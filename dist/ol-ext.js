@@ -12475,6 +12475,11 @@ ol.control.ProgressBar.prototype.setLayers = function (layers) {
  * @extends {ol.control.Control}
  * @fires select
  * @fires change:input
+ * @fires routing:start
+ * @fires routing
+ * @fires step:select
+ * @fires step:hover
+ * @fires error
  * @param {Object=} options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
@@ -12745,16 +12750,28 @@ ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
     'FL': 'Tourner légèrement à gauche sur ',
     'F': 'Continuer tout droit sur ',
   }
-  for (var i=0, f; f=routing.features[i]; i++) {
+  routing.features.forEach(function(f, i) {
     var d = this.getDistanceString(f.get('distance'));
     t = this.getTimeString(f.get('durationT'));
-    var li = document.createElement('li');
-        li.classList.add(f.get('instruction'));
-        li.innerHTML = (info[f.get('instruction')||'none']||'#')
-      + ' ' + f.get('name')
-      + '<i>' + d + (t ? ' - ' + t : '') +'</i>'
-    ul.appendChild(li);
-  }
+    ol.ext.element.create('LI', {
+      className: f.get('instruction'),
+      html: (info[f.get('instruction')||'none']||'#')
+        + ' ' + f.get('name')
+        + '<i>' + d + (t ? ' - ' + t : '') +'</i>',
+      on: {
+        pointerenter: function() {
+          this.dispatchEvent({ type: 'step:hover', hover: false, index: i, feature: f });
+        }.bind(this),
+        pointerleave: function() {
+          this.dispatchEvent({ type: 'step:hover', hover: false, index: i, feature: f });
+        }.bind(this)
+      },
+      click: function() {
+        this.dispatchEvent({ type: 'step:select', index: i, feature: f });
+      }.bind(this),
+      parent: ul
+    });
+  }.bind(this));
 };
 /** Handle routing response
  * @private
@@ -12812,7 +12829,6 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, e
   // console.log(data, routing);
   this.dispatchEvent(routing);
   this.path = routing;
-  console.log(routing)
   return routing;
 };
 /** Calculate route
@@ -12844,6 +12860,7 @@ ol.control.RoutingGeoportail.prototype.calculate = function (steps) {
     if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
   }
   var self = this;
+  this.dispatchEvent({ type: 'routing:start' });
   this.ajax(url + parameters, 
     function (resp) {
       if (resp.status >= 200 && resp.status < 400) {
@@ -12854,7 +12871,7 @@ ol.control.RoutingGeoportail.prototype.calculate = function (steps) {
       }
     }.bind(this), 
     function(resp){
-      console.log('ERROR', resp)
+      // console.log('ERROR', resp)
       this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText});
     }.bind(this)
   );

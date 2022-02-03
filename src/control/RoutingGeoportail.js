@@ -18,6 +18,11 @@ import {transform as ol_proj_transform} from 'ol/proj'
  * @extends {ol_control_Control}
  * @fires select
  * @fires change:input
+ * @fires routing:start
+ * @fires routing
+ * @fires step:select
+ * @fires step:hover
+ * @fires error
  * @param {Object=} options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
@@ -321,16 +326,28 @@ ol_control_RoutingGeoportail.prototype.listRouting = function (routing) {
     'F': 'Continuer tout droit sur ',
   }
 
-  for (var i=0, f; f=routing.features[i]; i++) {
+  routing.features.forEach(function(f, i) {
     var d = this.getDistanceString(f.get('distance'));
     t = this.getTimeString(f.get('durationT'));
-    var li = document.createElement('li');
-        li.classList.add(f.get('instruction'));
-        li.innerHTML = (info[f.get('instruction')||'none']||'#')
-      + ' ' + f.get('name')
-      + '<i>' + d + (t ? ' - ' + t : '') +'</i>'
-    ul.appendChild(li);
-  }
+    ol_ext_element.create('LI', {
+      className: f.get('instruction'),
+      html: (info[f.get('instruction')||'none']||'#')
+        + ' ' + f.get('name')
+        + '<i>' + d + (t ? ' - ' + t : '') +'</i>',
+      on: {
+        pointerenter: function() {
+          this.dispatchEvent({ type: 'step:hover', hover: false, index: i, feature: f });
+        }.bind(this),
+        pointerleave: function() {
+          this.dispatchEvent({ type: 'step:hover', hover: false, index: i, feature: f });
+        }.bind(this)
+      },
+      click: function() {
+        this.dispatchEvent({ type: 'step:select', index: i, feature: f });
+      }.bind(this),
+      parent: ul
+    });
+  }.bind(this));
 };
 
 /** Handle routing response
@@ -391,7 +408,6 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, e
   // console.log(data, routing);
   this.dispatchEvent(routing);
   this.path = routing;
-  console.log(routing)
   return routing;
 };
 
@@ -429,6 +445,7 @@ ol_control_RoutingGeoportail.prototype.calculate = function (steps) {
   }
 
   var self = this;
+  this.dispatchEvent({ type: 'routing:start' });
   this.ajax(url + parameters, 
     function (resp) {
       if (resp.status >= 200 && resp.status < 400) {
@@ -439,7 +456,7 @@ ol_control_RoutingGeoportail.prototype.calculate = function (steps) {
       }
     }.bind(this), 
     function(resp){
-      console.log('ERROR', resp)
+      // console.log('ERROR', resp)
       this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText});
     }.bind(this)
   );

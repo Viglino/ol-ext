@@ -35,6 +35,28 @@
   
   <link rel="stylesheet" href="../style.css"/>
   <style>
+    .routing {
+      opacity: .5;
+    }
+    .loading {
+      position: absolute;
+      display: none;
+      font-size: 2em;
+      top: 1em;
+      left: 50%;
+      padding: .5em 1em;
+      background-color: #fff;
+      border: 5px solid #369;
+      transform: translateX(-50%);
+      font-weight: bold;
+    }
+    .loading i {
+      font-size: 2em;
+      vertical-align: middle;
+    }
+    .routing .loading {
+      display: block;
+    }
     .ol-search ul {
       color: #333;
       font-size:0.85em;
@@ -78,6 +100,10 @@
   </style>
 </head>
 <body >
+  <div class="loading">
+    <i class="fa fa-spinner fa-pulse"></i>
+    loading...
+  </div>
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
@@ -162,6 +188,13 @@
     ]
   });
   map.addLayer(vector);
+
+  search.on('routing:start', function(routing) {
+    $('body').addClass('routing');
+  });
+  search.on(['routing', 'error'], function(routing) {
+    $('body').removeClass('routing');
+  });
 
   // Preocess result
   search.on('routing', function(routing) {
