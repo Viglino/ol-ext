@@ -147,12 +147,19 @@
       if (!style) {
         var color = ol.style.Chart.colors.classic[type];
         style = styleCache[type] = new ol.style.Style({
-          image:  new ol.style.FontSymbol({
+          /*
+          image: new ol.style.Icon({
+            src: 'https://cdn.pixabay.com/photo/2014/04/02/10/45/poi-304466_960_720.png',
+            scale: .05 
+          }),
+          */
+          image: new ol.style.FontSymbol({
             glyph: 'maki-'+form[type],
             radius: 12,
             color: color,	
+            scale: 10,
             fill: new ol.style.Fill({
-              color:color
+              color: color
             }),
             stroke: new ol.style.Stroke ({
               color: '#fff',

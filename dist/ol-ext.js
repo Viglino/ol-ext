@@ -11,7 +11,14 @@
 /*global ol*/
 if (window.ol && !ol.ext) {
   ol.ext = {};
+  if (!ol.util) {
+    ol.util = {
+      VERSION: ol.VERSION || '5.3.0'
+    };
+  }
 }
+ol.ext.olVersion = ol.util.VERSION.split('.');
+ol.ext.olVersion = parseInt(ol.ext.olVersion[0])*100 + parseInt(ol.ext.olVersion[1]);
 /** Inherit the prototype methods from one constructor into another.
  * replace deprecated ol method
  *
@@ -30218,6 +30225,7 @@ ol.layer.AnimatedCluster.prototype.animate = function(e) {
   var duration = this.get('animationDuration');
   if (!duration) return;
   var resolution = e.frameState.viewState.resolution;
+  var ratio = e.frameState.pixelRatio;
   var i, c0, a = this.animation;
   var time = e.frameState.time;
   // Start a new animation, if change resolution and source has changed
@@ -30333,6 +30341,30 @@ ol.layer.AnimatedCluster.prototype.animate = function(e) {
             vectorContext.drawFeature(f, s2);
           });
         } else {
+          // Bug with Icon images
+          if (ol.ext.olVersion > 605 && ratio !== 1 && (s.getImage() instanceof ol.style.Icon)) {
+            if (s.getImage()) {
+              s = s.clone();
+              var img = s.getImage();
+              img.setScale(img.getScale()*ratio);
+              /* BUG anchor don't use ratio */
+              var anchor = img.getAnchor();
+              if (img.setDisplacement) {
+                var disp = img.getDisplacement();
+                if (disp) {
+                  disp[0] -= anchor[0]/ratio;
+                  disp[1] += anchor[1]/ratio;
+                  img.setAnchor([0,0]);
+                }
+              } else {
+                if (anchor) {
+                  anchor[0] /= ratio;
+                  anchor[1] /= ratio;
+                }
+              }
+              /**/
+            }
+          }
           vectorContext.drawFeature(f, s);
         }
         /* OLD VERSION OL < 4.3

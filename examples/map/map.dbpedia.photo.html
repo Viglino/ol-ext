@@ -1,12 +1,10 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
-
+<!--
   Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-  
------------------------------------------------------------->
+ -->
   <title>ol-ext: DBPedia layer</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
@@ -107,24 +105,22 @@
       var count = new ol.style.Style({
         image: new ol.style.RegularShape({
           points: 12,
-            radius: 9,
-            fill: new ol.style.Fill({
-                color: '#fff'
-              })
-          }),
-          text: new ol.style.Text({
-            text: nb.toString(),
-            font: 'bold 12px helvetica,sans-serif',
-            offsetX: 20,
-            offsetY: -20,
-            fill: new ol.style.Fill({
-              color: '#000'
-            })
+          radius: 9,
+          displacement: [20,20],
+          fill: new ol.style.Fill({
+            color: '#fff'
           })
-        });
-      var p = count.getImage().getAnchor();
-      p[0]-=20;
-      p[1]+=20;
+        }),
+        text: new ol.style.Text({
+          text: nb.toString(),
+          font: 'bold 12px helvetica,sans-serif',
+          offsetX: 20,
+          offsetY: -20,
+          fill: new ol.style.Fill({
+            color: '#000'
+          })
+        })
+      });
       return [ style, count ];
     }
     else return [style];
