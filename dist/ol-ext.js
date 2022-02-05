@@ -11,14 +11,7 @@
 /*global ol*/
 if (window.ol && !ol.ext) {
   ol.ext = {};
-  if (!ol.util) {
-    ol.util = {
-      VERSION: ol.VERSION || '5.3.0'
-    };
-  }
 }
-ol.ext.olVersion = ol.util.VERSION.split('.');
-ol.ext.olVersion = parseInt(ol.ext.olVersion[0])*100 + parseInt(ol.ext.olVersion[1]);
 /** Inherit the prototype methods from one constructor into another.
  * replace deprecated ol method
  *
@@ -1180,6 +1173,46 @@ ol.ext.getMapCanvas = function(map) {
   return canvas;
 };
   
+/*global ol*/
+if (window.ol && !ol.util) {
+  ol.util = {
+    VERSION: ol.VERSION || '5.3.0'
+  };
+}
+ol.ext.olVersion = ol.util.VERSION.split('.');
+ol.ext.olVersion = parseInt(ol.ext.olVersion[0])*100 + parseInt(ol.ext.olVersion[1]);
+/** Get style to use in a VectorContext
+ * @param {} e
+ * @param {ol.style.Style} s
+ * @return {ol.style.Style}
+ */
+ol.ext.getVectorContextStyle = function(e, s) {
+  var ratio = e.frameState.pixelRatio;
+  // Bug with Icon images
+  if (ol.ext.olVersion > 605 && ratio !== 1 && (s.getImage() instanceof ol.style.Icon)) {
+    s = s.clone();
+    var img = s.getImage();
+    img.setScale(img.getScale()*ratio);
+    /* BUG anchor don't use ratio */
+    var anchor = img.getAnchor();
+    if (img.setDisplacement) {
+      var disp = img.getDisplacement();
+      if (disp) {
+        disp[0] -= anchor[0]/ratio;
+        disp[1] += anchor[1]/ratio;
+        img.setAnchor([0,0]);
+      }
+    } else {
+      if (anchor) {
+        anchor[0] /= ratio;
+        anchor[1] /= ratio;
+      }
+    }
+    /**/
+  }
+  return s;
+}
+
 /** @namespace ol.ext.imageLoader
  */
 if (window.ol) window.ol.ext.imageLoader = {};
@@ -17323,8 +17356,9 @@ ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow) {
     // Prevent crach if the style is not ready (image not loaded)
     try {
       var vectorContext = e.vectorContext || ol.render.getVectorContext(e);
-      vectorContext.setStyle(style[i]);
-      if (style[i].getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
+      var s = ol.ext.getVectorContextStyle(e, style[i]);
+      vectorContext.setStyle(s);
+      if (s.getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
       else vectorContext.drawGeometry(geom);
     } catch(e) { /* ok */ }
   }
@@ -30338,34 +30372,10 @@ ol.layer.AnimatedCluster.prototype.animate = function(e) {
             s2.getText().setOffsetX(offsetX - Math.sin(rot)*fontSize*(i - dl));
             s2.getText().setOffsetY(offsetY + Math.cos(rot)*fontSize*(i - dl));
             s2.getText().setText(t);
-            vectorContext.drawFeature(f, s2);
+            vectorContext.drawFeature(f, ol.ext.getVectorContextStyle(e, s2));
           });
         } else {
-          // Bug with Icon images
-          if (ol.ext.olVersion > 605 && ratio !== 1 && (s.getImage() instanceof ol.style.Icon)) {
-            if (s.getImage()) {
-              s = s.clone();
-              var img = s.getImage();
-              img.setScale(img.getScale()*ratio);
-              /* BUG anchor don't use ratio */
-              var anchor = img.getAnchor();
-              if (img.setDisplacement) {
-                var disp = img.getDisplacement();
-                if (disp) {
-                  disp[0] -= anchor[0]/ratio;
-                  disp[1] += anchor[1]/ratio;
-                  img.setAnchor([0,0]);
-                }
-              } else {
-                if (anchor) {
-                  anchor[0] /= ratio;
-                  anchor[1] /= ratio;
-                }
-              }
-              /**/
-            }
-          }
-          vectorContext.drawFeature(f, s);
+          vectorContext.drawFeature(f, ol.ext.getVectorContextStyle(e, s));
         }
         /* OLD VERSION OL < 4.3
         // Retina device
