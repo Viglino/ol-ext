@@ -2,81 +2,91 @@
 <html>
 <head>
 <!--
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-	<title>ol-ext: Clip interaction</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: Clip interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="Clip layers on a map." />
-	<meta name="keywords" content="Openlayers,ol,canvas,animation,clip,interaction" />
+  <meta name="description" content="Clip layers on a map." />
+  <meta name="keywords" content="Openlayers,ol,canvas,animation,clip,interaction" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
+  <!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	</head>
+  <link rel="stylesheet" href="../style.css" />
+  </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Clip interaction</h1>
-	</a>
-	<p class="info">
-		The <i>ol.interaction.Clip</i> clip layers by a circle on the map.
-		<br/>
-		You can change the radius of the clip
-	</p>
+  <a href="../../index.html">
+    <h1>ol-ext: Clip interaction</h1>
+  </a>
+  <p class="info">
+    The <i>ol.interaction.Clip</i> clip layers by a circle on the map.
+    <br/>
+    You can change the radius of the clip
+  </p>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<h2>Options:</h2>
-		<ul><li>
-			radius: <input id="radius" type="range" min="30" max="200" value="100" onchange="clip.setRadius(Number(this.value))">
-		</li></ul>
-		<p>
-			<i>Move around to show the map!</i>
-		</p>
-	</div>
-	
-	<script type="text/javascript">
-	// Layers
-	var mapbox = new ol.layer.Tile({
-		title:'terrain-background',
-		source: new ol.source.Stamen({ layer: 'terrain' })
-	});
-	var stamen = new ol.layer.Tile({
+  <div class="options">
+    <h2>Options:</h2>
+    <ul><li>
+      radius: <input id="radius" type="range" min="30" max="200" value="100" onchange="clip.setRadius(Number(this.value))">
+    </li></ul>
+    <p>
+      <i>Move around to show the map!</i>
+    </p>
+  </div>
+  
+<script type="text/javascript">
+  // Layers
+  var mapbox = new ol.layer.Tile({
+    title:'terrain-background',
+    source: new ol.source.Stamen({ layer: 'terrain' })
+  });
+  var stamen = new ol.layer.Tile({
     source: new ol.source.Stamen({ layer: 'watercolor' }) 
   });
+  var vector = new ol.layer.Vector({
+    name: '1914-18',
+    className: 'vector',
+    source: new ol.source.Vector({
+      url: '../data/fond_guerre.geojson',
+      projection: 'EPSG:3857',
+      format: new ol.format.GeoJSON(),
+      attributions: [ '&copy; <a href="https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire">data.culture.gouv.fr</a>' ]
+    })
+  });
 
-	// The map
-	var map = new ol.Map({
+  // The map
+  var map = new ol.Map({
     target: 'map',
     view: new ol.View({
       zoom: 5,
       center: [166326, 5992663]
     }),
-    layers: [mapbox, stamen]
+    layers: [mapbox, stamen, vector]
   });
 
-	// Clip interaction
-	var clip = new ol.interaction.Clip({ radius: Number($("#radius").val()), layers:stamen });
-	map.addInteraction(clip);
+  // Clip interaction
+  var clip = new ol.interaction.Clip({ radius: Number($("#radius").val()), layers:[ stamen, vector ] });
+  map.addInteraction(clip);
 
-	</script>
-	
+</script>
+  
 </body>
 </html>

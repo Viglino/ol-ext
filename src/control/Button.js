@@ -40,7 +40,7 @@ var ol_control_Button = function(options){
     }
   };
   bt.addEventListener("click", evtFunction);
-  bt.addEventListener("touchstart", evtFunction);
+  // bt.addEventListener("touchstart", evtFunction);
   element.appendChild(bt);
 
   // Try to get a title in the button content

@@ -182,6 +182,7 @@
   function getLayer() {
     return new ol.layer.Vector({
       name: '1914-18',
+      className: 'vector',
       source: new ol.source.Vector({
         url: '../data/fond_guerre.geojson',
         projection: 'EPSG:3857',
@@ -231,7 +232,8 @@
 
   // Tools
   var clip = new ol.interaction.Clip({ radius: 150, layers: map2.getLayers().getArray() });
-  var swipe = new ol.control.Swipe({ rightLayers: map2.getLayers().getArray(),  });
+  //var swipe = new ol.control.Swipe({ rightLayers: map2.getLayers().getArray(),  });
+  var swipe = new ol.control.SwipeMap({ right: true  });
 
   // Change mode
   var currentMode;
@@ -266,7 +268,7 @@
   // Check click and dispatch to map
   map2.on('click', function(e) {
     if (/swipe/.test(currentMode)) {
-      if (ol.extent.containsCoordinate(swipe.getRectangle(), e.pixel)) {
+      if (!ol.extent.containsCoordinate(swipe.getRectangle(), e.pixel)) {
         // Simulate map1 selection
         e.map = map;
         e.stopPropagation();

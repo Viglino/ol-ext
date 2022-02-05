@@ -59,7 +59,7 @@ var MapIFrameAPI = function(win, id, targetOrigin) {
  * @param {Object|function} data argments or a callback function to get returned Transferable
  * @param {function} fn callback function to get returned Transferable
  */
- MapIFrameAPI.prototype.call = function(key, data, fn) {
+MapIFrameAPI.prototype.call = function(key, data, fn) {
   if (typeof(data)==='function') { 
     fn = data;
     data = undefined;
@@ -93,7 +93,7 @@ var MapIFrameAPI = function(win, id, targetOrigin) {
  * @param {function} fn callback function
  * @return {function} IFrameListener
  */
- MapIFrameAPI.prototype.addIFrameListener = function(key, fn, data) {
+MapIFrameAPI.prototype.addIFrameListener = function(key, fn, data) {
   var callback = function(e) {
     if (e.data.id === this.id && e.data.api === key) {
       fn.call(this, e.data.data);

@@ -15,6 +15,8 @@ var ol_ext_IFrameAPI = function(targetOrigin) {
   this.setter = {};
   // Listener api
   this.listener = {};
+  // Nothing to do there
+  if (window.parent === window) return;
   // Wait for target ready
   window.addEventListener('message', function(e) {
     if (e.data.listener) {
@@ -24,6 +26,7 @@ var ol_ext_IFrameAPI = function(targetOrigin) {
     } else {
       switch (e.data.api) {
         case 'ready': {
+          this.ready = true;
           this.id = e.data.id;
           window.parent.postMessage(e.data, this.targetOrigin);
           break;

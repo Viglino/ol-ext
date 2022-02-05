@@ -177,10 +177,13 @@ ol_interaction_Clip.prototype.precompose_ = function(e) {
   var radius = this.radius;
   var tr = e.inversePixelTransform;
   if (tr) {
+    // Transform pt
     pt = [
       (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
       (-pt[0]*tr[2] + pt[1]*tr[3] + tr[5])
     ];
+    // Get radius / transform
+    radius = pt[0] - ((this.pos[0]-radius)*tr[0] - this.pos[1]*tr[1] + tr[4]);
   } else {
     pt[0] *= ratio;
     pt[1] *= ratio;

@@ -46,6 +46,7 @@
       background-color: #fff;
       width: 100%;
       overflow: auto;
+      user-select: all;
     }
     .result ul {
       background-color: #fff;
@@ -125,9 +126,10 @@
       <input id="key" 
         type="text" 
         placeholder="your key" 
+        onchange="loadCapabilities()"
         style="width: calc(100% - 1.5em); box-sizing: border-box;" 
-      /><select style="width: 1.5em;" onchange="$('#key').val(this.value); loadCapabilities()">
-        <option value=""></option>
+      /><select id="keys" style="width: 1.5em;" onchange="$('#key').val(this.value); loadCapabilities()">
+        <option value="" style="font-style: italic; color: #fff; background-color: #369;">choisir une couche</option>
         <option value="cartes">cartes</option>
         <option value="ortho">ortho</option>
         <option value="orthohisto">orthohisto</option>
@@ -142,17 +144,19 @@
         <option value="altimetrie">altimetrie</option>
         <option value="agriculture">agriculture</option>
         <option value="clc">clc</option>
+        <option value="all">Toutes les couches...</option>
       </select>
     </form>
     <div id="result" style="display: none;">
       <label style="display: block; margin-top:.5em;">Code: <span></span></label>
       <pre id="code"></pre>
       <button id="layer" onclick='addLayer()' style="float: right;">Add layer...</button>
+      <hr style="clear:both;" />
+      <button type="button" onclick="saveCapabilities()" style="float: right;">Load capabilities</button>
+      <button type="button" onclick="loadRegister()" style="float: right;">Load register</button>
       <p style="margin:0; clear:both;">Select a layer</p>
       <ul>
       </ul>
-      <button type="button" onclick="loadCapabilities(true)" style="float: right;">Load capabilities</button>
-      <button type="button" onclick="loadRegister()" style="float: right;">Load register</button>
     </div>
 	</div>
 	
@@ -218,7 +222,7 @@
 
   map.addControl(new ol.control.ScaleLine());
 
-  // Show information on click
+  // Show information on click (getFeatureInfo)
   var popup = new ol.Overlay.Popup();
   map.addOverlay(popup);
   map.on('click', function(e) {
@@ -263,26 +267,61 @@
     });
   });
 
-  var currentLayer, currentCap;
+  var currentLayer, currentCap=[];
   function addLayer() {
     if (currentLayer) map.addLayer(currentLayer);
   }
-  function loadCapabilities(save) {
+
+  // Save capabilities
+  function saveCapabilities() {
+    var k = $('#key').val();
+    // Export JS
+    var js = '// Define global\n'
+      + 'if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };\n'
+      + 'window.geoportailConfig.capabilities[\'default\'] = '
+      + ((k && k!=='all') ? 'window.geoportailConfig.capabilities[\''+k+'\'] = ' : '')
+      + '{';
+    for (var c in currentCap) {
+      if (k !== currentCap[c].key) {
+        k = currentCap[c].key;
+        js += '\n// --- '+k+'----'
+      }
+      js += '\n  "'+c+'": '+JSON.stringify(currentCap[c])+',';
+    }
+    js += '\n};'
+    // console.log(currentCap); return;
+    var blob = new Blob([js], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, 'capabilities.js');
+  }
+
+  // Get capapbilities
+  function loadCapabilities(k, add) {
     $('#result').hide();
     $('#layer').hide();
     $('#code').text('');
-    var k = $('#key').val();
-    if (true) {
+    $('#result label span').text('');
+    if (!k) k = $('#key').val();
+    if (k==='all') {
+      $('.options ul').html('');
+      currentCap = [];
+      $('#keys option').each(function() {
+        if (this.value && this.value !== 'all') {
+          loadCapabilities(this.value, true);
+        } 
+      });
+    } else if (k) {
       ol.layer.Geoportail.getCapabilities(k).then(function(cap) {
-        currentCap = cap;
         $('#result').show();
-        var ul = $('.options ul').html('');
+        var ul = $('.options ul');
+        if (!add) {
+          ul.html('');
+          currentCap = [];
+        }
         Object.keys(cap).forEach(function(l) {
-          var c = cap[l];
+          currentCap[l] = cap[l];
+          var ck = cap[l];
           $('<li>').text(l)
             .click(function() {
-              var ck = { key: k };
-              for (var i in c) ck[i] = c[i]
               $('#code').text(
                 'ol.layer.Geoportail.register('
                 + '"' + l + '", '
@@ -292,7 +331,6 @@
               $('#layer').show();
               $('#result label span').text(l);
               ol.layer.Geoportail.register(l, ck);
-              console.log(l)
               currentLayer = new ol.layer.Geoportail({
                 layer: l,
                 projection: map.getView().getProjection()
@@ -300,18 +338,6 @@
             })
             .appendTo(ul)
         });
-        if (save) {
-          // Export JS
-          var js = '// Define global\n'
-            + 'if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };\n'
-            + 'window.geoportailConfig.capabilities[\'default\'] = window.geoportailConfig.capabilities[\''+k+'\'] = {';
-          for (var c in cap) {
-            js += '\n  "'+c+'": '+JSON.stringify(cap[c])+',';
-          }
-          js += '\n};'
-          var blob = new Blob([js], {type: "text/plain;charset=utf-8"});
-          saveAs(blob, 'capabilities.js');
-        }
       }).catch(function(e) {
         alert ('Error while loading capabilities for key "'+k+'".');
       });
@@ -323,14 +349,17 @@
     var register = '';
     var k = $('#key').val();
     Object.keys(currentCap).forEach(function(l) {
-      var c = currentCap[l];
-      var ck = { key: k };
-      for (var i in c) ck[i] = c[i];
+      var ck = currentCap[l];
+      if (k !== ck.key) {
+        k = ck.key;
+        register += '// --- '+k+' ----\n'
+      }
       register += 'ol.layer.Geoportail.register('
         + '"' + l + '", '
         + JSON.stringify(ck)
         + ');\n';
     });
+    // console.log(register); return;
     var blob = new Blob([register], {type: "text/plain;charset=utf-8"});
     saveAs(blob, 'register.js');
   }

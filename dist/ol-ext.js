@@ -2303,7 +2303,7 @@ ol.ext.input.Checkbox = function(options) {
   var label = this.element = document.createElement('LABEL');
   if (options.html instanceof Element) label.appendChild(options.html)
   else if (options.html !== undefined) label.innerHTML = options.html;
-  label.className = ('ol-ext-check ol-ext-checkbox'  + (options.className || '')).trim();
+  label.className = ('ol-ext-check ol-ext-checkbox '  + (options.className || '')).trim();
   if (this.input.parentNode) this.input.parentNode.insertBefore(label, this.input);
   label.appendChild(this.input);
   label.appendChild(document.createElement('SPAN'));
@@ -2904,10 +2904,10 @@ ol.ext.inherits(ol.ext.input.List, ol.ext.input.Base);
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
  */
-ol.ext.input.Radio = function(input, options) {
+ol.ext.input.Radio = function(options) {
   options = options || {};
-  ol.ext.input.Checkbox.call(this, input, options);
-  this.element.className = ('ol-ext-check ol-ext-radio' + (options.className || '')).trim();
+  ol.ext.input.Checkbox.call(this, options);
+  this.element.className = ('ol-ext-check ol-ext-radio ' + (options.className || '')).trim();
 };
 ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
 
@@ -3839,7 +3839,7 @@ ol.control.Button = function(options){
     }
   };
   bt.addEventListener("click", evtFunction);
-  bt.addEventListener("touchstart", evtFunction);
+  // bt.addEventListener("touchstart", evtFunction);
   element.appendChild(bt);
   // Try to get a title in the button content
   if (!options.title && bt.firstElementChild) {
@@ -6830,12 +6830,19 @@ ol.control.Dialog = function(options) {
     parent: form
   });
   // Progress
-  this._progress = ol.ext.element.create('DIV', {
-    className: 'ol-progress-bar',
+  this._progress = ol.ext.element.create('DIV', { 
     style: { display: 'none' },
     parent: form
   });
+  var bar = ol.ext.element.create('DIV', {
+    className: 'ol-progress-bar',
+    parent: this._progress
+  });
   this._progressbar = ol.ext.element.create('DIV', {
+    parent: bar
+  });
+  this._progressMessage = ol.ext.element.create('DIV', {
+    className: 'ol-progress-message',
     parent: this._progress
   });
   // Buttons
@@ -6905,6 +6912,28 @@ ol.control.Dialog.prototype.open = function() {
   this.show();
 };
 /** Set the dialog content
+ * @param {Element | String} content dialog content
+ */
+ ol.control.Dialog.prototype.setContentMessage = function(content) {
+  if (content !== undefined) {
+    var elt = this.getContentElement();
+    if (content instanceof Element) ol.ext.element.setHTML(elt, '');
+    ol.ext.element.setHTML(elt, content || '');
+  }
+};
+/** Set the dialog title
+ * @param {Element | String} content dialog content
+ */
+ol.control.Dialog.prototype.setTitle = function(title) {
+  var form = this.element.querySelector('form');
+  form.querySelector('h2').innerText = title || '';
+  if (title) {
+    form.classList.add('ol-title');
+  } else {
+    form.classList.remove('ol-title');
+  }
+};
+/** Set the dialog content
  * @param {*} options
  *  @param {Element | String} options.content dialog content
  *  @param {string} options.title title of the dialog
@@ -6936,12 +6965,7 @@ ol.control.Dialog.prototype.setContent = function(options) {
     ol.ext.element.setHTML(form.querySelector('.ol-content'), options.content || '');
   }
   // Title
-  form.querySelector('h2').innerText = options.title || '';
-  if (options.title) {
-    form.classList.add('ol-title');
-  } else {
-    form.classList.remove('ol-title');
-  }
+  this.setTitle(options.title);
   // Closebox
   if (options.closeBox || (this.get('closeBox') && options.closeBox !== false)) {
     form.classList.add('ol-closebox');
@@ -6973,10 +6997,15 @@ ol.control.Dialog.prototype.getContentElement = function() {
   return this.element.querySelector('form .ol-content')
 };
 /** Set progress
- * @param {number} val
+ * @param {number|boolean} val the progress value or false to hide the progressBar
  * @param {number} max
+ * @param {string|element} message
  */
-ol.control.Dialog.prototype.setProgress = function(val, max) {
+ol.control.Dialog.prototype.setProgress = function(val, max, message) {
+  if (val===false) {
+    ol.ext.element.setStyle(this._progress, { display: 'none' })
+    return;
+  }
   if (max > 0) {
     this.set('max', Number(max));
   } else {
@@ -6990,6 +7019,8 @@ ol.control.Dialog.prototype.setProgress = function(val, max) {
     this._progressbar.className = p ? '' : 'notransition';
     ol.ext.element.setStyle(this._progressbar, { width: p+'%' })
   }
+  this._progressMessage.innerHTML = '';
+  ol.ext.element.setHTML(this._progressMessage, message || '');
 };
 /** Returns a function to do something on button click
  * @param {strnig} button button id
@@ -9804,14 +9835,18 @@ ol.control.MapZone.zones.DOMTOM = [{
  * @fire change:visible
  * @param {Object=} options Control options.
  *  @param {string} className class of the control
- *  @param {boolean} hideOnClick hide the control on click, default false
- *  @param {boolean} closeBox add a closeBox to the control, default false
+ *  @param {boolean} options.closeBox add a close button
+ *  @param {boolean} options.hideOnClick close dialog when click
  */
 ol.control.Notification = function(options) {
   options = options || {};
-	var element = document.createElement("DIV");
-  this.contentElement = document.createElement("DIV");
-  element.appendChild(this.contentElement);
+	var element = document.createElement('DIV');
+  this.contentElement = ol.ext.element.create('DIV', {
+    click: function() {
+      if (this.get('hideOnClick')) this.hide();
+    }.bind(this),
+    parent: element
+  });
   var classNames = (options.className||"")+ " ol-notification";
 	if (!options.target) {
     classNames += " ol-unselectable ol-control ol-collapsed";
@@ -9821,6 +9856,8 @@ ol.control.Notification = function(options) {
     element: element,
     target: options.target
   });
+  this.set('closeBox', options.closeBox);
+  this.set('hideOnClick', options.hideOnClick);
 };
 ol.ext.inherits(ol.control.Notification, ol.control.Control);
 /**
@@ -9838,7 +9875,17 @@ ol.control.Notification.prototype.show = function(what, duration) {
     } else {
       this.contentElement.innerHTML = what;
     }
-  }
+    if (this.get('closeBox')) {
+      this.contentElement.classList.add('ol-close')
+      ol.ext.element.create('SPAN', {
+        className: 'closeBox',
+        click: function() { this.hide(); }.bind(this),
+        parent: this.contentElement
+      })
+    } else {
+      this.contentElement.classList.remove('ol-close')
+    }
+  }  
   if (this._listener) {
     clearTimeout(this._listener);
     this._listener = null;
@@ -12374,13 +12421,14 @@ ol.control.Profil.prototype.getImage = function(type, encoderOptions) {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/** A simple push button control
+/** Add a progress bar to a map.
+ * Use the layers option listen to tileload event and show the layer loading progress.
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
  *  @param {String} [options.className] class of the control
  *  @param {String} [options.label] waiting label
- *  @param {ol.layer.Layer} [options.layers] a tile layer with tileload events
+ *  @param {ol.layer.Layer|Array<ol.layer.Layer>} [options.layers] tile layers with tileload events
  */
 ol.control.ProgressBar = function(options) {
   options = options || {};
@@ -12467,6 +12515,11 @@ ol.control.ProgressBar.prototype.setLayers = function (layers) {
  * @extends {ol.control.Control}
  * @fires select
  * @fires change:input
+ * @fires routing:start
+ * @fires routing
+ * @fires step:select
+ * @fires step:hover
+ * @fires error
  * @param {Object=} options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
@@ -12737,16 +12790,28 @@ ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
     'FL': 'Tourner légèrement à gauche sur ',
     'F': 'Continuer tout droit sur ',
   }
-  for (var i=0, f; f=routing.features[i]; i++) {
+  routing.features.forEach(function(f, i) {
     var d = this.getDistanceString(f.get('distance'));
     t = this.getTimeString(f.get('durationT'));
-    var li = document.createElement('li');
-        li.classList.add(f.get('instruction'));
-        li.innerHTML = (info[f.get('instruction')||'none']||'#')
-      + ' ' + f.get('name')
-      + '<i>' + d + (t ? ' - ' + t : '') +'</i>'
-    ul.appendChild(li);
-  }
+    ol.ext.element.create('LI', {
+      className: f.get('instruction'),
+      html: (info[f.get('instruction')||'none']||'#')
+        + ' ' + f.get('name')
+        + '<i>' + d + (t ? ' - ' + t : '') +'</i>',
+      on: {
+        pointerenter: function() {
+          this.dispatchEvent({ type: 'step:hover', hover: false, index: i, feature: f });
+        }.bind(this),
+        pointerleave: function() {
+          this.dispatchEvent({ type: 'step:hover', hover: false, index: i, feature: f });
+        }.bind(this)
+      },
+      click: function() {
+        this.dispatchEvent({ type: 'step:select', index: i, feature: f });
+      }.bind(this),
+      parent: ul
+    });
+  }.bind(this));
 };
 /** Handle routing response
  * @private
@@ -12804,7 +12869,6 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, e
   // console.log(data, routing);
   this.dispatchEvent(routing);
   this.path = routing;
-  console.log(routing)
   return routing;
 };
 /** Calculate route
@@ -12836,6 +12900,7 @@ ol.control.RoutingGeoportail.prototype.calculate = function (steps) {
     if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
   }
   var self = this;
+  this.dispatchEvent({ type: 'routing:start' });
   this.ajax(url + parameters, 
     function (resp) {
       if (resp.status >= 200 && resp.status < 400) {
@@ -12846,7 +12911,7 @@ ol.control.RoutingGeoportail.prototype.calculate = function (steps) {
       }
     }.bind(this), 
     function(resp){
-      console.log('ERROR', resp)
+      // console.log('ERROR', resp)
       this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText});
     }.bind(this)
   );
@@ -14997,8 +15062,8 @@ ol.control.Swipe.prototype.isLayer_ = function(layer){
 };
 /** Add a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
-*	@param {bool} add layer in the right part of the map, default left.
-*/
+ *	@param {bool} add layer in the right part of the map, default left.
+ */
 ol.control.Swipe.prototype.addLayer = function(layers, right) {
   if (!(layers instanceof Array)) layers = [layers];
   for (var i=0; i<layers.length; i++) {
@@ -15023,7 +15088,7 @@ ol.control.Swipe.prototype.removeLayers = function() {
 };
 /** Remove a layer to clip
  *	@param {ol.layer|Array<ol.layer>} layer to clip
-*/
+ */
 ol.control.Swipe.prototype.removeLayer = function(layers) {
   if (!(layers instanceof Array)) layers = [layers];
   for (var i=0; i<layers.length; i++) {
@@ -15053,7 +15118,7 @@ ol.control.Swipe.prototype.getRectangle = function() {
   }
 };
 /** @private
-*/
+ */
 ol.control.Swipe.prototype.move = function(e) {
   var self = this;
   var l;
@@ -15271,6 +15336,164 @@ ol.control.Swipe.prototype.postcompose = function(e) {
     } else {
       e.context.restore();
     }
+  }
+};
+
+/*
+  Copyright (c) 2015 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A control that use a CSS clip rect to swipe the map
+ * @classdesc Swipe Control.
+ * @fires moving
+ * @constructor
+ * @extends {ol.control.Control}
+ * @param {Object=} Control options.
+ *  @param {ol.layer} options.layers layer to swipe
+ *  @param {ol.layer} options.rightLayer layer to swipe on right side
+ *  @param {string} options.className control class name
+ *  @param {number} options.position position propertie of the swipe [0,1], default 0.5
+ *  @param {string} options.orientation orientation propertie (vertical|horizontal), default vertical
+ */
+ol.control.SwipeMap = function(options) {
+  options = options || {};
+  var button = document.createElement('button');
+  var element = document.createElement('div');
+  element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
+  element.appendChild(button);
+  element.addEventListener("mousedown", this.move.bind(this));
+  element.addEventListener("touchstart", this.move.bind(this));
+  ol.control.Control.call(this, {
+    element: element
+  });
+  this.on('propertychange', function(e) {
+    if (this.get('orientation') === "horizontal") {
+      this.element.style.top = this.get('position')*100+"%";
+      this.element.style.left = "";
+    } else {
+      if (this.get('orientation') !== "vertical") this.set('orientation', "vertical");
+      this.element.style.left = this.get('position')*100+"%";
+      this.element.style.top = "";
+    }
+    if (e.key === 'orientation') {
+      this.element.classList.remove("horizontal", "vertical");
+      this.element.classList.add(this.get('orientation'));
+    }
+    this._clip();
+  }.bind(this));
+  this.on('change:active', this._clip.bind(this));
+  this.set('position', options.position || 0.5);
+  this.set('orientation', options.orientation || 'vertical');
+  this.set('right', options.right);
+};
+ol.ext.inherits(ol.control.SwipeMap, ol.control.Control);
+/** Set the map instance the control associated with.
+ * @param {ol.Map} map The map instance.
+ */
+ol.control.SwipeMap.prototype.setMap = function(map) {
+  if (this.getMap()) {
+    if (this._listener) ol.Observable.unByKey(this._listener);
+    var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
+    layerDiv.style.clip = ''; 
+  }
+  ol.control.Control.prototype.setMap.call(this, map);
+  if (map) {
+    this._listener = map.on('change:size', this._clip.bind(this));
+  }
+};
+/** Clip
+ * @private
+ */
+ol.control.SwipeMap.prototype._clip = function() {
+  if (this.getMap()) {
+    var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
+    var rect = this.getRectangle();
+    layerDiv.style.clip = 'rect(' 
+      + rect[1]+'px,' // top
+      + rect[2]+'px,' // right
+      + rect[3]+'px,' // bottom
+      + rect[0]+'px'  //left
+      + ')';
+  }
+};
+/** Get visible rectangle
+ * @returns {ol.extent}
+ */
+ol.control.SwipeMap.prototype.getRectangle = function() {
+  var s = this.getMap().getSize();
+  if (this.get('orientation') === 'vertical') {
+    if (this.get('right')) {
+      return [ s[0]*this.get('position'), 0, s[0], s[1]];
+    } else {
+      return [ 0, 0, s[0]*this.get('position'), s[1]];
+    }
+  } else {
+    if (this.get('right')) {
+      return [ 0, s[1]*this.get('position'), s[0], s[1]];
+    } else {
+      return [ 0, 0, s[0], s[1]*this.get('position')];
+    }
+  }
+};
+/** @private
+*/
+ol.control.SwipeMap.prototype.move = function(e) {
+  var self = this;
+  var l;
+  if (!this._movefn) this._movefn = this.move.bind(this);
+  switch (e.type) {
+    case 'touchcancel':
+    case 'touchend':
+    case 'mouseup': {
+      self.isMoving = false;
+      ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
+        .forEach(function(eventName) {
+          document.removeEventListener(eventName, self._movefn);
+        });
+      break;
+    }
+    case 'mousedown':
+    case 'touchstart': {
+      self.isMoving = true;
+      ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
+        .forEach(function(eventName) {
+          document.addEventListener(eventName, self._movefn);
+        });
+    }
+    // fallthrough
+    case 'mousemove':
+    case 'touchmove': {
+      if (self.isMoving) {
+        if (self.get('orientation') === 'vertical') {
+          var pageX = e.pageX
+            || (e.touches && e.touches.length && e.touches[0].pageX)
+            || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
+          if (!pageX) break;
+          pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
+            window.pageXOffset - document.documentElement.clientLeft;
+          l = self.getMap().getSize()[0];
+          var w = l - Math.min(Math.max(0, l-pageX), l);
+          l = w/l;
+          self.set('position', l);
+          self.dispatchEvent({ type: 'moving', size: [w, self.getMap().getSize()[1]], position: [l,0] });
+        } else {
+          var pageY = e.pageY
+            || (e.touches && e.touches.length && e.touches[0].pageY)
+            || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
+          if (!pageY) break;
+          pageY -= self.getMap().getTargetElement().getBoundingClientRect().top +
+            window.pageYOffset - document.documentElement.clientTop;
+          l = self.getMap().getSize()[1];
+          var h = l - Math.min(Math.max(0, l-pageY), l);
+          l = h/l;
+          self.set('position', l);
+          self.dispatchEvent({ type: 'moving', size: [self.getMap().getSize()[0],h], position: [0,l] });
+        }
+      }
+      break;
+    }
+    default: break;
   }
 };
 
@@ -20207,10 +20430,13 @@ ol.interaction.Clip.prototype.precompose_ = function(e) {
   var radius = this.radius;
   var tr = e.inversePixelTransform;
   if (tr) {
+    // Transform pt
     pt = [
       (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
       (-pt[0]*tr[2] + pt[1]*tr[3] + tr[5])
     ];
+    // Get radius / transform
+    radius = pt[0] - ((this.pos[0]-radius)*tr[0] - this.pos[1]*tr[1] + tr[4]);
   } else {
     pt[0] *= ratio;
     pt[1] *= ratio;
@@ -22797,6 +23023,13 @@ ol.interaction.ModifyFeature.prototype.setMap = function(map) {
 ol.interaction.ModifyFeature.prototype.setActive = function(active) {
   ol.interaction.Interaction.prototype.setActive.call (this, active);
   if (this.overlayLayer_) this.overlayLayer_.getSource().clear();
+};
+/** Change the filter function
+ * @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
+ */
+ol.interaction.ModifyFeature.prototype.setFilter = function(filter) {
+  if (typeof(filter) === 'function') this.filterSplit_ = filter;
+  else if (filter === undefined) this.filterSplit_ = function(){ return true; };
 };
 /** Get closest feature at pixel
  * @param {ol.Pixel} 
@@ -30605,11 +30838,11 @@ ol.layer.Geoportail.capabilities = {
   // Need API key
   "GEOGRAPHICALGRIDSYSTEMS.MAPS": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"GEOGRAPHICALGRIDSYSTEMS.MAPS","title":"Cartes IGN","format":"image/jpeg","style":"normal","queryable":true,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-180,-75,180,80],"desc":"Cartes IGN","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":7,"maxZoom":7,"bbox":[-178.20573,-68.138855,144.84375,51.909786]},{"minZoom":8,"maxZoom":8,"bbox":[-178.20573,-68.138855,168.24327,51.909786]},{"minZoom":13,"maxZoom":13,"bbox":[-178.20573,-67.101425,168.24327,51.44377]},{"minZoom":14,"maxZoom":14,"bbox":[-178.20573,-67.101425,168.23909,51.44377]},{"minZoom":11,"maxZoom":12,"bbox":[-178.20573,-67.101425,168.24327,51.444122]},{"minZoom":9,"maxZoom":10,"bbox":[-178.20573,-68.138855,168.24327,51.444016]},{"minZoom":15,"maxZoom":15,"bbox":[-178.20573,-46.502903,168.23909,51.175068]},{"minZoom":16,"maxZoom":16,"bbox":[-178.20573,-46.502903,168.29811,51.175068]},{"minZoom":0,"maxZoom":6,"bbox":[-180,-60,180,80]},{"minZoom":18,"maxZoom":18,"bbox":[-5.6663494,41.209736,10.819784,51.175068]},{"minZoom":17,"maxZoom":17,"bbox":[-179.5,-75,179.5,75]}]},"DITTT":{"href":"http://www.dittt.gouv.nc/portal/page/portal/dittt/","attribution":"Direction des Infrastructures, de la Topographie et des Transports Terrestres","logo":"https://wxs.ign.fr/static/logos/DITTT/DITTT.gif","minZoom":8,"maxZoom":16,"constraint":[{"minZoom":8,"maxZoom":10,"bbox":[163.47784,-22.972307,168.24327,-19.402702]},{"minZoom":11,"maxZoom":13,"bbox":[163.47784,-22.972307,168.24327,-19.494438]},{"minZoom":14,"maxZoom":15,"bbox":[163.47784,-22.764496,168.23909,-19.493542]},{"minZoom":16,"maxZoom":16,"bbox":[163.47784,-22.809465,168.29811,-19.403923]}]}}},
   // Other layers
+  "ADMINEXPRESS-COG-CARTO.LATEST": {"key": "administratif", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"ADMINEXPRESS-COG-CARTO.LATEST","title":"ADMINEXPRESS COG CARTO","format":"image/png","style":"normal","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Limites administratives Express COG code officiel géographique 2021","originators":{"IGN":{"href":"https://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
   "GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN": {"key":"altimetrie","server":"https://wxs.ign.fr/geoportail/wmts","layer":"GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN","title":"Carte des pentes","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":17,"bbox":[-63.161392,-21.544624,56.001812,51.099052],"desc":"Carte des zones ayant une valeur de pente supérieure à 30°-35°-40°-45° d'après la BD ALTI au pas de 5m","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":17,"constraint":[{"minZoom":0,"maxZoom":17,"bbox":[-5.1504726,41.32521,9.570543,51.099052]}]}}},
-  "ADMINEXPRESS_COG_2018": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"ADMINEXPRESS_COG_2018","title":"ADMINEXPRESS_COG (2018)","format":"image/png","style":"normal","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Limites administratives COG mises à jour en continu. État en Mai 2018.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
   "ELEVATION.SLOPES": {"key":"altimetrie","server":"https://wxs.ign.fr/geoportail/wmts","layer":"ELEVATION.SLOPES","title":"Altitude","format":"image/jpeg","style":"normal","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":14,"bbox":[-178.20589,-22.595179,167.43176,50.93085],"desc":"La couche altitude se compose d'un MNT (Modèle Numérique de Terrain) affiché en teintes hypsométriques et issu de la BD ALTI®.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":14,"constraint":[{"minZoom":6,"maxZoom":14,"bbox":[55.205746,-21.392344,55.846554,-20.86271]}]}}},
   "GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1": { "key":"cartes", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1","title":"Plan IGN j+1","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Plan IGN j+1","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179,-80,179,80]}]}}},
-  "TRANSPORTNETWORKS.ROADS": {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"TRANSPORTNETWORKS.ROADS","title":"Routes","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":6,"maxZoom":18,"bbox":[-63.969162,-21.49687,55.964417,71.584076],"desc":"Affichage du réseau routier français et européen.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":18,"constraint":[{"minZoom":15,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":6,"maxZoom":14,"bbox":[-63.969162,-21.49687,55.964417,71.584076]}]}}},
+  "TRANSPORTNETWORKS.ROADS": { "key": "topographie", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"TRANSPORTNETWORKS.ROADS","title":"Routes","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":6,"maxZoom":18,"bbox":[-63.969162,-21.49687,55.964417,71.584076],"desc":"Affichage du réseau routier français et européen.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":18,"constraint":[{"minZoom":15,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":6,"maxZoom":14,"bbox":[-63.969162,-21.49687,55.964417,71.584076]}]}}},
 };
 /** Register new layer capability
  * @param {string} layer layer name
@@ -30716,6 +30949,7 @@ ol.layer.Geoportail.getCapabilities = function(gppKey) {
         if (!/WMTS/.test(l.getElementsByTagName('Server')[0].attributes['service'].value)) continue;
 //        if (!all && !/geoportail\/wmts/.test(l.find("OnlineResource").attr("href"))) continue;
         var service = {
+          key: gppKey,
           server: l.getElementsByTagName('gpp:Key')[0].innerHTML.replace(gppKey+"/",""), 
           layer: l.getElementsByTagName('Name')[0].innerHTML,
           title: l.getElementsByTagName('Title')[0].innerHTML,
