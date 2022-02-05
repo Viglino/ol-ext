@@ -79,6 +79,13 @@
     }),
     new ol.style.Style({
       image: new ol.style.RegularShape({ radius: 10, radius2: 5, points: 5, displacement: [0, 10], fill: new ol.style.Fill({ color: color }) }),
+      /** /
+      image: new ol.style.Icon({
+        src: 'https://cdn.pixabay.com/photo/2014/04/02/10/45/poi-304466_960_720.png',
+        scale: .05,
+        anchor: [0.5, 1]
+      }),
+      /**/
       stroke: new ol.style.Stroke({ color: color, width: 2}),
       fill: new ol.style.Fill({ color: fillcolor })
     })
@@ -89,12 +96,11 @@
   var filltransparent = [0,0,0,0];
   var transparentStyle = [
     new ol.style.Style({
-      image: new ol.style.RegularShape({ radius: 10, radius2: 5, points: 5, fill: new ol.style.Fill({ color: transparent }) }),
+      image: new ol.style.RegularShape({ radius: 10, radius2: 5, points: 5, displacement: [0, 10], fill: new ol.style.Fill({ color: transparent }) }),
       stroke: new ol.style.Stroke({ color: transparent, width: 2 }),
       fill: new ol.style.Fill({ color: filltransparent})
     })
   ];
-  transparentStyle[0].getImage().getAnchor()[1] += 10;
 
   // Intinite loop animation
   var animTab = [];

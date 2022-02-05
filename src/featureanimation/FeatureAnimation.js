@@ -17,6 +17,7 @@ import ol_layer_Vector from 'ol/layer/Vector'
 import ol_source_Vector from 'ol/source/Vector'
 
 import ol_render_getVectorContext from '../util/getVectorContext';
+import ol_ext_getVectorContextStyle from '../util/getVectorContextStyle'
 
 /** Feature animation base class
  * Use the {@link ol.Map#animateFeature} or {@link ol.layer.Vector#animateFeature} to animate a feature
@@ -78,8 +79,9 @@ ol_featureAnimation.prototype.drawGeom_ = function (e, geom, shadow) {
     // Prevent crach if the style is not ready (image not loaded)
     try {
       var vectorContext = e.vectorContext || ol_render_getVectorContext(e);
-      vectorContext.setStyle(style[i]);
-      if (style[i].getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
+      var s = ol_ext_getVectorContextStyle(e, style[i]);
+      vectorContext.setStyle(s);
+      if (s.getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
       else vectorContext.drawGeometry(geom);
     } catch(e) { /* ok */ }
   }

@@ -13,6 +13,7 @@ import {buffer as ol_extent_buffer} from 'ol/extent'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_render_getVectorContext from '../util/getVectorContext';
 import { ol_ext_olVersion } from '../util/ext'
+import ol_ext_getVectorContextStyle from '../util/getVectorContextStyle'
 
 /**
  *  A vector layer for animated cluster
@@ -209,34 +210,10 @@ ol_layer_AnimatedCluster.prototype.animate = function(e) {
             s2.getText().setOffsetX(offsetX - Math.sin(rot)*fontSize*(i - dl));
             s2.getText().setOffsetY(offsetY + Math.cos(rot)*fontSize*(i - dl));
             s2.getText().setText(t);
-            vectorContext.drawFeature(f, s2);
+            vectorContext.drawFeature(f, ol_ext_getVectorContextStyle(e, s2));
           });
         } else {
-          // Bug with Icon images
-          if (ol_ext_olVersion > 605 && ratio !== 1 && (s.getImage() instanceof ol_style_Icon)) {
-            if (s.getImage()) {
-              s = s.clone();
-              var img = s.getImage();
-              img.setScale(img.getScale()*ratio);
-              /* BUG anchor don't use ratio */
-              var anchor = img.getAnchor();
-              if (img.setDisplacement) {
-                var disp = img.getDisplacement();
-                if (disp) {
-                  disp[0] -= anchor[0]/ratio;
-                  disp[1] += anchor[1]/ratio;
-                  img.setAnchor([0,0]);
-                }
-              } else {
-                if (anchor) {
-                  anchor[0] /= ratio;
-                  anchor[1] /= ratio;
-                }
-              }
-              /**/
-            }
-          }
-          vectorContext.drawFeature(f, s);
+          vectorContext.drawFeature(f, ol_ext_getVectorContextStyle(e, s));
         }
         /* OLD VERSION OL < 4.3
         // Retina device
