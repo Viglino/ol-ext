@@ -93,24 +93,38 @@
       }
       // Create chart style
       var c = $("#color").val();
-      styleCache[k] = style = new ol.style.Style({
-        image: new ol.style.Chart({
-          type: $("#graph").val(), 
-          radius: (sel?1.2:1)*radius, 
-          offsetY: $("#graph").val()=='pie' ? 0 : (sel?-1.2:-1)*feature.get("radius"),
-          data: feature.get("data") || [10,30,20], 
-          colors: /,/.test(c) ? c.split(",") : c,
-          rotateWithView: true,
-          animation: animation,
-          stroke: new ol.style.Stroke({
-            color: $("#color").val()!="neon" ? "#fff":"#000",
-            width: 2
-          }),
+      styleCache[k] = style = [
+        new ol.style.Style({
+          image: new ol.style.Chart({
+            type: $("#graph").val(), 
+            radius: (sel?1.2:1)*radius, 
+            displacement: [
+              0,
+              $("#graph").val()==='bar' ? (sel?1.2:1)*radius : 0
+            ],
+            data: feature.get("data") || [10,30,20], 
+            colors: /,/.test(c) ? c.split(",") : c,
+            rotateWithView: true,
+            animation: animation,
+            stroke: new ol.style.Stroke({
+              color: $("#color").val()!="neon" ? "#fff":"#000",
+              width: 2
+            }),
+          })
+        }),
+        /*
+        new ol.style.Style({
+          image: new ol.style.Circle({
+            radius: 5,
+            stroke: new ol.style.Stroke({ color: '#fff', width: 1.5 }),
+            fill: new ol.style.Fill({ color: '#f00' })
+          })
         })
-      });
+        */
+      ];
     }
-    style.getImage().setAnimation(animation);
-    return [style];
+    style[0].getImage().setAnimation(animation);
+    return style;
   }
 
   // 30 random features with data: array of 4 values

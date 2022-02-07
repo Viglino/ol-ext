@@ -26,8 +26,9 @@ import {asString as ol_color_asString} from 'ol/color'
  *	@param {bool} options.snapToPixel use integral numbers of pixels, default true
  *	@param {_ol_style_Stroke_} options.stroke stroke style
  *	@param {String|Array<ol_color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
- *	@param {number} options.offsetX X offset in px
- *	@param {number} options.offsetY Y offset in px
+ *	@param {Array<number>} options.displacement
+ *	@param {number} options.offsetX X offset in px (deprecated, use displacement)
+ *	@param {number} options.offsetY Y offset in px (deprecated, use displacement)
  *	@param {number} options.animation step in an animation sequence [0,1]
  *	@param {number} options.max maximum value for bar chart
  * @see [Statistic charts example](../../examples/style/map.style.chart.html)
@@ -43,6 +44,7 @@ var ol_style_Chart = function(opt_options) {
     radius: options.radius + strokeWidth, 
     fill: new ol_style_Fill({color: [0,0,0]}),
     rotation: options.rotation,
+    displacement: options.displacement,
     snapToPixel: options.snapToPixel
   });
   if (options.scale) this.setScale(options.scale);
@@ -274,9 +276,11 @@ ol_style_Chart.prototype.renderChart_ = function(pixelratio) {
   context.restore();
 
   // Set Anchor
-  var anchor = this.getAnchor();
-  anchor[0] = c - this._offset[0];
-  anchor[1] = c - this._offset[1];
+  if (!this.setDisplacement) {
+    var anchor = this.getAnchor();
+    anchor[0] = c - this._offset[0];
+    anchor[1] = c - this._offset[1];
+  }
 };
 
 export default ol_style_Chart
