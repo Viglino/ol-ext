@@ -28171,9 +28171,9 @@ function _sunEquatorialPosition(sunEclLon, eclObliq) {
 }
 /** Get sun coordinates on earth
  * @param {string} time DateTime string, default yet
- * @returns {ol.coordinate}
+ * @returns {ol.coordinate} position in lonlat
  */
-ol.source.DayNight.prototype.getSunCoordinate = function (time) {
+ol.source.DayNight.prototype.getSunPosition = function (time) {
   var date = time ? new Date(time) : new Date();
   // Calculate the present UTC Julian Date. 
   // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 

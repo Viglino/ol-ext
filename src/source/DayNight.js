@@ -112,9 +112,9 @@ function _sunEquatorialPosition(sunEclLon, eclObliq) {
 
 /** Get sun coordinates on earth
  * @param {string} time DateTime string, default yet
- * @returns {ol.coordinate}
+ * @returns {ol.coordinate} position in lonlat
  */
-ol_source_DayNight.prototype.getSunCoordinate = function (time) {
+ol_source_DayNight.prototype.getSunPosition = function (time) {
   var date = time ? new Date(time) : new Date();
   
   // Calculate the present UTC Julian Date. 
@@ -128,7 +128,7 @@ ol_source_DayNight.prototype.getSunCoordinate = function (time) {
   var sunEclPos = _sunEclipticPosition(julianDay);
   var eclObliq = _eclipticObliquity(julianDay);
   var sunEqPos = _sunEquatorialPosition(sunEclPos.lambda, eclObliq);
-  
+
   return [sunEqPos.alpha - gst * 15, sunEqPos.delta]
 };
 
