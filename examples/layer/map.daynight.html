@@ -83,7 +83,8 @@
   });
 
   function setProjection(p) {
-    map.setView(new ol.View({ zoom: 0, center: [0,0], projection: p })); vectorSource.refresh()
+    map.setView(new ol.View({ zoom: 0, center: [0,0], projection: p })); 
+    vectorSource.refresh()
   }
   // DayNight source
   var vectorSource = new ol.source.DayNight({ });
@@ -91,6 +92,10 @@
   map.addLayer(new ol.layer.Vector({
     source: vectorSource,
     style: new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 5,
+        fill: new ol.style.Fill({ color: 'red' })
+      }),
       fill: new ol.style.Fill({
         color: [0,0,50,.5]
       })

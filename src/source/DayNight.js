@@ -110,6 +110,28 @@ function _sunEquatorialPosition(sunEclLon, eclObliq) {
   return {alpha: alpha, delta: delta};
 }
 
+/** Get sun coordinates on earth
+ * @param {string} time DateTime string, default yet
+ * @returns {ol.coordinate}
+ */
+ol_source_DayNight.prototype.getSunCoordinate = function (time) {
+  var date = time ? new Date(time) : new Date();
+  
+  // Calculate the present UTC Julian Date. 
+  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
+  var julianDay = (date / 86400000) + 2440587.5;
+
+  // Calculate Greenwich Mean Sidereal Time (low precision equation).
+  // http://aa.usno.navy.mil/faq/docs/GAST.php 
+  var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
+
+  var sunEclPos = _sunEclipticPosition(julianDay);
+  var eclObliq = _eclipticObliquity(julianDay);
+  var sunEqPos = _sunEquatorialPosition(sunEclPos.lambda, eclObliq);
+  
+  return [sunEqPos.alpha - gst * 15, sunEqPos.delta]
+};
+
 /** Get night-day separation line
  * @param {string} time DateTime string, default yet
  * @param {string} options use 'line' to get the separation line, 'day' to get the day polygon, 'night' to get the night polygon or 'daynight' to get both polygon, default 'night'
