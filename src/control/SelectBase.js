@@ -18,9 +18,11 @@ import ol_ext_element from '../util/element'
  * @fires select
  * @param {Object=} options
  *  @param {string} options.className control class name
+ *  @param {Element} options.content form element
  *  @param {Element | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *  @param {ol.Collection<ol.Feature>} options.features a collection of feature to search in, the collection will be kept in date while selection
  *  @param {ol.source.Vector | Array<ol.source.Vector>} options.source the source to search in if no features set
+ *  @param {string} options.btInfo ok button label
  */
 var ol_control_SelectBase = function(options) {
   if (!options) options = {};
@@ -45,14 +47,15 @@ var ol_control_SelectBase = function(options) {
   }
   if (options.className) element.classList.add(options.className);
 
-  element.appendChild(options.content);
+  var content = options.content || ol_ext_element.create('DIV');
+  element.appendChild(content);
 
   // OK button
   ol_ext_element.create('BUTTON', {
     html: options.btInfo || 'OK',
     className: 'ol-ok',
-    on: { 'click touchstart': this.doSelect.bind(this) },
-    parent: options.content
+    on: { 'click': this.doSelect.bind(this) },
+    parent: content
   });
 
   ol_control_Control.call(this, {
