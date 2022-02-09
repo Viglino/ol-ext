@@ -1,10 +1,14 @@
 import {VERSION as ol_util_VERSION} from 'ol/util'
 
 /*global ol*/
-if (window.ol && !ol.util) {
-  ol.util = {
-    VERSION: ol.VERSION || '5.3.0'
-  };
+if (window.ol) {
+  if (!ol.util) {
+    ol.util = {
+      VERSION: ol.VERSION || '5.3.0'
+    };
+  } else if (!ol.util.VERSION) {
+    ol.util.VERSION = ol.VERSION || '6.1.0'
+  }
 }
 var ol_ext_olVersion = ol_util_VERSION.split('.');
 ol_ext_olVersion = parseInt(ol_ext_olVersion[0])*100 + parseInt(ol_ext_olVersion[1]);

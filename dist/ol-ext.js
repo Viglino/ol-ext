@@ -1174,10 +1174,14 @@ ol.ext.getMapCanvas = function(map) {
 };
   
 /*global ol*/
-if (window.ol && !ol.util) {
-  ol.util = {
-    VERSION: ol.VERSION || '5.3.0'
-  };
+if (window.ol) {
+  if (!ol.util) {
+    ol.util = {
+      VERSION: ol.VERSION || '5.3.0'
+    };
+  } else if (!ol.util.VERSION) {
+    ol.util.VERSION = ol.VERSION || '6.1.0'
+  }
 }
 ol.ext.olVersion = ol.util.VERSION.split('.');
 ol.ext.olVersion = parseInt(ol.ext.olVersion[0])*100 + parseInt(ol.ext.olVersion[1]);
