@@ -656,6 +656,25 @@ ol_control_PrintDialog.prototype._labels = {
     printBt: 'Imprimer',
     cancel: 'annuler'
   },
+  de: {
+    title: 'Drucken',
+    orientation: 'Ausrichtung',
+    portrait: 'Hochformat',
+    landscape: 'Querformat',
+    size: 'Papierformat',
+    custom: 'Bildschirmgröße',
+    margin: 'Rand',
+    scale: 'Maßstab',
+    legend: 'Legende',
+    north: 'Nordpfeil',
+    mapTitle: 'Kartentitel',
+    saveas: 'Speichern als...',
+    saveLegend: 'Legende speichern...',
+    copied: '✔ In die Zwischenablage kopiert',
+    errorMsg: 'Kann Karte nicht speichern...',
+    printBt: 'Drucken...',
+    cancel: 'abbrechen'
+  },
   zh:{
     title: '打印',
     orientation: '方向',
