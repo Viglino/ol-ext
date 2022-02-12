@@ -599,7 +599,8 @@ ol.ext.element = {};
  * @param {*} options
  *  @param {string} options.className className The element class name 
  *  @param {Element} options.parent Parent to append the element as child
- *  @param {Element|string} options.html Content of the element
+ *  @param {Element|string} [options.html] Content of the element (if text is not set)
+ *  @param {string} [options.text] Text content (if html is not set)
  *  @param {Element|string} [options.options] when tagName = SELECT a list of options as key:value to add to the select
  *  @param {string} options.* Any other attribut to add to the element
  */
@@ -618,6 +619,10 @@ ol.ext.element.create = function (tagName, options) {
       switch (attr) {
         case 'className': {
           if (options.className && options.className.trim) elt.setAttribute('class', options.className.trim());
+          break;
+        }
+        case 'text': {
+          elt.innerText = options.text;
           break;
         }
         case 'html': {
