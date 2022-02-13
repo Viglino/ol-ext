@@ -16474,19 +16474,18 @@ ol.control.VideoRecorder.prototype.resume = function () {
  * @fires capabilities
  * @extends {ol.control.Button}
  * @param {*} options
- *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
- *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
- *  @param {string} options.placeholder input placeholder, default 'service url...'
- *  @param {string} options.title dialog title, default 'WMS'
- *  @param {string} options.searchLabel Label for search button, default 'search'
- *  @param {string} options.loadLabel Label for load button, default 'load'
- *  @param {boolean} options.popupLayer Use a popup for the layers, default false
- *  @param {*} options.services a key/url object of services for quick access in a menu
- *  @param {Array<string>} options.srs an array of supported srs, default map projection code or 'EPSG:3857'
- *  @param {number} options.timeout Timeout for getCapabilities request, default 1000
- *  @param {boolean} options.cors Use CORS, default false
- *  @param {boolean} options.trace Log layer info, default false
- *  @param {function} [options.onselect] callback function that takes a layer and layer options on select layer
+ *  @param {string|Element} [options.target] the target to set the dialog, use document.body to have fullwindow dialog
+ *  @param {string} [options.proxy] proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
+ *  @param {string} [options.placeholder='service url...'] input placeholder, default 'service url...'
+ *  @param {string} [options.title=WMS] dialog title, default 'WMS'
+ *  @param {string} [options.searchLabel='search'] Label for search button, default 'search'
+ *  @param {string} [options.loadLabel='load'] Label for load button, default 'load'
+ *  @param {Array<string>} [options.srs] an array of supported srs, default map projection code or 'EPSG:3857'
+ *  @param {number} [options.timeout=1000] Timeout for getCapabilities request, default 1000
+ *  @param {boolean} [options.cors=false] Use CORS, default false
+ *  @param {string} [options.optional] a list of optional url properties (when set in the request url), separated with ','
+ *  @param {boolean} [options.trace=false] Log layer info, default false
+ *  @param {*} [options.services] a key/url object of services for quick access in a menu
  */
 ol.control.WMSCapabilities = function (options) {
   options = options || {};
@@ -16509,6 +16508,7 @@ ol.control.WMSCapabilities = function (options) {
   this.set('trace', options.trace);
   this.set('title', options.title);
   this.set('loadLabel', options.loadLabel);
+  this.set('optional', options.optional);
   // Dialog
   this.createDialog(options);
   // Default version
@@ -16584,7 +16584,7 @@ ol.control.WMSCapabilities.prototype.labels = {
   formProjection: 'Projection:',
   formCrossOrigin: 'CrossOrigin:',
   formVersion: 'Version:',
-  formAttribution: 'Attribution:'
+  formAttribution: 'Attribution:',
 };
 /** Create dialog
  * @private
@@ -16898,6 +16898,7 @@ ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
   this._elements.formProjection.value = this.getMap().getView().getProjection().getCode();
   this._elements.formFormat.selectedIndex = 0;
   var map = options.map || '';
+  var optional = {};
   if (search) {
     search = search.replace(/^\?/,'').split('&');
     search.forEach(function(s) {
@@ -16925,13 +16926,31 @@ ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
           }
         }
       }
+      // Check optionals
+      if (this.get('optional')) {
+        this.get('optional').split(',').forEach(function(o) {
+          if (o === s[0]) {
+            optional[o] = s[1];
+          }
+        }.bind(this))
+      }
     }.bind(this))
   }
-  // Fill form
-  this._elements.input.value = (url || '') + (map ? '?map='+map : '');
-  this.clearForm();
+  // Get request params
   var request = this.getRequestParam(options);
-  if (map) request.MAP = map;
+  var opt = [];
+  if (map) {
+    request.MAP = map;
+    opt.push('map='+map);
+  }
+  for (var o in optional) {
+    request[o] = optional[o];
+    opt.push(o+'='+optional[o]);
+  }
+  // Fill form
+  this._elements.input.value = (url || '') + (opt ? '?'+opt.join('&') : '');
+  this.clearForm();
+  // Sen drequest
   if (this._proxy) {
     var q = '';
     for (var r in request) q += (q?'&':'')+r+'='+request[r];
@@ -16977,7 +16996,6 @@ ol.control.WMSCapabilities.prototype.clearForm = function() {
  * @param {*} caps JSON capabilities
  */
 ol.control.WMSCapabilities.prototype.showCapabilities = function(caps) {
-  console.log(caps)
   this._elements.result.classList.add('ol-visible')
 //  console.log(caps)
   var list = [];
@@ -17303,18 +17321,18 @@ ol.control.WMSCapabilities.prototype.loadLayer = function(url, layerName, onload
  * @fires capabilities
  * @extends {ol.control.WMSCapabilities}
  * @param {*} options
- *  @param {string|Element} options.target the target to set the dialog, use document.body to have fullwindow dialog
- *  @param {string} options.proxy proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
- *  @param {string} options.placeholder input placeholder, default 'service url...'
- *  @param {string} options.title dialog title, default 'WMS'
- *  @param {string} options.searchLabel Label for search button, default 'search'
- *  @param {string} options.loadLabel Label for load button, default 'load'
- *  @param {boolean} options.popupLayer Use a popup for the layers, default false
- *  @param {*} options.services a key/url object of services for quick access in a menu
- *  @param {Array<string>} options.srs an array of supported srs, default map projection code or 'EPSG:3857'
- *  @param {number} options.timeout Timeout for getCapabilities request, default 1000
- *  @param {boolean} options.cors Use CORS, default false
- *  @param {boolean} options.trace Log layer info, default false
+ *  @param {string|Element} [options.target] the target to set the dialog, use document.body to have fullwindow dialog
+ *  @param {string} [options.proxy] proxy to use when requesting Getcapabilites, default none (suppose the service use CORS)
+ *  @param {string} [options.placeholder='service url...'] input placeholder, default 'service url...'
+ *  @param {string} [options.title=WMTS] dialog title, default 'WMTS'
+ *  @param {string} [options.searchLabel='search'] Label for search button, default 'search'
+ *  @param {string} [options.loadLabel='load'] Label for load button, default 'load'
+ *  @param {Array<string>} [options.srs] an array of supported srs, default map projection code or 'EPSG:3857'
+ *  @param {number} [options.timeout=1000] Timeout for getCapabilities request, default 1000
+ *  @param {boolean} [options.cors=false] Use CORS, default false
+ *  @param {string} [options.optional] a list of optional url properties (when set in the request url), separated with ','
+ *  @param {boolean} [options.trace=false] Log layer info, default false
+ *  @param {*} [options.services] a key/url object of services for quick access in a menu
  */
 ol.control.WMTSCapabilities = function (options) {
   options = options || {};
