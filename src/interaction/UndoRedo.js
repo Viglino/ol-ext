@@ -370,7 +370,15 @@ ol_interaction_UndoRedo.prototype.blockStart = function (name) {
 /** @private
  */
 ol_interaction_UndoRedo.prototype._onInteraction.beforesplit = function() {
-  this.blockStart('split');
+  // Check modify before split
+  var l = this._undoStack.getLength();
+  if (l>2 
+    && this._undoStack.item(l-1).type === 'blockend'
+    && this._undoStack.item(l-2).type === 'changegeometry') {
+    this._undoStack.pop();
+  } else {
+    this.blockStart('split');
+  }
 };
 ol_interaction_UndoRedo.prototype._onInteraction.deletestart = function() {
   this.blockStart('delete');
