@@ -30794,9 +30794,11 @@ ol.layer.Geoportail = function(layer, options, tileoptions) {
     // throw new Error("ol.layer.Geoportail: no layer definition for \""+layer+"\"");
   }
   // tile options & default params
-  for (var i in capabilities) if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
+  for (var i in capabilities) {
+    if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
+  }
   this._originators = capabilities.originators;
-  if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
+  if (!tileoptions.gppKey && !tileoptions.key) tileoptions.gppKey = options.gppKey || options.key;
   if (!options.source) options.source = new ol.source.Geoportail(layer, tileoptions);
   if (!options.title) options.title = capabilities.title;
   if (!options.name) options.name = layer;
