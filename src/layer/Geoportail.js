@@ -46,11 +46,13 @@ var ol_layer_Geoportail = function(layer, options, tileoptions) {
   }
 
   // tile options & default params
-  for (var i in capabilities) if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
+  for (var i in capabilities) {
+    if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
+  }
 
   this._originators = capabilities.originators;
 
-  if (!tileoptions.gppKey) tileoptions.gppKey = options.gppKey || options.key;
+  if (!tileoptions.gppKey && !tileoptions.key) tileoptions.gppKey = options.gppKey || options.key;
   if (!options.source) options.source = new ol_source_Geoportail(layer, tileoptions);
   if (!options.title) options.title = capabilities.title;
   if (!options.name) options.name = layer;
