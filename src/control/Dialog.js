@@ -177,6 +177,7 @@ ol_control_Dialog.prototype.setContent = function(options) {
   this.element.className = this.get('className');
   if (typeof(options) === 'string') options = { content: options };
   options = options || {};
+  this.setProgress(false);
   if (options.max) this.setProgress(0, options.max);
   if (options.progress !== undefined) this.setProgress(options.progress);
   //this.element.className = 'ol-ext-dialog' + (this.get('zoom') ? ' ol-zoom' : '');
