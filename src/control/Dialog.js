@@ -267,12 +267,23 @@ ol_control_Dialog.prototype._onButton = function(button, callback) {
     e.preventDefault();
     if (button!=='submit' || this.get('closeOnSubmit')!==false) this.hide();
     var inputs = {};
+    // Get inputs elements
     this.element.querySelectorAll('form input').forEach (function(input) {
-      if (input.className) inputs[input.className] = input;
+      if (input.className) {
+        input.className.split(' ').forEach(function(n) {
+          inputs[n] = input;
+        })
+      }
     });
+    // Get textarea elements
     this.element.querySelectorAll('form textarea').forEach (function(input) {
-      if (input.className) inputs[input.className] = input;
+      if (input.className) {
+        input.className.split(' ').forEach(function(n) {
+          inputs[n] = input;
+        })
+      }
     });
+    // Send an event
     this.dispatchEvent ({ type: 'button', button: button, inputs: inputs });
     if (typeof(callback) === 'function') callback(button, inputs);
   }.bind(this);
