@@ -270,6 +270,9 @@ ol_control_Dialog.prototype._onButton = function(button, callback) {
     this.element.querySelectorAll('form input').forEach (function(input) {
       if (input.className) inputs[input.className] = input;
     });
+    this.element.querySelectorAll('form textarea').forEach (function(input) {
+      if (input.className) inputs[input.className] = input;
+    });
     this.dispatchEvent ({ type: 'button', button: button, inputs: inputs });
     if (typeof(callback) === 'function') callback(button, inputs);
   }.bind(this);
