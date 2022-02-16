@@ -11333,11 +11333,11 @@ ol.control.PrintDialog = function(options) {
   });
   this.formats.forEach(function(format, i) {
     ol.ext.element.create('OPTION', {
-      html: format.title,
+      html: this.i18n(format.title),
       value: i,
       parent: saveLegend
     });
-  });
+  }.bind(this));
   // Print
   var prButtons = ol.ext.element.create('DIV', {
     className: 'ol-ext-buttons',

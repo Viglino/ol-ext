@@ -436,11 +436,11 @@ var ol_control_PrintDialog = function(options) {
   });
   this.formats.forEach(function(format, i) {
     ol_ext_element.create('OPTION', {
-      html: format.title,
+      html: this.i18n(format.title),
       value: i,
       parent: saveLegend
     });
-  });
+  }.bind(this));
 
   // Print
   var prButtons = ol_ext_element.create('DIV', {
