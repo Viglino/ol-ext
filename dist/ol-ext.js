@@ -6967,8 +6967,8 @@ ol.control.Dialog.prototype.setContent = function(options) {
   if (this.get('zoom')) this.element.classList.add('ol-zoom');
   else this.element.classList.remove('ol-zoom');
   if (options.className) {
-    options.className.split(' ').forEach(function() {
-      this.element.classList.add(options.className);
+    options.className.split(' ').forEach(function(c) {
+      this.element.classList.add(c);
     }.bind(this));
   }
   var form = this.element.querySelector('form');
@@ -7041,33 +7041,32 @@ ol.control.Dialog.prototype.setProgress = function(val, max, message) {
  * @returns {function}
  * @private
  */
-ol.control.Dialog.prototype._onButton = function(button, callback) {
+ ol.control.Dialog.prototype._onButton = function(button, callback) {
   // Dispatch a button event
   var fn = function(e) {
     e.preventDefault();
     if (button!=='submit' || this.get('closeOnSubmit')!==false) this.hide();
-    var inputs = {};
-    // Get inputs elements
-    this.element.querySelectorAll('form input').forEach (function(input) {
-      if (input.className) {
-        input.className.split(' ').forEach(function(n) {
-          inputs[n] = input;
-        })
-      }
-    });
-    // Get textarea elements
-    this.element.querySelectorAll('form textarea').forEach (function(input) {
-      if (input.className) {
-        input.className.split(' ').forEach(function(n) {
-          inputs[n] = input;
-        })
-      }
-    });
-    // Send an event
+    var inputs = this.getInputs();
     this.dispatchEvent ({ type: 'button', button: button, inputs: inputs });
     if (typeof(callback) === 'function') callback(button, inputs);
   }.bind(this);
   return fn;
+};
+/** Get inputs, textarea an select of the dialog by classname 
+ * @return {Object} a {key:value} list of Elements by classname
+ */
+ol.control.Dialog.prototype.getInputs = function() {
+  var inputs = {};
+  ['input', 'textarea', 'select'].forEach(function(type) {
+    this.element.querySelectorAll('form '+type).forEach (function(input) {
+      if (input.className) {
+        input.className.split(' ').forEach(function(n) {
+          inputs[n] = input;
+        })
+      }
+    });
+  }.bind(this));
+  return inputs;
 };
 /** Close the dialog 
  */
@@ -11109,7 +11108,7 @@ ol.control.PrintDialog = function(options) {
   });
   for (s in this.marginSize) {
     ol.ext.element.create('OPTION', {
-      html: s + ' - ' + this.marginSize[s] + ' mm',
+      html: (this._labels[this._lang][s] || s) + ' - ' + this.marginSize[s] + ' mm',
       value: this.marginSize[s],
       parent: margin
     });
@@ -11247,11 +11246,11 @@ ol.control.PrintDialog = function(options) {
       return;
     }
     ol.ext.element.create('OPTION', {
-      html: format.title,
+      html: this.i18n(format.title),
       value: i,
       parent: save
     });
-  });
+  }.bind(this));
   // Save Legend
   li = ol.ext.element.create('LI',{ 
     className: 'ol-savelegend',
@@ -11523,6 +11522,13 @@ ol.control.PrintDialog.prototype._labels = {
     copied: '✔ Copied to clipboard',
     errorMsg: 'Can\'t save map canvas...',
     printBt: 'Print...',
+    clipboardFormat: 'copy to clipboard...',
+    jpegFormat: 'save as jpeg',
+    pngFormat: 'save as png',
+    pdfFormat: 'save as pdf',
+    none: 'none',
+    small: 'small',
+    large: 'large',  
     cancel: 'cancel'
   },
   fr: {
@@ -11542,6 +11548,13 @@ ol.control.PrintDialog.prototype._labels = {
     copied: '✔ Carte copiée',
     errorMsg: 'Impossible d\'enregistrer la carte',
     printBt: 'Imprimer',
+    clipboardFormat: 'copier dans le presse-papier...',
+    jpegFormat: 'enregistrer un jpeg',
+    pngFormat: 'enregistrer un png',
+    pdfFormat: 'enregistrer un pdf',
+    none: 'aucune',
+    small: 'petites',
+    large: 'larges',  
     cancel: 'annuler'
   },
   de: {
@@ -11561,6 +11574,13 @@ ol.control.PrintDialog.prototype._labels = {
     copied: '✔ In die Zwischenablage kopiert',
     errorMsg: 'Kann Karte nicht speichern...',
     printBt: 'Drucken...',
+    clipboardFormat: 'in die Zwischenablage kopieren...',
+    jpegFormat: 'speichern als jpeg',
+    pngFormat: 'speichern als png',
+    pdfFormat: 'speichern als pdf',
+    none: 'kein',
+    small: 'klein',
+    large: 'groß',  
     cancel: 'abbrechen'
   },
   zh:{
@@ -11608,19 +11628,19 @@ ol.control.PrintDialog.prototype.legendOptions = {
 };
 /** List of print image file formats */
 ol.control.PrintDialog.prototype.formats = [{
-    title: 'copy to clipboard',
+    title: 'clipboardFormat',
     imageType: 'image/png',
     clipboard: true
   }, {
-    title: 'save as jpeg',
+    title: 'jpegFormat',
     imageType: 'image/jpeg',
     quality: .8
   }, {
-    title: 'save as png',
+    title: 'pngFormat',
     imageType: 'image/png',
     quality: .8
   }, {
-    title: 'save as pdf',
+    title: 'pdfFormat',
     imageType: 'image/jpeg',
     pdf: true
   }
