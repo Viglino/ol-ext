@@ -184,8 +184,8 @@ ol_control_Dialog.prototype.setContent = function(options) {
   if (this.get('zoom')) this.element.classList.add('ol-zoom');
   else this.element.classList.remove('ol-zoom');
   if (options.className) {
-    options.className.split(' ').forEach(function() {
-      this.element.classList.add(options.className);
+    options.className.split(' ').forEach(function(c) {
+      this.element.classList.add(c);
     }.bind(this));
   }
   var form = this.element.querySelector('form');
@@ -261,33 +261,33 @@ ol_control_Dialog.prototype.setProgress = function(val, max, message) {
  * @returns {function}
  * @private
  */
-ol_control_Dialog.prototype._onButton = function(button, callback) {
+ ol_control_Dialog.prototype._onButton = function(button, callback) {
   // Dispatch a button event
   var fn = function(e) {
     e.preventDefault();
     if (button!=='submit' || this.get('closeOnSubmit')!==false) this.hide();
-    var inputs = {};
-    // Get inputs elements
-    this.element.querySelectorAll('form input').forEach (function(input) {
-      if (input.className) {
-        input.className.split(' ').forEach(function(n) {
-          inputs[n] = input;
-        })
-      }
-    });
-    // Get textarea elements
-    this.element.querySelectorAll('form textarea').forEach (function(input) {
-      if (input.className) {
-        input.className.split(' ').forEach(function(n) {
-          inputs[n] = input;
-        })
-      }
-    });
-    // Send an event
+    var inputs = this.getInputs();
     this.dispatchEvent ({ type: 'button', button: button, inputs: inputs });
     if (typeof(callback) === 'function') callback(button, inputs);
   }.bind(this);
   return fn;
+};
+
+/** Get inputs, textarea an select of the dialog by classname 
+ * @return {Object} a {key:value} list of Elements by classname
+ */
+ol_control_Dialog.prototype.getInputs = function() {
+  var inputs = {};
+  ['input', 'textarea', 'select'].forEach(function(type) {
+    this.element.querySelectorAll('form '+type).forEach (function(input) {
+      if (input.className) {
+        input.className.split(' ').forEach(function(n) {
+          inputs[n] = input;
+        })
+      }
+    });
+  }.bind(this));
+  return inputs;
 };
 
 /** Close the dialog 
