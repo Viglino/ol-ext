@@ -67,7 +67,6 @@ var ol_control_PrintDialog = function(options) {
     });
   }
   
-
   // Print control
   options.target = ol_ext_element.create('DIV');
   var printCtrl = this._printCtrl = new ol_control_Print(options);
@@ -204,7 +203,7 @@ var ol_control_PrintDialog = function(options) {
   });
   for (s in this.marginSize) {
     ol_ext_element.create('OPTION', {
-      html: s + ' - ' + this.marginSize[s] + ' mm',
+      html: (this._labels[this._lang][s] || s) + ' - ' + this.marginSize[s] + ' mm',
       value: this.marginSize[s],
       parent: margin
     });
@@ -348,11 +347,11 @@ var ol_control_PrintDialog = function(options) {
       return;
     }
     ol_ext_element.create('OPTION', {
-      html: format.title,
+      html: this.i18n(format.title),
       value: i,
       parent: save
     });
-  });
+  }.bind(this));
 
   // Save Legend
   li = ol_ext_element.create('LI',{ 
@@ -635,6 +634,13 @@ ol_control_PrintDialog.prototype._labels = {
     copied: '✔ Copied to clipboard',
     errorMsg: 'Can\'t save map canvas...',
     printBt: 'Print...',
+    clipboardFormat: 'copy to clipboard...',
+    jpegFormat: 'save as jpeg',
+    pngFormat: 'save as png',
+    pdfFormat: 'save as pdf',
+    none: 'none',
+    small: 'small',
+    large: 'large',  
     cancel: 'cancel'
   },
   fr: {
@@ -654,6 +660,13 @@ ol_control_PrintDialog.prototype._labels = {
     copied: '✔ Carte copiée',
     errorMsg: 'Impossible d\'enregistrer la carte',
     printBt: 'Imprimer',
+    clipboardFormat: 'copier dans le presse-papier...',
+    jpegFormat: 'enregistrer un jpeg',
+    pngFormat: 'enregistrer un png',
+    pdfFormat: 'enregistrer un pdf',
+    none: 'aucune',
+    small: 'petites',
+    large: 'larges',  
     cancel: 'annuler'
   },
   de: {
@@ -673,6 +686,13 @@ ol_control_PrintDialog.prototype._labels = {
     copied: '✔ In die Zwischenablage kopiert',
     errorMsg: 'Kann Karte nicht speichern...',
     printBt: 'Drucken...',
+    clipboardFormat: 'in die Zwischenablage kopieren...',
+    jpegFormat: 'speichern als jpeg',
+    pngFormat: 'speichern als png',
+    pdfFormat: 'speichern als pdf',
+    none: 'kein',
+    small: 'klein',
+    large: 'groß',  
     cancel: 'abbrechen'
   },
   zh:{
@@ -724,19 +744,19 @@ ol_control_PrintDialog.prototype.legendOptions = {
 
 /** List of print image file formats */
 ol_control_PrintDialog.prototype.formats = [{
-    title: 'copy to clipboard',
+    title: 'clipboardFormat',
     imageType: 'image/png',
     clipboard: true
   }, {
-    title: 'save as jpeg',
+    title: 'jpegFormat',
     imageType: 'image/jpeg',
     quality: .8
   }, {
-    title: 'save as png',
+    title: 'pngFormat',
     imageType: 'image/png',
     quality: .8
   }, {
-    title: 'save as pdf',
+    title: 'pdfFormat',
     imageType: 'image/jpeg',
     pdf: true
   }
