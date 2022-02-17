@@ -1209,6 +1209,13 @@ body > .ol-ext-dialog > form {
   -webkit-box-shadow: 0.6em 0 0 1em #fff;
           box-shadow: 0.6em 0 0 1em #fff;
 }
+.ol-imageline.ol-scroll0.ol-arrow:before {
+  display: none;
+}
+.ol-imageline.ol-scroll1.ol-arrow:after {
+  display: none;
+}
+
 
 .ol-imageline .ol-image {
   position: relative;
