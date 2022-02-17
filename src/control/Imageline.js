@@ -212,9 +212,29 @@ ol_control_Imageline.prototype._setScrolling = function() {
   ol_ext_element.scrollDiv(elt, {
     // Prevent selection when moving
     onmove: function(b) {
-      this._moving=b; 
+      this._moving = b;
     }.bind(this)
   });
+  elt.addEventListener('scroll', this._updateScrollBounds.bind(this));
+  this._updateScrollBounds();
+};
+
+/** Set element scrolling with a acceleration effect on desktop
+ * (on mobile it uses the scroll of the browser)
+ * @private
+ */
+ol_control_Imageline.prototype._updateScrollBounds = function() {
+  var elt = this._scrolldiv;
+  if (elt.scrollLeft < 5) {
+    this.element.classList.add('ol-scroll0')
+  } else {
+    this.element.classList.remove('ol-scroll0');
+  }
+  if (elt.scrollWidth - elt.scrollLeft - elt.offsetWidth < 5) {
+    this.element.classList.add('ol-scroll1');
+  } else {
+    this.element.classList.remove('ol-scroll1');
+  }
 };
 
 /**
@@ -302,6 +322,7 @@ ol_control_Imageline.prototype.refresh = function() {
   if (this._select && this._select.feature && !this._select.elt) {
     addImage(this._select.feature);
   }
+  this._updateScrollBounds();
 };
 
 /** Center image line on a feature
