@@ -4,7 +4,7 @@ import ol_ext_input_List from './List'
 
 /** Checkbox input
  * @constructor
- * @extends {ol_ext_input_Slider}
+ * @extends {ol_ext_input_List}
  * @param {*} options
  *  @param {string} [options.className]
  *  @param {Element} [options.input] input element, if non create one

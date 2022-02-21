@@ -14,7 +14,8 @@
   list-style: none;
   white-space: nowrap;
 }
-.ol-input-popup:hover .ol-popup {
+.ol-input-popup.ol-hover:hover .ol-popup,
+.ol-input-popup.ol-focus .ol-popup {
   display: block;
 }
 .ol-input-popup.ol-right .ol-popup {

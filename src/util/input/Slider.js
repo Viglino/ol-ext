@@ -7,8 +7,9 @@ import ol_ext_input_Base from './Base'
  * @extends {ol_ext_input_Base}
  * @param {*} options
  *  @param {string} [options.className]
- *  @param {Element} [options.input] input element, if non create one
- *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {Element} [options.input] input element, if non create one (use parent to tell where)
+ *  @param {Element} [options.parent] element to use as parent if no input option
+ *  @param {booelan} [options.hover=true] show popup on hover
  *  @param {string} [options.align=left] align popup left/right
  *  @param {string} [options.type] a slide type as 'size'
  *  @param {number} [options.min] min value, default use input min
@@ -27,6 +28,7 @@ var ol_ext_input_Slider = function(options) {
 
   this.element = ol_ext_element.create('DIV', {
     className: 'ol-input-slider' 
+      + (options.hover !== false ? ' ol-hover' : '')
       + (options.type ? ' ol-' + options.type : '')
       + (options.className ? ' ' + options.className : '')
   });

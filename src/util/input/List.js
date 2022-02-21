@@ -10,9 +10,11 @@ import ol_ext_input_Base from './Base'
  *  @param {Array<Object>} options.options an array of options to place in the popup { html:, title:, value: }
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {boolean} [options.hover=false] show popup on hover, default false or true if disabled or hidden
+ *  @param {boolean} [options.hidden] the input is display:none
+ *  @param {boolean} [options.disabled] disable input
  *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
  *  @param {string} [options.align=left] align popup left/right/middle
- *  @param {boolean} [options.fixed=false] no popup
  */
 var ol_ext_input_List = function(options) {
   options = options || {};
@@ -20,9 +22,10 @@ var ol_ext_input_List = function(options) {
   ol_ext_input_Base.call(this, options);
 
   this._content = ol_ext_element.create('DIV');
+  if (options.hidden || options.disabled) options.hover = true;
   this.element = ol_ext_element.create('DIV', {
     html: this._content,
-    className: 'ol-input-popup'
+    className: 'ol-input-popup' + (options.hover ? ' ol-hover' : '' )
   });
   this.set('hideOnClick', options.hideOnClick !== false);
   if (options.className) this.element.classList.add(options.className);
@@ -57,13 +60,15 @@ var ol_ext_input_List = function(options) {
         html: option.html,
         title: option.title || option.value,
         className: 'ol-option',
-        click: function() {
-          this.setValue(option.value);
-          if (this.get('hideOnClick')) {
-            popup.style.display = 'none';
-            setTimeout(function() { popup.style.display = ''; }, 200);
-          }
-        }.bind(this),
+        on: { 
+          pointerdown: function() {
+            this.setValue(option.value);
+            if (this.get('hideOnClick')) {
+              popup.style.display = 'none';
+              setTimeout(function() { popup.style.display = ''; }, 200);
+            }
+          }.bind(this)
+        },
         parent: this.popup
       })
     })

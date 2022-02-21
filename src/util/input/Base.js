@@ -44,6 +44,18 @@ var ol_ext_input_Base = function(options) {
   if (options.checked !== undefined) input.checked = !!options.checked;
   if (options.val !== undefined) input.value = options.val;
   if (options.hidden) input.style.display = 'none';
+  input.addEventListener('focus', function() {
+    if (this.element) this.element.classList.add('ol-focus');
+  }.bind(this))
+  var tout;
+  input.addEventListener('focusout', function() {
+    if (this.element) {
+      if (tout) clearTimeout(tout);
+      tout = setTimeout(function() {
+        this.element.classList.remove('ol-focus');
+      }.bind(this), 0);
+    }
+  }.bind(this))
 };
 ol_ext_inherits(ol_ext_input_Base, ol_Object);
 
