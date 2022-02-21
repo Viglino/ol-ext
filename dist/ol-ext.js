@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.22
+ * @version v3.2.23
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -2043,6 +2043,18 @@ ol.ext.input.Base = function(options) {
   if (options.checked !== undefined) input.checked = !!options.checked;
   if (options.val !== undefined) input.value = options.val;
   if (options.hidden) input.style.display = 'none';
+  input.addEventListener('focus', function() {
+    if (this.element) this.element.classList.add('ol-focus');
+  }.bind(this))
+  var tout;
+  input.addEventListener('focusout', function() {
+    if (this.element) {
+      if (tout) clearTimeout(tout);
+      tout = setTimeout(function() {
+        this.element.classList.remove('ol-focus');
+      }.bind(this), 0);
+    }
+  }.bind(this))
 };
 ol.ext.inherits(ol.ext.input.Base, ol.Object);
 /** Listen to drag event
@@ -2099,8 +2111,9 @@ ol.ext.input.Base.prototype.getInputElement = function() {
  * @extends {ol.ext.input.Base}
  * @param {*} options
  *  @param {string} [options.className]
- *  @param {Element} [options.input] input element, if non create one
- *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {Element} [options.input] input element, if non create one (use parent to tell where)
+ *  @param {Element} [options.parent] element to use as parent if no input option
+ *  @param {booelan} [options.hover=true] show popup on hover
  *  @param {string} [options.align=left] align popup left/right
  *  @param {string} [options.type] a slide type as 'size'
  *  @param {number} [options.min] min value, default use input min
@@ -2117,6 +2130,7 @@ ol.ext.input.Slider = function(options) {
   this.set('overflow', !!options.overflow);
   this.element = ol.ext.element.create('DIV', {
     className: 'ol-input-slider' 
+      + (options.hover !== false ? ' ol-hover' : '')
       + (options.type ? ' ol-' + options.type : '')
       + (options.className ? ' ' + options.className : '')
   });
@@ -2830,17 +2844,20 @@ ol.ext.input.Color.prototype.getColorID = function(color) {
  *  @param {Array<Object>} options.options an array of options to place in the popup { html:, title:, value: }
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
+ *  @param {boolean} [options.hover=false] show popup on hover, default false or true if disabled or hidden
+ *  @param {boolean} [options.hidden] the input is display:none
+ *  @param {boolean} [options.disabled] disable input
  *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
  *  @param {string} [options.align=left] align popup left/right/middle
- *  @param {boolean} [options.fixed=false] no popup
  */
 ol.ext.input.List = function(options) {
   options = options || {};
   ol.ext.input.Base.call(this, options);
   this._content = ol.ext.element.create('DIV');
+  if (options.hidden || options.disabled) options.hover = true;
   this.element = ol.ext.element.create('DIV', {
     html: this._content,
-    className: 'ol-input-popup'
+    className: 'ol-input-popup' + (options.hover ? ' ol-hover' : '' )
   });
   this.set('hideOnClick', options.hideOnClick !== false);
   if (options.className) this.element.classList.add(options.className);
@@ -2873,13 +2890,15 @@ ol.ext.input.List = function(options) {
         html: option.html,
         title: option.title || option.value,
         className: 'ol-option',
-        click: function() {
-          this.setValue(option.value);
-          if (this.get('hideOnClick')) {
-            popup.style.display = 'none';
-            setTimeout(function() { popup.style.display = ''; }, 200);
-          }
-        }.bind(this),
+        on: { 
+          pointerdown: function() {
+            this.setValue(option.value);
+            if (this.get('hideOnClick')) {
+              popup.style.display = 'none';
+              setTimeout(function() { popup.style.display = ''; }, 200);
+            }
+          }.bind(this)
+        },
         parent: this.popup
       })
     })
@@ -2922,7 +2941,7 @@ ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
 
 /** Checkbox input
  * @constructor
- * @extends {ol.ext.input.Slider}
+ * @extends {ol.ext.input.List}
  * @param {*} options
  *  @param {string} [options.className]
  *  @param {Element} [options.input] input element, if non create one
@@ -2973,7 +2992,7 @@ ol.ext.inherits(ol.ext.input.Switch, ol.ext.input.Checkbox);
 
 /** Checkbox input
  * @constructor
- * @extends {ol.ext.input.Slider}
+ * @extends {ol.ext.input.List}
  * @param {*} options
  *  @param {string} [options.className]
  *  @param {Element} [options.input] input element, if non create one
