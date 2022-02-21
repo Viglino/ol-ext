@@ -902,7 +902,6 @@ ol.ext.element.getFixedOffset = function(elt) {
       offset.top += r.top; 
       return offset;
     }
-    console.log(parent, offset)
     return getOffset(parent.offsetParent)
   }
   return getOffset(elt.offsetParent)
