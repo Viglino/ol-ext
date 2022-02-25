@@ -41,7 +41,7 @@ import ol_control_Compass from './Compass';
  */
 var ol_control_PrintDialog = function(options) {
   if (!options) options = {};
-  this._lang = options.lang;
+  this._lang = options.lang || 'en';
 
   var element = ol_ext_element.create('DIV', {
     className: (options.className || 'ol-print') + ' ol-unselectable ol-control'
@@ -203,7 +203,7 @@ var ol_control_PrintDialog = function(options) {
   });
   for (s in this.marginSize) {
     ol_ext_element.create('OPTION', {
-      html: (this._labels[this._lang][s] || s) + ' - ' + this.marginSize[s] + ' mm',
+      html: this.i18n(s) + ' - ' + this.marginSize[s] + ' mm',
       value: this.marginSize[s],
       parent: margin
     });
