@@ -10993,7 +10993,7 @@ ol.control.Print.prototype.print = function(options) {
  */
 ol.control.PrintDialog = function(options) {
   if (!options) options = {};
-  this._lang = options.lang;
+  this._lang = options.lang || 'en';
   var element = ol.ext.element.create('DIV', {
     className: (options.className || 'ol-print') + ' ol-unselectable ol-control'
   });
@@ -11146,7 +11146,7 @@ ol.control.PrintDialog = function(options) {
   });
   for (s in this.marginSize) {
     ol.ext.element.create('OPTION', {
-      html: (this._labels[this._lang][s] || s) + ' - ' + this.marginSize[s] + ' mm',
+      html: this.i18n(s) + ' - ' + this.marginSize[s] + ' mm',
       value: this.marginSize[s],
       parent: margin
     });
