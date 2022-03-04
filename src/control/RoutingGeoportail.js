@@ -12,8 +12,7 @@ import ol_source_Vector from 'ol/source/Vector'
 import ol_geom_Point from 'ol/geom/Point'
 import {transform as ol_proj_transform} from 'ol/proj'
 
-/**
- * Geoportail routing Control.
+/** Geoportail routing Control.
  * @constructor
  * @extends {ol_control_Control}
  * @fires select
@@ -23,6 +22,7 @@ import {transform as ol_proj_transform} from 'ol/proj'
  * @fires step:select
  * @fires step:hover
  * @fires error
+ * @fires abort
  * @param {Object=} options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
@@ -409,6 +409,17 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, e
   this.dispatchEvent(routing);
   this.path = routing;
   return routing;
+};
+
+/** Abort request
+ */
+ol_control_RoutingGeoportail.prototype.abort = function () {
+  // Abort previous request
+  if (this._request) {
+    this._request.abort();
+    this._request = null;
+    this.dispatchEvent({ type: 'abort' });
+  }
 };
 
 /** Calculate route
