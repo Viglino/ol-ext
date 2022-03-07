@@ -2238,18 +2238,26 @@ ol.ext.input.PopupBase = function(options) {
   this.element.addEventListener('click', function() {
     if (this.isCollapsed()) setTimeout( function() { this.collapse(false); }.bind(this) );
   }.bind(this));
-  // Hide on click outside
-  document.addEventListener('click', function() {
-    if (!this.moving) this.collapse(true);
-  }.bind(this));
-  // Hide on window resize
-  window.addEventListener('resize', function() {
-    this.collapse(true);
-  }.bind(this));
   this._elt = {};
   // Popup container
   this._elt.popup = ol.ext.element.create('DIV', { className: 'ol-popup', parent: this.element });
   this._elt.popup.addEventListener('click', function(e) { e.stopPropagation(); });
+  // Hide on click outside
+  var down = false;
+  this._elt.popup.addEventListener('pointerdown', function(e) { 
+    down = true;
+  })
+  this._elt.popup.addEventListener('click', function(e) { 
+    down = false;
+  })
+  document.addEventListener('click', function() { 
+    if (!this.moving && !down) this.collapse(true);
+    down = false;
+  }.bind(this))
+  // Hide on window resize
+  window.addEventListener('resize', function() {
+    this.collapse(true);
+  }.bind(this));
 };
 ol.ext.inherits(ol.ext.input.PopupBase, ol.ext.input.Base);
 /** show/hide color picker
@@ -12613,8 +12621,7 @@ ol.control.ProgressBar.prototype.setLayers = function (layers) {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/**
- * Geoportail routing Control.
+/** Geoportail routing Control.
  * @constructor
  * @extends {ol.control.Control}
  * @fires select
@@ -12624,6 +12631,7 @@ ol.control.ProgressBar.prototype.setLayers = function (layers) {
  * @fires step:select
  * @fires step:hover
  * @fires error
+ * @fires abort
  * @param {Object=} options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
@@ -12974,6 +12982,16 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, e
   this.dispatchEvent(routing);
   this.path = routing;
   return routing;
+};
+/** Abort request
+ */
+ol.control.RoutingGeoportail.prototype.abort = function () {
+  // Abort previous request
+  if (this._request) {
+    this._request.abort();
+    this._request = null;
+    this.dispatchEvent({ type: 'abort' });
+  }
 };
 /** Calculate route
  * @param {Array<ol.coordinate>|undefined} steps an array of steps in EPSG:4326, default use control input values

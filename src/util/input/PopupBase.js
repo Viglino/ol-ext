@@ -49,20 +49,29 @@ var ol_ext_input_PopupBase = function(options) {
   this.element.addEventListener('click', function() {
     if (this.isCollapsed()) setTimeout( function() { this.collapse(false); }.bind(this) );
   }.bind(this));
+
+  this._elt = {};
+  // Popup container
+  this._elt.popup = ol_ext_element.create('DIV', { className: 'ol-popup', parent: this.element });
+  this._elt.popup.addEventListener('click', function(e) { e.stopPropagation(); });
+
   // Hide on click outside
-  document.addEventListener('click', function() {
-    if (!this.moving) this.collapse(true);
-  }.bind(this));
+  var down = false;
+  this._elt.popup.addEventListener('pointerdown', function(e) { 
+    down = true;
+  })
+  this._elt.popup.addEventListener('click', function(e) { 
+    down = false;
+  })
+  document.addEventListener('click', function() { 
+    if (!this.moving && !down) this.collapse(true);
+    down = false;
+  }.bind(this))
+
   // Hide on window resize
   window.addEventListener('resize', function() {
     this.collapse(true);
   }.bind(this));
-
-  this._elt = {};
-
-  // Popup container
-  this._elt.popup = ol_ext_element.create('DIV', { className: 'ol-popup', parent: this.element });
-  this._elt.popup.addEventListener('click', function(e) { e.stopPropagation(); });
 };
 ol_ext_inherits(ol_ext_input_PopupBase, ol_ext_input_Base);
 
