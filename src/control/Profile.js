@@ -134,7 +134,7 @@ var ol_control_Profil = function(options) {
   this.set('selectable', options.selectable);
 
   // Offset in px
-  this.margin_ = { top:10*ratio, left:40*ratio, bottom:30*ratio, right:10*ratio };
+  this.margin_ = { top:10*ratio, left:45*ratio, bottom:30*ratio, right:10*ratio };
   if (!this.info.ytitle) this.margin_.left -= 20*ratio;
   if (!this.info.xtitle) this.margin_.bottom -= 20*ratio;
 
@@ -550,6 +550,7 @@ ol_control_Profil.prototype._drawGraph = function(t, style) {
  *  @param {Number|undefined} options.zmin default 0
  *  @param {Number|undefined} options.zmax default max Z of the feature
  *  @param {integer|undefined} options.zDigits number of digits for z graduation, default 0
+ *  @param {integer|undefined} options.zMaxChars maximum number of chars to be used for z graduation before switching to scientific notation
  *  @param {Number|undefined} options.graduation z graduation default 100
  *  @param {integer|undefined} options.amplitude amplitude of the altitude, default zmax-zmin
  * @api stable
@@ -612,6 +613,7 @@ ol_control_Profil.prototype.setGeometry = function(g, options) {
   this.set('unit', options.unit);
   this.set('zunit', options.zunit);
   this.set('zDigits', options.zDigits);
+  this.set('zMaxChars', options.zMaxChars);
 
   this.dispatchEvent({ type: 'change:geometry', geometry: g })
   
@@ -693,17 +695,44 @@ ol_control_Profil.prototype.refresh = function() {
 
   this._drawGraph(t, this._style);
 
-  // Draw
-  ctx.font = (10*ratio)+'px arial';
+  // Draw 
   ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
+  ctx.textBaseline = 'top';
   ctx.fillStyle = this._style.getText().getFill().getColor() || '#000';
   // Scale Z
   ctx.beginPath();
   var fix = this.get('zDigits') || 0;
+  var exp = null;
+  if (typeof(this.get('zMaxChars'))=='number') {
+    var usedChars;
+    if (this.get('zunit') != 'km') usedChars = Math.max(zmin.toFixed(fix).length, zmax.toFixed(fix).length);
+    else usedChars = Math.max((zmin/1000).toFixed(1).length, (zmax/1000).toFixed(1).length);
+    if (this.get('zMaxChars') < usedChars) {
+      var exp = Math.floor(Math.log10(Math.max(Math.abs(zmin), Math.abs(zmax),Number.MIN_VALUE)));
+      ctx.font = 'bold '+(9*ratio)+'px arial';
+      ctx.fillText(exp.toString(), -8*ratio, 8*ratio);
+      var expMetrics = ctx.measureText(exp.toString());
+      var expWidth = expMetrics.width;
+      var expHeight = expMetrics.actualBoundingBoxAscent + expMetrics.actualBoundingBoxDescent;
+      ctx.font = 'bold '+(12*ratio)+'px arial';
+      ctx.fillText("10", -8*ratio-expWidth, 8*ratio+0.5*expHeight);
+    }
+  }
+  ctx.font = (10*ratio)+'px arial';
+  ctx.textBaseline = 'middle';
   for (i=zmin; i<=zmax; i+=grad) {
-    if (this.get('zunit') != 'km') ctx.fillText(i.toFixed(fix), -4*ratio, i*scy+dy);
-    else ctx.fillText((i/1000).toFixed(1), -4*ratio, i*scy+dy);
+    if (exp !== null) {
+        let baseNumber = i / (10**exp);
+        if (this.get('zunit') == 'km')
+            baseNumber /= 1000;
+        let nbDigits = this.get('zMaxChars') - Math.floor(Math.log10(Math.max(Math.abs(baseNumber),1))+1) - 1;
+        if (baseNumber < 0) nbDigits -= 1
+        if (this.get('zunit') != 'km') ctx.fillText(baseNumber.toFixed(Math.max(nbDigits, 0)), -4*ratio, i*scy+dy);
+        else ctx.fillText(baseNumber.toFixed(Math.max(nbDigits,0)), -4*ratio, i*scy+dy);
+    } else {
+        if (this.get('zunit') != 'km') ctx.fillText(i.toFixed(fix), -4*ratio, i*scy+dy);
+        else ctx.fillText((i/1000).toFixed(1), -4*ratio, i*scy+dy);
+    }
     ctx.moveTo (-2*ratio, i*scy+dy);
     if (i!=0) ctx.lineTo (d*scx, i*scy+dy);
     else ctx.lineTo (0, i*scy+dy);
