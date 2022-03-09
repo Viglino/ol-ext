@@ -14,7 +14,8 @@ import {asString as ol_color_asString} from 'ol/color'
  * @param {Object} [options]
  *  @param {ol.Feature} [options.feature] feature to mask with
  *  @param {ol.style.Fill} [options.fill] style to fill with
- *  @param {boolean} [options.inner] mask inner, default false
+ *  @param {boolean} [options.inner=false] mask inner, default false
+ *  @param {boolean} [options.wrapX=false] wrap around the world, default false
  */
 var ol_filter_Mask = function(options) {
   options = options || {};
@@ -77,25 +78,45 @@ ol_filter_Mask.prototype.drawFeaturePath_ = function(e, out) {
   // Geometry
   var ll = this.feature_.getGeometry().getCoordinates();
   if (this.feature_.getGeometry().getType()=="Polygon") ll = [ll];
-  ctx.beginPath();
-    if (out) {
-      ctx.moveTo (0,0);
-      ctx.lineTo (canvas.width, 0);
-      ctx.lineTo (canvas.width, canvas.height);
-      ctx.lineTo (0, canvas.height);
-      ctx.lineTo (0, 0);
-    }
+
+  // Draw feature at dx world
+  function drawll(dx) {
     for (var l=0; l<ll.length; l++) {
       var c = ll[l];
       for (var i=0; i<c.length; i++) {
-        var pt = tr(c[i][0]);
+        var pt = tr([c[i][0][0] + dx, c[i][0][1]]);
         ctx.moveTo (pt[0], pt[1]);
         for (var j=1; j<c[i].length; j++) {
-          pt = tr(c[i][j]);
+          pt = tr([c[i][j][0] + dx, c[i][j][1]]);
           ctx.lineTo (pt[0], pt[1]);
         }
       }
     }
+  }
+
+  ctx.beginPath();
+
+  if (out) {
+    ctx.moveTo (0,0);
+    ctx.lineTo (canvas.width, 0);
+    ctx.lineTo (canvas.width, canvas.height);
+    ctx.lineTo (0, canvas.height);
+    ctx.lineTo (0, 0);
+  }
+  
+  // Draw current world
+  if (this.get('wrapX')) {
+    var worldExtent = e.frameState.viewState.projection.getExtent()
+    var worldWidth  = worldExtent[2] - worldExtent[0];
+    var extent = e.frameState.extent;
+    var start = Math.floor((extent[0] - worldExtent[0]) / worldWidth);
+    var end = Math.floor((extent[2] - worldExtent[2]) / worldWidth) +1;
+    for (var i=start; i<=end; i++) {
+      drawll(i*worldWidth);
+    }
+  } else {
+    drawll(0);
+  }
 };
 
 ol_filter_Mask.prototype.postcompose = function(e) {

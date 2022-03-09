@@ -43,7 +43,7 @@
   </div>
 
   <!-- Map div -->
-  <div id="map" style="width:600px; height:400px;"></div>
+  <div id="map" style="width:100%; height:400px;"></div>
 
   <div class="options" >
     <ul><li>
@@ -85,9 +85,18 @@
 
     var coords = dep.geometry.coordinates;
     var f = new ol.Feature(new ol.geom.MultiPolygon(coords));
-    var crop = new ol.filter.Crop({ feature: f, inner:false });
+    var crop = new ol.filter.Crop({ 
+      feature: f, 
+      wrapX: true,
+      inner: false
+    });
     osm.addFilter(crop);
-    var mask = new ol.filter.Mask({ feature: f, inner:false, fill: new ol.style.Fill({ color:[255,255,255,0.8] }) });
+    var mask = new ol.filter.Mask({ 
+      feature: f, 
+      wrapX: true,
+      inner: false, 
+      fill: new ol.style.Fill({ color:[255,255,255,0.8] }) 
+    });
     osm.addFilter(mask);
 
     function setFilter(){
