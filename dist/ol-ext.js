@@ -13188,16 +13188,22 @@ ol.control.Scale.prototype.setScale = function (value) {
  *  @param {string|undefined} options.url Url to BAN api, default "https://api-adresse.data.gouv.fr/search/"
  *  @param {boolean} options.position Search, with priority to geo position, default false
  *  @param {function} options.getTitle a function that takes a feature and return the text to display in the menu, default return label attribute
+ *  @param {string|undefined} options.citycode limit search to an administrative area defined by its city code (code commune insee)
+ *  @param {string|undefined} options.postcode limit search to a postal code
+ *  @param {string|undefined} options.type type of result: 'housenumber' | 'street'
  * @see {@link https://adresse.data.gouv.fr/api/}
  */
-ol.control.SearchBAN = function(options) {
-  options = options || {};
-  options.typing = options.typing || 500;
-  options.url = options.url || 'https://api-adresse.data.gouv.fr/search/';
-  options.className = options.className || 'BAN';
-  options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
-  ol.control.SearchPhoton.call(this, options);
-};
+ ol.control.SearchBAN = function(options) {
+   options = options || {};
+   options.typing = options.typing || 500;
+   options.url = options.url || 'https://api-adresse.data.gouv.fr/search/';
+   options.className = options.className || 'BAN';
+   options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
+   ol.control.SearchPhoton.call(this, options);
+   this.set("postcode", options.postcode);
+   this.set("citycode", options.citycode);
+   this.set("type", options.type);
+ };
 ol.ext.inherits(ol.control.SearchBAN, ol.control.SearchPhoton);
 /** Returns the text to be displayed in the menu
  * @param {ol.Feature} f the feature
@@ -13219,6 +13225,13 @@ ol.control.SearchBAN.prototype.select = function (f){
     c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
   } catch(e) { /* ok */ }
   this.dispatchEvent({ type:"select", search:f, coordinate: c });
+};
+ol.control.SearchBAN.prototype.requestData = function (s) {
+  var data = ol.control.SearchPhoton.prototype.requestData.call(this, s);
+  data.postcode = this.get('postcode'),
+  data.citycode = this.get('citycode'),
+  data.type = this.get('type')
+  return data;
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
