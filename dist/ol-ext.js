@@ -18616,7 +18616,7 @@ ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out) {
   }
   // Geometry
   var ll = this.feature_.getGeometry().getCoordinates();
-  if (this.feature_.getGeometry().getType()=="Polygon") ll = [ll];
+  if (this.feature_.getGeometry().getType()==='Polygon') ll = [ll];
   // Draw feature at dx world
   function drawll(dx) {
     for (var l=0; l<ll.length; l++) {
@@ -18644,8 +18644,10 @@ ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out) {
     var worldExtent = e.frameState.viewState.projection.getExtent()
     var worldWidth  = worldExtent[2] - worldExtent[0];
     var extent = e.frameState.extent;
-    var start = Math.floor((extent[0] - worldExtent[0]) / worldWidth);
-    var end = Math.floor((extent[2] - worldExtent[2]) / worldWidth) +1;
+    var fExtent = this.feature_.getGeometry().getExtent();
+    var fWidth = fExtent[2] - fExtent[1];
+    var start = Math.floor((extent[0] + fWidth - worldExtent[0]) / worldWidth);
+    var end = Math.floor((extent[2] - fWidth - worldExtent[2]) / worldWidth) +1;
     for (var i=start; i<=end; i++) {
       drawll(i*worldWidth);
     }
