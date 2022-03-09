@@ -15,7 +15,7 @@ if (window.ol) {
  * @constructor
  * @extends {ol_Object}
  * @param {*} options
- *  @param {Element} [options.input] input element, if non create one
+ *  @param {Element} [options.input] input element, if none create one
  *  @param {string} [options.type] input type, if no input
  *  @param {number} [options.min] input min, if no input
  *  @param {number} [options.max] input max, if no input
