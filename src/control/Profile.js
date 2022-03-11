@@ -38,11 +38,11 @@ import ol_ext_element from '../util/element'
  *  @param {ol.style.Style} [options.style] style to draw the profil, default darkblue
  *  @param {ol.style.Style} [options.selectStyle] style for selection, default darkblue fill
  *  @param {*} options.info keys/values for i19n
- *  @param {number} options.width
- *  @param {number} options.height
- *  @param {ol.Feature} options.feature the feature to draw profil
- *  @param {boolean} options.selectable enable selection on the profil, default false
- *  @param {boolean} options.zoomable can zoom in the profil
+ *  @param {number} [options.width=300]
+ *  @param {number} [options.height=150]
+ *  @param {ol.Feature} [options.feature] the feature to draw profil
+ *  @param {boolean} [options.selectable=false] enable selection on the profil, default false
+ *  @param {boolean} [options.zoomable=false] can zoom in the profil
  */
 var ol_control_Profil = function(options) {
   options = options || {};
@@ -392,13 +392,13 @@ ol_control_Profil.prototype.onMove = function(e) {
   var dx = pageX -pos.left;
   var dy = pageY -pos.top;
   var ratio = this.ratio;
-  if (dx>this.margin_.left/ratio && dx<(this.canvas_.width-this.margin_.right)/ratio
-    && dy>this.margin_.top/ratio && dy<(this.canvas_.height-this.margin_.bottom)/ratio) {
+  if (dx > this.margin_.left/ratio - 20 && dx < (this.canvas_.width-this.margin_.right) / ratio + 8
+    && dy > this.margin_.top/ratio && dy < (this.canvas_.height-this.margin_.bottom) / ratio) {
     var d = (dx*ratio-this.margin_.left)/this.scale_[0];
     var p0 = this.tab_[0];
     var index, p;
     for (index=1; p=this.tab_[index]; index++) {
-      if (p[0]>=d) {
+      if (p[0] >= d) {
         if (d < (p[0]+p0[0])/2) {
           index = 0;
           p = p0;
@@ -406,6 +406,8 @@ ol_control_Profil.prototype.onMove = function(e) {
         break;
       }
     }
+    if (!p) p = this.tab_[this.tab_.length-1];
+    dx = Math.max(this.margin_.left/ratio, Math.min(dx, (this.canvas_.width-this.margin_.right)/ratio));
     this._drawAt(p, dx);
     this.dispatchEvent({ type:'over', click:e.type==='click', index: index, coord: p[3], time: p[2], distance: p[0] });
     // Handle drag / click
@@ -544,15 +546,15 @@ ol_control_Profil.prototype._drawGraph = function(t, style) {
  * Set the geometry to draw the profil.
  * @param {ol.Feature|ol.geom.Geometry} f the feature.
  * @param {Object=} options
- *  @param {ol.ProjectionLike} options.projection feature projection, default projection of the map
- *  @param {string} options.zunit 'm' or 'km', default m
- *  @param {string} options.unit 'm' or 'km', default km
- *  @param {Number|undefined} options.zmin default 0
+ *  @param {ol.ProjectionLike} [options.projection] feature projection, default projection of the map
+ *  @param {string} [options.zunit='m'] 'm' or 'km', default m
+ *  @param {string} [options.unit='km'] 'm' or 'km', default km
+ *  @param {Number|undefined} [options.zmin=0] default 0
  *  @param {Number|undefined} options.zmax default max Z of the feature
- *  @param {integer|undefined} options.zDigits number of digits for z graduation, default 0
- *  @param {integer|undefined} options.zMaxChars maximum number of chars to be used for z graduation before switching to scientific notation
- *  @param {Number|undefined} options.graduation z graduation default 100
- *  @param {integer|undefined} options.amplitude amplitude of the altitude, default zmax-zmin
+ *  @param {integer|undefined} [options.zDigits=0] number of digits for z graduation, default 0
+ *  @param {integer|undefined} [options.zMaxChars] maximum number of chars to be used for z graduation before switching to scientific notation
+ *  @param {Number|undefined} [options.graduation=100] z graduation default 100
+ *  @param {integer|undefined} [options.amplitude] amplitude of the altitude, default zmax-zmin
  * @api stable
  */
 ol_control_Profil.prototype.setGeometry = function(g, options) {
@@ -722,10 +724,10 @@ ol_control_Profil.prototype.refresh = function() {
   ctx.textBaseline = 'middle';
   for (i=zmin; i<=zmax; i+=grad) {
     if (exp !== null) {
-        let baseNumber = i / (10**exp);
+        var baseNumber = i / (10**exp);
         if (this.get('zunit') == 'km')
             baseNumber /= 1000;
-        let nbDigits = this.get('zMaxChars') - Math.floor(Math.log10(Math.max(Math.abs(baseNumber),1))+1) - 1;
+        var nbDigits = this.get('zMaxChars') - Math.floor(Math.log10(Math.max(Math.abs(baseNumber),1))+1) - 1;
         if (baseNumber < 0) nbDigits -= 1
         if (this.get('zunit') != 'km') ctx.fillText(baseNumber.toFixed(Math.max(nbDigits, 0)), -4*ratio, i*scy+dy);
         else ctx.fillText(baseNumber.toFixed(Math.max(nbDigits,0)), -4*ratio, i*scy+dy);
