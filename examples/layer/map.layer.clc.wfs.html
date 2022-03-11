@@ -297,7 +297,7 @@ function getSource(type) {
       $('#loading span').text(e.loaded+'/'+e.loading)
     }
   }
-  var key = 'corinelandcover';
+  var key = 'clc';
   var source = new ol.source.TileWFS({
     url: 'https://wxs.ign.fr/'+key+'/geoportail/wfs',
     typeName: type,
