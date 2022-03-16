@@ -86,7 +86,6 @@ function setWFS(type) {
   loadLayer.getSource().clear();
   if (vectorSource) vectorSource.clear();
   popup.hide();
-  vectorLayer.set('title', type.split(':')[1].replace(/_/g,' ').capitalize());
   switcher.drawPanel();
   minZoom = /bati|parcelle/.test(type) ? 16 : /LANDCOVER/.test(type) ? 13 : 15;
   /* Standard WFS
@@ -116,7 +115,10 @@ function setWFS(type) {
       $('#loading span').text(e.loaded+'/'+e.loading)
     }
   }
-  var key = /LANDCOVER/.test(type) ? 'corinelandcover' : 'choisirgeoportail';
+  var key = type.split('|')[0];
+  type = type.split('|')[1];
+  var title = (type.split(':')[1] || type).replace(/(_|\.)/g,' ').capitalize();
+  vectorLayer.set('title', title);
   vectorSource = new ol.source.TileWFS({
     url: 'https://wxs.ign.fr/'+key+'/geoportail/wfs',
     typeName: type,
