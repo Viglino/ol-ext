@@ -2244,10 +2244,10 @@ ol.ext.input.PopupBase = function(options) {
   this._elt.popup.addEventListener('click', function(e) { e.stopPropagation(); });
   // Hide on click outside
   var down = false;
-  this._elt.popup.addEventListener('pointerdown', function(e) { 
+  this._elt.popup.addEventListener('pointerdown', function() { 
     down = true;
   })
-  this._elt.popup.addEventListener('click', function(e) { 
+  this._elt.popup.addEventListener('click', function() { 
     down = false;
   })
   document.addEventListener('click', function() { 
@@ -12490,7 +12490,7 @@ ol.control.Profil.prototype.refresh = function() {
     if (this.get('zunit') != 'km') usedChars = Math.max(zmin.toFixed(fix).length, zmax.toFixed(fix).length);
     else usedChars = Math.max((zmin/1000).toFixed(1).length, (zmax/1000).toFixed(1).length);
     if (this.get('zMaxChars') < usedChars) {
-      var exp = Math.floor(Math.log10(Math.max(Math.abs(zmin), Math.abs(zmax),Number.MIN_VALUE)));
+      exp = Math.floor(Math.log10(Math.max(Math.abs(zmin), Math.abs(zmax),Number.MIN_VALUE)));
       ctx.font = 'bold '+(9*ratio)+'px arial';
       ctx.fillText(exp.toString(), -8*ratio, 8*ratio);
       var expMetrics = ctx.measureText(exp.toString());
@@ -12504,7 +12504,7 @@ ol.control.Profil.prototype.refresh = function() {
   ctx.textBaseline = 'middle';
   for (i=zmin; i<=zmax; i+=grad) {
     if (exp !== null) {
-        var baseNumber = i / (10**exp);
+        var baseNumber = i / Math.pow(10, exp);
         if (this.get('zunit') == 'km')
             baseNumber /= 1000;
         var nbDigits = this.get('zMaxChars') - Math.floor(Math.log10(Math.max(Math.abs(baseNumber),1))+1) - 1;
@@ -12678,7 +12678,7 @@ ol.control.ProgressBar.prototype.setLayers = function (layers) {
  *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
  *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
- *	@param {number} options.timeout default 10s
+ *	@param {number} options.timeout default 20s
  */
 ol.control.RoutingGeoportail = function(options) {
   var self = this;
@@ -12734,7 +12734,7 @@ ol.control.RoutingGeoportail = function(options) {
   this.resultElement.setAttribute('class', 'ol-result');
   element.appendChild(this.resultElement);
   this.setMode(options.mode || 'car');
-  this.set('timeout', options.timeout || 10000);
+  this.set('timeout', options.timeout || 20000);
 };
 ol.ext.inherits(ol.control.RoutingGeoportail, ol.control.Control);
 ol.control.RoutingGeoportail.prototype.setMode = function (mode, silent) {
@@ -12889,12 +12889,11 @@ ol.control.RoutingGeoportail.prototype.requestData = function (steps) {
     waypoints += (waypoints ? ';':'') + steps[i].x+','+steps[i].y;
   }
   return {
-    resource: 'bdtopo-pgr',
+    resource: 'bdtopo-osrm', // 'bdtopo-pgr',
     profile: this.get('mode')==='pedestrian' ? 'pedestrian' : 'car',
     optimization: this.get('method') || 'fastest', // 'distance'
     start: start.x+','+start.y,
     end: end.x+','+end.y,
-    optimization: this.get('method') || 'fastest', // 'distance'
     intermediates: waypoints,
     geometryFormat: 'geojson'
   };
@@ -12971,7 +12970,7 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, e
     })
     return;
   }
-  console.log(data)
+  // console.log(data)
   var routing = { type:'routing' };
   routing.features = [];
   var distance = 0;
@@ -12997,17 +12996,28 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, e
       f = new ol.Feature(options);
       */
       s.type = 'Feature'; 
-      s.properties = s.attributes;
+      s.properties = s.attributes.name || s.attributes;
       s.properties.distance = s.distance;
       s.properties.duration = Math.round(s.duration * 60);
+      // Route info
+      if (s.instruction) {
+        s.properties.instruction_type = s.instruction.type;
+        s.properties.instruction_modifier = s.instruction.modifier;
+      }
+      // Distance / time
       distance += s.distance;
       duration += s.duration;
       s.properties.distanceT = Math.round(distance * 100) / 100;
       s.properties.durationT = Math.round(duration * 60);
-      s.properties.name = s.properties.cpx_toponyme_route_nommee || s.properties.cpx_numero || s.properties.nom_1_droite; 
-      if (lastPt) s.geometry.coordinates.unshift(lastPt);
+      s.properties.name = s.properties.cpx_toponyme_route_nommee || s.properties.cpx_toponyme || s.properties.cpx_numero || s.properties.nom_1_droite || s.properties.nom_1_gauche || ''; 
+      // TODO: BUG ?
+      var lp = s.geometry.coordinates[s.geometry.coordinates.length-1]
+      if (lastPt && !ol.coordinate.equal(lp, s.geometry.coordinates[s.geometry.coordinates.length-1])) {
+        s.geometry.coordinates.unshift(lastPt);
+      }
       lastPt = s.geometry.coordinates[s.geometry.coordinates.length-1];
-      var f = parser.readFeature(s, {
+      //
+      f = parser.readFeature(s, {
         featureProjection: this.getMap().getView().getProjection()
       });
       routing.features.push(f);
@@ -13101,7 +13111,7 @@ ol.control.RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror)
   // New request
   var ajax = this._request = new XMLHttpRequest();
   ajax.open('GET', url, true);
-  ajax.timeout = this.get('timeout') || 10000;
+  ajax.timeout = this.get('timeout') || 20000;
   if (this._auth) {
     ajax.setRequestHeader("Authorization", "Basic " + this._auth);
   }
@@ -30747,7 +30757,7 @@ ol.layer.AnimatedCluster.prototype.animate = function(e) {
   var duration = this.get('animationDuration');
   if (!duration) return;
   var resolution = e.frameState.viewState.resolution;
-  var ratio = e.frameState.pixelRatio;
+  // var ratio = e.frameState.pixelRatio;
   var i, c0, a = this.animation;
   var time = e.frameState.time;
   // Start a new animation, if change resolution and source has changed
