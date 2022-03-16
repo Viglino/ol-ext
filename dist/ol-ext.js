@@ -12884,9 +12884,9 @@ ol.control.RoutingGeoportail.prototype.setMap = function (map) {
 ol.control.RoutingGeoportail.prototype.requestData = function (steps) {
   var start = steps[0];
   var end = steps[steps.length-1];
-  var waypoints = '';
+  var waypoints = [];
   for (var i=1; i<steps.length-1; i++) {
-    waypoints += (waypoints ? ';':'') + steps[i].x+','+steps[i].y;
+    waypoints.push(steps[i].x+','+steps[i].y);
   }
   return {
     resource: 'bdtopo-osrm', // 'bdtopo-pgr',
@@ -12894,7 +12894,7 @@ ol.control.RoutingGeoportail.prototype.requestData = function (steps) {
     optimization: this.get('method') || 'fastest', // 'distance'
     start: start.x+','+start.y,
     end: end.x+','+end.y,
-    intermediates: waypoints,
+    intermediates: waypoints.join(';'),
     geometryFormat: 'geojson'
   };
 };
