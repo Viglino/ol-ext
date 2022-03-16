@@ -1,6 +1,4 @@
-﻿/*	Copyright (c) 2018 Jean-Marc VIGLINO,
-  released under the CeCILL-B license (French BSD license)
-  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+﻿/*	Old version of Geoportail routing (deprecated)
 */
 import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
@@ -44,9 +42,7 @@ var ol_control_RoutingGeoportail = function(options) {
   var self = this;
   if (!options) options = {};
   if (options.typing == undefined) options.typing = 300;
-  options.apiKey = options.apiKey || 'itineraire';
-  if (!options.search) options.search = {};
-  options.search.apiKey = options.search.apiKey || 'essentiels';
+  options.apiKey = options.apiKey || 'essentiels';
 
   // Class name for history
   this._classname = options.className || 'search';
@@ -74,7 +70,7 @@ var ol_control_RoutingGeoportail = function(options) {
     target: options.target
   });
   
-  this.set('url', 'https://wxs.ign.fr/calcul/geoportail/'+options.apiKey+'/rest/1.0.0/route');
+  this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
 
   var content = ol_ext_element.create('DIV', { className: 'content', parent: element } )
 
@@ -186,8 +182,8 @@ ol_control_RoutingGeoportail.prototype.addSearch = function (element, options, a
 
   var search = div.olsearch = new ol_control_SearchGeoportail({
     className: 'IGNF ol-collapsed',
-    apiKey: options.search.apiKey,
-    authentication: options.search.authentication,
+    apiKey: options.apiKey,
+    authentication: options.authentication,
     target: div,
     reverse: true
   });
@@ -276,14 +272,13 @@ ol_control_RoutingGeoportail.prototype.requestData = function (steps) {
     waypoints += (waypoints ? ';':'') + steps[i].x+','+steps[i].y;
   }
   return {
-    resource: 'bdtopo-pgr',
-    profile: this.get('mode')==='pedestrian' ? 'pedestrian' : 'car',
-    optimization: this.get('method') || 'fastest', // 'distance'
-    start: start.x+','+start.y,
-    end: end.x+','+end.y,
-    optimization: this.get('method') || 'fastest', // 'distance'
-    intermediates: waypoints,
-    geometryFormat: 'geojson'
+    'gp-access-lib': '1.1.0',
+    origin: start.x+','+start.y,
+    destination: end.x+','+end.y,
+    method: this.get('method') || 'time', // 'distance'
+    graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
+    waypoints: waypoints,
+    format: 'STANDARDEXT'
   };
 };
 
@@ -365,17 +360,20 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, e
     })
     return;
   }
-  console.log(data)
   var routing = { type:'routing' };
   routing.features = [];
   var distance = 0;
   var duration = 0;
-  var f;
-  var parser = new ol_format_GeoJSON();
-  var lastPt;
-  for (var i=0, l; l=data.portions[i]; i++) {
+  var f, route = [];
+  for (var i=0, l; l=data.legs[i]; i++) {
     for (var j=0, s; s=l.steps[j]; j++) {
-      /*
+      var geom = [];
+      for (var k=0, p; p=s.points[k]; k++){
+        p = p.split(',');
+        geom.push([parseFloat(p[0]),parseFloat(p[1])]);
+        if (i===0 || k!==0) route.push(geom[k]);
+      }
+      geom = new ol_geom_LineString(geom);
       var options = {
         geometry: geom.transform('EPSG:4326',this.getMap().getView().getProjection()),
         name: s.name,
@@ -389,33 +387,16 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, e
       options.distanceT = distance;
       options.durationT = duration;
       f = new ol_Feature(options);
-      */
-      s.type = 'Feature'; 
-      s.properties = s.attributes;
-      s.properties.distance = s.distance;
-      s.properties.duration = Math.round(s.duration * 60);
-      distance += s.distance;
-      duration += s.duration;
-      s.properties.distanceT = Math.round(distance * 100) / 100;
-      s.properties.durationT = Math.round(duration * 60);
-      s.properties.name = s.properties.cpx_toponyme_route_nommee || s.properties.cpx_numero || s.properties.nom_1_droite; 
-      if (lastPt) s.geometry.coordinates.unshift(lastPt);
-      lastPt = s.geometry.coordinates[s.geometry.coordinates.length-1];
-      var f = parser.readFeature(s, {
-        featureProjection: this.getMap().getView().getProjection()
-      });
       routing.features.push(f);
     }
   }
-  routing.distance = parseFloat(data.distance);
-  routing.duration = parseFloat(data.duration) / 60;
+  routing.distance = parseFloat(data.distanceMeters);
+  routing.duration = parseFloat(data.durationSeconds);
 
   // Full route
-  var route = parser.readGeometry(data.geometry, {
-    featureProjection: this.getMap().getView().getProjection()
-  });
+  route = new ol_geom_LineString(route);
   routing.feature = new ol_Feature ({
-    geometry: route,
+    geometry: route.transform('EPSG:4326',this.getMap().getView().getProjection()),
     start: this._search[0].getTitle(start),
     end: this._search[0].getTitle(end), 
     distance: routing.distance,
