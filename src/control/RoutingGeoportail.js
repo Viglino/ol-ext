@@ -4,13 +4,14 @@
 */
 import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
-import ol_geom_LineString from 'ol/geom/LineString';
 import ol_Feature from 'ol/Feature'
 import ol_ext_element from '../util/element';
 import ol_control_SearchGeoportail from './SearchGeoportail'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_geom_Point from 'ol/geom/Point'
 import {transform as ol_proj_transform} from 'ol/proj'
+import { ol_coordinate_equal } from '../geom/GeomUtils'
+import ol_format_GeoJSON from 'ol/format/GeoJSON'
 
 /** Geoportail routing Control.
  * @constructor
@@ -38,7 +39,7 @@ import {transform as ol_proj_transform} from 'ol/proj'
  *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
  *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
- *	@param {number} options.timeout default 10s
+ *	@param {number} options.timeout default 20s
  */
 var ol_control_RoutingGeoportail = function(options) {
   var self = this;
@@ -106,7 +107,7 @@ var ol_control_RoutingGeoportail = function(options) {
   element.appendChild(this.resultElement);
 
   this.setMode(options.mode || 'car');
-  this.set('timeout', options.timeout || 10000);
+  this.set('timeout', options.timeout || 20000);
 };
 ol_ext_inherits(ol_control_RoutingGeoportail, ol_control_Control);
 
@@ -276,12 +277,11 @@ ol_control_RoutingGeoportail.prototype.requestData = function (steps) {
     waypoints += (waypoints ? ';':'') + steps[i].x+','+steps[i].y;
   }
   return {
-    resource: 'bdtopo-pgr',
+    resource: 'bdtopo-osrm', // 'bdtopo-pgr',
     profile: this.get('mode')==='pedestrian' ? 'pedestrian' : 'car',
     optimization: this.get('method') || 'fastest', // 'distance'
     start: start.x+','+start.y,
     end: end.x+','+end.y,
-    optimization: this.get('method') || 'fastest', // 'distance'
     intermediates: waypoints,
     geometryFormat: 'geojson'
   };
@@ -365,7 +365,7 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, e
     })
     return;
   }
-  console.log(data)
+  // console.log(data)
   var routing = { type:'routing' };
   routing.features = [];
   var distance = 0;
@@ -391,17 +391,28 @@ ol_control_RoutingGeoportail.prototype.handleResponse = function (data, start, e
       f = new ol_Feature(options);
       */
       s.type = 'Feature'; 
-      s.properties = s.attributes;
+      s.properties = s.attributes.name || s.attributes;
       s.properties.distance = s.distance;
       s.properties.duration = Math.round(s.duration * 60);
+      // Route info
+      if (s.instruction) {
+        s.properties.instruction_type = s.instruction.type;
+        s.properties.instruction_modifier = s.instruction.modifier;
+      }
+      // Distance / time
       distance += s.distance;
       duration += s.duration;
       s.properties.distanceT = Math.round(distance * 100) / 100;
       s.properties.durationT = Math.round(duration * 60);
-      s.properties.name = s.properties.cpx_toponyme_route_nommee || s.properties.cpx_numero || s.properties.nom_1_droite; 
-      if (lastPt) s.geometry.coordinates.unshift(lastPt);
+      s.properties.name = s.properties.cpx_toponyme_route_nommee || s.properties.cpx_toponyme || s.properties.cpx_numero || s.properties.nom_1_droite || s.properties.nom_1_gauche || ''; 
+      // TODO: BUG ?
+      var lp = s.geometry.coordinates[s.geometry.coordinates.length-1]
+      if (lastPt && !ol_coordinate_equal(lp, s.geometry.coordinates[s.geometry.coordinates.length-1])) {
+        s.geometry.coordinates.unshift(lastPt);
+      }
       lastPt = s.geometry.coordinates[s.geometry.coordinates.length-1];
-      var f = parser.readFeature(s, {
+      //
+      f = parser.readFeature(s, {
         featureProjection: this.getMap().getView().getProjection()
       });
       routing.features.push(f);
@@ -508,7 +519,7 @@ ol_control_RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror)
   // New request
   var ajax = this._request = new XMLHttpRequest();
   ajax.open('GET', url, true);
-  ajax.timeout = this.get('timeout') || 10000;
+  ajax.timeout = this.get('timeout') || 20000;
 
   if (this._auth) {
     ajax.setRequestHeader("Authorization", "Basic " + this._auth);
