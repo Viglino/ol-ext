@@ -12,7 +12,6 @@ import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import {buffer as ol_extent_buffer} from 'ol/extent'
 import ol_geom_Point from 'ol/geom/Point'
 import ol_render_getVectorContext from '../util/getVectorContext';
-import { ol_ext_olVersion } from '../util/ext'
 import ol_ext_getVectorContextStyle from '../util/getVectorContextStyle'
 
 /**
@@ -94,7 +93,7 @@ ol_layer_AnimatedCluster.prototype.animate = function(e) {
   var duration = this.get('animationDuration');
   if (!duration) return;
   var resolution = e.frameState.viewState.resolution;
-  var ratio = e.frameState.pixelRatio;
+  // var ratio = e.frameState.pixelRatio;
   var i, c0, a = this.animation;
   var time = e.frameState.time;
 

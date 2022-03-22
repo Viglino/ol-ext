@@ -57,10 +57,10 @@ var ol_ext_input_PopupBase = function(options) {
 
   // Hide on click outside
   var down = false;
-  this._elt.popup.addEventListener('pointerdown', function(e) { 
+  this._elt.popup.addEventListener('pointerdown', function() { 
     down = true;
   })
-  this._elt.popup.addEventListener('click', function(e) { 
+  this._elt.popup.addEventListener('click', function() { 
     down = false;
   })
   document.addEventListener('click', function() { 

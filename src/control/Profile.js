@@ -710,7 +710,7 @@ ol_control_Profil.prototype.refresh = function() {
     if (this.get('zunit') != 'km') usedChars = Math.max(zmin.toFixed(fix).length, zmax.toFixed(fix).length);
     else usedChars = Math.max((zmin/1000).toFixed(1).length, (zmax/1000).toFixed(1).length);
     if (this.get('zMaxChars') < usedChars) {
-      var exp = Math.floor(Math.log10(Math.max(Math.abs(zmin), Math.abs(zmax),Number.MIN_VALUE)));
+      exp = Math.floor(Math.log10(Math.max(Math.abs(zmin), Math.abs(zmax),Number.MIN_VALUE)));
       ctx.font = 'bold '+(9*ratio)+'px arial';
       ctx.fillText(exp.toString(), -8*ratio, 8*ratio);
       var expMetrics = ctx.measureText(exp.toString());
@@ -724,7 +724,7 @@ ol_control_Profil.prototype.refresh = function() {
   ctx.textBaseline = 'middle';
   for (i=zmin; i<=zmax; i+=grad) {
     if (exp !== null) {
-        var baseNumber = i / (10**exp);
+        var baseNumber = i / Math.pow(10, exp);
         if (this.get('zunit') == 'km')
             baseNumber /= 1000;
         var nbDigits = this.get('zMaxChars') - Math.floor(Math.log10(Math.max(Math.abs(baseNumber),1))+1) - 1;

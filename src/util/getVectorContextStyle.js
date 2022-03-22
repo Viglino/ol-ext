@@ -1,4 +1,5 @@
 import {VERSION as ol_util_VERSION} from 'ol/util'
+import ol_style_Icon from 'ol/style/Icon'
 
 /*global ol*/
 if (window.ol) {
