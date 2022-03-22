@@ -69,9 +69,11 @@ var ol_style_FontSymbol = function(options) {
 ol_ext_inherits(ol_style_FontSymbol, ol_style_RegularShape);
 
 /** Cool stuff to get the image symbol for a style
+ * @param {number} ratio pixelratio
  */
-ol_style_Image.prototype.getImagePNG = function() {
-  var canvas = this.getImage();
+ol_style_Image.prototype.getImagePNG = function(ratio) {
+  ratio = ratio || window.devicePixelRatio;
+  var canvas = this.getImage(ratio);
   if (canvas) {
     try { return canvas.toDataURL("image/png"); }
     catch(e) { return false; }

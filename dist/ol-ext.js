@@ -37688,9 +37688,11 @@ ol.style.FontSymbol = function(options) {
 };
 ol.ext.inherits(ol.style.FontSymbol, ol.style.RegularShape);
 /** Cool stuff to get the image symbol for a style
+ * @param {number} ratio pixelratio
  */
-ol.style.Image.prototype.getImagePNG = function() {
-  var canvas = this.getImage();
+ol.style.Image.prototype.getImagePNG = function(ratio) {
+  ratio = ratio || window.devicePixelRatio;
+  var canvas = this.getImage(ratio);
   if (canvas) {
     try { return canvas.toDataURL("image/png"); }
     catch(e) { return false; }
