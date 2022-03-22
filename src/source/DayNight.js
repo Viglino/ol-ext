@@ -132,6 +132,38 @@ ol_source_DayNight.prototype.getSunPosition = function (time) {
   return [sunEqPos.alpha - gst * 15, sunEqPos.delta]
 };
 
+/** Get the day/night separation latitude
+ * @param {number} lon
+ * @param {Date} time
+ * @returns {number}
+ */
+ol_source_DayNight.getNightLat = function (lon, time) {
+  var rad2deg = 180 / Math.PI;
+  var deg2rad = Math.PI / 180;
+
+  var date = time ? new Date(time) : new Date();
+  
+  // Calculate the present UTC Julian Date. 
+  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
+  var julianDay = (date / 86400000) + 2440587.5;
+
+  // Calculate Greenwich Mean Sidereal Time (low precision equation).
+  // http://aa.usno.navy.mil/faq/docs/GAST.php 
+  var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
+
+  var sunEclPos = _sunEclipticPosition(julianDay);
+  var eclObliq = _eclipticObliquity(julianDay);
+  var sunEqPos = _sunEquatorialPosition(sunEclPos.lambda, eclObliq);
+
+  // Hour angle (indegrees) of the sun for a longitude on Earth.
+  var ha = (gst * 15 + lon) - sunEqPos.alpha;
+  // Latitude     
+  var lat = Math.atan(-Math.cos(ha * deg2rad) /
+    Math.tan(sunEqPos.delta * deg2rad)) * rad2deg;
+
+  return lat;
+};
+
 /** Get night-day separation line
  * @param {string} time DateTime string, default yet
  * @param {string} options use 'line' to get the separation line, 'day' to get the day polygon, 'night' to get the night polygon or 'daynight' to get both polygon, default 'night'
