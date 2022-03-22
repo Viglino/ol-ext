@@ -2244,10 +2244,10 @@ ol.ext.input.PopupBase = function(options) {
   this._elt.popup.addEventListener('click', function(e) { e.stopPropagation(); });
   // Hide on click outside
   var down = false;
-  this._elt.popup.addEventListener('pointerdown', function(e) { 
+  this._elt.popup.addEventListener('pointerdown', function() { 
     down = true;
   })
-  this._elt.popup.addEventListener('click', function(e) { 
+  this._elt.popup.addEventListener('click', function() { 
     down = false;
   })
   document.addEventListener('click', function() { 
@@ -12490,7 +12490,7 @@ ol.control.Profil.prototype.refresh = function() {
     if (this.get('zunit') != 'km') usedChars = Math.max(zmin.toFixed(fix).length, zmax.toFixed(fix).length);
     else usedChars = Math.max((zmin/1000).toFixed(1).length, (zmax/1000).toFixed(1).length);
     if (this.get('zMaxChars') < usedChars) {
-      var exp = Math.floor(Math.log10(Math.max(Math.abs(zmin), Math.abs(zmax),Number.MIN_VALUE)));
+      exp = Math.floor(Math.log10(Math.max(Math.abs(zmin), Math.abs(zmax),Number.MIN_VALUE)));
       ctx.font = 'bold '+(9*ratio)+'px arial';
       ctx.fillText(exp.toString(), -8*ratio, 8*ratio);
       var expMetrics = ctx.measureText(exp.toString());
@@ -12504,7 +12504,7 @@ ol.control.Profil.prototype.refresh = function() {
   ctx.textBaseline = 'middle';
   for (i=zmin; i<=zmax; i+=grad) {
     if (exp !== null) {
-        var baseNumber = i / (10**exp);
+        var baseNumber = i / Math.pow(10, exp);
         if (this.get('zunit') == 'km')
             baseNumber /= 1000;
         var nbDigits = this.get('zMaxChars') - Math.floor(Math.log10(Math.max(Math.abs(baseNumber),1))+1) - 1;
@@ -12678,13 +12678,15 @@ ol.control.ProgressBar.prototype.setLayers = function (layers) {
  *	@param {integer | undefined} options.maxHistory maximum number of items to display in history. Set -1 if you don't want history, default maxItems
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index.
  *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
- *	@param {number} options.timeout default 10s
+ *	@param {number} options.timeout default 20s
  */
 ol.control.RoutingGeoportail = function(options) {
   var self = this;
   if (!options) options = {};
   if (options.typing == undefined) options.typing = 300;
-  options.apiKey = options.apiKey || 'essentiels';
+  options.apiKey = options.apiKey || 'itineraire';
+  if (!options.search) options.search = {};
+  options.search.apiKey = options.search.apiKey || 'essentiels';
   // Class name for history
   this._classname = options.className || 'search';
   this._source = new ol.source.Vector();
@@ -12706,7 +12708,7 @@ ol.control.RoutingGeoportail = function(options) {
     element: element,
     target: options.target
   });
-  this.set('url', 'https://wxs.ign.fr/'+options.apiKey+'/itineraire/rest/route.json');
+  this.set('url', 'https://wxs.ign.fr/calcul/geoportail/'+options.apiKey+'/rest/1.0.0/route');
   var content = ol.ext.element.create('DIV', { className: 'content', parent: element } )
   var listElt = ol.ext.element.create('DIV', { className: 'search-input', parent: content });
   this._search = [];
@@ -12732,7 +12734,7 @@ ol.control.RoutingGeoportail = function(options) {
   this.resultElement.setAttribute('class', 'ol-result');
   element.appendChild(this.resultElement);
   this.setMode(options.mode || 'car');
-  this.set('timeout', options.timeout || 10000);
+  this.set('timeout', options.timeout || 20000);
 };
 ol.ext.inherits(ol.control.RoutingGeoportail, ol.control.Control);
 ol.control.RoutingGeoportail.prototype.setMode = function (mode, silent) {
@@ -12803,8 +12805,8 @@ ol.control.RoutingGeoportail.prototype.addSearch = function (element, options, a
     }.bind(this));
   var search = div.olsearch = new ol.control.SearchGeoportail({
     className: 'IGNF ol-collapsed',
-    apiKey: options.apiKey,
-    authentication: options.authentication,
+    apiKey: options.search.apiKey,
+    authentication: options.search.authentication,
     target: div,
     reverse: true
   });
@@ -12882,18 +12884,18 @@ ol.control.RoutingGeoportail.prototype.setMap = function (map) {
 ol.control.RoutingGeoportail.prototype.requestData = function (steps) {
   var start = steps[0];
   var end = steps[steps.length-1];
-  var waypoints = '';
+  var waypoints = [];
   for (var i=1; i<steps.length-1; i++) {
-    waypoints += (waypoints ? ';':'') + steps[i].x+','+steps[i].y;
+    waypoints.push(steps[i].x+','+steps[i].y);
   }
   return {
-    'gp-access-lib': '1.1.0',
-    origin: start.x+','+start.y,
-    destination: end.x+','+end.y,
-    method: this.get('method') || 'time', // 'distance'
-    graphName: this.get('mode')==='pedestrian' ? 'Pieton' : 'Voiture',
-    waypoints: waypoints,
-    format: 'STANDARDEXT'
+    resource: 'bdtopo-osrm', // 'bdtopo-pgr',
+    profile: this.get('mode')==='pedestrian' ? 'pedestrian' : 'car',
+    optimization: this.get('method') || 'fastest', // 'distance'
+    start: start.x+','+start.y,
+    end: end.x+','+end.y,
+    intermediates: waypoints.join(';'),
+    geometryFormat: 'geojson'
   };
 };
 /** Gets time as string
@@ -12968,20 +12970,17 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, e
     })
     return;
   }
+  // console.log(data)
   var routing = { type:'routing' };
   routing.features = [];
   var distance = 0;
   var duration = 0;
-  var f, route = [];
-  for (var i=0, l; l=data.legs[i]; i++) {
+  var f;
+  var parser = new ol.format.GeoJSON();
+  var lastPt;
+  for (var i=0, l; l=data.portions[i]; i++) {
     for (var j=0, s; s=l.steps[j]; j++) {
-      var geom = [];
-      for (var k=0, p; p=s.points[k]; k++){
-        p = p.split(',');
-        geom.push([parseFloat(p[0]),parseFloat(p[1])]);
-        if (i===0 || k!==0) route.push(geom[k]);
-      }
-      geom = new ol.geom.LineString(geom);
+      /*
       var options = {
         geometry: geom.transform('EPSG:4326',this.getMap().getView().getProjection()),
         name: s.name,
@@ -12995,15 +12994,43 @@ ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, e
       options.distanceT = distance;
       options.durationT = duration;
       f = new ol.Feature(options);
+      */
+      s.type = 'Feature'; 
+      s.properties = s.attributes.name || s.attributes;
+      s.properties.distance = s.distance;
+      s.properties.duration = Math.round(s.duration * 60);
+      // Route info
+      if (s.instruction) {
+        s.properties.instruction_type = s.instruction.type;
+        s.properties.instruction_modifier = s.instruction.modifier;
+      }
+      // Distance / time
+      distance += s.distance;
+      duration += s.duration;
+      s.properties.distanceT = Math.round(distance * 100) / 100;
+      s.properties.durationT = Math.round(duration * 60);
+      s.properties.name = s.properties.cpx_toponyme_route_nommee || s.properties.cpx_toponyme || s.properties.cpx_numero || s.properties.nom_1_droite || s.properties.nom_1_gauche || ''; 
+      // TODO: BUG ?
+      var lp = s.geometry.coordinates[s.geometry.coordinates.length-1]
+      if (lastPt && !ol.coordinate.equal(lp, s.geometry.coordinates[s.geometry.coordinates.length-1])) {
+        s.geometry.coordinates.unshift(lastPt);
+      }
+      lastPt = s.geometry.coordinates[s.geometry.coordinates.length-1];
+      //
+      f = parser.readFeature(s, {
+        featureProjection: this.getMap().getView().getProjection()
+      });
       routing.features.push(f);
     }
   }
-  routing.distance = parseFloat(data.distanceMeters);
-  routing.duration = parseFloat(data.durationSeconds);
+  routing.distance = parseFloat(data.distance);
+  routing.duration = parseFloat(data.duration) / 60;
   // Full route
-  route = new ol.geom.LineString(route);
+  var route = parser.readGeometry(data.geometry, {
+    featureProjection: this.getMap().getView().getProjection()
+  });
   routing.feature = new ol.Feature ({
-    geometry: route.transform('EPSG:4326',this.getMap().getView().getProjection()),
+    geometry: route,
     start: this._search[0].getTitle(start),
     end: this._search[0].getTitle(end), 
     distance: routing.distance,
@@ -13084,7 +13111,7 @@ ol.control.RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror)
   // New request
   var ajax = this._request = new XMLHttpRequest();
   ajax.open('GET', url, true);
-  ajax.timeout = this.get('timeout') || 10000;
+  ajax.timeout = this.get('timeout') || 20000;
   if (this._auth) {
     ajax.setRequestHeader("Authorization", "Basic " + this._auth);
   }
@@ -30730,7 +30757,7 @@ ol.layer.AnimatedCluster.prototype.animate = function(e) {
   var duration = this.get('animationDuration');
   if (!duration) return;
   var resolution = e.frameState.viewState.resolution;
-  var ratio = e.frameState.pixelRatio;
+  // var ratio = e.frameState.pixelRatio;
   var i, c0, a = this.animation;
   var time = e.frameState.time;
   // Start a new animation, if change resolution and source has changed
@@ -37688,11 +37715,9 @@ ol.style.FontSymbol = function(options) {
 };
 ol.ext.inherits(ol.style.FontSymbol, ol.style.RegularShape);
 /** Cool stuff to get the image symbol for a style
- * @param {number} ratio pixelratio
  */
-ol.style.Image.prototype.getImagePNG = function(ratio) {
-  ratio = ratio || window.devicePixelRatio;
-  var canvas = this.getImage(ratio);
+ol.style.Image.prototype.getImagePNG = function() {
+  var canvas = this.getImage();
   if (canvas) {
     try { return canvas.toDataURL("image/png"); }
     catch(e) { return false; }
