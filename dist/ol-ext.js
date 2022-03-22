@@ -12884,9 +12884,9 @@ ol.control.RoutingGeoportail.prototype.setMap = function (map) {
 ol.control.RoutingGeoportail.prototype.requestData = function (steps) {
   var start = steps[0];
   var end = steps[steps.length-1];
-  var waypoints = [];
+  var waypoints = '';
   for (var i=1; i<steps.length-1; i++) {
-    waypoints.push(steps[i].x+','+steps[i].y);
+    waypoints += (waypoints ? ';':'') + steps[i].x+','+steps[i].y;
   }
   return {
     resource: 'bdtopo-osrm', // 'bdtopo-pgr',
@@ -12894,7 +12894,7 @@ ol.control.RoutingGeoportail.prototype.requestData = function (steps) {
     optimization: this.get('method') || 'fastest', // 'distance'
     start: start.x+','+start.y,
     end: end.x+','+end.y,
-    intermediates: waypoints.join(';'),
+    intermediates: waypoints,
     geometryFormat: 'geojson'
   };
 };
@@ -37715,9 +37715,11 @@ ol.style.FontSymbol = function(options) {
 };
 ol.ext.inherits(ol.style.FontSymbol, ol.style.RegularShape);
 /** Cool stuff to get the image symbol for a style
+ * @param {number} ratio pixelratio
  */
-ol.style.Image.prototype.getImagePNG = function() {
-  var canvas = this.getImage();
+ol.style.Image.prototype.getImagePNG = function(ratio) {
+  ratio = ratio || window.devicePixelRatio;
+  var canvas = this.getImage(ratio);
   if (canvas) {
     try { return canvas.toDataURL("image/png"); }
     catch(e) { return false; }
