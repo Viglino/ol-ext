@@ -94,6 +94,14 @@ ol_source_TileWFS.prototype._loadTile = function(url, extent, projection, format
           loaded: loader.loaded 
         });
       } else {
+        // Load features
+        var features = format.readFeatures(response, {
+          featureProjection: projection
+        });
+        if (features.length > 0) {
+          this.addFeatures(features);
+        }
+        // Next page?
         let pos = response.numberReturned || 0;
         if (/&startIndex/.test(url)) {
           pos += parseInt(url.replace(/.*&startIndex=(\d*).*/, '$1'));
@@ -119,12 +127,6 @@ ol_source_TileWFS.prototype._loadTile = function(url, extent, projection, format
             loading: loader.loading, 
             loaded: loader.loaded 
           });
-        }
-        var features = format.readFeatures(response, {
-          featureProjection: projection
-        });
-        if (features.length > 0) {
-          this.addFeatures(features);
         }
       }
     }.bind(this),
