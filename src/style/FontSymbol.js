@@ -26,7 +26,7 @@ import {asString as ol_color_asString} from 'ol/color'
  *  @param {number} options.rotation
  *  @param {boolean} options.rotateWithView
  *  @param {number} [options.opacity=1]
- *  @param {number} [options.fontSize=1] default 1
+ *  @param {number} [options.fontSize=1] size of the font compare to the radius, fontSize greater than 1 will exceed the symbol extent
  *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
  *  @param {boolean} options.gradient true to display a gradient on the symbol
  *  @param {number} [options.offsetX=0] default 0
