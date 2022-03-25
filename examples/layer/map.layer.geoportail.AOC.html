@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: AOC viticoles</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="AOC viticoles" />
+  <meta name="keywords" content="ol, openlayers, layer, source, geoportail, vignes" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    #map {
+      position: fixed;
+      top: 8em;
+      left: .5em;
+      bottom: .5em;
+      right: .5em;
+      margin: 0;
+    }
+    .ol-popup.ol-fixed {
+      z-index: 12;
+    }
+    p {
+      margin: 0;
+    }
+    .info img {
+      height: 2em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: AOC viticoles</h1>
+  </a>
+  <div class="info">
+    <p>
+      Click on the map to get info.
+      <a href="https://geoservices.ign.fr/services-web-experts-parcellaire" target="_new">
+        &copy; Geoservice IGN 
+        <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo-licence-ouverte2.svg"/>
+      </a>
+    </p>
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map"></div>
+ 
+  <script type="text/javascript">
+  // Key Capabilities
+  ol.layer.Geoportail.register("Aire-Parcellaire", {"key":"parcellaire","server":"https://wxs.ign.fr/geoportail/wmts","layer":"Aire-Parcellaire","title":"Délimitation parcellaire AOC viticole","format":"image/png","style":"normal","queryable":true,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052],"desc":"<![CDATA[Selon les règlements européens n°110/2008 du 15 janvier 2008, n°1151/2012 du 21 novembre 2012 et n°1308/2013 de l’OCM , le cahier des charges des appellations définit l’aire géographique. Le terme de « délimitation parcellaire » désigne une aire qui repose sur les limites administratives du cadastre (les parcelles) et dont le maillage suffisamment fin permet de tenir compte de variations très localisées des éléments du milieu physique. Elle correspond à l'aire de production de la matière première. Elle est incluse dans l'aire géographique.\n\nDonnées produites par l'Institut National des Origines et la Qualité (INAO)]]>","originators":{"IGN":{"href":"https://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052]}]}}});
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 6,
+      center: [261204, 6000000],
+      /*
+      center: [9.48, 42.738038240088095],
+      projection: 'EPSG:4326'
+      */
+    })
+  });
+
+
+  map.addLayer (new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
+    permalink: 'ortho',
+    className: 'photo',
+  }));
+  map.addLayer (new ol.layer.Geoportail({
+    layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
+    permalink: 'plan',
+    className: 'plan',
+    visible: true,
+    opacity: .5
+  }));
+  var vignes = new ol.layer.Geoportail({
+    layer: 'Aire-Parcellaire',
+    className: 'AOC',
+    title: 'Délimitation AOC viticole',
+    opacity: .5
+  })
+  map.addLayer (vignes);
+  map.addControl(new ol.control.Permalink({  visible: false }));
+
+  var vector = new ol.layer.Vector({ title: 'vector', className: 'vector', source: new ol.source.Vector() });
+  map.addLayer(vector);
+
+  map.addControl(new ol.control.ScaleLine());
+  map.addControl(new ol.control.LayerSwitcher());
+
+  // Show information on click (getFeatureInfo)
+  var popup = new ol.Overlay.PopupFeature({
+    canFix: true,
+    template: {
+      attributes: ['id', 'app', 'denom', 'dt', 'type_prod', 'categorie', 'type_denom', 'type_ig', 'insee', 'nomcom', 'insee_2011', 'nomcom_201', 'crinao']
+    }
+  });
+  map.addOverlay(popup);
+  map.on('click', function(e) {
+    popup.hide();
+    map.forEachLayerAtPixel(e.pixel, function(l, pixel) {
+      vector.getSource().clear();
+      if (l === vignes) {
+        // Create new object
+        l.getSource().getFeatureInfo(
+          e.coordinate, 
+          map.getView().getResolution(), {
+            INFO_FORMAT: 'application/json',
+            callback: function(resp) {
+              if (resp) {
+                resp = JSON.parse(resp);
+                if (resp.features[0]) {
+                  var format = new ol.format.GeoJSON();
+                  var features = format.readFeatures(resp);
+                  popup.show(e.coordinate, features);
+                  vector.getSource().addFeatures(features);
+                  console.log(resp.features[0].properties);
+                }
+              }
+            }
+          }
+        );
+      }
+      return true;
+    });
+  });
+
+  </script>
+</body>
+</html>
