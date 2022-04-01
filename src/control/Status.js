@@ -2,8 +2,7 @@ import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 import ol_ext_element from '../util/element'
 
-/** A control with scroll-driven navigation to create narrative maps
- *
+/** A control to display status information on top of the map
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
