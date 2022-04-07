@@ -190,9 +190,11 @@ ol_interaction_Transform.prototype.setDefaultStyle = function(options) {
       fill: fill,
       stroke: stroke,
       radius: this.isTouch ? 12 : 6,
+      displacement: this.isTouch ? [24, -24] : [12, -12],
       points: 15
     });
-  circle.getAnchor()[0] = this.isTouch ? -10 : -5;
+  // Old version with no displacement
+  if (!circle.setDisplacement) circle.getAnchor()[0] = this.isTouch ? -10 : -5; 
   var bigpt = new ol_style_RegularShape({
       fill: fill,
       stroke: stroke,
@@ -241,7 +243,9 @@ ol_interaction_Transform.prototype.setStyle = function(style, olstyle) {
   for (var i=0; i<this.style[style].length; i++) {
     var im = this.style[style][i].getImage();
     if (im) {
-      if (style == 'rotate') im.getAnchor()[0] = -5;
+      if (style == 'rotate') {
+        im.getAnchor()[0] = -5;
+      }
       if (this.isTouch) im.setScale(1.8);
     }
     var tx = this.style[style][i].getText();
