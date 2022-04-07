@@ -724,6 +724,7 @@ ol_control_PrintDialog.prototype.paperSize = {
   'A2': [420,594],
   'A3': [297,420],
   'A4': [210,297],
+  'US Letter': [215.9,279.4],
   'A5': [148,210],
   'B4': [257,364],
   'B5': [182,257]
@@ -824,7 +825,13 @@ ol_control_PrintDialog.prototype.setSize = function (size) {
   if (!size) return;
 
   if (typeof(size) === 'string') {
-    size = size.toLocaleUpperCase();
+    // Test uppercase
+    for (var k in this.paperSize) {
+      if (k && new RegExp(k, 'i').test(size)) {
+        size = k;
+      }
+    }
+    // Default
     if (!this.paperSize[size]) size = this._size = 'A4';
     this._input.size.value = size;
     size = [
