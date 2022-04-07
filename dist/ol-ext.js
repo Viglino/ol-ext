@@ -11657,6 +11657,7 @@ ol.control.PrintDialog.prototype.paperSize = {
   'A2': [420,594],
   'A3': [297,420],
   'A4': [210,297],
+  'US Letter': [215.9,279.4],
   'A5': [148,210],
   'B4': [257,364],
   'B5': [182,257]
@@ -11745,7 +11746,13 @@ ol.control.PrintDialog.prototype.setSize = function (size) {
   else size = this._size;
   if (!size) return;
   if (typeof(size) === 'string') {
-    size = size.toLocaleUpperCase();
+    // Test uppercase
+    for (var k in this.paperSize) {
+      if (k && new RegExp(k, 'i').test(size)) {
+        size = k;
+      }
+    }
+    // Default
     if (!this.paperSize[size]) size = this._size = 'A4';
     this._input.size.value = size;
     size = [
@@ -26692,9 +26699,11 @@ ol.interaction.Transform.prototype.setDefaultStyle = function(options) {
       fill: fill,
       stroke: stroke,
       radius: this.isTouch ? 12 : 6,
+      displacement: this.isTouch ? [24, -24] : [12, -12],
       points: 15
     });
-  circle.getAnchor()[0] = this.isTouch ? -10 : -5;
+  // Old version with no displacement
+  if (!circle.setDisplacement) circle.getAnchor()[0] = this.isTouch ? -10 : -5; 
   var bigpt = new ol.style.RegularShape({
       fill: fill,
       stroke: stroke,
@@ -26742,7 +26751,9 @@ ol.interaction.Transform.prototype.setStyle = function(style, olstyle) {
   for (var i=0; i<this.style[style].length; i++) {
     var im = this.style[style][i].getImage();
     if (im) {
-      if (style == 'rotate') im.getAnchor()[0] = -5;
+      if (style == 'rotate') {
+        im.getAnchor()[0] = -5;
+      }
       if (this.isTouch) im.setScale(1.8);
     }
     var tx = this.style[style][i].getText();
