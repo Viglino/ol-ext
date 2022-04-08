@@ -17,7 +17,7 @@ import ol_filter_Base from './Base'
  *  @param {number|number[]} [options.fsize=[8,10]] fold size in px, default 8,10
  *  @param {boolean} [options.fill=false] true to fill the background, default false
  *  @param {boolean} [options.shadow=true] true to display shadow
- *  @param {boolean} [options.opacity=.2] shadow opacity
+ *  @param {boolean} [options.opacity=.2] effect opacity
  */
 var ol_filter_Fold = function(options) {
   options = options || {};
@@ -30,7 +30,7 @@ var ol_filter_Fold = function(options) {
   this.set('fsize', options.fsize || [8,10]);
   this.set('fill', options.fill);
   this.set('shadow', options.shadow!==false);
-  this.set('opacity', options.opacity||.2);
+  this.set('opacity', (options.hasOwnProperty('opacity') ? options.opacity : .2));
 };
 ol_ext_inherits(ol_filter_Fold, ol_filter_Base);
 
@@ -102,7 +102,7 @@ ol_filter_Fold.prototype.postcompose = function(e) {
 
       var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
       grd.addColorStop(0,"transparent");
-      grd.addColorStop(1,"rgba(0,0,0,"+(this.get('opacity')||.2)+")");
+      grd.addColorStop(1,"rgba(0,0,0," + this.get('opacity') + ")");
       ctx.fillStyle = grd;
       ctx.scale (1,h/w);
       for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++) {
