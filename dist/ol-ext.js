@@ -1757,6 +1757,59 @@ ol.ext.inherits(ol.ext.SVGFilter.Laplacian, ol.ext.SVGFilter);
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
+/** Apply a sobel filter on an image
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.ext.SVGFilter}
+ * @param {object} options
+ *  @param {string} [options.id]
+ *  @param {number} [options.scale=1]
+ *  @param {number} [options.ligth=50] light option. 0: darker, 100: lighter
+ */
+ol.ext.SVGFilter.Paper = function(options) {
+  options = options || {};
+  ol.ext.SVGFilter.call(this, { 
+    id: options.id
+  });
+  this.addOperation({
+    feoperation: 'feTurbulence',
+    numOctaves: 4,
+    seed: 0,
+    type: 'fractalNoise',
+    baseFrequency: 0.2 / (options.scale || 1)
+  });
+  this.addOperation({
+    feoperation: 'feDiffuseLighting',
+    'lighting-color': 'rgb(255,255,255)',
+    surfaceScale: 1.5,
+    kernelUnitLength: 0.01,
+    diffuseConstant: 1.1000000000000001,
+    result: 'paper',
+    operations: [{
+      feoperation: 'feDistantLight',
+      elevation: options.light || 50, 
+      azimuth: 75
+    }]
+  });
+  this.addOperation({
+    feoperation: 'feBlend',
+    in: 'SourceGraphic',
+    in2: 'paper',
+    mode: 'multiply'
+  })
+};
+ol.ext.inherits(ol.ext.SVGFilter.Paper, ol.ext.SVGFilter);
+/** Set filter light
+ * @param {number} light light option. 0: darker, 100: lighter
+ */
+ol.ext.SVGFilter.Paper.prototype.setLight = function(light) {
+  this.element.querySelector('feDistantLight').setAttribute('elevation', light);
+}
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
 /** Apply a Prewitt filter on an image
  * @constructor
  * @requires ol.filter
@@ -18499,7 +18552,7 @@ ol.filter = {};
  *
  * @constructor
  * @extends {ol.Object}
- * @param {Object} options Extend {@link _ol_control_Control_} options.
+ * @param {Object} options 
  *  @param {boolean} [options.active]
  */
 ol.filter.Base = function(options) {
@@ -18568,6 +18621,12 @@ function addFilter_(filter) {
 function removeFilter_(filter) {
   var i
   if (!this.filters_) this.filters_ = [];
+  if (!filter) {
+    this.filters_.forEach(function(f) {
+      this.removeFilter(f)
+    }.bind(this))
+    return;
+  }
   for (i=this.filters_.length-1; i>=0; i--) {
     if (this.filters_[i]===filter) this.filters_.splice(i,1);
   }
@@ -19585,6 +19644,50 @@ ol.filter.Lego.prototype.postcompose = function(e) {
     ctx.rect(0,0, w, h);
     ctx.fill(); 
   ctx.restore();
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** @typedef {Object} FilterPointillismOptions
+ * @property {number} saturate saturation, default 2
+ */
+/** A pointillism filter to turn maps into pointillism paintings
+ * @constructor
+ * @extends {ol.filter.Base}
+ * @param {object} options
+ *  @param {boolean} [options.active]
+ *  @param {number} [options.scale=1]
+ */
+ol.filter.Paper = function(options) {
+  options = options || {};
+  ol.filter.Base.call(this, options);
+  this._svgfilter = new ol.ext.SVGFilter.Paper(options);
+};
+ol.ext.inherits(ol.filter.Paper, ol.filter.Base);
+/** @private 
+ */
+ol.filter.Paper.prototype.precompose = function(/* e */) {
+};
+/** @private 
+ */
+ol.filter.Paper.prototype.postcompose = function(e) {
+  // var ratio = e.frameState.pixelRatio;
+  var ctx = e.context;
+  var canvas = ctx.canvas;
+  ctx.save();
+    ctx.filter = 'url(#' + this._svgfilter.getId() +')';
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+};
+/** Set filter light
+ * @param {number} light light option. 0: darker, 100: lighter
+ */
+ol.filter.Paper.prototype.setLight = function(light) {
+  this._svgfilter.setLight(light);
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
