@@ -86,6 +86,8 @@
         <label>saturate:</label><input onchange="filter.set('saturate', this.value);" list="200marks" type="range" value=100 min=0 max=200>%
       </li><li>
         <label>sepia:</label><input onchange="filter.set('sepia', this.value);" list="100marks" type="range" value=0 min=0 max=100>%
+      </li><li>
+        <label>paper:</label><input onchange="setPaper(this.value);" list="100marks" type="range" value=100 min=0 max=100>%
       </li>
     </ul>
   </div>
@@ -186,6 +188,14 @@
         filter.addSVGFilter(erodeFilter);
       }
     }
+
+    // Paper filter
+    var paperFilter = new ol.ext.SVGFilter.Paper({ scale : 2, light: 100 });
+    function setPaper(val) {
+      paperFilter.setLight(val);
+      filter.dispatchEvent({ type: 'propertychange' });
+    }
+    filter.addSVGFilter(paperFilter);
 
     map.addControl(new ol.control.Permalink({ visible: false }));
 
