@@ -318,6 +318,36 @@ var ol_coordinate_sampleAt = function(p1, p2, d, start) {
 };
 export { ol_coordinate_sampleAt }
 
+/** Sample a LineString at a distance
+ * @param {number} d
+ * @returns {ol_geom_LineString}
+ */
+ol_geom_LineString.prototype.sampleAt = function(d) {
+  var line = this.getCoordinates();
+  var result = [];
+  for (var i=1; i<line.length; i++) {
+    result = result.concat(ol_coordinate_sampleAt(line[i-1], line[i], d, i===1));
+  }
+  return new ol_geom_LineString(result);
+};
+
+/** Sample a MultiLineString at a distance
+ * @param {number} d
+ * @returns {ol_geom_MultiLineString}
+ */
+ol_geom_MultiLineString.prototype.sampleAt = function(d) {
+  var lines = this.getCoordinates();
+  var result = [];
+  lines.forEach(function(p) {
+    var l = [];
+    for (var i=1; i<p.length; i++) {
+      l = l.concat(ol_coordinate_sampleAt(p[i-1], p[i], d, i===1));
+    }
+    result.push(l);
+  })
+  return new ol_geom_MultiLineString(result);
+};
+
 /** Sample a Polygon at a distance
  * @param {number} d
  * @returns {ol_geom_Polygon}
