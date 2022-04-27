@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.23
+ * @version v3.2.24
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -35289,6 +35289,34 @@ ol.coordinate.sampleAt = function(p1, p2, d, start) {
   pts.push(p2);
   return pts;
 };
+/** Sample a LineString at a distance
+ * @param {number} d
+ * @returns {ol.geom.LineString}
+ */
+ol.geom.LineString.prototype.sampleAt = function(d) {
+  var line = this.getCoordinates();
+  var result = [];
+  for (var i=1; i<line.length; i++) {
+    result = result.concat(ol.coordinate.sampleAt(line[i-1], line[i], d, i===1));
+  }
+  return new ol.geom.LineString(result);
+};
+/** Sample a MultiLineString at a distance
+ * @param {number} d
+ * @returns {ol.geom.MultiLineString}
+ */
+ol.geom.MultiLineString.prototype.sampleAt = function(d) {
+  var lines = this.getCoordinates();
+  var result = [];
+  lines.forEach(function(p) {
+    var l = [];
+    for (var i=1; i<p.length; i++) {
+      l = l.concat(ol.coordinate.sampleAt(p[i-1], p[i], d, i===1));
+    }
+    result.push(l);
+  })
+  return new ol.geom.MultiLineString(result);
+};
 /** Sample a Polygon at a distance
  * @param {number} d
  * @returns {ol.geom.Polygon}
@@ -35383,9 +35411,9 @@ ol.geom.Circle.prototype.intersection = function(geom, resolution) {
 
 /** Split a lineString by a point or a list of points
  *	NB: points must be on the line, use getClosestPoint() to get one
-* @param {ol.Coordinate | Array<ol.Coordinate>} pt points to split the line
-* @param {Number} tol distance tolerance for 2 points to be equal
-*/
+ * @param {ol.Coordinate | Array<ol.Coordinate>} pt points to split the line
+ * @param {Number} tol distance tolerance for 2 points to be equal
+ */
 ol.geom.LineString.prototype.splitAt = function(pt, tol) {
   var i;
   if (!pt) return [this];
