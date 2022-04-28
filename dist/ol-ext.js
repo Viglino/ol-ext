@@ -24599,9 +24599,11 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e) {
       var deselectedFeatures = e.deselected;
       deselectedFeatures.forEach(deselectedFeature => {
         var selectClusterFeatures = deselectedFeature.get('selectcluserfeatures');
-        selectClusterFeatures.forEach(selectClusterFeature => {
-          this.overlayLayer_.getSource().removeFeature(selectClusterFeature);
-        });
+        if (selectClusterFeatures) {
+          selectClusterFeatures.forEach(selectClusterFeature => {
+            this.overlayLayer_.getSource().removeFeature(selectClusterFeature);
+          });
+        }
       });
     }
     return;
