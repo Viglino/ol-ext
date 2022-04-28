@@ -167,9 +167,11 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
       const deselectedFeatures = e.deselected;
       deselectedFeatures.forEach(deselectedFeature => {
         const selectClusterFeatures = deselectedFeature.get('selectcluserfeatures');
-        selectClusterFeatures.forEach(selectClusterFeature => {
-          this.overlayLayer_.getSource().removeFeature(selectClusterFeature);
-        });
+        if (selectClusterFeatures) {
+          selectClusterFeatures.forEach(selectClusterFeature => {
+            this.overlayLayer_.getSource().removeFeature(selectClusterFeature);
+          });
+        }
       });
     }
     return;
