@@ -108,6 +108,7 @@
   var plink = new ol.control.Permalink({ visible: false, localStorage: 'position' });
   map.addControl(plink);
   map.addControl(new ol.control.SearchNominatim({ zoomOnSelect: 13 }));
+  if (plink.hasUrlParam('edugeo')) $('.options button').show();
 
   var cap = new ol.control.WMSCapabilities({ 
     // target: $('.options').get(0),
@@ -175,8 +176,8 @@
       "layers": []
     }
     map.getLayers().getArray().forEach(function(l) {
-      if (l.get('WMS')) {
-        carte.layers.push({
+      if (l.getSource() instanceof ol.source.TileWMS) {
+        var wms = {
           "wms": true,
           "type": "WMS",
           "name": l.get('title'),
@@ -198,8 +199,7 @@
             "params": {
               "LAYERS": l.getSource().getParams().LAYERS,
               "FORMAT": l.getSource().getParams().FORMAT,
-              "VERSION": l.getSource().getParams().VERSION,
-              "MAP": l.getSource().getParams().MAP || ''
+              "VERSION": l.getSource().getParams().VERSION
             }
             },
             "attribution": {
@@ -210,7 +210,9 @@
           },
           "maxZoomCluster": 20,
           "radiusCluster": 40
-        })
+        }
+        if (l.getSource().getParams().MAP) wms.wmsparam.source.params.MAP = l.getSource().getParams().MAP;
+        carte.layers.push(wms)
       }
     });
     var blob = new Blob([JSON.stringify(carte, null, ' ')], {type: 'text/plain;charset=utf-8'});
