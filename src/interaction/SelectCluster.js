@@ -164,12 +164,14 @@ ol_interaction_SelectCluster.prototype.selectCluster = function (e) {
     if (this._autoClose) {
       this.clear();
     } else {
-      const deselectedFeatures = e.deselected;
+      var deselectedFeatures = e.deselected;
       deselectedFeatures.forEach(deselectedFeature => {
-        const selectClusterFeatures = deselectedFeature.get('selectcluserfeatures');
-        selectClusterFeatures.forEach(selectClusterFeature => {
-          this.overlayLayer_.getSource().removeFeature(selectClusterFeature);
-        });
+        var selectClusterFeatures = deselectedFeature.get('selectcluserfeatures');
+        if (selectClusterFeatures) {
+          selectClusterFeatures.forEach(selectClusterFeature => {
+            this.overlayLayer_.getSource().removeFeature(selectClusterFeature);
+          });
+        }
       });
     }
     return;

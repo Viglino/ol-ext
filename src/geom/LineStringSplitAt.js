@@ -3,9 +3,9 @@ import ol_geom_LineString from "ol/geom/LineString";
 
 /** Split a lineString by a point or a list of points
  *	NB: points must be on the line, use getClosestPoint() to get one
-* @param {ol.Coordinate | Array<ol.Coordinate>} pt points to split the line
-* @param {Number} tol distance tolerance for 2 points to be equal
-*/
+ * @param {ol.Coordinate | Array<ol.Coordinate>} pt points to split the line
+ * @param {Number} tol distance tolerance for 2 points to be equal
+ */
 ol_geom_LineString.prototype.splitAt = function(pt, tol) {
   var i;
   if (!pt) return [this];

@@ -219,11 +219,13 @@
 }
 
 .ol-ext-dialog.ol-wmscapabilities form {
-  max-height: calc(85% - 1em);
   width: 600px;
   min-height: 15em;
   top: 15%;
-  transform: translate(-50%, 0);
+  transform: translate(-50%, -15%);
+}
+.ol-ext-dialog.ol-wmscapabilities .ol-content {
+  max-height: calc(100vh - 6em);
 }
 
 .ol-ext-dialog.ol-wmtscapabilities [data-param="map"] {

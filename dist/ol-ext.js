@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.23
+ * @version v3.2.24
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -1752,6 +1752,59 @@ ol.ext.SVGFilter.Laplacian = function(options) {
   else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
 };
 ol.ext.inherits(ol.ext.SVGFilter.Laplacian, ol.ext.SVGFilter);
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** Apply a sobel filter on an image
+ * @constructor
+ * @requires ol.filter
+ * @extends {ol.ext.SVGFilter}
+ * @param {object} options
+ *  @param {string} [options.id]
+ *  @param {number} [options.scale=1]
+ *  @param {number} [options.ligth=50] light option. 0: darker, 100: lighter
+ */
+ol.ext.SVGFilter.Paper = function(options) {
+  options = options || {};
+  ol.ext.SVGFilter.call(this, { 
+    id: options.id
+  });
+  this.addOperation({
+    feoperation: 'feTurbulence',
+    numOctaves: 4,
+    seed: 0,
+    type: 'fractalNoise',
+    baseFrequency: 0.2 / (options.scale || 1)
+  });
+  this.addOperation({
+    feoperation: 'feDiffuseLighting',
+    'lighting-color': 'rgb(255,255,255)',
+    surfaceScale: 1.5,
+    kernelUnitLength: 0.01,
+    diffuseConstant: 1.1000000000000001,
+    result: 'paper',
+    operations: [{
+      feoperation: 'feDistantLight',
+      elevation: options.light || 50, 
+      azimuth: 75
+    }]
+  });
+  this.addOperation({
+    feoperation: 'feBlend',
+    in: 'SourceGraphic',
+    in2: 'paper',
+    mode: 'multiply'
+  })
+};
+ol.ext.inherits(ol.ext.SVGFilter.Paper, ol.ext.SVGFilter);
+/** Set filter light
+ * @param {number} light light option. 0: darker, 100: lighter
+ */
+ol.ext.SVGFilter.Paper.prototype.setLight = function(light) {
+  this.element.querySelector('feDistantLight').setAttribute('elevation', light);
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -11657,6 +11710,7 @@ ol.control.PrintDialog.prototype.paperSize = {
   'A2': [420,594],
   'A3': [297,420],
   'A4': [210,297],
+  'US Letter': [215.9,279.4],
   'A5': [148,210],
   'B4': [257,364],
   'B5': [182,257]
@@ -11745,7 +11799,13 @@ ol.control.PrintDialog.prototype.setSize = function (size) {
   else size = this._size;
   if (!size) return;
   if (typeof(size) === 'string') {
-    size = size.toLocaleUpperCase();
+    // Test uppercase
+    for (var k in this.paperSize) {
+      if (k && new RegExp(k, 'i').test(size)) {
+        size = k;
+      }
+    }
+    // Default
     if (!this.paperSize[size]) size = this._size = 'A4';
     this._input.size.value = size;
     size = [
@@ -14896,8 +14956,7 @@ ol.control.SelectPopup.prototype.setValues = function(options) {
   }
 };
 
-/** A control with scroll-driven navigation to create narrative maps
- *
+/** A control to display status information on top of the map
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
@@ -18493,7 +18552,7 @@ ol.filter = {};
  *
  * @constructor
  * @extends {ol.Object}
- * @param {Object} options Extend {@link _ol_control_Control_} options.
+ * @param {Object} options 
  *  @param {boolean} [options.active]
  */
 ol.filter.Base = function(options) {
@@ -18562,6 +18621,12 @@ function addFilter_(filter) {
 function removeFilter_(filter) {
   var i
   if (!this.filters_) this.filters_ = [];
+  if (!filter) {
+    this.filters_.forEach(function(f) {
+      this.removeFilter(f)
+    }.bind(this))
+    return;
+  }
   for (i=this.filters_.length-1; i>=0; i--) {
     if (this.filters_[i]===filter) this.filters_.splice(i,1);
   }
@@ -19260,12 +19325,13 @@ ol.filter.Crop.prototype.postcompose = function(e) {
  * @requires ol.filter
  * @extends {ol.filter.Base}
  * @param {Object} [options]
- *  @param {Array<number>} [options.fold] number of fold (horizontal and vertical)
- *  @param {number} [options.margin] margin in px, default 8
- *  @param {number} [options.padding] padding in px, default 8
- *  @param {number|number[]} [options.fsize] fold size in px, default 8,10
- *  @param {boolean} [options.fill] true to fill the background, default false
- *  @param {boolean} [options.shadow] true to display shadow, default true
+ *  @param {Array<number>} [options.fold[8,4]] number of fold (horizontal and vertical)
+ *  @param {number} [options.margin=8] margin in px, default 8
+ *  @param {number} [options.padding=8] padding in px, default 8
+ *  @param {number|number[]} [options.fsize=[8,10]] fold size in px, default 8,10
+ *  @param {boolean} [options.fill=false] true to fill the background, default false
+ *  @param {boolean} [options.shadow=true] true to display shadow
+ *  @param {boolean} [options.opacity=.2] effect opacity
  */
 ol.filter.Fold = function(options) {
   options = options || {};
@@ -19277,6 +19343,7 @@ ol.filter.Fold = function(options) {
   this.set('fsize', options.fsize || [8,10]);
   this.set('fill', options.fill);
   this.set('shadow', options.shadow!==false);
+  this.set('opacity', (options.hasOwnProperty('opacity') ? options.opacity : .2));
 };
 ol.ext.inherits(ol.filter.Fold, ol.filter.Base);
 ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m) {
@@ -19339,7 +19406,7 @@ ol.filter.Fold.prototype.postcompose = function(e) {
       var h = canvas.height/fold[1];
       var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
       grd.addColorStop(0,"transparent");
-      grd.addColorStop(1,"rgba(0,0,0,0.2)");
+      grd.addColorStop(1,"rgba(0,0,0," + this.get('opacity') + ")");
       ctx.fillStyle = grd;
       ctx.scale (1,h/w);
       for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++) {
@@ -19577,6 +19644,50 @@ ol.filter.Lego.prototype.postcompose = function(e) {
     ctx.rect(0,0, w, h);
     ctx.fill(); 
   ctx.restore();
+};
+
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** @typedef {Object} FilterPointillismOptions
+ * @property {number} saturate saturation, default 2
+ */
+/** A pointillism filter to turn maps into pointillism paintings
+ * @constructor
+ * @extends {ol.filter.Base}
+ * @param {object} options
+ *  @param {boolean} [options.active]
+ *  @param {number} [options.scale=1]
+ */
+ol.filter.Paper = function(options) {
+  options = options || {};
+  ol.filter.Base.call(this, options);
+  this._svgfilter = new ol.ext.SVGFilter.Paper(options);
+};
+ol.ext.inherits(ol.filter.Paper, ol.filter.Base);
+/** @private 
+ */
+ol.filter.Paper.prototype.precompose = function(/* e */) {
+};
+/** @private 
+ */
+ol.filter.Paper.prototype.postcompose = function(e) {
+  // var ratio = e.frameState.pixelRatio;
+  var ctx = e.context;
+  var canvas = ctx.canvas;
+  ctx.save();
+    ctx.filter = 'url(#' + this._svgfilter.getId() +')';
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+};
+/** Set filter light
+ * @param {number} light light option. 0: darker, 100: lighter
+ */
+ol.filter.Paper.prototype.setLight = function(light) {
+  this._svgfilter.setLight(light);
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -24488,9 +24599,11 @@ ol.interaction.SelectCluster.prototype.selectCluster = function (e) {
       var deselectedFeatures = e.deselected;
       deselectedFeatures.forEach(deselectedFeature => {
         var selectClusterFeatures = deselectedFeature.get('selectcluserfeatures');
-        selectClusterFeatures.forEach(selectClusterFeature => {
-          this.overlayLayer_.getSource().removeFeature(selectClusterFeature);
-        });
+        if (selectClusterFeatures) {
+          selectClusterFeatures.forEach(selectClusterFeature => {
+            this.overlayLayer_.getSource().removeFeature(selectClusterFeature);
+          });
+        }
       });
     }
     return;
@@ -26691,9 +26804,11 @@ ol.interaction.Transform.prototype.setDefaultStyle = function(options) {
       fill: fill,
       stroke: stroke,
       radius: this.isTouch ? 12 : 6,
+      displacement: this.isTouch ? [24, -24] : [12, -12],
       points: 15
     });
-  circle.getAnchor()[0] = this.isTouch ? -10 : -5;
+  // Old version with no displacement
+  if (!circle.setDisplacement) circle.getAnchor()[0] = this.isTouch ? -10 : -5; 
   var bigpt = new ol.style.RegularShape({
       fill: fill,
       stroke: stroke,
@@ -26741,7 +26856,9 @@ ol.interaction.Transform.prototype.setStyle = function(style, olstyle) {
   for (var i=0; i<this.style[style].length; i++) {
     var im = this.style[style][i].getImage();
     if (im) {
-      if (style == 'rotate') im.getAnchor()[0] = -5;
+      if (style == 'rotate') {
+        im.getAnchor()[0] = -5;
+      }
       if (this.isTouch) im.setScale(1.8);
     }
     var tx = this.style[style][i].getText();
@@ -35174,6 +35291,34 @@ ol.coordinate.sampleAt = function(p1, p2, d, start) {
   pts.push(p2);
   return pts;
 };
+/** Sample a LineString at a distance
+ * @param {number} d
+ * @returns {ol.geom.LineString}
+ */
+ol.geom.LineString.prototype.sampleAt = function(d) {
+  var line = this.getCoordinates();
+  var result = [];
+  for (var i=1; i<line.length; i++) {
+    result = result.concat(ol.coordinate.sampleAt(line[i-1], line[i], d, i===1));
+  }
+  return new ol.geom.LineString(result);
+};
+/** Sample a MultiLineString at a distance
+ * @param {number} d
+ * @returns {ol.geom.MultiLineString}
+ */
+ol.geom.MultiLineString.prototype.sampleAt = function(d) {
+  var lines = this.getCoordinates();
+  var result = [];
+  lines.forEach(function(p) {
+    var l = [];
+    for (var i=1; i<p.length; i++) {
+      l = l.concat(ol.coordinate.sampleAt(p[i-1], p[i], d, i===1));
+    }
+    result.push(l);
+  })
+  return new ol.geom.MultiLineString(result);
+};
 /** Sample a Polygon at a distance
  * @param {number} d
  * @returns {ol.geom.Polygon}
@@ -35268,9 +35413,9 @@ ol.geom.Circle.prototype.intersection = function(geom, resolution) {
 
 /** Split a lineString by a point or a list of points
  *	NB: points must be on the line, use getClosestPoint() to get one
-* @param {ol.Coordinate | Array<ol.Coordinate>} pt points to split the line
-* @param {Number} tol distance tolerance for 2 points to be equal
-*/
+ * @param {ol.Coordinate | Array<ol.Coordinate>} pt points to split the line
+ * @param {Number} tol distance tolerance for 2 points to be equal
+ */
 ol.geom.LineString.prototype.splitAt = function(pt, tol) {
   var i;
   if (!pt) return [this];

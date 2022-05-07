@@ -22,7 +22,7 @@ export {ol_filter};
  *
  * @constructor
  * @extends {ol.Object}
- * @param {Object} options Extend {@link _ol_control_Control_} options.
+ * @param {Object} options 
  *  @param {boolean} [options.active]
  */
 var ol_filter_Base = function(options) {
@@ -98,6 +98,12 @@ function addFilter_(filter) {
 function removeFilter_(filter) {
   var i
   if (!this.filters_) this.filters_ = [];
+  if (!filter) {
+    this.filters_.forEach(function(f) {
+      this.removeFilter(f)
+    }.bind(this))
+    return;
+  }
   for (i=this.filters_.length-1; i>=0; i--) {
     if (this.filters_[i]===filter) this.filters_.splice(i,1);
   }
