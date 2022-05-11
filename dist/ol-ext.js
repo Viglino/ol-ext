@@ -18954,10 +18954,10 @@ ol.filter.CanvasFilter.prototype.postcompose = function(e) {
       + this.get('shadowColor')+')'); 
   }
   if (this.get('grayscale')!==undefined) filter.push('grayscale('+this.get('grayscale')+'%)'); 
+  if (this.get('sepia')!==undefined) filter.push('sepia('+this.get('sepia')+'%)');
   if (this.get('hueRotate')!==undefined) filter.push('hue-rotate('+this.get('hueRotate')+'deg)'); 
   if (this.get('invert')!==undefined) filter.push('invert('+this.get('invert')+'%)'); 
   if (this.get('saturate')!==undefined) filter.push('saturate('+this.get('saturate')+'%)'); 
-  if (this.get('sepia')!==undefined) filter.push('sepia('+this.get('sepia')+'%)');
   filter = filter.join(' ');
   // Apply filter
   if (filter) {
