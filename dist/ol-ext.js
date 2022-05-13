@@ -647,7 +647,7 @@ ol.ext.element.create = function (tagName, options) {
           break;
         }
         case 'style': {
-          this.setStyle(elt, options.style);
+          ol.ext.element.setStyle(elt, options.style);
           break;
         }
         case 'change':
