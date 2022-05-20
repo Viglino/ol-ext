@@ -382,9 +382,11 @@ ol_interaction_Transform.prototype.drawSketch_ = function(center) {
       // Calculate extent arround the point
       var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]]);
       if (p) {
+        var dx = ptRadius ? ptRadius[0] || 10 : 10;
+        var dy = ptRadius ? ptRadius[1] || 10 : 10;
         ext = ol_extent_boundingExtent([
-          this.getMap().getCoordinateFromPixel([p[0] - (ptRadius[0] || 10), p[1] - (ptRadius[1] || 10)]),
-          this.getMap().getCoordinateFromPixel([p[0] + (ptRadius[0] || 10), p[1] + (ptRadius[1] || 10)])
+          this.getMap().getCoordinateFromPixel([p[0] - dx, p[1] - dy]),
+          this.getMap().getCoordinateFromPixel([p[0] + dx, p[1] + dy])
         ]);
       }
     }
