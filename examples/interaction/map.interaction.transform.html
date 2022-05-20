@@ -120,7 +120,7 @@
         image: new ol.style.RegularShape({
           fill: new ol.style.Fill({ color: [0,0,255,0.4]}),
           stroke: new ol.style.Stroke({color: [0,0,255,1],width: 1}),
-          radius: 10,
+          radius: feature.get('radius') ||10,
           points: 3,
           angle: feature.get('angle')||0
         }),
@@ -247,13 +247,18 @@
       keepAspectRatio: $("#keepAspectRatio").prop('checked') ? ol.events.condition.always : undefined,
       keepRectangle: false,
       translate: $("#translate").prop('checked'),
-      stretch: $("#stretch").prop('checked')
+      stretch: $("#stretch").prop('checked'),
+      pointRadius: function(f) {
+        var radius = f.get('radius') || 10;
+        return [radius, radius];
+      }
     });
     map.addInteraction(interaction);
     // Style handles
     setHandleStyle();
     // Events handlers
     var startangle = 0;
+    var startRadius = 10;
     var d=[0,0];
 
     // Handle rotate on first point
@@ -267,6 +272,8 @@
     interaction.on (['rotatestart','translatestart'], function(e){
       // Rotation
       startangle = e.feature.get('angle')||0;
+      // radius
+      startRadius = e.feature.get('radius')||10;
       // Translation
       d=[0,0];
     });
@@ -287,6 +294,10 @@
       $('#info').text("scale: "+e.scale[0].toFixed(2)+","+e.scale[1].toFixed(2)); 
       if (firstPoint) {
         interaction.setCenter(e.features.getArray()[0].getGeometry().getFirstCoordinate());
+      }
+      if (e.features.getLength() === 1) {
+        var feature = e.features.item(0);
+        feature.set('radius', startRadius * Math.abs(e.scale[0]));
       }
     });
     interaction.on(['rotateend', 'translateend', 'scaleend'], function (e) {
