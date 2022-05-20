@@ -26663,8 +26663,8 @@ ol.interaction.TouchCursorSelect.prototype.select = function(f) {
  *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
  *	@param {boolean} options.enableRotatedTransform Enable transform when map is rotated
  *	@param {boolean} [options.keepRectangle=false] keep rectangle when possible
- *	@param {} options.style list of ol.style for handles
- *
+ *	@param {*} options.style list of ol.style for handles
+ *  @param {number|Array<number>|function} [options.pointRadius=0] radius for points or a function that takes a feature and returns the radius (or [radiusX, radiusY]). If not null show handles to transform the points
  */
 ol.interaction.Transform = function(options) {
   if (!options) options = {};
@@ -26699,6 +26699,7 @@ ol.interaction.Transform = function(options) {
   this.layers_ = options.layers ? (options.layers instanceof Array) ? options.layers:[options.layers] : null;
   this._handleEvent = options.condition || function() { return true; };
   this.addFn_ = options.addCondition || function() { return false; };
+  this.setPointRadius(options.pointRadius);
   /* Translate when click on feature */
   this.set('translateFeature', (options.translateFeature!==false));
   /* Can translate the feature */
@@ -26971,6 +26972,8 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
     var extendExt = this.getGeometryRotateToZero_(f).getExtent();
     ol.extent.extend(ext, extendExt);
   }.bind(this));
+  var ptRadius = (this.selection_.getLength() === 1 ? this._pointRadius(this.selection_.item(0)) : 0);
+  if (ptRadius && !(ptRadius instanceof Array)) ptRadius = [ptRadius, ptRadius];
   if (center===true) {
     if (!this.ispt_) {
       this.overlayLayer_.getSource().addFeature(new ol.Feature( { geometry: new ol.geom.Point(this.center_), handle:'rotate0' }) );
@@ -26986,9 +26989,11 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
       // Calculate extent arround the point
       var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]]);
       if (p) {
+        var dx = ptRadius ? ptRadius[0] || 10 : 10;
+        var dy = ptRadius ? ptRadius[1] || 10 : 10;
         ext = ol.extent.boundingExtent([
-          this.getMap().getCoordinateFromPixel([p[0]-10, p[1]-10]),
-          this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
+          this.getMap().getCoordinateFromPixel([p[0] - dx, p[1] - dy]),
+          this.getMap().getCoordinateFromPixel([p[0] + dx, p[1] + dy])
         ]);
       }
     }
@@ -26999,10 +27004,10 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
     f = this.bbox_ = new ol.Feature(geom);
     var features = [];
     var g = geom.getCoordinates()[0];
-    if (!this.ispt_) {
+    if (!this.ispt_ || ptRadius) {
       features.push(f);
       // Middle
-      if (!this.iscircle_ && this.get('stretch') && this.get('scale')) for (i=0; i<g.length-1; i++) {
+      if (!this.iscircle_ && !this.ispt_ && this.get('stretch') && this.get('scale')) for (i=0; i<g.length-1; i++) {
         f = new ol.Feature( { geometry: new ol.geom.Point([(g[i][0]+g[i+1][0])/2,(g[i][1]+g[i+1][1])/2]), handle:'scale', constraint:i%2?"h":"v", option:i });
         features.push(f);
       }
@@ -27435,6 +27440,16 @@ ol.interaction.Transform.prototype.handleUpEvent_ = function(evt) {
  */
 ol.interaction.Transform.prototype.getFeatures = function() {
   return this.selection_;
+};
+/** Set the point radius to calculate handles on points
+ *  @param {number|Array<number>|function} [pointRadius=0] radius for points or a function that takes a feature and returns the radius (or [radiusX, radiusY]). If not null show handles to transform the points
+ */
+ol.interaction.Transform.prototype.setPointRadius = function(pointRadius) {
+  if (typeof(pointRadius)==='function') {
+    this._pointRadius = pointRadius;
+  } else {
+    this._pointRadius = function(){ return pointRadius };
+  }
 };
 
 /** Undo/redo interaction
