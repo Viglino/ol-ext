@@ -270,7 +270,7 @@
       }
     });
 
-    interaction.on (['rotatestart','translatestart'], function(e){
+    interaction.on (['rotatestart','translatestart','scalestart'], function(e){
       // Rotation
       startangle = e.feature.get('angle')||0;
       // radius
