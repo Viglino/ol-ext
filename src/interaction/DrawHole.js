@@ -137,7 +137,8 @@ ol_interaction_DrawHole.prototype._startDrawing = function(e) {
   map.forEachFeatureAtPixel(
     map.getPixelFromCoordinate(coord),
     function(feature, layer) {
-      if (this._features(feature, layer)) {
+      // Not yet found?
+      if (!this._current && this._features(feature, layer)) {
         var poly = feature.getGeometry();
         if (poly.getType() === "Polygon"
           && poly.intersectsCoordinate(coord)) {
