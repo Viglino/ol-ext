@@ -17713,13 +17713,16 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     console.log(t);
     delete layer_opt.source;
   }
+  var returnedLegend=undefined;
+  if(caps.Style && caps.Style[0].LegendURL[0] )
+    returnedLegend=caps.Style[0].LegendURL[0].href;
   return ({ 
     layer: layer_opt, 
     source: source_opt,
     data: {
       title: caps.Title,
       abstract: caps.Abstract,
-      legend: caps.Style ? [ caps.Style[0].LegendURL[0].href ] : undefined,
+      legend: returnedLegend,
     } 
   });
 };
@@ -18784,6 +18787,9 @@ ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out) {
     var fWidth = fExtent[2] - fExtent[1];
     var start = Math.floor((extent[0] + fWidth - worldExtent[0]) / worldWidth);
     var end = Math.floor((extent[2] - fWidth - worldExtent[2]) / worldWidth) +1;
+    if(start > end) {
+        [start, end] = [end, start];
+    }
     for (var i=start; i<=end; i++) {
       drawll(i*worldWidth);
     }
@@ -21555,7 +21561,8 @@ ol.interaction.DrawHole.prototype._startDrawing = function(e) {
   map.forEachFeatureAtPixel(
     map.getPixelFromCoordinate(coord),
     function(feature, layer) {
-      if (this._features(feature, layer)) {
+      // Not yet found?
+      if (!this._current && this._features(feature, layer)) {
         var poly = feature.getGeometry();
         if (poly.getType() === "Polygon"
           && poly.intersectsCoordinate(coord)) {
