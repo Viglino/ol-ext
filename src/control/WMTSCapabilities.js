@@ -200,7 +200,7 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     delete layer_opt.source;
   }
   var returnedLegend=undefined;
-  if(caps.Style && caps.Style[0].LegendURL[0] )
+  if(caps.Style && caps.Style[0] && caps.Style[0].LegendURL && caps.Style[0].LegendURL[0] )
     returnedLegend=caps.Style[0].LegendURL[0].href;
   return ({ 
     layer: layer_opt, 
