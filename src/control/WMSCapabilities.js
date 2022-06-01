@@ -301,7 +301,7 @@ ol_control_WMSCapabilities.prototype.createDialog = function (options) {
       this._elements[label] = ol_ext_element.create('INPUT', {
         value: (val===undefined ? '' : val),
         placeholder: pholder || '',
-        type: typeof(val),
+        type: typeof(val)==='number' ? 'number' : 'text',
         parent: li
       });
     }

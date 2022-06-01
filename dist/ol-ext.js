@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.24
+ * @version v3.2.25
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -16965,7 +16965,7 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
       this._elements[label] = ol.ext.element.create('INPUT', {
         value: (val===undefined ? '' : val),
         placeholder: pholder || '',
-        type: typeof(val),
+        type: typeof(val)==='number' ? 'number' : 'text',
         parent: li
       });
     }
@@ -17713,13 +17713,16 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     console.log(t);
     delete layer_opt.source;
   }
+  var returnedLegend=undefined;
+  if(caps.Style && caps.Style[0].LegendURL[0] )
+    returnedLegend=caps.Style[0].LegendURL[0].href;
   return ({ 
     layer: layer_opt, 
     source: source_opt,
     data: {
       title: caps.Title,
       abstract: caps.Abstract,
-      legend: caps.Style ? [ caps.Style[0].LegendURL[0].href ] : undefined,
+      legend: returnedLegend,
     } 
   });
 };
@@ -18784,6 +18787,9 @@ ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out) {
     var fWidth = fExtent[2] - fExtent[1];
     var start = Math.floor((extent[0] + fWidth - worldExtent[0]) / worldWidth);
     var end = Math.floor((extent[2] - fWidth - worldExtent[2]) / worldWidth) +1;
+    if(start > end) {
+        [start, end] = [end, start];
+    }
     for (var i=start; i<=end; i++) {
       drawll(i*worldWidth);
     }
