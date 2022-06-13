@@ -1,4 +1,4 @@
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -19,7 +19,7 @@ var ol_ext_SVGFilter_Laplacian = function(options) {
   options = options || {};
 
   ol_ext_SVGFilter.call(this, { id: options.id });
-  
+
   var operation = {
     feoperation: 'feConvolveMatrix',
     in: 'SourceGraphic',
@@ -28,14 +28,14 @@ var ol_ext_SVGFilter_Laplacian = function(options) {
   };
   if (options.neighbours===4) {
     operation.kernelMatrix = [
-       0, -1,  0, 
-      -1,  4, -1, 
+       0, -1,  0,
+      -1,  4, -1,
        0, -1,  0
     ];
   } else {
     operation.kernelMatrix = [
-      -1, -1, -1, 
-      -1,  8, -1, 
+      -1, -1, -1,
+      -1,  8, -1,
       -1, -1, -1
     ];
   }

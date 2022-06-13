@@ -1,4 +1,4 @@
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -27,14 +27,14 @@ var ol_ext_SVGFilter_Sobel = function(options) {
   };
   // Vertical
   operation.kernelMatrix = [
-    -1, -2, -1, 
+    -1, -2, -1,
      0,  0,  0,
      1,  2,  1
   ];
   operation.result = 'V1';
   this.addOperation(operation);
   operation.kernelMatrix = [
-     1,  2,  1, 
+     1,  2,  1,
      0,  0,  0,
     -1, -2, -1
   ];
@@ -42,14 +42,14 @@ var ol_ext_SVGFilter_Sobel = function(options) {
   this.addOperation(operation);
   // Horizontal
   operation.kernelMatrix = [
-    -1,  0,  1, 
+    -1,  0,  1,
     -2,  0,  2,
     -1,  0,  1
   ];
   operation.result = 'H1';
   this.addOperation(operation);
   operation.kernelMatrix = [
-     1, -0, -1, 
+     1, -0, -1,
      2,  0, -2,
      1,  0, -1
   ];

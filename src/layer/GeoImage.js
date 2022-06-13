@@ -12,19 +12,21 @@ import {ol_ext_inherits} from '../util/ext'
  * @param {Object=} options Layer Image options.
  * @api
  */
-var ol_layer_GeoImage = function(options) {
-  ol_layer_Image.call(this, options);
+class ol_layer_GeoImage {
+  constructor(options) {
+    ol_layer_Image.call(this, options);
+  }
+  /**
+   * Return the {@link module:ol/extent~Extent extent} of the source associated with the layer.
+   * @return {ol.Extent} The layer extent.
+   * @observable
+   * @api
+   */
+  getExtent() {
+    return this.getSource().getExtent();
+  }
 }
 ol_ext_inherits (ol_layer_GeoImage, ol_layer_Image);
 
-/**
- * Return the {@link module:ol/extent~Extent extent} of the source associated with the layer.
- * @return {ol.Extent} The layer extent.
- * @observable
- * @api
- */
-ol_layer_GeoImage.prototype.getExtent = function() {
-  return this.getSource().getExtent();
-}
 
 export default ol_layer_GeoImage;
