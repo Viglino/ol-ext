@@ -46,9 +46,7 @@ ol_interaction_ClipMap.prototype.setMap = function(map) {
  */
 ol_interaction_ClipMap.prototype.setRadius = function(radius) {
   this.radius = radius;
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
+  this._clip();
 };
 
 /** Get clip radius
@@ -64,7 +62,7 @@ ol_interaction_ClipMap.prototype.getRadius = function() {
 ol_interaction_ClipMap.prototype.setPosition = function(coord) {
   if (this.getMap()) {
     this.pos = this.getMap().getPixelFromCoordinate(coord);
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    this._clip();
   }
 };
 
@@ -81,9 +79,7 @@ ol_interaction_ClipMap.prototype.getPosition = function() {
  */
  ol_interaction_ClipMap.prototype.setPixelPosition = function(pixel) {
   this.pos = pixel;
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
+  this._clip();
 };
 
 /** Get position of the clip

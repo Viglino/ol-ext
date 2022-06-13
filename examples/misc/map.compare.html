@@ -231,7 +231,7 @@
   map2.addInteraction( new ol.interaction.Synchronize({ maps: [map] }) );
 
   // Tools
-  /** /
+  /* Use layer clipping * /
   var clip = new ol.interaction.Clip({ radius: 150, layers: map2.getLayers().getArray() });
   var swipe = new ol.control.Swipe({ rightLayers: map2.getLayers().getArray(),  });
   /*/
