@@ -1,4 +1,4 @@
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -14,39 +14,43 @@ var ol_filter = {};
 export {ol_filter};
 
 /**
- * @classdesc 
- * Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
- * Used to create filters    
+ * @classdesc
+ * Abstract base class; normally only used for creating subclasses and not instantiated in apps.
+ * Used to create filters
  * Use {@link ol_layer_Base#addFilter}, {@link ol_layer_Base#removeFilter} or {@link ol_layer_Base#getFilters}
  * to handle filters on layers.
  *
  * @constructor
  * @extends {ol.Object}
- * @param {Object} options 
+ * @param {Object} options
  *  @param {boolean} [options.active]
  */
-var ol_filter_Base = function(options) {
-  ol_Object.call(this, options);
-  // Array of postcompose listener
-  this._listener = [];
-  if (options && options.active===false) this.set('active', false);
-  else this.set('active', true);
-};
+  class ol_filter_Base {
+    constructor(options) {
+      ol_Object.call(this, options)
+      // Array of postcompose listener
+      this._listener = []
+      if (options && options.active === false)
+        this.set('active', false)
+      else
+        this.set('active', true)
+    }
+    /** Activate / deactivate filter
+    *	@param {boolean} b
+    */
+    setActive(b) {
+      this.set('active', b === true)
+    }
+    /** Get filter active
+    *	@return {boolean}
+    */
+    getActive() {
+      return this.get('active')
+    }
+  }
 ol_ext_inherits(ol_filter_Base, ol_Object);
 
-/** Activate / deactivate filter
-*	@param {boolean} b
-*/
-ol_filter_Base.prototype.setActive = function (b) {
-  this.set('active', b===true);
-};
 
-/** Get filter active
-*	@return {boolean}
-*/
-ol_filter_Base.prototype.getActive = function () {
-  return this.get('active');
-};
 
 (function(){
 
@@ -73,7 +77,7 @@ function filterRedraw_(/* e */) {
   if (this.renderSync) {
     try { this.renderSync(); } catch(e) { /* ok */ }
   } else {
-    this.changed(); 
+    this.changed();
   }
 }
 

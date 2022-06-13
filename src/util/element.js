@@ -64,7 +64,7 @@ ol_ext_element.create = function (tagName, options) {
           break;
         }
         case 'style': {
-          this.setStyle(elt, options.style);
+          ol_ext_element.setStyle(elt, options.style);
           break;
         }
         case 'change':
@@ -134,7 +134,6 @@ ol_ext_element.createCheck = function (options) {
     on: options.on,
     parent: options.parent
   });
-  console.log(input)
   var opt = Object.assign ({ input: input }, options || {});
   if (options.type === 'radio') {
     new ol_ext_input_Radio(opt);

@@ -1,4 +1,4 @@
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -19,71 +19,71 @@ import ol_control_CanvasBase from './CanvasBase'
  *  @param {ol.style.Style|Array<ol.style.Style>} options.style
  *  @param {string} options.composite composite operation = difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
-var ol_control_Target = function(options) {
-  options = options || {};
+class ol_control_Target {
+  constructor(options) {
+    options = options || {}
 
-	this.style = options.style || [
-    new ol_style_Style({ image: new ol_style_RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol_style_Stroke({ color: "#fff", width:3 }) }) }),
-    new ol_style_Style({ image: new ol_style_RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol_style_Stroke({ color: "#000", width:1 }) }) })
-  ];
-	if (!(this.style instanceof Array)) this.style = [this.style];
-	this.composite = options.composite || '';
+    this.style = options.style || [
+      new ol_style_Style({ image: new ol_style_RegularShape({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel: true, stroke: new ol_style_Stroke({ color: "#fff", width: 3 }) }) }),
+      new ol_style_Style({ image: new ol_style_RegularShape({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel: true, stroke: new ol_style_Stroke({ color: "#000", width: 1 }) }) })
+    ]
+    if (!(this.style instanceof Array))
+      this.style = [this.style]
+    this.composite = options.composite || ''
 
-	var div = document.createElement('div');
-	div.className = "ol-target ol-unselectable ol-control";
-	ol_control_CanvasBase.call(this, {
-    element: div,
-		target: options.target
-	});
+    var div = document.createElement('div')
+    div.className = "ol-target ol-unselectable ol-control"
+    ol_control_CanvasBase.call(this, {
+      element: div,
+      target: options.target
+    })
 
-	this.setVisible(options.visible!==false);
-};
-ol_ext_inherits(ol_control_Target, ol_control_CanvasBase);
-
-/** Set the control visibility
- * @paraam {boolean} b 
- */
-ol_control_Target.prototype.setVisible = function (b) {
-  this.set("visible",b);
-	if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    this.setVisible(options.visible !== false)
   }
-};
+  /** Set the control visibility
+   * @paraam {boolean} b
+   */
+  setVisible(b) {
+    this.set("visible", b)
+    if (this.getMap()) {
+      try { this.getMap().renderSync()}  catch (e) { /* ok */ }
+    }
+  }
+  /** Get the control visibility
+   * @return {boolean} b
+   */
+  getVisible() {
+    return this.get("visible")
+  }
+  /** Draw the target
+   * @private
+   */
+  _draw(e) {
+    var ctx = this.getContext(e)
+    if (!ctx || !this.getMap() || !this.getVisible())
+      return
 
-/** Get the control visibility
- * @return {boolean} b 
- */
-ol_control_Target.prototype.getVisible = function () {
-  return this.get("visible");
-};
+    var ratio = e.frameState.pixelRatio
 
-/** Draw the target
- * @private
- */
-ol_control_Target.prototype._draw = function (e) {
-  var ctx = this.getContext(e);
-  if (!ctx || !this.getMap() || !this.getVisible()) return;
+    ctx.save()
 
-	var ratio = e.frameState.pixelRatio;
+    ctx.scale(ratio, ratio)
 
-	ctx.save();
-	
-		ctx.scale(ratio,ratio);
+    var cx = ctx.canvas.width / (2 * ratio)
+    var cy = ctx.canvas.height / (2 * ratio)
+    var geom = new ol_geom_Point(this.getMap().getCoordinateFromPixel([cx, cy]))
 
-		var cx = ctx.canvas.width/(2*ratio);
-		var cy = ctx.canvas.height/(2*ratio);
-		var geom = new ol_geom_Point (this.getMap().getCoordinateFromPixel([cx,cy]));
+    if (this.composite)
+      ctx.globalCompositeOperation = this.composite
 
-		if (this.composite) ctx.globalCompositeOperation = this.composite;
-
-    for (var i=0; i<this.style.length; i++) {
-      var style = this.style[i];
+    for (var i = 0; i < this.style.length; i++) {
+      var style = this.style[i]
 
       if (style instanceof ol_style_Style) {
-        var vectorContext = e.vectorContext;
+        var vectorContext = e.vectorContext
         if (!vectorContext) {
           var event = {
-            inversePixelTransform: [ratio,0,0,ratio,0,0],
+            inversePixelTransform: [ratio, 0, 0, ratio, 0, 0],
             context: ctx,
             frameState: {
               pixelRatio: ratio,
@@ -92,14 +92,19 @@ ol_control_Target.prototype._draw = function (e) {
               viewState: e.frameState.viewState
             }
           }
-          vectorContext = ol_render_getVectorContext(event);
-        } 
-        vectorContext.setStyle(style);
-        vectorContext.drawGeometry(geom);
+          vectorContext = ol_render_getVectorContext(event)
+        }
+        vectorContext.setStyle(style)
+        vectorContext.drawGeometry(geom)
       }
     }
 
-	ctx.restore();
-};
+    ctx.restore()
+  }
+}
+ol_ext_inherits(ol_control_Target, ol_control_CanvasBase);
+
+
+
 
 export default ol_control_Target

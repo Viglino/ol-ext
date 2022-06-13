@@ -8,43 +8,47 @@ import ol_ext_element from '../util/element'
  * @fires focus
  * @extends {ol_interaction_Interaction}
  */
-var ol_interaction_FocusMap = function() {
-  //
-  ol_interaction_Interaction.call(this, {});
+class ol_interaction_FocusMap {
+  constructor() {
+    //
+    ol_interaction_Interaction.call(this, {});
 
-  // Focus (hidden) button to focus on the map when click on it 
-  this.focusBt = ol_ext_element.create('BUTTON', {
-    on: {
-      focus: function() {
-        this.dispatchEvent({ type:'focus' });
-      }.bind(this)
-    },
-    style: {
-      position: 'absolute',
-      zIndex: -1,
-      top: 0,
-      opacity: 0
+    // Focus (hidden) button to focus on the map when click on it
+    this.focusBt = ol_ext_element.create('BUTTON', {
+      on: {
+        focus: function () {
+          this.dispatchEvent({ type: 'focus' });
+        }.bind(this)
+      },
+      style: {
+        position: 'absolute',
+        zIndex: -1,
+        top: 0,
+        opacity: 0
+      }
+    });
+  }
+  /** Set the map > add the focus button and focus on the map when pointerdown to enable keyboard events.
+   */
+  setMap(map) {
+    if (this._listener)
+      ol_Observable_unByKey(this._listener);
+    this._listener = null;
+    if (this.getMap()) { this.getMap().getViewport().removeChild(this.focusBt); }
+
+    ol_interaction_Interaction.prototype.setMap.call(this, map);
+
+    if (this.getMap()) {
+      // Force focus on the clicked map
+      this._listener = this.getMap().on('pointerdown', function () {
+        if (this.getActive())
+          this.focusBt.focus();
+      }.bind(this));
+      this.getMap().getViewport().appendChild(this.focusBt);
     }
-  });
-};
+  }
+}
 ol_ext_inherits(ol_interaction_FocusMap, ol_interaction_Interaction);
 
-/** Set the map > add the focus button and focus on the map when pointerdown to enable keyboard events.
- */
-ol_interaction_FocusMap.prototype.setMap = function(map) {
-  if (this._listener) ol_Observable_unByKey(this._listener);
-  this._listener = null;
-  if (this.getMap()) { this.getMap().getViewport().removeChild(this.focusBt); }
-
-  ol_interaction_Interaction.prototype.setMap.call (this, map);
-
-  if (this.getMap()) {
-    // Force focus on the clicked map
-    this._listener = this.getMap().on('pointerdown', function() {
-      if (this.getActive()) this.focusBt.focus();
-    }.bind(this));
-    this.getMap().getViewport().appendChild(this.focusBt); 
-  }
-};
 
 export default ol_interaction_FocusMap

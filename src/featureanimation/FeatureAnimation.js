@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2016 Jean-Marc VIGLINO, 
+  Copyright (c) 2016 Jean-Marc VIGLINO,
   released under the CeCILL license (http://www.cecill.info/).
 */
 
@@ -31,75 +31,81 @@ import ol_ext_getVectorContextStyle from '../util/getVectorContextStyle'
 *	@param {bool} options.revers revers the animation direction
 *	@param {Number} options.repeat number of time to repeat the animation, default 0
 *	@param {ol.style.Style} options.hiddenStyle a style to display the feature when playing the animation
-*	  to be used to make the feature selectable when playing animation 
-*	  (@see {@link ../examples/map.featureanimation.select.html}), default the feature 
+*	  to be used to make the feature selectable when playing animation
+*	  (@see {@link ../examples/map.featureanimation.select.html}), default the feature
 *	  will be hidden when playing (and not selectable)
 *	@param {ol_easing_Function} options.fade an easing function used to fade in the feature, default none
 *	@param {ol_easing_Function} options.easing an easing function for the animation, default ol_easing_linear
 */
-var ol_featureAnimation = function(options) {
-  options = options || {};
-  
-  this.duration_ = typeof (options.duration)=='number' ? (options.duration>=0 ? options.duration : 0) : 1000;
-  this.fade_ = typeof(options.fade) == 'function' ? options.fade : null;
-  this.repeat_ = Number(options.repeat);
+class ol_featureAnimation {
+  constructor(options) {
+    options = options || {}
 
-  var easing = typeof(options.easing) =='function' ? options.easing : ol_easing_linear;
-  if (options.revers) this.easing_ = function(t) { return (1 - easing(t)); };
-  else this.easing_ = easing;
+    this.duration_ = typeof (options.duration) == 'number' ? (options.duration >= 0 ? options.duration : 0) : 1000
+    this.fade_ = typeof (options.fade) == 'function' ? options.fade : null
+    this.repeat_ = Number(options.repeat)
 
-  this.hiddenStyle = options.hiddenStyle;
+    var easing = typeof (options.easing) == 'function' ? options.easing : ol_easing_linear
+    if (options.revers)
+      this.easing_ = function (t) { return (1 - easing(t)) }
+    else
+      this.easing_ = easing
 
-  ol_Object.call(this);
-};
+    this.hiddenStyle = options.hiddenStyle
+
+    ol_Object.call(this)
+  }
+  /** Draw a geometry
+  * @param {olx.animateFeatureEvent} e
+  * @param {ol.geom} geom geometry for shadow
+  * @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
+  * @private
+  */
+  drawGeom_(e, geom, shadow) {
+    if (this.fade_) {
+      e.context.globalAlpha = this.fade_(1 - e.elapsed)
+    }
+    var style = e.style
+    for (var i = 0; i < style.length; i++) {
+      // Prevent crach if the style is not ready (image not loaded)
+      try {
+        var vectorContext = e.vectorContext || ol_render_getVectorContext(e)
+        var s = ol_ext_getVectorContextStyle(e, style[i])
+        vectorContext.setStyle(s)
+        if (s.getZIndex() < 0)
+          vectorContext.drawGeometry(shadow || geom)
+        else
+          vectorContext.drawGeometry(geom)
+      } catch (e) { /* ok */ }
+    }
+  }
+  /** Function to perform manipulations onpostcompose.
+   * This function is called with an ol_featureAnimationEvent argument.
+   * The function will be overridden by the child implementation.
+   * Return true to keep this function for the next frame, false to remove it.
+   * @param {ol_featureAnimationEvent} e
+   * @return {bool} true to continue animation.
+   * @api
+   */
+  animate( /* e */) {
+    return false
+  }
+}
 ol_ext_inherits(ol_featureAnimation, ol_Object);
 
 
 /** Hidden style: a transparent style
  */
-ol_featureAnimation.hiddenStyle = new ol_style_Style({ 
-  image: new ol_style_Circle({}), 
-  stroke: new ol_style_Stroke({ 
-    color: 'transparent' 
-  }) 
+ol_featureAnimation.hiddenStyle = new ol_style_Style({
+  image: new ol_style_Circle({}),
+  stroke: new ol_style_Stroke({
+    color: 'transparent'
+  })
 });
 
-/** Draw a geometry 
-* @param {olx.animateFeatureEvent} e
-* @param {ol.geom} geom geometry for shadow
-* @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
-* @private
-*/
-ol_featureAnimation.prototype.drawGeom_ = function (e, geom, shadow) {
-  if (this.fade_) {
-    e.context.globalAlpha = this.fade_(1-e.elapsed);
-  }
-  var style = e.style;
-  for (var i=0; i<style.length; i++) {
-    // Prevent crach if the style is not ready (image not loaded)
-    try {
-      var vectorContext = e.vectorContext || ol_render_getVectorContext(e);
-      var s = ol_ext_getVectorContextStyle(e, style[i]);
-      vectorContext.setStyle(s);
-      if (s.getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
-      else vectorContext.drawGeometry(geom);
-    } catch(e) { /* ok */ }
-  }
-};
 
-/** Function to perform manipulations onpostcompose. 
- * This function is called with an ol_featureAnimationEvent argument.
- * The function will be overridden by the child implementation.    
- * Return true to keep this function for the next frame, false to remove it.
- * @param {ol_featureAnimationEvent} e
- * @return {bool} true to continue animation.
- * @api 
- */
-ol_featureAnimation.prototype.animate = function (/* e */) {
-  return false;
-};
 
-/** An animation controler object an object to control animation with start, stop and isPlaying function.    
+/** An animation controler object an object to control animation with start, stop and isPlaying function.
  * To be used with {@link olx.Map#animateFeature} or {@link ol.layer.Vector#animateFeature}
  * @typedef {Object} animationControler
  * @property {function} start - start animation.
@@ -108,13 +114,13 @@ ol_featureAnimation.prototype.animate = function (/* e */) {
  */
 
 /** Animate feature on a map
- * @function 
+ * @function
  * @param {ol.Feature} feature Feature to animate
  * @param {ol_featureAnimation|Array<ol_featureAnimation>} fanim the animation to play
  * @return {animationControler} an object to control animation with start, stop and isPlaying function
  */
 ol_Map.prototype.animateFeature = function(feature, fanim) {
-  // Get or create an animation layer associated with the map 
+  // Get or create an animation layer associated with the map
   var layer = this._featureAnimationLayer;
   if (!layer) {
     layer = this._featureAnimationLayer = new ol_layer_Vector({ source: new ol_source_Vector() });
@@ -132,7 +138,7 @@ ol_Map.prototype.animateFeature = function(feature, fanim) {
   layer.animateFeature(feature, fanim);
 };
 
-/** Animate feature on a vector layer 
+/** Animate feature on a vector layer
  * @fires animationstart, animationend
  * @param {ol.Feature} feature Feature to animate
  * @param {ol_featureAnimation|Array<ol_featureAnimation>} fanim the animation to play
@@ -201,7 +207,7 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
     if (this.getOpacity) {
       e.context.globalAlpha = this.getOpacity();
     }
-    
+
 
     // Stop animation?
     if (!fanim[step].animate(event)) {
@@ -220,8 +226,8 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
         stop();
       }
     } else {
-      var animEvent = { 
-        type: 'animating', 
+      var animEvent = {
+        type: 'animating',
         step: step,
         start: event.start,
         time: event.time,
@@ -229,7 +235,7 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
         rotation: event.rotation||0,
         geom: event.geom,
         coordinate: event.coord,
-        feature: feature 
+        feature: feature
       };
       fanim[step].dispatchEvent(animEvent);
       self.dispatchEvent(animEvent);
@@ -253,7 +259,7 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
     var event = { type:'animationend', feature: feature };
     if (options) {
       for (var i in options) if (options.hasOwnProperty(i)) {
-        event[i] = options[i]; 
+        event[i] = options[i];
       }
     }
     fanim[step].dispatchEvent(event);
@@ -276,7 +282,7 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
       var event = { type:'animationstart', feature: feature };
       if (options) {
         for (var i in options) if (options.hasOwnProperty(i)) {
-          event[i] = options[i]; 
+          event[i] = options[i];
         }
       }
       fanim[step].dispatchEvent(event);

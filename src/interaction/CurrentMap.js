@@ -12,73 +12,75 @@ import ol_interaction_Interaction from 'ol/interaction/Interaction'
  *  @param {function} onKeyUp a function that takes a keyup event is fired on the active map
  * @extends {ol_interaction_Interaction}
  */
-var ol_interaction_CurrentMap = function(options) {
-  options = options || {};
+class ol_interaction_CurrentMap {
+  constructor(options) {
+    options = options || {};
 
-  var condition = options.condition || function() {
-    return true;
-  }
-  // Check events on the map
-  ol_interaction_Interaction.call(this, {
-    handleEvent: function(e) {
-      if (condition(e)) {
-        if (!this.isCurrentMap()) {
-          this.setCurrentMap(this.getMap());
-          this.dispatchEvent({ type: 'focus', map: this.getMap() });
-          this.getMap().dispatchEvent({ type: 'focus', map: this.getMap() });
-        }
-      }
+    var condition = options.condition || function () {
       return true;
-    }.bind(this)
-  });
+    };
+    // Check events on the map
+    ol_interaction_Interaction.call(this, {
+      handleEvent: function (e) {
+        if (condition(e)) {
+          if (!this.isCurrentMap()) {
+            this.setCurrentMap(this.getMap());
+            this.dispatchEvent({ type: 'focus', map: this.getMap() });
+            this.getMap().dispatchEvent({ type: 'focus', map: this.getMap() });
+          }
+        }
+        return true;
+      }.bind(this)
+    });
 
-  // Add a key listener
-  if (options.onKeyDown) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyDown ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
+    // Add a key listener
+    if (options.onKeyDown) {
+      document.addEventListener('keydown', function (e) {
+        if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+          options.onKeyDown({ type: e.type, map: this.getMap(), originalEvent: e });
+        }
+      }.bind(this));
+    }
+    if (options.onKeyPress) {
+      document.addEventListener('keydown', function (e) {
+        if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+          options.onKeyPress({ type: e.type, map: this.getMap(), originalEvent: e });
+        }
+      }.bind(this));
+    }
+    if (options.onKeyUp) {
+      document.addEventListener('keydown', function (e) {
+        if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+          options.onKeyUp({ type: e.type, map: this.getMap(), originalEvent: e });
+        }
+      }.bind(this));
+    }
   }
-  if (options.onKeyPress) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyPress ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
+  /** Check if is the current map
+   * @return {boolean}
+   */
+  isCurrentMap() {
+    return this.getMap() === ol_interaction_CurrentMap.prototype._currentMap;
   }
-  if (options.onKeyUp) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyUp ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
+  /** Get the current map
+   * @return {ol.Map}
+   */
+  getCurrentMap() {
+    return ol_interaction_CurrentMap.prototype._currentMap;
   }
-};
+  /** Set the current map
+   * @param {ol.Map} map
+   */
+  setCurrentMap(map) {
+    ol_interaction_CurrentMap.prototype._currentMap = map;
+  }
+}
 ol_ext_inherits(ol_interaction_CurrentMap, ol_interaction_Interaction);
 
 /** The current map */
 ol_interaction_CurrentMap.prototype._currentMap = undefined;
 
-/** Check if is the current map 
- * @return {boolean}
- */
-ol_interaction_CurrentMap.prototype.isCurrentMap = function() {
-  return this.getMap() === ol_interaction_CurrentMap.prototype._currentMap;
-};
 
-/** Get the current map
- * @return {ol.Map}
- */
-ol_interaction_CurrentMap.prototype.getCurrentMap = function() {
-  return ol_interaction_CurrentMap.prototype._currentMap;
-};
 
-/** Set the current map
- * @param {ol.Map} map
- */
-ol_interaction_CurrentMap.prototype.setCurrentMap = function(map) {
-  ol_interaction_CurrentMap.prototype._currentMap = map;
-};
 
 export default ol_interaction_CurrentMap

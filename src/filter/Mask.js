@@ -113,6 +113,10 @@ class ol_filter_Mask {
       var fWidth = fExtent[2] - fExtent[1];
       var start = Math.floor((extent[0] + fWidth - worldExtent[0]) / worldWidth);
       var end = Math.floor((extent[2] - fWidth - worldExtent[2]) / worldWidth) + 1;
+
+      if (start > end) {
+        [start, end] = [end, start];
+      }
       for (var i = start; i <= end; i++) {
         drawll(i * worldWidth);
       }

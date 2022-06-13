@@ -1,4 +1,4 @@
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -29,141 +29,144 @@ import ol_layer_SketchOverlay from '../layer/SketchOverlay'
  *  @param {string} options.geometryName Geometry name to use for features created by the draw interaction.
  *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
  */
-var ol_interaction_TouchCursorDraw = function(options) {
-  options = options || {};
+class ol_interaction_TouchCursorDraw {
+  constructor(options) {
+    options = options || {};
 
-  // Draw 
-  var sketch = this.sketch = new ol_layer_SketchOverlay({
-    type: options.type
-  });
-
-  sketch.on('drawend', function(e) {
-    if (e.valid && options.source) options.source.addFeature(e.feature);
-    this.getOverlayElement().classList.add('nodrawing');
-    this.dispatchEvent(e);
-  }.bind(this));
-  sketch.on('drawstart', function(e) {
-    this.getOverlayElement().classList.remove('nodrawing');
-    this.dispatchEvent(e);
-  }.bind(this));
-  sketch.on('drawabort', function(e) {
-    this.getOverlayElement().classList.add('nodrawing');
-    this.dispatchEvent(e);
-  }.bind(this));
-
-  // Create cursor
-  ol_interaction_TouchCursor.call(this, {
-    className: options.className,
-    coordinate: options.coordinate,
-  });
-  this.getOverlayElement().classList.add('nodrawing');
-
-  this.set('types', options.types);
-  this.setType(options.type);
-
-  this.on('click', function() {
-    this.sketch.addPoint(this.getPosition());
-  }.bind(this))
-
-  this.on('dragging', function() {
-    this.sketch.setPosition(this.getPosition());
-  }.bind(this))
-};
-ol_ext_inherits(ol_interaction_TouchCursorDraw, ol_interaction_TouchCursor);
-
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {_ol_Map_} map Map.
- * @api stable
- */
-ol_interaction_TouchCursorDraw.prototype.setMap = function(map) {
-  ol_interaction_TouchCursor.prototype.setMap.call (this, map);
-
-  this.sketch.setMap(map);
-  if (map) {
-    this._listeners.movend = map.on('moveend', function() {
-      this.sketch.setPosition(this.getPosition())
-    }.bind(this))
-  }
-};
-
-/**
- * Activate or deactivate the interaction.
- * @param {boolean} active Active.
- * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
- * @observable
- * @api
- */
-ol_interaction_TouchCursorDraw.prototype.setActive = function(b, position) {
-  ol_interaction_TouchCursor.prototype.setActive.call (this, b, position);
-  this.sketch.abortDrawing();
-  this.sketch.setPosition(position);
-  this.sketch.setVisible(b);
-};
-
-/**
- * Set Geometry type
- * @param {string} type Geometry type
- */
-ol_interaction_TouchCursorDraw.prototype.setType = function(type) {
-  this.removeButton();
-  var sketch = this.sketch;
-  this.getOverlayElement().classList.remove(sketch.getGeometryType());
-  // Set type
-  var oldValue = sketch.setGeometryType();
-  type = sketch.setGeometryType(type);
-  this.getOverlayElement().classList.add(type);
-
-  this.dispatchEvent({
-    type: 'change:type',
-    oldValue: oldValue
-  });
-
-  // Next type
-  var types = this.get('types');
-  if (types && types.length) {
-    var next = types[(types.indexOf(type) + 1) % types.length];
-    this.addButton({
-      className: 'ol-button-type '+next, 
-      click: function() {
-        this.setType(next)
-      }.bind(this)
+    // Draw
+    var sketch = this.sketch = new ol_layer_SketchOverlay({
+      type: options.type
     });
-  }
-  // Add buttons
-  if (type !== 'Point') {
-    // Cancel drawing
-    this.addButton({
-      className: 'ol-button-x', 
-      click: function() {
-        sketch.abortDrawing();
-      }
+
+    sketch.on('drawend', function (e) {
+      if (e.valid && options.source)
+        options.source.addFeature(e.feature);
+      this.getOverlayElement().classList.add('nodrawing');
+      this.dispatchEvent(e);
+    }.bind(this));
+    sketch.on('drawstart', function (e) {
+      this.getOverlayElement().classList.remove('nodrawing');
+      this.dispatchEvent(e);
+    }.bind(this));
+    sketch.on('drawabort', function (e) {
+      this.getOverlayElement().classList.add('nodrawing');
+      this.dispatchEvent(e);
+    }.bind(this));
+
+    // Create cursor
+    ol_interaction_TouchCursor.call(this, {
+      className: options.className,
+      coordinate: options.coordinate,
     });
-    if (type !== 'Circle') {
-      // Add a new point (nothing to do, just click)
-      this.addButton({ 
-        className: 'ol-button-check',
-        click: function() {
-          sketch.finishDrawing(true);
-        }
-      });
-      // Remove last point
-      this.addButton({  
-        className: 'ol-button-remove', 
-        click: function() {
-          sketch.removeLastPoint();
-        }
-      });
+    this.getOverlayElement().classList.add('nodrawing');
+
+    this.set('types', options.types);
+    this.setType(options.type);
+
+    this.on('click', function () {
+      this.sketch.addPoint(this.getPosition());
+    }.bind(this));
+
+    this.on('dragging', function () {
+      this.sketch.setPosition(this.getPosition());
+    }.bind(this));
+  }
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {_ol_Map_} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    ol_interaction_TouchCursor.prototype.setMap.call(this, map);
+
+    this.sketch.setMap(map);
+    if (map) {
+      this._listeners.movend = map.on('moveend', function () {
+        this.sketch.setPosition(this.getPosition());
+      }.bind(this));
     }
   }
-};
+  /**
+   * Activate or deactivate the interaction.
+   * @param {boolean} active Active.
+   * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
+   * @observable
+   * @api
+   */
+  setActive(b, position) {
+    ol_interaction_TouchCursor.prototype.setActive.call(this, b, position);
+    this.sketch.abortDrawing();
+    this.sketch.setPosition(position);
+    this.sketch.setVisible(b);
+  }
+  /**
+   * Set Geometry type
+   * @param {string} type Geometry type
+   */
+  setType(type) {
+    this.removeButton();
+    var sketch = this.sketch;
+    this.getOverlayElement().classList.remove(sketch.getGeometryType());
+    // Set type
+    var oldValue = sketch.setGeometryType();
+    type = sketch.setGeometryType(type);
+    this.getOverlayElement().classList.add(type);
 
-/** Get geometry type
- */
-ol_interaction_TouchCursorDraw.prototype.getType = function() {
-  return this.sketch.getGeometryType();
-};
+    this.dispatchEvent({
+      type: 'change:type',
+      oldValue: oldValue
+    });
+
+    // Next type
+    var types = this.get('types');
+    if (types && types.length) {
+      var next = types[(types.indexOf(type) + 1) % types.length];
+      this.addButton({
+        className: 'ol-button-type ' + next,
+        click: function () {
+          this.setType(next);
+        }.bind(this)
+      });
+    }
+    // Add buttons
+    if (type !== 'Point') {
+      // Cancel drawing
+      this.addButton({
+        className: 'ol-button-x',
+        click: function () {
+          sketch.abortDrawing();
+        }
+      });
+      if (type !== 'Circle') {
+        // Add a new point (nothing to do, just click)
+        this.addButton({
+          className: 'ol-button-check',
+          click: function () {
+            sketch.finishDrawing(true);
+          }
+        });
+        // Remove last point
+        this.addButton({
+          className: 'ol-button-remove',
+          click: function () {
+            sketch.removeLastPoint();
+          }
+        });
+      }
+    }
+  }
+  /** Get geometry type
+   */
+  getType() {
+    return this.sketch.getGeometryType();
+  }
+}
+ol_ext_inherits(ol_interaction_TouchCursorDraw, ol_interaction_TouchCursor);
+
+
+
+
 
 
 export default ol_interaction_TouchCursorDraw

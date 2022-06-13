@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.24
+ * @version v3.2.25
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -647,7 +647,7 @@ ol.ext.element.create = function (tagName, options) {
           break;
         }
         case 'style': {
-          this.setStyle(elt, options.style);
+          ol.ext.element.setStyle(elt, options.style);
           break;
         }
         case 'change':
@@ -715,7 +715,6 @@ ol.ext.element.createCheck = function (options) {
     on: options.on,
     parent: options.parent
   });
-  console.log(input)
   var opt = Object.assign ({ input: input }, options || {});
   if (options.type === 'radio') {
     new ol.ext.input.Radio(opt);
@@ -16965,7 +16964,7 @@ ol.control.WMSCapabilities.prototype.createDialog = function (options) {
       this._elements[label] = ol.ext.element.create('INPUT', {
         value: (val===undefined ? '' : val),
         placeholder: pholder || '',
-        type: typeof(val),
+        type: typeof(val)==='number' ? 'number' : 'text',
         parent: li
       });
     }
@@ -17713,13 +17712,16 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     console.log(t);
     delete layer_opt.source;
   }
+  var returnedLegend=undefined;
+  if(caps.Style && caps.Style[0] && caps.Style[0].LegendURL && caps.Style[0].LegendURL[0] )
+    returnedLegend=caps.Style[0].LegendURL[0].href;
   return ({ 
     layer: layer_opt, 
     source: source_opt,
     data: {
       title: caps.Title,
       abstract: caps.Abstract,
-      legend: caps.Style ? [ caps.Style[0].LegendURL[0].href ] : undefined,
+      legend: returnedLegend,
     } 
   });
 };
@@ -18784,6 +18786,9 @@ ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out) {
     var fWidth = fExtent[2] - fExtent[1];
     var start = Math.floor((extent[0] + fWidth - worldExtent[0]) / worldWidth);
     var end = Math.floor((extent[2] - fWidth - worldExtent[2]) / worldWidth) +1;
+    if(start > end) {
+        [start, end] = [end, start];
+    }
     for (var i=start; i<=end; i++) {
       drawll(i*worldWidth);
     }
@@ -18954,10 +18959,10 @@ ol.filter.CanvasFilter.prototype.postcompose = function(e) {
       + this.get('shadowColor')+')'); 
   }
   if (this.get('grayscale')!==undefined) filter.push('grayscale('+this.get('grayscale')+'%)'); 
+  if (this.get('sepia')!==undefined) filter.push('sepia('+this.get('sepia')+'%)');
   if (this.get('hueRotate')!==undefined) filter.push('hue-rotate('+this.get('hueRotate')+'deg)'); 
   if (this.get('invert')!==undefined) filter.push('invert('+this.get('invert')+'%)'); 
   if (this.get('saturate')!==undefined) filter.push('saturate('+this.get('saturate')+'%)'); 
-  if (this.get('sepia')!==undefined) filter.push('sepia('+this.get('sepia')+'%)');
   filter = filter.join(' ');
   // Apply filter
   if (filter) {
@@ -21116,6 +21121,110 @@ ol.interaction.CenterTouch.prototype.getPosition = function () {
   return this.pos_; 
 };
 
+/** Clip interaction to clip layers in a circle
+ * @constructor
+ * @extends {ol.interaction.Pointer}
+ * @param {ol.interaction.ClipMap.options} options flashlight  param
+ *  @param {number} options.radius radius of the clip, default 100 (px)
+ */
+ol.interaction.ClipMap = function(options) {
+  this.layers_ = [];
+  ol.interaction.Pointer.call(this, {
+    handleDownEvent: this._clip,
+    handleMoveEvent: this._clip
+  });
+  // Default options
+  options = options || {};
+  this.pos = false;
+  this.radius = (options.radius||100);
+  this.pos = [-1000, -1000];
+};
+ol.ext.inherits(ol.interaction.ClipMap, ol.interaction.Pointer);
+/** Set the map > start postcompose
+*/
+ol.interaction.ClipMap.prototype.setMap = function(map) {
+  if (this.getMap()) {
+    if (this._listener) ol.Observable.unByKey(this._listener);
+    var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
+    layerDiv.style.clipPath = ''; 
+  }
+  ol.interaction.Pointer.prototype.setMap.call(this, map);
+  if (map) {
+    this._listener = map.on('change:size', this._clip.bind(this));
+  }
+};
+/** Set clip radius
+ *	@param {integer} radius
+ */
+ol.interaction.ClipMap.prototype.setRadius = function(radius) {
+  this.radius = radius;
+  this._clip();
+};
+/** Get clip radius
+ *	@returns {integer} radius
+ */
+ol.interaction.ClipMap.prototype.getRadius = function() {
+  return this.radius;
+};
+/** Set position of the clip
+ * @param {ol.coordinate} coord
+ */
+ol.interaction.ClipMap.prototype.setPosition = function(coord) {
+  if (this.getMap()) {
+    this.pos = this.getMap().getPixelFromCoordinate(coord);
+    this._clip();
+  }
+};
+/** Get position of the clip
+ * @returns {ol.coordinate}
+ */
+ol.interaction.ClipMap.prototype.getPosition = function() {
+  if (this.pos) return this.getMap().getCoordinateFromPixel(this.pos);
+  return null;
+};
+/** Set position of the clip
+ * @param {ol.Pixel} pixel
+ */
+ ol.interaction.ClipMap.prototype.setPixelPosition = function(pixel) {
+  this.pos = pixel;
+  this._clip();
+};
+/** Get position of the clip
+ * @returns {ol.Pixel} pixel
+ */
+ ol.interaction.ClipMap.prototype.getPixelPosition = function() {
+  return this.pos;
+};
+/** Set position of the clip
+ * @param {ol.MapBrowserEvent} e
+ * @privata
+ */
+ol.interaction.ClipMap.prototype._setPosition = function(e) {
+  if (e.type==='pointermove' && this.get('action')==='onclick') return;
+  if (e.pixel) {
+    this.pos = e.pixel;
+  }
+  if (this.getMap()) {
+    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  }
+};
+/** Clip
+ * @private
+ */
+ ol.interaction.ClipMap.prototype._clip = function(e) {
+  if (e && e.pixel) {
+    this.pos = e.pixel;
+  }
+  if (this.pos && this.getMap()) {
+    var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
+    layerDiv.style.clipPath = 'circle(' 
+      + this.getRadius() + 'px' // radius
+      + ' at ' 
+      + this.pos[0] + 'px '
+      + this.pos[1] + 'px)';
+  }
+};
+
 /** An interaction to copy/paste features on a map. 
  * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
  * @constructor
@@ -21555,7 +21664,8 @@ ol.interaction.DrawHole.prototype._startDrawing = function(e) {
   map.forEachFeatureAtPixel(
     map.getPixelFromCoordinate(coord),
     function(feature, layer) {
-      if (this._features(feature, layer)) {
+      // Not yet found?
+      if (!this._current && this._features(feature, layer)) {
         var poly = feature.getGeometry();
         if (poly.getType() === "Polygon"
           && poly.intersectsCoordinate(coord)) {
@@ -26663,8 +26773,8 @@ ol.interaction.TouchCursorSelect.prototype.select = function(f) {
  *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
  *	@param {boolean} options.enableRotatedTransform Enable transform when map is rotated
  *	@param {boolean} [options.keepRectangle=false] keep rectangle when possible
- *	@param {} options.style list of ol.style for handles
- *
+ *	@param {*} options.style list of ol.style for handles
+ *  @param {number|Array<number>|function} [options.pointRadius=0] radius for points or a function that takes a feature and returns the radius (or [radiusX, radiusY]). If not null show handles to transform the points
  */
 ol.interaction.Transform = function(options) {
   if (!options) options = {};
@@ -26699,6 +26809,7 @@ ol.interaction.Transform = function(options) {
   this.layers_ = options.layers ? (options.layers instanceof Array) ? options.layers:[options.layers] : null;
   this._handleEvent = options.condition || function() { return true; };
   this.addFn_ = options.addCondition || function() { return false; };
+  this.setPointRadius(options.pointRadius);
   /* Translate when click on feature */
   this.set('translateFeature', (options.translateFeature!==false));
   /* Can translate the feature */
@@ -26971,6 +27082,8 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
     var extendExt = this.getGeometryRotateToZero_(f).getExtent();
     ol.extent.extend(ext, extendExt);
   }.bind(this));
+  var ptRadius = (this.selection_.getLength() === 1 ? this._pointRadius(this.selection_.item(0)) : 0);
+  if (ptRadius && !(ptRadius instanceof Array)) ptRadius = [ptRadius, ptRadius];
   if (center===true) {
     if (!this.ispt_) {
       this.overlayLayer_.getSource().addFeature(new ol.Feature( { geometry: new ol.geom.Point(this.center_), handle:'rotate0' }) );
@@ -26986,9 +27099,11 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
       // Calculate extent arround the point
       var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]]);
       if (p) {
+        var dx = ptRadius ? ptRadius[0] || 10 : 10;
+        var dy = ptRadius ? ptRadius[1] || 10 : 10;
         ext = ol.extent.boundingExtent([
-          this.getMap().getCoordinateFromPixel([p[0]-10, p[1]-10]),
-          this.getMap().getCoordinateFromPixel([p[0]+10, p[1]+10])
+          this.getMap().getCoordinateFromPixel([p[0] - dx, p[1] - dy]),
+          this.getMap().getCoordinateFromPixel([p[0] + dx, p[1] + dy])
         ]);
       }
     }
@@ -26999,10 +27114,10 @@ ol.interaction.Transform.prototype.drawSketch_ = function(center) {
     f = this.bbox_ = new ol.Feature(geom);
     var features = [];
     var g = geom.getCoordinates()[0];
-    if (!this.ispt_) {
+    if (!this.ispt_ || ptRadius) {
       features.push(f);
       // Middle
-      if (!this.iscircle_ && this.get('stretch') && this.get('scale')) for (i=0; i<g.length-1; i++) {
+      if (!this.iscircle_ && !this.ispt_ && this.get('stretch') && this.get('scale')) for (i=0; i<g.length-1; i++) {
         f = new ol.Feature( { geometry: new ol.geom.Point([(g[i][0]+g[i+1][0])/2,(g[i][1]+g[i+1][1])/2]), handle:'scale', constraint:i%2?"h":"v", option:i });
         features.push(f);
       }
@@ -27435,6 +27550,16 @@ ol.interaction.Transform.prototype.handleUpEvent_ = function(evt) {
  */
 ol.interaction.Transform.prototype.getFeatures = function() {
   return this.selection_;
+};
+/** Set the point radius to calculate handles on points
+ *  @param {number|Array<number>|function} [pointRadius=0] radius for points or a function that takes a feature and returns the radius (or [radiusX, radiusY]). If not null show handles to transform the points
+ */
+ol.interaction.Transform.prototype.setPointRadius = function(pointRadius) {
+  if (typeof(pointRadius)==='function') {
+    this._pointRadius = pointRadius;
+  } else {
+    this._pointRadius = function(){ return pointRadius };
+  }
 };
 
 /** Undo/redo interaction
