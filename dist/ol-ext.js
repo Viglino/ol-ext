@@ -31625,7 +31625,7 @@ ol.layer.Geoportail.getCapabilities = function(gppKey) {
           server: l.getElementsByTagName('gpp:Key')[0].innerHTML.replace(gppKey+"/",""), 
           layer: l.getElementsByTagName('Name')[0].innerHTML,
           title: l.getElementsByTagName('Title')[0].innerHTML,
-          format: l.getElementsByTagName('Format')[0].innerHTML,
+          format: l.getElementsByTagName('Format')[0] ? l.getElementsByTagName('Format')[0].innerHTML : 'image.jpeg',
           style: l.getElementsByTagName('Style')[0].getElementsByTagName('Name')[0].innerHTML,
           queryable: (l.attributes.queryable.value==='1'),
           tilematrix: 'PM',
