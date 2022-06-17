@@ -8,17 +8,12 @@ import ol_ext_input_Base from './Base'
  * @param {*} options
  *  @param {string} [options.className]
  *  @param {Element} [options.input] input element, if non create one (use parent to tell where)
+ *  @param {Element} [options.input2] input element
  *  @param {Element} [options.parent] element to use as parent if no input option
- *  @param {booelan} [options.hover=true] show popup on hover
- *  @param {string} [options.align=left] align popup left/right
- *  @param {string} [options.type] a slide type as 'size'
  *  @param {number} [options.min] min value, default use input min
  *  @param {number} [options.max] max value, default use input max
  *  @param {number} [options.step] step value, default use input step
  *  @param {boolean} [options.overflow=false] enable values over min/max
- *  @param {string|Element} [options.before] an element to add before the slider
- *  @param {string|Element} [options.after] an element to add after the slider
- *  @param {boolean} [options.fixed=false] no pupop
  */
 var ol_ext_input_Range = function(options) {
   options = options || {};
@@ -130,10 +125,29 @@ ol_ext_inherits(ol_ext_input_Range, ol_ext_input_Base);
 
 /** Set the current value (second input)
  */
-ol_ext_input_Base.prototype.setValue2 = function(v) {
+ol_ext_input_Range.prototype.setValue2 = function(v) {
   if (!this.input2) return;
   if (v !== undefined) this.input2.value = v;
   this.input2.dispatchEvent(new Event('change'));
 };
-  
+
+/** Get the current value (second input)
+ */
+ol_ext_input_Range.prototype.getValue2 = function() {
+  return this.input2 ? this.input2.value : null;
+}
+
+/** Get the current min value
+ * @return {number}
+ */
+ol_ext_input_Range.prototype.getMin = function() {
+  return parseFloat(this.getValue());
+}
+
+/** Get the current max value
+ * @return {number}
+ */
+ol_ext_input_Range.prototype.getMax = function() {
+  return parseFloat(this.getValue2());
+}
 export default ol_ext_input_Range
