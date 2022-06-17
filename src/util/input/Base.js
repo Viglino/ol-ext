@@ -67,6 +67,7 @@ ol_ext_inherits(ol_ext_input_Base, ol_Object);
 ol_ext_input_Base.prototype._listenDrag = function(elt, cback) {
   var handle = function(e) {
     this.moving = true;
+    this.element.classList.add('ol-moving');
     var listen = function(e) {
       if (e.type==='pointerup') {
         document.removeEventListener('pointermove', listen);
@@ -74,6 +75,7 @@ ol_ext_input_Base.prototype._listenDrag = function(elt, cback) {
         document.removeEventListener('pointercancel', listen);
         setTimeout(function() {
           this.moving = false;
+          this.element.classList.remove('ol-moving');
         }.bind(this));
       }
       if (e.target === elt) cback(e);
@@ -92,7 +94,7 @@ ol_ext_input_Base.prototype._listenDrag = function(elt, cback) {
 
 /** Set the current value
  */
- ol_ext_input_Base.prototype.setValue = function(v) {
+ol_ext_input_Base.prototype.setValue = function(v) {
   if (v !== undefined) this.input.value = v;
   this.input.dispatchEvent(new Event('change'));
 };

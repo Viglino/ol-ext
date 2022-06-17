@@ -33,6 +33,8 @@
   margin-right: 10px;
 }
 .ol-input-slider .ol-slider {
+  display: inline-block;
+  vertical-align: middle;
   position: relative;
   width: 100px;
   height: 3px;
@@ -50,6 +52,30 @@
   top: 50%;
   transform: translate(-50%, -50%);
   background-color: #999;
+  pointer-events: none;
+}
+.ol-input-range .ol-slider {
+  cursor: default;
+  width: 150px;
+}
+.ol-input-range .ol-slider > .ol-cursor {
+  pointer-events: all;
+  cursor: pointer;
+  width: 10px;
+  border-radius: 50%;
+  background-color: rgb(0,60,136);
+}
+.ol-input-range.ol-moving .ol-slider > .ol-cursor {
+  pointer-events: none;
+}
+.ol-input-range .ol-slider > .ol-back {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 30%;
+  right: 20%;
+  height: 100%;
+  background-color: rgb(0,60,136);
   pointer-events: none;
 }
 
