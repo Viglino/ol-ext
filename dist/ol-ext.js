@@ -25362,8 +25362,8 @@ ol.ext.inherits(ol.interaction.SnapLayerPixel, ol.interaction.Interaction);
  * @extends {ol.interaction.Interaction}
  * @fires  beforesplit, aftersplit, pointermove
  * @param {*} 
- *  @param {ol.source.Vector|Array<ol.source.Vector>} options.source a list of source to split (configured with useSpatialIndex set to true)
- *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split
+ *  @param {ol.source.Vector|Array<ol.source.Vector>} [options.sources] a list of source to split (configured with useSpatialIndex set to true), if none use map visible layers.
+ *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split (instead of a list of sources)
  *  @param {integer} options.snapDistance distance (in px) to snap to an object, default 25px
  *	@param {string|undefined} options.cursor cursor name to display when hovering an objet
  *  @param {function|undefined} opttion.filter a filter that takes a feature and return true if it can be clipped, default always split.
@@ -25393,7 +25393,7 @@ ol.interaction.Split = function(options) {
   // Cursor
   this.cursor_ = options.cursor;
   // List of source to split
-  this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
+  this.sources_ = this.setSources(options.sources);
   if (options.features) {
     this.sources_.push (new ol.source.Vector({ features: options.features }));
   }
@@ -25471,6 +25471,34 @@ ol.interaction.Split.prototype.setMap = function(map) {
   ol.interaction.Interaction.prototype.setMap.call (this, map);
   this.overlayLayer_.setMap(map);
 };
+/** Get sources to split features in
+ * @return {Array<ol.source.Vector>}
+ */
+ol.interaction.Split.prototype.getSources = function() {
+  if (!this.sources_ && this.getMap()) {
+    var sources = []
+    function getSources(layers) {
+      layers.forEach(function(layer) {
+        if (layer.getVisible()) {
+          if (layer.getSource && layer.getSource() instanceof ol.source.Vector) {
+            sources.unshift(layer.getSource());
+          } else if (layer.getLayers) {
+            getSources(layer.getLayers());
+          }
+        }
+      })
+    }
+    getSources(this.getMap().getLayers())
+    return sources;
+  }
+  return this.sources_ || [];
+};
+/** Set sources to split features in 
+ * @param {ol.source.Vector|Array<ol.source.Vector>} [sources]
+ */
+ol.interaction.Split.prototype.setSources = function(sources) {
+  this.sources_ = sources ? (sources instanceof Array ? sources||false : [sources]) : false;
+};
 /** Get closest feature at pixel
  * @param {ol.Pixel} 
  * @return {ol.feature} 
@@ -25479,7 +25507,7 @@ ol.interaction.Split.prototype.setMap = function(map) {
 ol.interaction.Split.prototype.getClosestFeature = function(e) {
   var source, f, c, g, d = this.snapDistance_+1;
   // Look for closest point in the sources
-  this.sources_.forEach(function(si) {
+  this.getSources().forEach(function(si) {
     var fi = si.getClosestFeatureToCoordinate(e.coordinate);
     if (fi && fi.getGeometry().splitAt) {
       var ci = fi.getGeometry().getClosestPoint(e.coordinate);
