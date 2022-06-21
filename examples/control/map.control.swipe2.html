@@ -54,13 +54,13 @@
 
   <script type="text/javascript">
     // Layers
-    var osm = new ol.layer.Tile({
+    var osm = new ol.layer.WebGLTile({
       source: new ol.source.OSM() 
     });
-    var stamen = new ol.layer.Tile({
+    var stamen = new ol.layer.WebGLTile({
       source: new ol.source.Stamen({ layer: 'watercolor' }) 
     });
-    var label = new ol.layer.Tile({
+    var label = new ol.layer.WebGLTile({
       source: new ol.source.Stamen({ layer: 'terrain-labels' }) 
     });
     // GeoJSON layer
