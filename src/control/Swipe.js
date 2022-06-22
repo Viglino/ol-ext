@@ -310,13 +310,15 @@ ol_control_Swipe.prototype.precomposeLeft = function(e) {
       var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
       var topRight = this._transformPt(e, [mapSize[0], 0]);
     
-      var width = topRight[0] - bottomLeft[0];
-      var height = topRight[1] - bottomLeft[1];
+      var fullWidth = topRight[0] - bottomLeft[0];
+      var fullHeight = topRight[1] - bottomLeft[1];
       if (this.get('orientation') === "vertical") {
-        width = Math.round(width * this.get('position'));
+        var width = Math.round(fullWidth * this.get('position'));
+        var height = fullHeight;
       } else {
-        height = Math.round(height * this.get('position'));
-        bottomLeft[1] += mapSize[1] - height;
+        var width = fullWidth;
+        var height = Math.round((fullHeight * this.get('position')));
+        bottomLeft[1] += fullHeight - height;
       }
       ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
     }
@@ -360,14 +362,16 @@ ol_control_Swipe.prototype.precomposeRight = function(e) {
       var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
       var topRight = this._transformPt(e, [mapSize[0], 0]);
     
-      var width = topRight[0] - bottomLeft[0];
-      var height = topRight[1] - bottomLeft[1];
+      var fullWidth = topRight[0] - bottomLeft[0];
+      var fullHeight = topRight[1] - bottomLeft[1];
       if (this.get('orientation') === "vertical") {
-        width = Math.round(width * (1-this.get('position')));
-        bottomLeft[0] += mapSize[0] - width;
+        var height = fullHeight;
+        var width = Math.round(fullWidth * (1-this.get('position')));
+        bottomLeft[0] += fullWidth - width;
       } else {
-        height = Math.round(height * (1-this.get('position')));
-        }
+        var width = fullWidth;
+        var height = Math.round(fullHeight * (1-this.get('position')));
+      }
       ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
     }
   } else {
