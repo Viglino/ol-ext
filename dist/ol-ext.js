@@ -15630,13 +15630,15 @@ ol.control.Swipe.prototype.precomposeLeft = function(e) {
       // get render coordinates and dimensions given CSS coordinates
       var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
       var topRight = this._transformPt(e, [mapSize[0], 0]);
-      var width = topRight[0] - bottomLeft[0];
-      var height = topRight[1] - bottomLeft[1];
+      var fullWidth = topRight[0] - bottomLeft[0];
+      var fullHeight = topRight[1] - bottomLeft[1];
       if (this.get('orientation') === "vertical") {
-        width = Math.round(width * this.get('position'));
+        var width = Math.round(fullWidth * this.get('position'));
+        var height = fullHeight;
       } else {
-        height = Math.round(height * this.get('position'));
-        bottomLeft[1] += mapSize[1] - height;
+        var width = fullWidth;
+        var height = Math.round((fullHeight * this.get('position')));
+        bottomLeft[1] += fullHeight - height;
       }
       ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
     }
@@ -15675,14 +15677,16 @@ ol.control.Swipe.prototype.precomposeRight = function(e) {
       // get render coordinates and dimensions given CSS coordinates
       var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
       var topRight = this._transformPt(e, [mapSize[0], 0]);
-      var width = topRight[0] - bottomLeft[0];
-      var height = topRight[1] - bottomLeft[1];
+      var fullWidth = topRight[0] - bottomLeft[0];
+      var fullHeight = topRight[1] - bottomLeft[1];
       if (this.get('orientation') === "vertical") {
-        width = Math.round(width * (1-this.get('position')));
-        bottomLeft[0] += mapSize[0] - width;
+        var height = fullHeight;
+        var width = Math.round(fullWidth * (1-this.get('position')));
+        bottomLeft[0] += fullWidth - width;
       } else {
-        height = Math.round(height * (1-this.get('position')));
-        }
+        var width = fullWidth;
+        var height = Math.round(fullHeight * (1-this.get('position')));
+      }
       ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
     }
   } else {
@@ -34248,7 +34252,7 @@ ol.Overlay.Placemark.prototype.setRadius = function(size) {
  *  @param {Number|Array<number>} options.offsetBox an offset box
  *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
- *  @param {Template|function} options.template A template with a list of properties to use in the popup or a function that takes a feature and returns a Template
+ *  @param {Template|function} [options.template] A template with a list of properties to use in the popup or a function that takes a feature and returns a Template, default use all feature properties
  *  @param {ol.interaction.Select} options.select a select interaction to get features from
  *  @param {boolean} options.keepSelection keep original selection, otherwise set selection to the current popup feature and add a counter to change current feature, default false
  *  @param {boolean} options.canFix Enable popup to be fixed, default false
@@ -34280,9 +34284,18 @@ ol.Overlay.PopupFeature = function (options) {
 };
 ol.ext.inherits(ol.Overlay.PopupFeature, ol.Overlay.Popup);
 /** Set the template
- * @param {Template} template A template with a list of properties to use in the popup
+ * @param {Template} [template] A template with a list of properties to use in the popup, default use all features properties
  */
 ol.Overlay.PopupFeature.prototype.setTemplate = function(template) {
+  if (!template) {
+    template = function(f) {
+      var prop = f.getProperties();
+      delete prop[f.getGeometryName()];
+      return {
+        attributes: Object.keys(prop)
+      }
+    }
+  }
   this._template = template;
   this._attributeObject(this._template);
 }
