@@ -11,7 +11,7 @@ if (window.ol) {
   ol.ext.input = {};
 }
 
-/** Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
+/** Abstract base class; normally only used for creating subclasses and not instantiated in apps.
  * @constructor
  * @extends {ol_Object}
  * @param {*} options
@@ -26,89 +26,104 @@ if (window.ol) {
  *  @param {boolean} [options.disabled] disable input
  *  @param {Element} [options.parent] parent element, if no input
  */
-var ol_ext_input_Base = function(options) {
-  options = options || {};
-  
-  ol_Object.call(this);
-  
-  var input = this.input = options.input;
-  if (!input) {
-    input = this.input = document.createElement('INPUT');
-    if (options.type) input.setAttribute('type', options.type);
-    if (options.min !== undefined) input.setAttribute('min', options.min);
-    if (options.max !== undefined) input.setAttribute('max', options.max);
-    if (options.step !== undefined) input.setAttribute('step', options.step);
-    if (options.parent) options.parent.appendChild(input);
-  } 
-  if (options.disabled) input.disabled = true;
-  if (options.checked !== undefined) input.checked = !!options.checked;
-  if (options.val !== undefined) input.value = options.val;
-  if (options.hidden) input.style.display = 'none';
-  input.addEventListener('focus', function() {
-    if (this.element) this.element.classList.add('ol-focus');
-  }.bind(this))
-  var tout;
-  input.addEventListener('focusout', function() {
-    if (this.element) {
-      if (tout) clearTimeout(tout);
-      tout = setTimeout(function() {
-        this.element.classList.remove('ol-focus');
-      }.bind(this), 0);
-    }
-  }.bind(this))
-};
-ol_ext_inherits(ol_ext_input_Base, ol_Object);
+class ol_ext_input_Base {
+  constructor(options) {
+    options = options || {};
 
-/** Listen to drag event
- * @param {Element} elt 
- * @param {function} cback when draggin on the element
- * @private
- */
-ol_ext_input_Base.prototype._listenDrag = function(elt, cback) {
-  var handle = function(e) {
-    this.moving = true;
-    var listen = function(e) {
-      if (e.type==='pointerup') {
-        document.removeEventListener('pointermove', listen);
-        document.removeEventListener('pointerup', listen);
-        document.removeEventListener('pointercancel', listen);
-        setTimeout(function() {
-          this.moving = false;
-        }.bind(this));
+    ol_Object.call(this);
+
+    var input = this.input = options.input;
+    if (!input) {
+      input = this.input = document.createElement('INPUT');
+      if (options.type)
+        input.setAttribute('type', options.type);
+      if (options.min !== undefined)
+        input.setAttribute('min', options.min);
+      if (options.max !== undefined)
+        input.setAttribute('max', options.max);
+      if (options.step !== undefined)
+        input.setAttribute('step', options.step);
+      if (options.parent)
+        options.parent.appendChild(input);
+    }
+    if (options.disabled)
+      input.disabled = true;
+    if (options.checked !== undefined)
+      input.checked = !!options.checked;
+    if (options.val !== undefined)
+      input.value = options.val;
+    if (options.hidden)
+      input.style.display = 'none';
+    input.addEventListener('focus', function () {
+      if (this.element)
+        this.element.classList.add('ol-focus');
+    }.bind(this));
+    var tout;
+    input.addEventListener('focusout', function () {
+      if (this.element) {
+        if (tout)
+          clearTimeout(tout);
+        tout = setTimeout(function () {
+          this.element.classList.remove('ol-focus');
+        }.bind(this), 0);
       }
-      if (e.target === elt) cback(e);
+    }.bind(this));
+  }
+  /** Listen to drag event
+   * @param {Element} elt
+   * @param {function} cback when draggin on the element
+   * @private
+   */
+  _listenDrag(elt, cback) {
+    var handle = function (e) {
+      this.moving = true;
+      var listen = function (e) {
+        if (e.type === 'pointerup') {
+          document.removeEventListener('pointermove', listen);
+          document.removeEventListener('pointerup', listen);
+          document.removeEventListener('pointercancel', listen);
+          setTimeout(function () {
+            this.moving = false;
+          }.bind(this));
+        }
+        if (e.target === elt)
+          cback(e);
+        e.stopPropagation();
+        e.preventDefault();
+      }.bind(this);
+      document.addEventListener('pointermove', listen, false);
+      document.addEventListener('pointerup', listen, false);
+      document.addEventListener('pointercancel', listen, false);
       e.stopPropagation();
       e.preventDefault();
     }.bind(this);
-    document.addEventListener('pointermove', listen, false);
-    document.addEventListener('pointerup', listen, false);
-    document.addEventListener('pointercancel', listen, false);
-    e.stopPropagation();
-    e.preventDefault();
-  }.bind(this)
-  elt.addEventListener('mousedown', handle, false);
-  elt.addEventListener('touchstart', handle, false);
-};
+    elt.addEventListener('mousedown', handle, false);
+    elt.addEventListener('touchstart', handle, false);
+  }
+  /** Set the current value
+   */
+  setValue(v) {
+    if (v !== undefined)
+      this.input.value = v;
+    this.input.dispatchEvent(new Event('change'));
+  }
+  /** Get the current getValue
+   * @returns {string}
+   */
+  getValue() {
+    return this.input.value;
+  }
+  /** Get the input element
+   * @returns {Element}
+   */
+  getInputElement() {
+    return this.input;
+  }
+}
+ol_ext_inherits(ol_ext_input_Base, ol_Object);
 
-/** Set the current value
- */
- ol_ext_input_Base.prototype.setValue = function(v) {
-  if (v !== undefined) this.input.value = v;
-  this.input.dispatchEvent(new Event('change'));
-};
 
-/** Get the current getValue
- * @returns {string}
- */
-ol_ext_input_Base.prototype.getValue = function() {
-  return this.input.value;
-};
 
-/** Get the input element
- * @returns {Element}
- */
-ol_ext_input_Base.prototype.getInputElement = function() {
-  return this.input;
-};
+
 
 export default ol_ext_input_Base

@@ -18,52 +18,56 @@ import {ol_ext_inherits} from '../util/ext'
  *  @param {function} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {function} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
-var ol_source_FeatureBin = function (options) {
-  options = options || {};
+class ol_source_FeatureBin {
+  constructor(options) {
+    options = options || {};
 
-  if (options.binSource) {
-    this._sourceFeature = options.binSource;
-    // When features change recalculate the bin...
-    var timout;
-    this._sourceFeature.on(['addfeature','changefeature','removefeature'], function() {
-      if (timout) {
-        // Do it only one time
-        clearTimeout(timout);
-      }
-      timout = setTimeout(function () {
-        this.reset();
+    if (options.binSource) {
+      this._sourceFeature = options.binSource;
+      // When features change recalculate the bin...
+      var timout;
+      this._sourceFeature.on(['addfeature', 'changefeature', 'removefeature'], function () {
+        if (timout) {
+          // Do it only one time
+          clearTimeout(timout);
+        }
+        timout = setTimeout(function () {
+          this.reset();
+        }.bind(this));
       }.bind(this));
-    }.bind(this));
-  } else {
-    this._sourceFeature = new ol_source_Vector ({ features: options.features || [] });
-  }
+    } else {
+      this._sourceFeature = new ol_source_Vector({ features: options.features || [] });
+    }
 
-  ol_source_BinBase.call(this, options);
-};
+    ol_source_BinBase.call(this, options);
+  }
+  /** Set features to use as bin collector
+   * @param {ol.Feature} features
+   */
+  setFeatures(features) {
+    this._sourceFeature.clear();
+    this._sourceFeature.addFeatures(features || []);
+    this.reset();
+  }
+  /** Get the grid geometry at the coord
+   * @param {ol.Coordinate} coord
+   * @returns {ol.geom.Polygon}
+   * @api
+   */
+  getGridGeomAt(coord, attributes) {
+    var f = this._sourceFeature.getFeaturesAtCoordinate(coord)[0];
+    if (!f)
+      return null;
+    var a = f.getProperties();
+    for (var i in a) {
+      if (i !== 'geometry')
+        attributes[i] = a[i];
+    }
+    return f.getGeometry();
+  }
+}
 ol_ext_inherits(ol_source_FeatureBin, ol_source_BinBase);
 
-/** Set features to use as bin collector
- * @param {ol.Feature} features
- */
-ol_source_FeatureBin.prototype.setFeatures = function (features) {
-  this._sourceFeature.clear();
-  this._sourceFeature.addFeatures(features || []);
-  this.reset();
-};
 
-/** Get the grid geometry at the coord 
- * @param {ol.Coordinate} coord
- * @returns {ol.geom.Polygon} 
- * @api
- */
-ol_source_FeatureBin.prototype.getGridGeomAt = function (coord, attributes) {
-  var f = this._sourceFeature.getFeaturesAtCoordinate(coord)[0];
-  if (!f) return null;
-  var a = f.getProperties();
-  for (var i in a) {
-    if (i!=='geometry') attributes[i] = a[i];
-  }
-  return f.getGeometry();
-};
 
 export default ol_source_FeatureBin

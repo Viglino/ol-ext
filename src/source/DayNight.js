@@ -1,4 +1,4 @@
-/*	Copyright (c) 2018 Jean-Marc VIGLINO, 
+/*	Copyright (c) 2018 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
@@ -10,7 +10,7 @@ import ol_source_Vector from 'ol/source/Vector'
 import {all as ol_loadingstrategy_all} from 'ol/loadingstrategy'
 
 /** DayNight source: a source to display day/night on a map
- * @constructor 
+ * @constructor
  * @extends {ol.source.Vector}
  * @param {any} options Vector source options
  *  @param {string|Date} time source date time
@@ -47,7 +47,7 @@ ol_source_DayNight.prototype.setTime = function(time) {
 };
 
 /** Compute the position of the Sun in ecliptic coordinates at julianDay.
- * @see http://en.wikipedia.org/wiki/Position_of_the_Sun 
+ * @see http://en.wikipedia.org/wiki/Position_of_the_Sun
  * @param {number} julianDay
  * @private
  */
@@ -70,7 +70,7 @@ function _sunEclipticPosition(julianDay) {
   return { lambda: lambda, R: R };
 }
 
-/** 
+/**
  * @see http://en.wikipedia.org/wiki/Axial_tilt#Obliquity_of_the_ecliptic_.28Earth.27s_axial_tilt.29
  * @param {number} julianDay
  * @private
@@ -116,13 +116,13 @@ function _sunEquatorialPosition(sunEclLon, eclObliq) {
  */
 ol_source_DayNight.prototype.getSunPosition = function (time) {
   var date = time ? new Date(time) : new Date();
-  
-  // Calculate the present UTC Julian Date. 
-  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
+
+  // Calculate the present UTC Julian Date.
+  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds.
   var julianDay = (date / 86400000) + 2440587.5;
 
   // Calculate Greenwich Mean Sidereal Time (low precision equation).
-  // http://aa.usno.navy.mil/faq/docs/GAST.php 
+  // http://aa.usno.navy.mil/faq/docs/GAST.php
   var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
 
   var sunEclPos = _sunEclipticPosition(julianDay);
@@ -142,13 +142,13 @@ ol_source_DayNight.getNightLat = function (lon, time) {
   var deg2rad = Math.PI / 180;
 
   var date = time ? new Date(time) : new Date();
-  
-  // Calculate the present UTC Julian Date. 
-  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
+
+  // Calculate the present UTC Julian Date.
+  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds.
   var julianDay = (date / 86400000) + 2440587.5;
 
   // Calculate Greenwich Mean Sidereal Time (low precision equation).
-  // http://aa.usno.navy.mil/faq/docs/GAST.php 
+  // http://aa.usno.navy.mil/faq/docs/GAST.php
   var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
 
   var sunEclPos = _sunEclipticPosition(julianDay);
@@ -157,7 +157,7 @@ ol_source_DayNight.getNightLat = function (lon, time) {
 
   // Hour angle (indegrees) of the sun for a longitude on Earth.
   var ha = (gst * 15 + lon) - sunEqPos.alpha;
-  // Latitude     
+  // Latitude
   var lat = Math.atan(-Math.cos(ha * deg2rad) /
     Math.tan(sunEqPos.delta * deg2rad)) * rad2deg;
 
@@ -174,13 +174,13 @@ ol_source_DayNight.prototype.getCoordinates = function (time, options) {
   var deg2rad = Math.PI / 180;
 
   var date = time ? new Date(time) : new Date();
-  
-  // Calculate the present UTC Julian Date. 
-  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
+
+  // Calculate the present UTC Julian Date.
+  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds.
   var julianDay = (date / 86400000) + 2440587.5;
 
   // Calculate Greenwich Mean Sidereal Time (low precision equation).
-  // http://aa.usno.navy.mil/faq/docs/GAST.php 
+  // http://aa.usno.navy.mil/faq/docs/GAST.php
   var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
   var lonlat = [];
 
@@ -193,7 +193,7 @@ ol_source_DayNight.prototype.getCoordinates = function (time, options) {
     var lon = i;
     // Hour angle (indegrees) of the sun for a longitude on Earth.
     var ha = (gst * 15 + lon) - sunEqPos.alpha;
-    // Latitude     
+    // Latitude
     var lat = Math.atan(-Math.cos(ha * deg2rad) /
       Math.tan(sunEqPos.delta * deg2rad)) * rad2deg;
     // New point

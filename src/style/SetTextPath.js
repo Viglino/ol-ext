@@ -14,7 +14,7 @@ import ol_style_Text from 'ol/style/Text'
 function drawTextPath (e)
 {	// Prent drawing at large resolution
 	if (e.frameState.viewState.resolution > this.textPathMaxResolution_) return;
-	
+
 	var extent = e.frameState.extent;
 	var c2p = e.frameState.coordinateToPixelTransform;
 
@@ -22,7 +22,7 @@ function drawTextPath (e)
 	var k;
 	function getPath(c, readable)
 	{	var path1 = [];
-		for (k=0; k<c.length; k++) 
+		for (k=0; k<c.length; k++)
 		{	path1.push(c2p[0]*c[k][0]+c2p[1]*c[k][1]+c2p[4]);
 			path1.push(c2p[2]*c[k][0]+c2p[3]*c[k][1]+c2p[5]);
 		}
@@ -46,7 +46,7 @@ function drawTextPath (e)
 	for (var i=0, f; f=features[i]; i++)
 	{	{	var style = this.textPathStyle_(f,e.frameState.viewState.resolution);
 			for (var s,j=0; s=style[j]; j++)
-			{	
+			{
 				var g = s.getGeometry() || f.getGeometry();
 				var c;
 				switch (g.getType())
@@ -57,7 +57,7 @@ function drawTextPath (e)
 
 				var st = s.getText();
 				var path = getPath(c, st.getRotateWithView() );
-				
+
 				ctx.font = st.getFont();
 				ctx.textBaseline = st.getTextBaseline();
 				ctx.textAlign = st.getTextAlign();
@@ -77,10 +77,10 @@ function drawTextPath (e)
 	ctx.restore();
 }
 
-/** Set the style for features. 
-*	This can be a single style object, an array of styles, or a function that takes a feature and resolution and 
-*	returns an array of styles. If it is undefined the default style is used. 
-*	If it is null the layer has no style (a null style). 
+/** Set the style for features.
+*	This can be a single style object, an array of styles, or a function that takes a feature and resolution and
+*	returns an array of styles. If it is undefined the default style is used.
+*	If it is null the layer has no style (a null style).
 *	See ol.style for information on the default style.
 *	@param {ol.style.Style|Array.<ol.style.Style>|ol.StyleFunction} style
 *	@param {Number} maxResolution to display text, default: 0
@@ -118,21 +118,24 @@ ol_layer_Vector.prototype.setTextPathStyle = function(style, maxResolution)
 *	@param {visible|ellipsis|string} textOverflow
 *	@param {number} minWidth minimum width (px) to draw text, default 0
 */
-var ol_style_TextPath = function(options)
-{	if (!options) options={};
-	ol_style_Text.call (this, options);
-	this.textOverflow_ = typeof(options.textOverflow)!="undefined" ?  options.textOverflow : "visible";
-	this.minWidth_ = options.minWidth || 0;
-}
+	class ol_style_TextPath {
+		constructor(options) {
+			if (!options)
+				options = {};
+			ol_style_Text.call(this, options);
+			this.textOverflow_ = typeof (options.textOverflow) != "undefined" ? options.textOverflow : "visible";
+			this.minWidth_ = options.minWidth || 0;
+		}
+		getTextOverflow() {
+			return this.textOverflow_;
+		}
+		getMinWidth() {
+			return this.minWidth_;
+		}
+	}
 ol_ext_inherits(ol_style_TextPath, ol_style_Text);
 
-ol_style_TextPath.prototype.getTextOverflow = function()
-{	return this.textOverflow_; 
-};
 
-ol_style_TextPath.prototype.getMinWidth = function()
-{	return this.minWidth_; 
-};
 
 /**/
 
@@ -152,7 +155,7 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 		var dy = y2-y1;
 		return Math.sqrt(dx*dx+dy*dy);
 	}
-  
+
 	var di, dpos=0;
 	var pos=2;
 	function getPoint(path, dl)
@@ -165,13 +168,13 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 				dpos += di;
 			}
 		}
-   
+
 		var x, y, a, dt = dl-dpos;
-		if (pos>=path.length) 
+		if (pos>=path.length)
 		{	pos = path.length-2;
 		}
 
-		if (!dt) 
+		if (!dt)
 		{	x = path[pos-2];
 			y = path[pos-1];
 			a = Math.atan2(path[pos+1]-path[pos-1], path[pos]-path[pos-2]);
@@ -185,7 +188,7 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 	}
 
 	var letterPadding = ctx.measureText(" ").width *0.25;
-  
+
 	var start = 0;
 
 	var d = 0;
@@ -213,7 +216,7 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 		case "end":
 		case "right":
 		{	// Text align
-			if (ctx.textJustify) 
+			if (ctx.textJustify)
 			{	start = 0;
 				letterPadding = (d - ctx.measureText(text).width) / (text.length-1 + nbspace);
 			}
@@ -225,11 +228,11 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 		}
 		default: break;
 	}
-  
+
 	for (var t=0; t<text.length; t++)
 	{	var letter = text[t];
 		var wl = ctx.measureText(letter).width;
-    
+
 		var p = getPoint(path, start+wl/2);
 
 		ctx.save();
@@ -241,7 +244,7 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 		ctx.restore();
 		start += wl+letterPadding*(letter==" "?2:1);
 	}
-  
+
 };
 
 //NB: (Not confirmed)To use this module, you just have to :

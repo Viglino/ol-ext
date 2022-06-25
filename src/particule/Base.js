@@ -10,8 +10,8 @@ import ol_Object from 'ol/Object'
 if (window.ol && !ol.particule) {
   ol.particule = {};
 }
-  
-/** Abstract base class; normally only used for creating subclasses. 
+
+/** Abstract base class; normally only used for creating subclasses.
  * An object with coordinates, draw and update
  * @constructor
  * @extends {ol_Object}
@@ -19,47 +19,52 @@ if (window.ol && !ol.particule) {
  *  @param {ol.Overlay} options.overlay
  *  @param {ol.pixel} coordinate the position of the particule
  */
-var ol_particule_Base = function(options) {
-  if (!options) options = {};
-  
-  ol_Object.call(this);
-  this.setOverlay(options.overlay) ;
-  this.coordinate = options.coordinate || [0,0];
-};
+class ol_particule_Base {
+  constructor(options) {
+    if (!options)
+      options = {};
+
+    ol_Object.call(this);
+    this.setOverlay(options.overlay);
+    this.coordinate = options.coordinate || [0, 0];
+  }
+  /** Set the particule overlay
+   * @param {ol.Overlay} overl
+   */
+  setOverlay(overlay) {
+    this._overlay = overlay;
+  }
+  /** Get the particule overlay
+   * @return {ol.Overlay}
+   */
+  getOverlay() {
+    return this._overlay;
+  }
+  /** Draw the particule
+   * @param { CanvasRenderingContext2D } ctx
+   */
+  draw( /* ctx */) {
+  }
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  update( /* dt */) {
+  }
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  getRandomCoord(dt) {
+    if (this.getOverlay().randomCoord)
+      return this.getOverlay().randomCoord();
+    else
+      return [dt, 0];
+  }
+}
 ol_ext_inherits(ol_particule_Base, ol_Object);
 
-/** Set the particule overlay
- * @param {ol.Overlay} overl
- */
-ol_particule_Base.prototype.setOverlay = function(overlay) {
-  this._overlay = overlay;
-};
 
-/** Get the particule overlay
- * @return {ol.Overlay}
- */
-ol_particule_Base.prototype.getOverlay = function() {
-  return this._overlay;
-};
 
-/** Draw the particule
- * @param { CanvasRenderingContext2D } ctx
- */
-ol_particule_Base.prototype.draw = function(/* ctx */) {
-};
 
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol_particule_Base.prototype.update = function(/* dt */) {
-};
 
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol_particule_Base.prototype.getRandomCoord = function(dt) {
-  if (this.getOverlay().randomCoord) return this.getOverlay().randomCoord();
-  else return [dt,0];
-};
 
 export default ol_particule_Base

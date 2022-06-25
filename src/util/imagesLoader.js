@@ -12,7 +12,7 @@ if (window.ol) window.ol.ext.imageLoader = {};
  */
 var ol_ext_imageLoader_loadBILImage = function(src, onload, onerror) {
   var size = [
-    parseInt(src.replace(/.*WIDTH=(\d*).*/i,'$1')), 
+    parseInt(src.replace(/.*WIDTH=(\d*).*/i,'$1')),
     parseInt(src.replace(/.*HEIGHT=(\d*).*/i,'$1'))
   ];
   var xhr = new XMLHttpRequest();
@@ -75,7 +75,7 @@ var ol_ext_imageLoader_loadImage = function(src, onload, onerror) {
 var ol_ext_imageLoader_pixelTransform = function(setPixel) {
   return function(tile, src) {
     ol_ext_imageLoader_loadImage(
-      src, 
+      src,
       function(img, size) {
         var canvas = document.createElement('canvas');
         canvas.width = size[0];
@@ -128,8 +128,8 @@ var ol_ext_imageLoader_transparent = function(colors) {
     color = [Math.min(color1[0], color2[0]), Math.min(color1[1], color2[1]), Math.min(color1[2], color2[2])];
     color2 = [Math.max(color1[0], color2[0]), Math.max(color1[1], color2[1]), Math.max(color1[2], color2[2])];
     return ol_ext_imageLoader_pixelTransform(function(pixels, i) {
-      if (pixels[i]>=color1[0] && pixels[i]<=color2[0] 
-        && pixels[i+1]>=color[1] && pixels[i+1]<=color2[1] 
+      if (pixels[i]>=color1[0] && pixels[i]<=color2[0]
+        && pixels[i+1]>=color[1] && pixels[i+1]<=color2[1]
         && pixels[i+2]>=color[2] && pixels[i+2]<=color2[2]) {
         pixels[i+3] = 0;
       }
@@ -137,7 +137,7 @@ var ol_ext_imageLoader_transparent = function(colors) {
   }
 };
 
-/** Returns an Imageloader function to load an x-bil-32 image as sea level map 
+/** Returns an Imageloader function to load an x-bil-32 image as sea level map
  * to use as a ol/Tile~LoadFunction or ol/Image~LoadFunction
  * @param { number } level
  * @param {*} options
@@ -196,7 +196,7 @@ var ol_ext_imageLoader_shadedRelief = function() {
           var slx = (rightValue - leftValue)/3;
           var sly = ( bottomValue - topValue )/3;
           var sl0 = Math.sqrt( slx*slx + sly*sly );
-          
+
           // get aspect
           var phi = Math.acos( slx/sl0 );
           if ( sl0 == 0 ) {
@@ -215,10 +215,10 @@ var ol_ext_imageLoader_shadedRelief = function() {
             if ( sly < 0 ) azimuth = Math.PI;
             else if ( sly > 0 ) azimuth = 0;
           }
-          
+
           // get luminance
           var lum = Math.cos( azimuth - sunAzimuth )*Math.cos( Math.PI*.5 - Math.atan(sl0) )*Math.cos( sunElev ) +  Math.sin( Math.PI*.5 - Math.atan(sl0) )*Math.sin( sunElev );
-          
+
           if (lum<0) lum = 0;
           lum = Math.sqrt(lum*.8 + .5);
           var p = getIndexForCoordinates(x,y) * 4;
@@ -279,15 +279,15 @@ var ol_ext_imageLoader_elevationMap = function(getPixelColor) {
 var ol_ext_getPixelFromElevation =  function(height) {
   var h = Math.round(height*100 + 1200000);
   var pixel = [
-    h >> 16, 
-    (h % 65536) >> 8, 
-    h % 256, 
+    h >> 16,
+    (h % 65536) >> 8,
+    h % 256,
     255
   ];
   return pixel;
 };
 
-/** Convert pixel (terrain-RGB) to elevation 
+/** Convert pixel (terrain-RGB) to elevation
  * @see ol_ext_getPixelFromElevation
  * @param {Array<number>} pixel the pixel value
  * @returns {number} elevation

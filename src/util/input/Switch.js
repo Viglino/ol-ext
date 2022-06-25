@@ -18,5 +18,5 @@ var ol_ext_input_Switch = function(options) {
   this.element.className = ('ol-ext-toggle-switch ' + (options.className || '')).trim();
 };
 ol_ext_inherits(ol_ext_input_Switch, ol_ext_input_Checkbox);
-  
+
 export default ol_ext_input_Switch

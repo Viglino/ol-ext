@@ -16,9 +16,9 @@
     "gulp-concat": "^2.6.1",
     "gulp-cssmin": "^0.2.0",
     "gulp-header": "^2.0.5",
+    "gulp-jsdoc3": "^2.0.0",
     "gulp-minify": "^3.1.0",
     "gulp-watch": "^5.0.1",
-    "gulp-jsdoc3": "^2.0.0",
     "live-server": "^1.2.0",
     "minimist": "^1.2.0",
     "plugin-error": "^1.0.1",
@@ -73,6 +73,7 @@
   },
   "license": "BSD-3-Clause",
   "dependencies": {
-    "ol": "^6.14.1"
+    "npx": "^10.2.2",
+    "ol": ">= 5.3.0"
   }
 }
