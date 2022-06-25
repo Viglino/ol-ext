@@ -2,28 +2,28 @@
 <html>
 <head>
 <!----------------------------------------------------------
- 
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
+
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  
 ------------------------------------------------------------>
-	<title>ol-ext: Split interaction</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: Split interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="an OL3 interaction to draw regular polygon" />
-	<meta name="keywords" content="ol3, interaction, draw, regular, rectangle, circle, triangle" />
+  <meta name="description" content="an OL3 interaction to draw regular polygon" />
+  <meta name="keywords" content="ol3, interaction, draw, regular, rectangle, circle, triangle" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
+  <!-- Openlayers -->
     <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
@@ -31,112 +31,112 @@
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Split interaction</h1>
-	</a>
-	<div class="info">
-		<b>ol.interaction.Split</b> is an interaction to split linestrings by clicking on a point on the feature (ol.geom.LineString only).
-		<br/>
-		The feature is cloned. The interaction fires a beforesplit and aftersplit event.
-		You can listen to the event on the interaction itself or on the source of the splitted feature.
-		<br/>
-		The sources provided to the interaction must have a spatial index to be splitable (configured with useSpatialIndex set to true).
-		<br />
-		<br/>
-		NB: If you look to a split feature agent while editing vector features, look at <a href="map.interaction.splitter.html">ol.interaction.Splitter</a>.
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: Split interaction</h1>
+  </a>
+  <div class="info">
+    <b>ol.interaction.Split</b> is an interaction to split linestrings by clicking on a point on the feature (ol.geom.LineString only).
+    <br/>
+    The feature is cloned. The interaction fires a beforesplit and aftersplit event.
+    You can listen to the event on the interaction itself or on the source of the splitted feature.
+    <br/>
+    The sources provided to the interaction must have a spatial index to be splitable (configured with useSpatialIndex set to true).
+    <br />
+    <br/>
+    NB: If you look to a split feature agent while editing vector features, look at <a href="map.interaction.splitter.html">ol.interaction.Splitter</a>.
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
-		<h2>Options:</h2>
-		<ul><li>
-			Operation: 
-			<input type="radio" name="op" value="modify" /><label> Select</label>
-			<input type="radio" name="op" value="draw" /><label> Draw</label>
-			<input type="radio" name="op" value="split" checked="checked" /><label> Split</label>
-		</li></ul>
-		<div style="background:white; padding:0 0.45em;"><span id="info"></span>&nbsp;</div>
-	</div>
-	
+  <div class="options" >
+    <h2>Options:</h2>
+    <ul><li>
+      Operation: 
+      <input type="radio" name="op" value="modify" /><label> Select</label>
+      <input type="radio" name="op" value="draw" /><label> Draw</label>
+      <input type="radio" name="op" value="split" checked="checked" /><label> Split</label>
+    </li></ul>
+    <div style="background:white; padding:0 0.45em;"><span id="info"></span>&nbsp;</div>
+  </div>
+  
 
-	<script type="text/javascript">
-		// Layers
-		var layers = [
-			new ol.layer.Tile({
-				title:'terrain-background',
-				source: new ol.source.Stamen({ layer: 'terrain' })
-			})
-		]
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 5,
-					center: [261720, 5951081]
-				}),
-				controls: ol.control.defaults({ "attribution": false }),
-				layers: layers
-			});
+  <script type="text/javascript">
+    // Layers
+    var layers = [
+      new ol.layer.Tile({
+        title:'terrain-background',
+        source: new ol.source.Stamen({ layer: 'terrain' })
+      })
+    ]
+    // The map
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 5,
+        center: [261720, 5951081]
+      }),
+      controls: ol.control.defaults({ "attribution": false }),
+      layers: layers
+    });
 
-		// New vector layer
-		var vector = new ol.layer.Vector(
-		{	name: 'Vecteur',
-			source: new ol.source.Vector({ features: new ol.Collection() }),
-			style: function(f) 
-			{	return [
-					new ol.style.Style({
-						stroke: new ol.style.Stroke({ color: '#ffcc33',width: 2 }),
-					}),
-					new ol.style.Style({
-						image: new ol.style.RegularShape({ radius: 4, points:4, fill: new ol.style.Fill({ color: '#f00' }) }),
-						geometry: new ol.geom.MultiPoint([f.getGeometry().getFirstCoordinate(),f.getGeometry().getLastCoordinate()])
-					})
-				]
-			}
-		})
-		map.addLayer(vector);
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[-288626, 5757848], [210354, 5576845], [34243, 6305749]])));
-		vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449],[406033, 5664901]]])));
+    // New vector layer
+    var vector = new ol.layer.Vector({
+      name: 'Vecteur',
+      source: new ol.source.Vector({ features: new ol.Collection() }),
+      style: function(f) {
+        return [
+          new ol.style.Style({
+            stroke: new ol.style.Stroke({ color: '#ffcc33',width: 2 }),
+          }),
+          new ol.style.Style({
+            image: new ol.style.RegularShape({ radius: 4, points:4, fill: new ol.style.Fill({ color: '#f00' }) }),
+            geometry: new ol.geom.MultiPoint([f.getGeometry().getFirstCoordinate(),f.getGeometry().getLastCoordinate()])
+          })
+        ]
+      }
+    })
+    map.addLayer(vector);
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[-288626, 5757848], [210354, 5576845], [34243, 6305749]])));
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Polygon([[[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449],[406033, 5664901]]])));
 
 
-		var interactions = 
-		{	select: new ol.interaction.Select(),
-			draw: new ol.interaction.Draw(
-				{	source: vector.getSource(),
-					type: "LineString"
-				}),
-			split: new ol.interaction.Split (
-				{	sources: vector.getSource()
-				})
-		}
-		interactions.modify = new ol.interaction.Modify ({ features: interactions.select.getFeatures() });
-		for (var i in interactions) map.addInteraction(interactions[i]);
+    var interactions = {
+      select: new ol.interaction.Select(),
+      draw: new ol.interaction.Draw({
+        source: vector.getSource(),
+        type: "LineString"
+      }),
+      split: new ol.interaction.Split ({
+        //sources: vector.getSource()
+      })
+    }
+    interactions.modify = new ol.interaction.Modify ({ features: interactions.select.getFeatures() });
+    for (var i in interactions) map.addInteraction(interactions[i]);
 
-		setInteraction = function ()
-		{	interactions.select.getFeatures().clear();
-			$(".options > div").html("");
-			var name = $('[name="op"]:checked').val();
-			for (var i in interactions) 
-			{	interactions[i].set("active", (i==name));
-			}
-			if (name=="modify") interactions.select.set("active", true);
-		}
-		setInteraction();
+    setInteraction = function () {
+      interactions.select.getFeatures().clear();
+      $(".options > div").html("");
+      var name = $('[name="op"]:checked').val();
+      for (var i in interactions) {
+        interactions[i].set("active", (i==name));
+      }
+      if (name=="modify") interactions.select.set("active", true);
+    }
+    setInteraction();
 
-		$("label").click(function(){$(this).prev().click();});
-		$("input:radio").on("change",setInteraction);
+    $("label").click(function(){$(this).prev().click();});
+    $("input:radio").on("change",setInteraction);
 
-		// Listen to split event
-		vector.getSource().on("aftersplit", function(e)
-			{	console.log(e); 
-				$(".options > div").text("1 feature split in "+e.features.length);
-			});
-		
-	</script>
+    // Listen to split event
+    vector.getSource().on("aftersplit", function(e) {
+      console.log(e); 
+      $(".options > div").text("1 feature split in "+e.features.length);
+    });
+    
+  </script>
 
 </body>
 </html>

@@ -76,17 +76,17 @@
     var vector = new ol.layer.Vector( { source: new ol.source.Vector() })
 
     // The map
-    var map = new ol.Map
-      ({	target: 'map',
-        view: new ol.View
-        ({	zoom: 14,
-          center: [270701, 6247637]
-        }),
-        layers: 
-          [	new ol.layer.Tile({ source: new ol.source.OSM() }),
-            vector
-          ]
-      });
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 14,
+        center: [270701, 6247637]
+      }),
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() }),
+        vector
+      ]
+    });
     var note = new ol.control.Notification();
     map.addControl(note)
 

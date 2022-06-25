@@ -136,7 +136,15 @@
   </p><p>
     Popup:
     <input class="popup" style="width: 3em" value=1 />
+  </p><p>
+    Range:
+    <input type="number" class="range" style="width: 3em" value=1 min=0 max=20 />
+  </p><p>
+    Range2:
+    <input type="number" class="range2" style="width: 3em" value=5 min=0 max=20 step=".1" />
+    <input type="number" class="range2" style="width: 3em" value=12 min=0 max=20 />
   </p>
+  <p style="height:3em;"></p>
 
 
 <script type="text/javascript">
@@ -233,6 +241,15 @@
 
   var popup = new ol.ext.input.PopupBase({ 
     input: $('.popup').get(0),
+  });
+
+  var range = new ol.ext.input.Range({ 
+    input: $('.range').get(0),
+  });
+  var range2 = new ol.ext.input.Range({ 
+    input: $('.range2').get(0),
+    input2: $('.range2').get(1),
+    overflow: true
   });
 
 </script>

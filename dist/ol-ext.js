@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.25
+ * @version v3.2.26
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -2116,6 +2116,7 @@ ol.ext.inherits(ol.ext.input.Base, ol.Object);
 ol.ext.input.Base.prototype._listenDrag = function(elt, cback) {
   var handle = function(e) {
     this.moving = true;
+    this.element.classList.add('ol-moving');
     var listen = function(e) {
       if (e.type==='pointerup') {
         document.removeEventListener('pointermove', listen);
@@ -2123,6 +2124,7 @@ ol.ext.input.Base.prototype._listenDrag = function(elt, cback) {
         document.removeEventListener('pointercancel', listen);
         setTimeout(function() {
           this.moving = false;
+          this.element.classList.remove('ol-moving');
         }.bind(this));
       }
       if (e.target === elt) cback(e);
@@ -2140,7 +2142,7 @@ ol.ext.input.Base.prototype._listenDrag = function(elt, cback) {
 };
 /** Set the current value
  */
- ol.ext.input.Base.prototype.setValue = function(v) {
+ol.ext.input.Base.prototype.setValue = function(v) {
   if (v !== undefined) this.input.value = v;
   this.input.dispatchEvent(new Event('change'));
 };
@@ -2227,11 +2229,12 @@ ol.ext.input.Slider = function(options) {
   var min = (options.min !== undefined) ? options.min : parseFloat(input.min) || 0;
   var max = (options.max !== undefined) ? options.max : parseFloat(input.max) || 1;
   var step = (options.step !== undefined) ? options.step : parseFloat(input.step) || 1;
+  var dstep = 1/step;
   // Handle popup drag
   this._listenDrag(slider, function(e) {
     var tx = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
     cursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
-    var v = input.value = Math.round((tx * (max - min) + min) / step) * step;
+    var v = input.value = Math.round((tx * (max - min) + min) * dstep) / dstep;
     this.dispatchEvent({ type: 'change:value', value: v });
   }.bind(this));
   // Set value
@@ -2997,6 +3000,139 @@ ol.ext.input.Radio = function(options) {
   this.element.className = ('ol-ext-check ol-ext-radio ' + (options.className || '')).trim();
 };
 ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
+
+/** Checkbox input
+ * @constructor
+ * @extends {ol.ext.input.Base}
+ * @param {*} options
+ *  @param {string} [options.className]
+ *  @param {Element} [options.input] input element, if non create one (use parent to tell where)
+ *  @param {Element} [options.input2] input element
+ *  @param {Element} [options.parent] element to use as parent if no input option
+ *  @param {number} [options.min] min value, default use input min
+ *  @param {number} [options.max] max value, default use input max
+ *  @param {number} [options.step] step value, default use input step
+ *  @param {boolean} [options.overflow=false] enable values over min/max
+ */
+ol.ext.input.Range = function(options) {
+  options = options || {};
+  ol.ext.input.Base.call(this, options);
+  this.set('overflow', !!options.overflow);
+  this.element = ol.ext.element.create('DIV', {
+    className: 'ol-input-slider ol-input-range' 
+      + (options.className ? ' ' + options.className : '')
+  });
+  var input = this.input;
+  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
+  this.element.appendChild(input);
+  // Slider
+  var slider = this.slider = ol.ext.element.create('DIV', {
+    className: 'ol-slider',
+    parent: this.element
+  });
+  var back = ol.ext.element.create('DIV', {
+    className: 'ol-back',
+    parent: this.slider
+  })
+  var input2 = this.input2 = options.input2;
+  if(input2) this.element.appendChild(input2);
+  // Cursors
+  var cursor = ol.ext.element.create('DIV', {
+    className: 'ol-cursor',
+    parent: slider
+  })
+  var cursor2 = ol.ext.element.create('DIV', {
+    className: 'ol-cursor',
+    parent: input2 ? slider : undefined
+  })
+  var currentCursor = cursor;
+  function setCursor(e) {
+    currentCursor = e.target;
+  }
+  cursor.addEventListener('mousedown', setCursor, false);
+  cursor.addEventListener('touchstart', setCursor, false);
+  cursor2.addEventListener('mousedown', setCursor, false);
+  cursor2.addEventListener('touchstart', setCursor, false);
+  var min = (options.min !== undefined) ? options.min : parseFloat(input.min) || 0;
+  var max = (options.max !== undefined) ? options.max : parseFloat(input.max) || 1;
+  var step = (options.step !== undefined) ? options.step : parseFloat(input.step) || 1;
+  var dstep = 1/step;
+  function setRange() {
+    // range
+    if (input2) {
+      var l1 = parseFloat(cursor.style.left) || 0;
+      var l2 = parseFloat(cursor2.style.left) || 0;
+      back.style.left = Math.min(l1, l2) + '%';
+      back.style.right = (100 - Math.max(l1, l2)) + '%';
+    } else {
+      back.style.left = 0;
+      back.style.right = (100 - parseFloat(cursor.style.left) || 0) + '%';
+    }
+  }
+  function checkMinMax() {
+    if (input2 && parseFloat(input.value) > parseFloat(input2.value)) {
+      var v = input.value;
+      input.value = input2.value;
+      input2.value = v;
+      setValue({ target: input });
+      if (input2) setValue({ target: input2 });
+    }
+  }
+  // Handle popup drag
+  this._listenDrag(slider, function(e) {
+    var current = (currentCursor===cursor ? input : input2);
+    var tx = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
+    currentCursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
+    var v = current.value = Math.round((tx * (max - min) + min) * dstep) / dstep;
+    setRange();
+    this.dispatchEvent({ type: 'change:value', value: v });
+    if (e.type==='pointerup') {
+      checkMinMax();
+    }
+  }.bind(this));
+  // Set value
+  var setValue = function(e) {
+    var current = e.target;
+    var curs = (current===input ? cursor : cursor2);
+    var v = parseFloat(current.value) || 0;
+    if (!this.get('overflow')) v = Math.max(min, Math.min(max, v));
+    if (v != current.value) current.value = v;
+    var tx = (v - min) / (max - min);
+    curs.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
+    setRange();
+    this.dispatchEvent({ type: 'change:value', value: v });
+    checkMinMax();
+  }.bind(this);
+  input.addEventListener('change', setValue);
+  if (input2) input2.addEventListener('change', setValue);
+  setValue({ target: input });
+  if (input2) setValue({ target: input2 });
+};
+ol.ext.inherits(ol.ext.input.Range, ol.ext.input.Base);
+/** Set the current value (second input)
+ */
+ol.ext.input.Range.prototype.setValue2 = function(v) {
+  if (!this.input2) return;
+  if (v !== undefined) this.input2.value = v;
+  this.input2.dispatchEvent(new Event('change'));
+};
+/** Get the current value (second input)
+ */
+ol.ext.input.Range.prototype.getValue2 = function() {
+  return this.input2 ? this.input2.value : null;
+}
+/** Get the current min value
+ * @return {number}
+ */
+ol.ext.input.Range.prototype.getMin = function() {
+  return parseFloat(this.getValue());
+}
+/** Get the current max value
+ * @return {number}
+ */
+ol.ext.input.Range.prototype.getMax = function() {
+  return parseFloat(this.getValue2());
+}
 
 /** Checkbox input
  * @constructor
@@ -15494,13 +15630,15 @@ ol.control.Swipe.prototype.precomposeLeft = function(e) {
       // get render coordinates and dimensions given CSS coordinates
       var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
       var topRight = this._transformPt(e, [mapSize[0], 0]);
-      var width = topRight[0] - bottomLeft[0];
-      var height = topRight[1] - bottomLeft[1];
+      var fullWidth = topRight[0] - bottomLeft[0];
+      var fullHeight = topRight[1] - bottomLeft[1];
       if (this.get('orientation') === "vertical") {
-        width = Math.round(width * this.get('position'));
+        var width = Math.round(fullWidth * this.get('position'));
+        var height = fullHeight;
       } else {
-        height = Math.round(height * this.get('position'));
-        bottomLeft[1] += mapSize[1] - height;
+        var width = fullWidth;
+        var height = Math.round((fullHeight * this.get('position')));
+        bottomLeft[1] += fullHeight - height;
       }
       ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
     }
@@ -15539,14 +15677,16 @@ ol.control.Swipe.prototype.precomposeRight = function(e) {
       // get render coordinates and dimensions given CSS coordinates
       var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
       var topRight = this._transformPt(e, [mapSize[0], 0]);
-      var width = topRight[0] - bottomLeft[0];
-      var height = topRight[1] - bottomLeft[1];
+      var fullWidth = topRight[0] - bottomLeft[0];
+      var fullHeight = topRight[1] - bottomLeft[1];
       if (this.get('orientation') === "vertical") {
-        width = Math.round(width * (1-this.get('position')));
-        bottomLeft[0] += mapSize[0] - width;
+        var height = fullHeight;
+        var width = Math.round(fullWidth * (1-this.get('position')));
+        bottomLeft[0] += fullWidth - width;
       } else {
-        height = Math.round(height * (1-this.get('position')));
-        }
+        var width = fullWidth;
+        var height = Math.round(fullHeight * (1-this.get('position')));
+      }
       ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
     }
   } else {
@@ -25226,8 +25366,8 @@ ol.ext.inherits(ol.interaction.SnapLayerPixel, ol.interaction.Interaction);
  * @extends {ol.interaction.Interaction}
  * @fires  beforesplit, aftersplit, pointermove
  * @param {*} 
- *  @param {ol.source.Vector|Array<ol.source.Vector>} options.source a list of source to split (configured with useSpatialIndex set to true)
- *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split
+ *  @param {ol.source.Vector|Array<ol.source.Vector>} [options.sources] a list of source to split (configured with useSpatialIndex set to true), if none use map visible layers.
+ *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split (instead of a list of sources)
  *  @param {integer} options.snapDistance distance (in px) to snap to an object, default 25px
  *	@param {string|undefined} options.cursor cursor name to display when hovering an objet
  *  @param {function|undefined} opttion.filter a filter that takes a feature and return true if it can be clipped, default always split.
@@ -25257,7 +25397,7 @@ ol.interaction.Split = function(options) {
   // Cursor
   this.cursor_ = options.cursor;
   // List of source to split
-  this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
+  this.sources_ = this.setSources(options.sources);
   if (options.features) {
     this.sources_.push (new ol.source.Vector({ features: options.features }));
   }
@@ -25335,6 +25475,34 @@ ol.interaction.Split.prototype.setMap = function(map) {
   ol.interaction.Interaction.prototype.setMap.call (this, map);
   this.overlayLayer_.setMap(map);
 };
+/** Get sources to split features in
+ * @return {Array<ol.source.Vector>}
+ */
+ol.interaction.Split.prototype.getSources = function() {
+  if (!this.sources_ && this.getMap()) {
+    var sources = []
+    function getSources(layers) {
+      layers.forEach(function(layer) {
+        if (layer.getVisible()) {
+          if (layer.getSource && layer.getSource() instanceof ol.source.Vector) {
+            sources.unshift(layer.getSource());
+          } else if (layer.getLayers) {
+            getSources(layer.getLayers());
+          }
+        }
+      })
+    }
+    getSources(this.getMap().getLayers())
+    return sources;
+  }
+  return this.sources_ || [];
+};
+/** Set sources to split features in 
+ * @param {ol.source.Vector|Array<ol.source.Vector>} [sources]
+ */
+ol.interaction.Split.prototype.setSources = function(sources) {
+  this.sources_ = sources ? (sources instanceof Array ? sources||false : [sources]) : false;
+};
 /** Get closest feature at pixel
  * @param {ol.Pixel} 
  * @return {ol.feature} 
@@ -25343,7 +25511,7 @@ ol.interaction.Split.prototype.setMap = function(map) {
 ol.interaction.Split.prototype.getClosestFeature = function(e) {
   var source, f, c, g, d = this.snapDistance_+1;
   // Look for closest point in the sources
-  this.sources_.forEach(function(si) {
+  this.getSources().forEach(function(si) {
     var fi = si.getClosestFeatureToCoordinate(e.coordinate);
     if (fi && fi.getGeometry().splitAt) {
       var ci = fi.getGeometry().getClosestPoint(e.coordinate);
@@ -31489,7 +31657,7 @@ ol.layer.Geoportail.getCapabilities = function(gppKey) {
           server: l.getElementsByTagName('gpp:Key')[0].innerHTML.replace(gppKey+"/",""), 
           layer: l.getElementsByTagName('Name')[0].innerHTML,
           title: l.getElementsByTagName('Title')[0].innerHTML,
-          format: l.getElementsByTagName('Format')[0].innerHTML,
+          format: l.getElementsByTagName('Format')[0] ? l.getElementsByTagName('Format')[0].innerHTML : 'image.jpeg',
           style: l.getElementsByTagName('Style')[0].getElementsByTagName('Name')[0].innerHTML,
           queryable: (l.attributes.queryable.value==='1'),
           tilematrix: 'PM',
@@ -34084,7 +34252,7 @@ ol.Overlay.Placemark.prototype.setRadius = function(size) {
  *  @param {Number|Array<number>} options.offsetBox an offset box
  *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
- *  @param {Template|function} options.template A template with a list of properties to use in the popup or a function that takes a feature and returns a Template
+ *  @param {Template|function} [options.template] A template with a list of properties to use in the popup or a function that takes a feature and returns a Template, default use all feature properties
  *  @param {ol.interaction.Select} options.select a select interaction to get features from
  *  @param {boolean} options.keepSelection keep original selection, otherwise set selection to the current popup feature and add a counter to change current feature, default false
  *  @param {boolean} options.canFix Enable popup to be fixed, default false
@@ -34116,9 +34284,18 @@ ol.Overlay.PopupFeature = function (options) {
 };
 ol.ext.inherits(ol.Overlay.PopupFeature, ol.Overlay.Popup);
 /** Set the template
- * @param {Template} template A template with a list of properties to use in the popup
+ * @param {Template} [template] A template with a list of properties to use in the popup, default use all features properties
  */
 ol.Overlay.PopupFeature.prototype.setTemplate = function(template) {
+  if (!template) {
+    template = function(f) {
+      var prop = f.getProperties();
+      delete prop[f.getGeometryName()];
+      return {
+        attributes: Object.keys(prop)
+      }
+    }
+  }
   this._template = template;
   this._attributeObject(this._template);
 }
