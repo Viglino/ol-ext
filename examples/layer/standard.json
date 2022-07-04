@@ -1,7 +1,15 @@
-{"version":8,"name":"PLAN IGN","sprite":"https://wxs.ign.fr/static/vectorTiles/styles/PLAN.IGN/sprite/PlanIgn",
-"sources":{"plan_ign":{"type":"vector","url":"https://wxs.ign.fr/choisirgeoportail/geoportail/tms/1.0.0/PLAN.IGN/metadata.json"}},
-"transition":{"duration":300,"delay":0},
-"layers":[
+{
+  "version":8,
+  "name":"PLAN IGN",
+  "sprite":"https://wxs.ign.fr/static/vectorTiles/styles/PLAN.IGN/sprite/PlanIgn",
+  "sources":{
+    "plan_ign":{
+      "type":"vector",
+      "url":"https://wxs.ign.fr/choisirgeoportail/geoportail/tms/1.0.0/PLAN.IGN/metadata.json"
+      }
+    },
+  "transition":{"duration":300,"delay":0},
+  "layers":[
 {"id":"bckgrd","type":"fill","source":"plan_ign","source-layer":"fond_opaque","minzoom":0,"layout":{"visibility":"visible"},"paint":{"fill-color":"#FFFFFF","fill-opacity":1}},
 {"id":"orographie : relief - 0m","type":"fill","source":"plan_ign","source-layer":"oro_relief","minzoom":0,"layout":{"visibility":"visible"},"filter":["==","symbo","HYPSO_0"],"paint":{"fill-color":"#D6E5BA","fill-opacity":1}},
 {"id":"orographie : relief - 100m","type":"fill","source":"plan_ign","source-layer":"oro_relief","minzoom":0,"layout":{"visibility":"visible"},"filter":["==","symbo","HYPSO_100"],"paint":{"fill-color":"#F7F2DA","fill-opacity":1}},
