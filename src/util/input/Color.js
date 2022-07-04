@@ -9,7 +9,6 @@ import { asArray as ol_color_asArray } from 'ol/color'
 /** Color picker
  * @constructor
  * @extends {ol_ext_input_PopupBase}
- * @fires change:color
  * @fires color
  * @param {*} options
  *  @param {string} [options.className]

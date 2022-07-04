@@ -16,7 +16,7 @@ import '../geom/LineStringSplitAt'
  * @extends {ol_interaction_Interaction}
  * @fires  beforesplit, aftersplit
  * @param {options} 
- *  @param {ol.source.Vector|Array{ol.source.Vector}} options.source The target source (or array of source) with features to be split (configured with useSpatialIndex set to true)
+ *  @param {ol.source.Vector|Array<ol.source.Vector>} options.source The target source (or array of source) with features to be split (configured with useSpatialIndex set to true)
  *  @param {ol.source.Vector} options.triggerSource Any newly created or modified features from this source will be used to split features on the target source. If none is provided the target source is used instead.
  *  @param {ol_Collection.<ol.Feature>} options.features A collection of feature to be split (replace source target).
  *  @param {ol_Collection.<ol.Feature>} options.triggerFeatures Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).

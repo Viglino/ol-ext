@@ -2542,7 +2542,6 @@ ol.ext.input.Collection.prototype.refresh = function() {
 /** Color picker
  * @constructor
  * @extends {ol.ext.input.PopupBase}
- * @fires change:color
  * @fires color
  * @param {*} options
  *  @param {string} [options.className]
@@ -3004,6 +3003,7 @@ ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
 /** Checkbox input
  * @constructor
  * @extends {ol.ext.input.Base}
+ * @fires change:value
  * @param {*} options
  *  @param {string} [options.className]
  *  @param {Element} [options.input] input element, if non create one (use parent to tell where)
@@ -8960,14 +8960,14 @@ ol.control.Imageline.prototype.setMap = function (map) {
 	}
 };
 /** Set layers to use in the control
- * @param {Array<ol.Layer} layers
+ * @param {Array<ol.Layer>} layers
  */
 ol.control.Imageline.prototype.setLayers = function (layers) {
   this._sources = this._getSources(layers);
 };
 /** Get source from a set of layers
- * @param {Array<ol.Layer} layers
- * @returns {Array<ol.source.Vector}
+ * @param {Array<ol.Layer>} layers
+ * @returns {Array<ol.source.Vector>}
  * @private
  */
 ol.control.Imageline.prototype._getSources = function (layers) {
@@ -25643,7 +25643,7 @@ ol.interaction.Split.prototype.handleMoveEvent = function(e) {
  * @extends {ol.interaction.Interaction}
  * @fires  beforesplit, aftersplit
  * @param {options} 
- *  @param {ol.source.Vector|Array{ol.source.Vector}} options.source The target source (or array of source) with features to be split (configured with useSpatialIndex set to true)
+ *  @param {ol.source.Vector|Array<ol.source.Vector>} options.source The target source (or array of source) with features to be split (configured with useSpatialIndex set to true)
  *  @param {ol.source.Vector} options.triggerSource Any newly created or modified features from this source will be used to split features on the target source. If none is provided the target source is used instead.
  *  @param {ol.Collection.<ol.Feature>} options.features A collection of feature to be split (replace source target).
  *  @param {ol.Collection.<ol.Feature>} options.triggerFeatures Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).

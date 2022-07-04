@@ -5,6 +5,7 @@ import ol_ext_input_Base from './Base'
 /** Checkbox input
  * @constructor
  * @extends {ol_ext_input_Base}
+ * @fires change:value
  * @param {*} options
  *  @param {string} [options.className]
  *  @param {Element} [options.input] input element, if non create one (use parent to tell where)

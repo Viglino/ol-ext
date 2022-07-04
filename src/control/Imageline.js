@@ -99,15 +99,15 @@ ol_control_Imageline.prototype.setMap = function (map) {
 };
 
 /** Set layers to use in the control
- * @param {Array<ol.Layer} layers
+ * @param {Array<ol.Layer>} layers
  */
 ol_control_Imageline.prototype.setLayers = function (layers) {
   this._sources = this._getSources(layers);
 };
 
 /** Get source from a set of layers
- * @param {Array<ol.Layer} layers
- * @returns {Array<ol.source.Vector}
+ * @param {Array<ol.Layer>} layers
+ * @returns {Array<ol.source.Vector>}
  * @private
  */
 ol_control_Imageline.prototype._getSources = function (layers) {
