@@ -3590,26 +3590,39 @@ ol.legend.Legend.getLegendImage = function(item, canvas, row) {
   cy += (row*height) || 0;
   for (i=0; s= style[i]; i++) {
     vectorContext.setStyle(s);
+    ctx.save();
+    var geom;
     switch (typeGeom) {
       case ol.geom.Point:
       case 'Point':
-      case 'MultiPoint':
-        vectorContext.drawGeometry(new ol.geom.Point([cx, cy]));
+      case 'MultiPoint': {
+        geom = new ol.geom.Point([cx, cy]);
         break;
+      }
       case ol.geom.LineString:
       case 'LineString':
-      case 'MultiLineString': 
-        ctx.save();
-          ctx.rect(item.margin * ratio, 0, size[0] *  ratio, canvas.height);
-          ctx.clip();
-          vectorContext.drawGeometry(new ol.geom.LineString([[cx-sx, cy], [cx+sx, cy]]));
-        ctx.restore();
+      case 'MultiLineString': {
+        // Clip lines
+        ctx.rect(item.margin * ratio, 0, size[0] *  ratio, canvas.height);
+        ctx.clip();
+        geom = new ol.geom.LineString([[cx-sx, cy], [cx+sx, cy]]);
         break;
+      }
       case ol.geom.Polygon:
       case 'Polygon':
-      case 'MultiPolygon': 
-        vectorContext.drawGeometry(new ol.geom.Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]));
+      case 'MultiPolygon': {
+        geom = new ol.geom.Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]);
         break;
+      }
+    }
+    // Geometry function?
+    if (s.getGeometryFunction()) {
+      geom = s.getGeometryFunction()(new ol.Feature(geom));
+      ctx.restore();
+      vectorContext.drawGeometry(geom);
+    } else {
+      vectorContext.drawGeometry(geom);
+      ctx.restore();
     }
   }
   ctx.restore();
