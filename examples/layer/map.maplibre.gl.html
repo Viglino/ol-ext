@@ -78,7 +78,7 @@
   
 <script>
 
-var d3 = (document.location.search === '?3D')
+var d3 = (/3D/.test(document.location.search))
 
 // Mapbox map
 var map = new mapboxgl.Map({
@@ -132,7 +132,7 @@ map.on('wheel',function() { rotate(false) });
 
 // 3D Buildings
 map.on('load', function () {
-  if (document.location.search === '?gpp') {
+  if (/gpp/.test(document.location.search)) {
     map.addSource('gpp-tiles', {
       'type': 'raster',
       'tiles': [
@@ -142,7 +142,7 @@ map.on('load', function () {
       'attribution': 'IGN-Géoservices'
     });
     map.addLayer({
-      'id': 'simple-tiles',
+      'id': 'gpp-ortho',
       'type': 'raster',
       'source': 'gpp-tiles',
       'minzoom': 0,

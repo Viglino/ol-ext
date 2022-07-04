@@ -25397,7 +25397,7 @@ ol.interaction.Split = function(options) {
   // Cursor
   this.cursor_ = options.cursor;
   // List of source to split
-  this.sources_ = this.setSources(options.sources);
+  this.setSources(options.sources);
   if (options.features) {
     this.sources_.push (new ol.source.Vector({ features: options.features }));
   }
