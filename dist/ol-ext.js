@@ -3511,7 +3511,7 @@ ol.legend.Legend.getLegendImage = function(item, canvas, row) {
   };
   var width = size[0] + 2 * item.margin;
   var height = item.lineHeight || (size[1] + 2 * item.margin);
-  var ratio = ol.has.DEVICE_PIXEL_RATIO;
+  var ratio = item.pixelratio || ol.has.DEVICE_PIXEL_RATIO;
   if (!canvas) {
     row = 0;
     canvas = document.createElement('canvas');
