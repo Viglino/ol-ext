@@ -47,14 +47,6 @@ var ol_style_FontSymbol = function(options) {
   if (!options.displacement) {
     options.displacement = [options.offsetX || 0, -options.offsetY || 0];
   }
-  ol_style_RegularShape.call (this, { 
-    radius: options.radius, 
-    fill: options.fill,
-    rotation: options.rotation, 
-    displacement: options.displacement,
-    rotateWithView: options.rotateWithView 
-  });
-  
   if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
   this.color_ = options.color;
   this.fontSize_ = options.fontSize || 1;
@@ -65,11 +57,19 @@ var ol_style_FontSymbol = function(options) {
   this.form_ = options.form || "none";
   this.gradient_ = options.gradient;
   this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
-
+  
   if (options.glyph) this.glyph_ = this.getGlyph(options.glyph);
   else this.glyph_ = this.getTextGlyph(options.text||'', options.font);
-
-  if (!this.setDisplacement) this.getImage();
+  
+  ol_style_RegularShape.call (this, { 
+    radius: options.radius, 
+    fill: options.fill,
+    rotation: options.rotation, 
+    displacement: options.displacement,
+    rotateWithView: options.rotateWithView 
+  });
+  
+  if (!this.getDisplacement) this.getImage();
 };
 ol_ext_inherits(ol_style_FontSymbol, ol_style_RegularShape);
 
@@ -236,7 +236,7 @@ ol_style_FontSymbol.prototype.getImage = function(pixelratio) {
   this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
 
   // Set anchor / displacement
-  if (!this.setDisplacement) {
+  if (!this.getDisplacement) {
     var a = this.getAnchor();
     a[0] = canvas.width / 2 - this.offset_[0];
     a[1] = canvas.width / 2 - this.offset_[1];

@@ -97,7 +97,7 @@ ol_style_Shadow.prototype.getImage = function(pixelratio) {
   context.restore();
     
   // Set anchor
-  if (!this.setDisplacement) {
+  if (!this.getDisplacement) {
     var a = this.getAnchor();
     a[0] = canvas.width /2 - this._offset[0];
     a[1] = canvas.height /2 - this._offset[1];

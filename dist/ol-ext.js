@@ -38187,13 +38187,6 @@ ol.style.FontSymbol = function(options) {
   if (!options.displacement) {
     options.displacement = [options.offsetX || 0, -options.offsetY || 0];
   }
-  ol.style.RegularShape.call (this, { 
-    radius: options.radius, 
-    fill: options.fill,
-    rotation: options.rotation, 
-    displacement: options.displacement,
-    rotateWithView: options.rotateWithView 
-  });
   if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
   this.color_ = options.color;
   this.fontSize_ = options.fontSize || 1;
@@ -38206,7 +38199,14 @@ ol.style.FontSymbol = function(options) {
   this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
   if (options.glyph) this.glyph_ = this.getGlyph(options.glyph);
   else this.glyph_ = this.getTextGlyph(options.text||'', options.font);
-  if (!this.setDisplacement) this.getImage();
+  ol.style.RegularShape.call (this, { 
+    radius: options.radius, 
+    fill: options.fill,
+    rotation: options.rotation, 
+    displacement: options.displacement,
+    rotateWithView: options.rotateWithView 
+  });
+  if (!this.getDisplacement) this.getImage();
 };
 ol.ext.inherits(ol.style.FontSymbol, ol.style.RegularShape);
 /** Cool stuff to get the image symbol for a style
@@ -38356,7 +38356,7 @@ ol.style.FontSymbol.prototype.getImage = function(pixelratio) {
   context.clearRect(0, 0, canvas.width, canvas.height);
   this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
   // Set anchor / displacement
-  if (!this.setDisplacement) {
+  if (!this.getDisplacement) {
     var a = this.getAnchor();
     a[0] = canvas.width / 2 - this.offset_[0];
     a[1] = canvas.width / 2 - this.offset_[1];
@@ -38584,6 +38584,7 @@ ol.style.FontSymbol.prototype.getChecksum = function() {
  */
 ol.style.Photo = function(options) {
   options = options || {};
+  if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0]
   this.sanchor_ = (options.kind==="anchored" ? 8 : 0);
   this._shadow = (Number(options.shadow) || 0);
   if (!options.stroke) {
@@ -38761,6 +38762,7 @@ ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth, pixel
 ol.style.Photo.prototype.getImage = function(pixelratio) {
   pixelratio = pixelratio || 1;
   var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
+  if (this._gethit) return canvas;
   var strokeStyle;
   var strokeWidth = 0;
   if (this._stroke) {
@@ -38768,12 +38770,14 @@ ol.style.Photo.prototype.getImage = function(pixelratio) {
     strokeWidth = this._stroke.getWidth();
   }
   // Draw hitdetection image
-  var context = this.getHitDetectionImage().getContext('2d');
-  context.save();
-  context.setTransform(1,0,0,1,0,0)
-  this.drawBack_(context,"#000",strokeWidth, 1);
-  context.fill();
-  context.restore();
+  this._gethit = true;
+    var context = this.getHitDetectionImage().getContext('2d');
+    context.save();
+    context.setTransform(1,0,0,1,0,0)
+    this.drawBack_(context, "#000", strokeWidth, 1);
+    context.fill();
+    context.restore();
+  this._gethit = false;
   // Draw the image
   context = canvas.getContext('2d');
   context.save();
@@ -38804,7 +38808,7 @@ ol.style.Photo.prototype.getImage = function(pixelratio) {
     };
   }
   // Set anchor (ol < 6)
-  if (!this.setDisplacement) {
+  if (!this.getDisplacement) {
     var a = this.getAnchor();
     a[0] = (canvas.width/pixelratio - this._shadow)/2  - this._offset[0];
     if (this.sanchor_) {
@@ -39288,7 +39292,7 @@ ol.style.Shadow.prototype.getImage = function(pixelratio) {
   context.shadowColor = 'transparent';
   context.restore();
   // Set anchor
-  if (!this.setDisplacement) {
+  if (!this.getDisplacement) {
     var a = this.getAnchor();
     a[0] = canvas.width /2 - this._offset[0];
     a[1] = canvas.height /2 - this._offset[1];

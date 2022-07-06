@@ -34,6 +34,7 @@ import ol_style_Fill from 'ol/style/Fill'
  */
 var ol_style_Photo = function(options) {
   options = options || {};
+  if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0]
   this.sanchor_ = (options.kind==="anchored" ? 8 : 0);
   this._shadow = (Number(options.shadow) || 0);
   if (!options.stroke) {
@@ -221,6 +222,7 @@ ol_style_Photo.prototype.drawBack_ = function(context, color, strokeWidth, pixel
 ol_style_Photo.prototype.getImage = function(pixelratio) {
   pixelratio = pixelratio || 1;
   var canvas = ol_style_RegularShape.prototype.getImage.call(this, pixelratio);
+  if (this._gethit) return canvas;
 
   var strokeStyle;
   var strokeWidth = 0;
@@ -230,12 +232,14 @@ ol_style_Photo.prototype.getImage = function(pixelratio) {
   }
 
   // Draw hitdetection image
-  var context = this.getHitDetectionImage().getContext('2d');
-  context.save();
-  context.setTransform(1,0,0,1,0,0)
-  this.drawBack_(context,"#000",strokeWidth, 1);
-  context.fill();
-  context.restore();
+  this._gethit = true;
+    var context = this.getHitDetectionImage().getContext('2d');
+    context.save();
+    context.setTransform(1,0,0,1,0,0)
+    this.drawBack_(context, "#000", strokeWidth, 1);
+    context.fill();
+    context.restore();
+  this._gethit = false;
 
   // Draw the image
   context = canvas.getContext('2d');
@@ -271,7 +275,7 @@ ol_style_Photo.prototype.getImage = function(pixelratio) {
   }
   
   // Set anchor (ol < 6)
-  if (!this.setDisplacement) {
+  if (!this.getDisplacement) {
     var a = this.getAnchor();
     a[0] = (canvas.width/pixelratio - this._shadow)/2  - this._offset[0];
     if (this.sanchor_) {
