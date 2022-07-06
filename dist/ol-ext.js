@@ -17755,12 +17755,12 @@ ol.control.WMTSCapabilities.prototype.getRequestParam = function(options) {
  * @returns {*}
  * @private
  */
-ol.control.WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, maxZoom) {
+ol.control.WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, maxZoom, tilePrefix) {
   var matrixIds = new Array();
   var resolutions = new Array();
   var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
   for (var z=0; z <= (maxZoom ? maxZoom : 20) ; z++) {
-    var id = tileMatrixSet !== 'PM' ? tileMatrixSet+':'+z : z;
+    var id = tilePrefix ? tileMatrixSet+':'+z : z;
     matrixIds[z] = id ; 
     resolutions[z] = size / Math.pow(2, z);
   }
@@ -17775,11 +17775,12 @@ ol.control.WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, 
  * @param {sting} tileMatrixSet
  * @param {number} minZoom
  * @param {number} maxZoom
+ * @param {boolean} tilePrefix
  * @returns {ol.tilegrid.WMTS}
  * @private
  */
-ol.control.WMTSCapabilities.prototype.getTileGrid = function(tileMatrixSet, minZoom, maxZoom) {
-  return new ol.tilegrid.WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom));
+ol.control.WMTSCapabilities.prototype.getTileGrid = function(tileMatrixSet, minZoom, maxZoom, tilePrefix) {
+  return new ol.tilegrid.WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom, tilePrefix));
 };
 /** Return a WMTS options for the given capabilities
  * @param {*} caps layer capabilities (read from the capabilities)
@@ -17802,6 +17803,7 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     this.showError({ type: 'TileMatrix' });
     return;
   }
+  var tilePrefix = tmatrix.TileMatrixSetLimits[0].TileMatrix.split(':').length > 1;
   tmatrix.TileMatrixSetLimits.forEach(function(tm) {
     var zoom = tm.TileMatrix.split(':').pop();
     minZoom = Math.min(minZoom, parseInt(zoom));
@@ -17822,6 +17824,7 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     format: caps.Format[0] || 'image/jpeg',
     projection: 'EPSG:3857',
     //tileGrid: tg,
+    tilePrefix: tilePrefix,
     minZoom: minZoom,
     maxZoom: maxZoom,
     style: caps.Style ? caps.Style[0].Identifier : 'normal',
@@ -17848,7 +17851,7 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     source_opt.tileGrid = 'TILEGRID';
     var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
     tso = tso.replace('"TILEGRID"', 'new ol.tilegrid.WMTS('
-      + JSON.stringify(this._getTG(source_opt.matrixSet, source_opt.minZoom, source_opt.maxZoom), null, '\t').replace(/\n/g, '\n\t\t')
+      + JSON.stringify(this._getTG(source_opt.matrixSet, source_opt.minZoom, source_opt.maxZoom, source_opt.tilePrefix), null, '\t').replace(/\n/g, '\n\t\t')
       + ')'
     );
     delete source_opt.tileGrid;
@@ -17938,7 +17941,7 @@ ol.control.WMTSCapabilities.prototype._getFormOptions = function() {
  */
 ol.control.WMTSCapabilities.prototype.getLayerFromOptions = function (options) {
   if (!options) return;
-  options.source.tileGrid = this.getTileGrid(options.source.matrixSet, options.source.minZoom, options.source.maxZoom);
+  options.source.tileGrid = this.getTileGrid(options.source.matrixSet, options.source.minZoom, options.source.maxZoom, options.source.tilePrefix);
   options.layer.source = new ol.source.WMTS(options.source);
   var layer = new ol.layer.Tile(options.layer);
   // Restore options
