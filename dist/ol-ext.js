@@ -38166,8 +38166,9 @@ ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
  *  @param {number} [options.fontSize=1] size of the font compare to the radius, fontSize greater than 1 will exceed the symbol extent
  *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
  *  @param {boolean} options.gradient true to display a gradient on the symbol
- *  @param {number} [options.offsetX=0] default 0
- *  @param {number} [options.offsetY=0] default 0
+ *  @param {Array<number>} [options.displacement] to use with ol > 6
+ * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
+ * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
  *  @param {_ol_style_Fill_} options.fill
  *  @param {_ol_style_Stroke_} options.stroke
  * @extends {ol.style.RegularShape}
@@ -38180,10 +38181,14 @@ ol.style.FontSymbol = function(options) {
   if (options.stroke) {
     strokeWidth = options.stroke.getWidth();
   }
+  if (!options.displacement) {
+    options.displacement = [options.offsetX || 0, -options.offsetY || 0];
+  }
   ol.style.RegularShape.call (this, { 
     radius: options.radius, 
-    fill:options.fill,
-    rotation:options.rotation, 
+    fill: options.fill,
+    rotation: options.rotation, 
+    displacement: options.displacement,
     rotateWithView: options.rotateWithView 
   });
   if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
@@ -38198,7 +38203,7 @@ ol.style.FontSymbol = function(options) {
   this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
   if (options.glyph) this.glyph_ = this.getGlyph(options.glyph);
   else this.glyph_ = this.getTextGlyph(options.text||'', options.font);
-  this.renderMarker_();
+  if (!this.setDisplacement) this.getImage();
 };
 ol.ext.inherits(ol.style.FontSymbol, ol.style.RegularShape);
 /** Cool stuff to get the image symbol for a style
@@ -38267,7 +38272,7 @@ ol.style.FontSymbol.prototype.clone = function() {
   });
   g.setScale(this.getScale());
   g.glyph_ = this.glyph_;
-  g.renderMarker_();
+  g.getImage();
   return g;
 };
 /** Get the fill style for the symbol.
@@ -38321,28 +38326,22 @@ ol.style.FontSymbol.prototype.getGlyphName = function() {
 ol.style.FontSymbol.prototype.getFontInfo = function(glyph) {
   return ol.style.FontSymbol.prototype.defs.fonts[glyph.font];
 }
-/** @private
+/**
+ * Get the image icon.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {HTMLCanvasElement} Image or Canvas element.
+ * @api
  */
-ol.style.FontSymbol.prototype.renderMarker_ = function(pixelratio) {
-  if (!pixelratio) {
-    if (this.getPixelRatio) {
-      pixelratio = window.devicePixelRatio;
-      this.renderMarker_(pixelratio);
-      if (this.getPixelRatio && pixelratio!==1) this.renderMarker_(1); 
-    } else {
-      this.renderMarker_(1);
-    }
-    return;
-  }
+ol.style.FontSymbol.prototype.getImage = function(pixelratio) {
+  pixelratio = pixelratio || 1;
+  // get canvas
+  var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
   var strokeStyle;
   var strokeWidth = 0;
   if (this.stroke_) {
     strokeStyle = ol.color.asString(this.stroke_.getColor());
     strokeWidth = this.stroke_.getWidth();
   }
-  // get canvas
-  var canvas = this.getImage(pixelratio);
-  //console.log(this.getImage().width+" / "+(2 * (this.radius_ + strokeWidth) + 1));
   /** @type {ol.style.FontSymbol.RenderOptions} */
   var renderOptions = {
     strokeStyle: strokeStyle,
@@ -38354,13 +38353,12 @@ ol.style.FontSymbol.prototype.renderMarker_ = function(pixelratio) {
   context.clearRect(0, 0, canvas.width, canvas.height);
   this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
   // Set anchor / displacement
-  if (this.setDisplacement) {
-    this.setDisplacement([this.offset_[0], -this.offset_[1]])
-  } else {
+  if (!this.setDisplacement) {
     var a = this.getAnchor();
     a[0] = canvas.width / 2 - this.offset_[0];
     a[1] = canvas.width / 2 - this.offset_[1];
   }
+  return canvas;
 };
 /**
  * @private
@@ -38368,12 +38366,13 @@ ol.style.FontSymbol.prototype.renderMarker_ = function(pixelratio) {
  * @param {CanvasRenderingContext2D} context
  */
 ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
-  var s = 2*this.radius_+renderOptions.strokeWidth+1;
+  var s = 2 * this.radius_ + renderOptions.strokeWidth;
   var w = renderOptions.strokeWidth/2;
   var c = renderOptions.size / 2;
   // Transfo to place the glyph at the right place
-  var transfo = { fac:1, posX:renderOptions.size / 2, posY:renderOptions.size / 2 };
+  var transfo = { fac:1, posX: renderOptions.size / 2, posY: renderOptions.size / 2 };
   context.lineJoin = 'round';
+  context.lineCap = 'round';
   context.beginPath();
   // Draw the path with the form
   switch (this.form_) {
@@ -38572,16 +38571,17 @@ ol.style.FontSymbol.prototype.getChecksum = function() {
  *  @param {ol.style.Stroke} options.stroke
  *  @param {String} options.src image src
  *  @param {String} options.crossOrigin The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
- *  @param {Number} options.offsetX Horizontal offset in pixels. Default is 0.
- *  @param {Number} options.offsetY Vertical offset in pixels. Default is 0.
- *  @param {function} options.onload callback when image is loaded (to redraw the layer)
+ *  @param {Array<number>} [options.displacement] to use with ol > 6
+ * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
+ * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
+ *  @param {function} [options.onload] callback when image is loaded (to redraw the layer)
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
 ol.style.Photo = function(options) {
   options = options || {};
-  this.sanchor_ = options.kind=="anchored" ? 8:0;
+  this.sanchor_ = (options.kind==="anchored" ? 8 : 0);
   this._shadow = (Number(options.shadow) || 0);
   if (!options.stroke) {
     options.stroke = new ol.style.Stroke({ width: 0, color: "#000"})
@@ -38593,12 +38593,13 @@ ol.style.Photo = function(options) {
   ol.style.RegularShape.call (this, {
     radius: options.radius + strokeWidth + this.sanchor_/2 + this._shadow/2, 
     points: 0,
+    displacement: [ options.displacement[0] || 0, (options.displacement[1] || 0) + this.sanchor_],
     // No fill to create a hit detection Image (v5) or transparent (v6) 
     fill: ol.style.RegularShape.prototype.render ? new ol.style.Fill({ color: [0,0,0,0] }) : null
   });
   // Hack to get the hit detection Image (v4.6.5 ?)
   if (!this.getHitDetectionImage) {
-    var img = this.getImage();
+    var img = ol.style.RegularShape.prototype.getImage.call(this);
     if (!this.hitDetectionCanvas_) {
       for (var i in this) {
         if (this[i] && this[i].getContext && this[i]!==img) {
@@ -38615,6 +38616,8 @@ ol.style.Photo = function(options) {
     this.getHitDetectionImage = function() {
       return hit;
     }
+    // Calculate image
+    setTimeout(function() { this.getImage(); }.bind(this))
   }
   this._stroke = options.stroke;
   this._fill = options.fill;
@@ -38627,7 +38630,6 @@ ol.style.Photo = function(options) {
   this._onload = options.onload;
   if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
   if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
-  this.renderPhoto_();
 };
 ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
 /** Set photo offset
@@ -38635,7 +38637,7 @@ ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
  */
 ol.style.Photo.prototype.setOffset = function(offset) {
   this._offset = [offset[0]||0, offset[1]||0];
-  this.renderPhoto_();
+  this.getImage();
 };
 /**
  * Clones the style. 
@@ -38656,7 +38658,7 @@ ol.style.Photo.prototype.clone = function() {
     opacity: this.getOpacity(),
     rotation: this.getRotation()
   });
-  i.renderPhoto_();
+  i.getImage();
   return i;
 };
 /**
@@ -38748,25 +38750,20 @@ ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth, pixel
   context.closePath();
 };
 /**
- * @private
+ * Get the image icon.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {HTMLCanvasElement} Image or Canvas element.
+ * @api
  */
-ol.style.Photo.prototype.renderPhoto_ = function(pixelratio) {
-  if (!pixelratio) {
-    if (this.getPixelRatio) {
-      pixelratio = window.devicePixelRatio;
-      this.renderPhoto_(pixelratio);
-    } else {
-      this.renderPhoto_(1);
-    }
-    return;
-  }
+ol.style.Photo.prototype.getImage = function(pixelratio) {
+  pixelratio = pixelratio || 1;
+  var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
   var strokeStyle;
   var strokeWidth = 0;
   if (this._stroke) {
     strokeStyle = ol.color.asString(this._stroke.getColor());
     strokeWidth = this._stroke.getWidth();
   }
-  var canvas = this.getImage(pixelratio);
   // Draw hitdetection image
   var context = this.getHitDetectionImage().getContext('2d');
   context.save();
@@ -38794,31 +38791,32 @@ ol.style.Photo.prototype.renderPhoto_ = function(pixelratio) {
   img.src = this._src;
   // Draw image
   if (img.width) {
-    self.drawImage_(img);
+    self.drawImage_(canvas, img, pixelratio);
   } else {
     img.onload = function() {
-      self.drawImage_(img);
+      self.drawImage_(canvas, img, pixelratio);
       // Force change (?!)
       // self.setScale(1);
       if (self._onload) self._onload();
     };
   }
-  // Set anchor
-  var a = this.getAnchor();
-  a[0] = (canvas.width/pixelratio - this._shadow)/2  - this._offset[0];
-  if (this.sanchor_) {
-    a[1] = canvas.height/pixelratio - this._shadow - this._offset[1];
-  } else {
-    a[1] = (canvas.height/pixelratio - this._shadow)/2 - this._offset[1];
+  // Set anchor (ol < 6)
+  if (!this.setDisplacement) {
+    var a = this.getAnchor();
+    a[0] = (canvas.width/pixelratio - this._shadow)/2  - this._offset[0];
+    if (this.sanchor_) {
+      a[1] = canvas.height/pixelratio - this._shadow - this._offset[1];
+    } else {
+      a[1] = (canvas.height/pixelratio - this._shadow)/2 - this._offset[1];
+    }
   }
+  return canvas;
 };
 /**
  * Draw an timage when loaded
  * @private
  */
-ol.style.Photo.prototype.drawImage_ = function(img) {
-  var pixelratio = window.devicePixelRatio;
-  var canvas = this.getImage(pixelratio);
+ol.style.Photo.prototype.drawImage_ = function(canvas, img, pixelratio) {
   // Remove the circle on the canvas
   var context = (canvas.getContext('2d'));
   var strokeWidth = 0;
@@ -39221,20 +39219,26 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
  *  @param {ol.style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
  *  @param {number} options.radius point radius
  * 	@param {number} options.blur lur radius, default radius/3
- * 	@param {number} options.offsetX x offset, default 0
- * 	@param {number} options.offsetY y offset, default 0
+ *  @param {Array<number>} [options.displacement] to use with ol > 6
+ * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
+ * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
  * @extends {ol.style.RegularShape}
  * @api
  */
 ol.style.Shadow = function(options) {
   options = options || {};
-  if (!options.fill) options.fill = new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
-  ol.style.RegularShape.call (this,{ radius: options.radius, fill: options.fill });
-  this._fill = options.fill;
+  this._fill = options.fill || new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
   this._radius = options.radius;
   this._blur = options.blur===0 ? 0 : options.blur || options.radius/3;
   this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
-  this.renderShadow_();
+  if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0];
+  ol.style.RegularShape.call (this, { 
+    radius: options.radius, 
+    fill: options.fill,
+    displacement: options.displacement
+  });
+  // ol < 6
+  if (!this.setDisplacement) this.getImage();
 };
 ol.ext.inherits(ol.style.Shadow, ol.style.RegularShape);
 /**
@@ -39254,21 +39258,15 @@ ol.style.Shadow.prototype.clone = function() {
   return s;
 };
 /**
- * @private
+ * Get the image icon.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {HTMLCanvasElement} Image or Canvas element.
+ * @api
  */
-ol.style.Shadow.prototype.renderShadow_ = function(pixelratio) {	
-  if (!pixelratio) {
-    if (this.getPixelRatio) {
-      pixelratio = window.devicePixelRatio;
-      this.renderShadow_(pixelratio);
-      if (this.getPixelRatio && pixelratio!==1) this.renderShadow_(1); 
-    } else {
-      this.renderShadow_(1);
-    }
-    return;
-  }
+ol.style.Shadow.prototype.getImage = function(pixelratio) {
+  pixelratio = pixelratio || 1;
   var radius = this._radius;
-  var canvas = this.getImage(pixelratio);
+  var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
   // Remove the circle on the canvas
   var context = (canvas.getContext('2d'));
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -39276,20 +39274,23 @@ ol.style.Shadow.prototype.renderShadow_ = function(pixelratio) {
   context.beginPath();
     context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
     context.scale(1,0.5);
-    context.arc(radius, -radius, radius-this._blur, 0, 2 * Math.PI, false);
+    context.arc(radius, -radius, radius - this._blur, 0, 2 * Math.PI, false);
     context.fillStyle = '#000';
     context.shadowColor = this._fill.getColor();
-    context.shadowBlur = 0.7*this._blur*pixelratio;
+    context.shadowBlur = 0.7 * this._blur * pixelratio;
     context.shadowOffsetX = 0;
-    context.shadowOffsetY = 1.5*radius*pixelratio;
+    context.shadowOffsetY = 1.5 * radius * pixelratio;
   context.closePath();
   context.fill();
   context.shadowColor = 'transparent';
   context.restore();
   // Set anchor
-  var a = this.getAnchor();
-  a[0] = canvas.width /2 - this._offset[0];
-  a[1] = canvas.height /2 - this._offset[1];
+  if (!this.setDisplacement) {
+    var a = this.getAnchor();
+    a[0] = canvas.width /2 - this._offset[0];
+    a[1] = canvas.height /2 - this._offset[1];
+  }
+  return canvas;
 }
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 

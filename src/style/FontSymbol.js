@@ -29,8 +29,9 @@ import {asString as ol_color_asString} from 'ol/color'
  *  @param {number} [options.fontSize=1] size of the font compare to the radius, fontSize greater than 1 will exceed the symbol extent
  *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
  *  @param {boolean} options.gradient true to display a gradient on the symbol
- *  @param {number} [options.offsetX=0] default 0
- *  @param {number} [options.offsetY=0] default 0
+ *  @param {Array<number>} [options.displacement] to use with ol > 6
+ * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
+ * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
  *  @param {_ol_style_Fill_} options.fill
  *  @param {_ol_style_Stroke_} options.stroke
  * @extends {ol_style_RegularShape}
@@ -43,10 +44,14 @@ var ol_style_FontSymbol = function(options) {
   if (options.stroke) {
     strokeWidth = options.stroke.getWidth();
   }
+  if (!options.displacement) {
+    options.displacement = [options.offsetX || 0, -options.offsetY || 0];
+  }
   ol_style_RegularShape.call (this, { 
     radius: options.radius, 
-    fill:options.fill,
-    rotation:options.rotation, 
+    fill: options.fill,
+    rotation: options.rotation, 
+    displacement: options.displacement,
     rotateWithView: options.rotateWithView 
   });
   
@@ -64,7 +69,7 @@ var ol_style_FontSymbol = function(options) {
   if (options.glyph) this.glyph_ = this.getGlyph(options.glyph);
   else this.glyph_ = this.getTextGlyph(options.text||'', options.font);
 
-  this.renderMarker_();
+  if (!this.setDisplacement) this.getImage();
 };
 ol_ext_inherits(ol_style_FontSymbol, ol_style_RegularShape);
 
@@ -138,7 +143,7 @@ ol_style_FontSymbol.prototype.clone = function() {
   });
   g.setScale(this.getScale());
   g.glyph_ = this.glyph_;
-  g.renderMarker_();
+  g.getImage();
   return g;
 };
 
@@ -199,19 +204,17 @@ ol_style_FontSymbol.prototype.getFontInfo = function(glyph) {
   return ol_style_FontSymbol.prototype.defs.fonts[glyph.font];
 }
 
-/** @private
+/**
+ * Get the image icon.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {HTMLCanvasElement} Image or Canvas element.
+ * @api
  */
-ol_style_FontSymbol.prototype.renderMarker_ = function(pixelratio) {
-  if (!pixelratio) {
-    if (this.getPixelRatio) {
-      pixelratio = window.devicePixelRatio;
-      this.renderMarker_(pixelratio);
-      if (this.getPixelRatio && pixelratio!==1) this.renderMarker_(1); 
-    } else {
-      this.renderMarker_(1);
-    }
-    return;
-  }
+ol_style_FontSymbol.prototype.getImage = function(pixelratio) {
+  pixelratio = pixelratio || 1;
+  // get canvas
+  var canvas = ol_style_RegularShape.prototype.getImage.call(this, pixelratio);
+  
   var strokeStyle;
   var strokeWidth = 0;
 
@@ -219,10 +222,6 @@ ol_style_FontSymbol.prototype.renderMarker_ = function(pixelratio) {
     strokeStyle = ol_color_asString(this.stroke_.getColor());
     strokeWidth = this.stroke_.getWidth();
   }
-
-  // get canvas
-  var canvas = this.getImage(pixelratio);
-  //console.log(this.getImage().width+" / "+(2 * (this.radius_ + strokeWidth) + 1));
 
   /** @type {ol_style_FontSymbol.RenderOptions} */
   var renderOptions = {
@@ -237,13 +236,13 @@ ol_style_FontSymbol.prototype.renderMarker_ = function(pixelratio) {
   this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
 
   // Set anchor / displacement
-  if (this.setDisplacement) {
-    this.setDisplacement([this.offset_[0], -this.offset_[1]])
-  } else {
+  if (!this.setDisplacement) {
     var a = this.getAnchor();
     a[0] = canvas.width / 2 - this.offset_[0];
     a[1] = canvas.width / 2 - this.offset_[1];
   }
+
+  return canvas;
 };
 
 /**
@@ -252,12 +251,13 @@ ol_style_FontSymbol.prototype.renderMarker_ = function(pixelratio) {
  * @param {CanvasRenderingContext2D} context
  */
 ol_style_FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
-  var s = 2*this.radius_+renderOptions.strokeWidth+1;
+  var s = 2 * this.radius_ + renderOptions.strokeWidth;
   var w = renderOptions.strokeWidth/2;
   var c = renderOptions.size / 2;
   // Transfo to place the glyph at the right place
-  var transfo = { fac:1, posX:renderOptions.size / 2, posY:renderOptions.size / 2 };
+  var transfo = { fac:1, posX: renderOptions.size / 2, posY: renderOptions.size / 2 };
   context.lineJoin = 'round';
+  context.lineCap = 'round';
   context.beginPath();
 
   // Draw the path with the form

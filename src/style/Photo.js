@@ -24,9 +24,10 @@ import ol_style_Fill from 'ol/style/Fill'
  *  @param {ol_style_Stroke} options.stroke
  *  @param {String} options.src image src
  *  @param {String} options.crossOrigin The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
- *  @param {Number} options.offsetX Horizontal offset in pixels. Default is 0.
- *  @param {Number} options.offsetY Vertical offset in pixels. Default is 0.
- *  @param {function} options.onload callback when image is loaded (to redraw the layer)
+ *  @param {Array<number>} [options.displacement] to use with ol > 6
+ * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
+ * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
+ *  @param {function} [options.onload] callback when image is loaded (to redraw the layer)
  * @extends {ol_style_RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
@@ -212,7 +213,10 @@ ol_style_Photo.prototype.drawBack_ = function(context, color, strokeWidth, pixel
 };
 
 /**
- * @private
+ * Get the image icon.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {HTMLCanvasElement} Image or Canvas element.
+ * @api
  */
 ol_style_Photo.prototype.getImage = function(pixelratio) {
   pixelratio = pixelratio || 1;
@@ -267,12 +271,14 @@ ol_style_Photo.prototype.getImage = function(pixelratio) {
   }
   
   // Set anchor (ol < 6)
-  var a = this.getAnchor();
-  a[0] = (canvas.width/pixelratio - this._shadow)/2  - this._offset[0];
-  if (this.sanchor_) {
-    a[1] = canvas.height/pixelratio - this._shadow - this._offset[1];
-  } else {
-    a[1] = (canvas.height/pixelratio - this._shadow)/2 - this._offset[1];
+  if (!this.setDisplacement) {
+    var a = this.getAnchor();
+    a[0] = (canvas.width/pixelratio - this._shadow)/2  - this._offset[0];
+    if (this.sanchor_) {
+      a[1] = canvas.height/pixelratio - this._shadow - this._offset[1];
+    } else {
+      a[1] = (canvas.height/pixelratio - this._shadow)/2 - this._offset[1];
+    }
   }
 
   return canvas;
