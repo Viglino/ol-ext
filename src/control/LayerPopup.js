@@ -15,8 +15,8 @@ import ol_ext_element from '../util/element';
  */
 var ol_control_LayerPopup = function(options) {
   options = options || {};
-	options.switcherClass="ol-layerswitcher-popup";
-	if (options.mouseover!==false) options.mouseover=true;
+	options.switcherClass = 'ol-layerswitcher-popup' + (options.switcherClass ? ' ' + options.switcherClass : '');
+	if (options.mouseover!==false) options.mouseover = true;
 	ol_control_LayerSwitcher.call(this, options);
 };
 ol_ext_inherits(ol_control_LayerPopup, ol_control_LayerSwitcher);
@@ -37,19 +37,19 @@ ol_control_LayerPopup.prototype.drawList = function(ul, layers) {
     e.preventDefault(); 
 		var l = self._getLayerForLI(this);
 		self.switchLayerVisibility(l,layers);
-		if (e.type=="touchstart") self.element.classList.add("ol-collapsed");
+		if (e.type === 'touchstart') self.element.classList.add('ol-collapsed');
 	};
 
 	layers.forEach(function(layer) {
     if (self.displayInLayerSwitcher(layer)) {
       var d = ol_ext_element.create('LI', {
-        html: layer.get("title") || layer.get("name"),
+        html: layer.get('title') || layer.get('name'),
         on: { 'click touchstart': setVisibility },
         parent: ul
       });
       self._setLayerForLI(d, layer);
 
-			if (self.testLayerVisibility(layer)) d.classList.add("ol-layer-hidden");
+			if (self.testLayerVisibility(layer)) d.classList.add('ol-layer-hidden');
 			if (layer.getVisible()) d.classList.add('ol-visible');
 		}
 	});
