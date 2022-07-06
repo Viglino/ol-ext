@@ -38188,17 +38188,17 @@ ol.style.FontSymbol = function(options) {
     options.displacement = [options.offsetX || 0, -options.offsetY || 0];
   }
   if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
-  this.color_ = options.color;
-  this.fontSize_ = options.fontSize || 1;
-  this.fontStyle_ = options.fontStyle || '';
-  this.stroke_ = options.stroke;
-  this.fill_ = options.fill;
-  this.radius_ = options.radius -strokeWidth;
-  this.form_ = options.form || "none";
-  this.gradient_ = options.gradient;
-  this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
-  if (options.glyph) this.glyph_ = this.getGlyph(options.glyph);
-  else this.glyph_ = this.getTextGlyph(options.text||'', options.font);
+  this._color = options.color;
+  this._fontSize = options.fontSize || 1;
+  this._fontStyle = options.fontStyle || '';
+  this._stroke = options.stroke;
+  this._fill = options.fill;
+  this._radius = options.radius -strokeWidth;
+  this._form = options.form || "none";
+  this._gradient = options.gradient;
+  this._offset = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
+  if (options.glyph) this._glyph = this.getGlyph(options.glyph);
+  else this._glyph = this.getTextGlyph(options.text||'', options.font);
   ol.style.RegularShape.call (this, { 
     radius: options.radius, 
     fill: options.fill,
@@ -38259,22 +38259,22 @@ ol.style.FontSymbol.addDefs = function(font, glyphs) {
 ol.style.FontSymbol.prototype.clone = function() {
   var g = new ol.style.FontSymbol({
     glyph: '',
-    color: this.color_,
-    fontSize: this.fontSize_,
-    fontStyle: this.fontStyle_,
-    stroke: this.stroke_,
-    fill: this.fill_,
-    radius: this.radius_ + (this.stroke_ ? this.stroke_.getWidth():0),
-    form: this.form_,
-    gradient: this.gradient_,
-    offsetX: this.offset_[0],
-    offsetY: this.offset_[1],
+    color: this._color,
+    fontSize: this._fontSize,
+    fontStyle: this._fontStyle,
+    stroke: this._stroke,
+    fill: this._fill,
+    radius: this._radius + (this._stroke ? this._stroke.getWidth():0),
+    form: this._form,
+    gradient: this._gradient,
+    offsetX: this._offset[0],
+    offsetY: this._offset[1],
     opacity: this.getOpacity(),
     rotation: this.getRotation(),
     rotateWithView: this.getRotateWithView()
   });
   g.setScale(this.getScale());
-  g.glyph_ = this.glyph_;
+  g.glyph_ = this._glyph;
   g.getImage();
   return g;
 };
@@ -38283,14 +38283,14 @@ ol.style.FontSymbol.prototype.clone = function() {
  * @api
  */
 ol.style.FontSymbol.prototype.getFill = function() {
-  return this.fill_;
+  return this._fill;
 };
 /** Get the stroke style for the symbol.
  * @return {_ol_style_Stroke_} Stroke style.
  * @api
  */
 ol.style.FontSymbol.prototype.getStroke = function() {
-  return this.stroke_;
+  return this._stroke;
 };
 /** Get the glyph definition for the symbol.
  * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
@@ -38299,7 +38299,7 @@ ol.style.FontSymbol.prototype.getStroke = function() {
  */
 ol.style.FontSymbol.prototype.getGlyph = function(name) {
   if (name) return ol.style.FontSymbol.prototype.defs.glyphs[name] || { font:'sans-serif', char:name.charAt(0), theme:'none', name:'none', search:'' };
-  else return this.glyph_;
+  else return this._glyph;
 };
 /** Get glyph definition given a text and a font
  * @param {string|undefined} text
@@ -38317,7 +38317,7 @@ ol.style.FontSymbol.prototype.getTextGlyph = function(text, font) {
  */
 ol.style.FontSymbol.prototype.getGlyphName = function() {
   for (var i in ol.style.FontSymbol.prototype.defs.glyphs) {
-    if (ol.style.FontSymbol.prototype.defs.glyphs[i] === this.glyph_) return i;
+    if (ol.style.FontSymbol.prototype.defs.glyphs[i] === this._glyph) return i;
   }
   return '';
 };
@@ -38341,9 +38341,9 @@ ol.style.FontSymbol.prototype.getImage = function(pixelratio) {
   var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
   var strokeStyle;
   var strokeWidth = 0;
-  if (this.stroke_) {
-    strokeStyle = ol.color.asString(this.stroke_.getColor());
-    strokeWidth = this.stroke_.getWidth();
+  if (this._stroke) {
+    strokeStyle = ol.color.asString(this._stroke.getColor());
+    strokeWidth = this._stroke.getWidth();
   }
   /** @type {ol.style.FontSymbol.RenderOptions} */
   var renderOptions = {
@@ -38358,8 +38358,8 @@ ol.style.FontSymbol.prototype.getImage = function(pixelratio) {
   // Set anchor / displacement
   if (!this.getDisplacement) {
     var a = this.getAnchor();
-    a[0] = canvas.width / 2 - this.offset_[0];
-    a[1] = canvas.width / 2 - this.offset_[1];
+    a[0] = canvas.width / 2 - this._offset[0];
+    a[1] = canvas.width / 2 - this._offset[1];
   }
   return canvas;
 };
@@ -38369,7 +38369,7 @@ ol.style.FontSymbol.prototype.getImage = function(pixelratio) {
  * @param {CanvasRenderingContext2D} context
  */
 ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
-  var s = 2 * this.radius_ + renderOptions.strokeWidth;
+  var s = 2 * this._radius + renderOptions.strokeWidth;
   var w = renderOptions.strokeWidth/2;
   var c = renderOptions.size / 2;
   // Transfo to place the glyph at the right place
@@ -38378,7 +38378,7 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
   context.lineCap = 'round';
   context.beginPath();
   // Draw the path with the form
-  switch (this.form_) {
+  switch (this._form) {
     case "none": {
       transfo.fac=1;  
       break;
@@ -38389,34 +38389,34 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
       break;
     }
     case "poi": {
-      context.arc ( c, c -0.4*this.radius_, 0.6*this.radius_, 0.15*Math.PI, 0.85*Math.PI, true);
+      context.arc ( c, c -0.4*this._radius, 0.6*this._radius, 0.15*Math.PI, 0.85*Math.PI, true);
       context.lineTo ( c-0.89*0.05*s, (0.95+0.45*0.05)*s+w);
       context.arc ( c, 0.95*s+w, 0.05*s, 0.85*Math.PI, 0.15*Math.PI, true);
-      transfo = { fac:0.45, posX:c, posY:c -0.35*this.radius_ };
+      transfo = { fac:0.45, posX:c, posY:c -0.35*this._radius };
       break;
     }
     case "bubble": {
-      context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.4*Math.PI, 0.6*Math.PI, true);
+      context.arc ( c, c -0.2*this._radius, 0.8*this._radius, 0.4*Math.PI, 0.6*Math.PI, true);
       context.lineTo ( 0.5*s+w, s+w);
-      transfo = { fac:0.7, posX:c, posY:c -0.2*this.radius_ };
+      transfo = { fac:0.7, posX:c, posY:c -0.2*this._radius };
       break;
     }
     case "marker": {
-      context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.25*Math.PI, 0.75*Math.PI, true);
+      context.arc ( c, c -0.2*this._radius, 0.8*this._radius, 0.25*Math.PI, 0.75*Math.PI, true);
       context.lineTo ( 0.5*s+w, s+w);
-      transfo = { fac:0.7, posX: c, posY: c -0.2*this.radius_ };
+      transfo = { fac:0.7, posX: c, posY: c -0.2*this._radius };
       break;
     }
     case "coma": {
-      context.moveTo ( c + 0.8*this.radius_, c -0.2*this.radius_);
+      context.moveTo ( c + 0.8*this._radius, c -0.2*this._radius);
       context.quadraticCurveTo ( 0.95*s+w, 0.75*s+w, 0.5*s+w, s+w);
-      context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.45*Math.PI, 0, false);
-      transfo = { fac:0.7, posX: c, posY: c -0.2*this.radius_ };
+      context.arc ( c, c -0.2*this._radius, 0.8*this._radius, 0.45*Math.PI, 0, false);
+      transfo = { fac:0.7, posX: c, posY: c -0.2*this._radius };
       break;
     }
     default: {
       var pts;
-      switch (this.form_) {
+      switch (this._form) {
         case "shield": {
           pts = [ 0.05,0, 0.95,0, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0 ]; 
           transfo.posY = 0.45*s+w ;
@@ -38483,19 +38483,19 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
  * @param {number} y The origin for the symbol (y).
  */
 ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y, pixelratio) {
-  var fcolor = this.fill_ ? this.fill_.getColor() : "#000";
-  var scolor = this.stroke_ ? this.stroke_.getColor() : "#000";
-  if (this.form_ == "none" && this.stroke_ && this.fill_) {
-    scolor = this.fill_.getColor();
-    fcolor = this.stroke_.getColor();
+  var fcolor = this._fill ? this._fill.getColor() : "#000";
+  var scolor = this._stroke ? this._stroke.getColor() : "#000";
+  if (this._form == "none" && this._stroke && this._fill) {
+    scolor = this._fill.getColor();
+    fcolor = this._stroke.getColor();
   }
   // reset transform
   context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
   // then move to (x, y)
   context.translate(x, y);
   var tr = this.drawPath_(renderOptions, context, pixelratio);
-  if (this.fill_) {
-    if (this.gradient_ && this.form_!="none") {
+  if (this._fill) {
+    if (this._gradient && this._form!="none") {
       var grd = context.createLinearGradient(0,0,renderOptions.size/2,renderOptions.size);
       grd.addColorStop (1, ol.color.asString(fcolor));
       grd.addColorStop (0, ol.color.asString(scolor));
@@ -38505,30 +38505,30 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
     }
     context.fill();
   }
-  if (this.stroke_ && renderOptions.strokeWidth) {
+  if (this._stroke && renderOptions.strokeWidth) {
     context.strokeStyle = renderOptions.strokeStyle;
     context.lineWidth = renderOptions.strokeWidth;
     context.stroke();
   }
   // Draw the symbol
-  if (this.glyph_.char) {
-    context.font = this.fontStyle_ +' '
-      + (2*tr.fac*(this.radius_)*this.fontSize_)+"px "
-      + this.glyph_.font;
+  if (this._glyph.char) {
+    context.font = this._fontStyle +' '
+      + (2*tr.fac*(this._radius)*this._fontSize)+"px "
+      + this._glyph.font;
     context.strokeStyle = context.fillStyle;
-    context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
-    context.fillStyle = ol.color.asString(this.color_ || scolor);
+    context.lineWidth = renderOptions.strokeWidth * (this._form == "none" ? 2:1);
+    context.fillStyle = ol.color.asString(this._color || scolor);
     context.textAlign = "center";
     context.textBaseline = "middle";
-    var t = this.glyph_.char;
+    var t = this._glyph.char;
     if (renderOptions.strokeWidth && scolor!="transparent") context.strokeText(t, tr.posX, tr.posY);
     context.fillText(t, tr.posX, tr.posY);
   }
-  if (this.form_=="ban" && this.stroke_ && renderOptions.strokeWidth) {
+  if (this._form=="ban" && this._stroke && renderOptions.strokeWidth) {
     context.strokeStyle = renderOptions.strokeStyle;
     context.lineWidth = renderOptions.strokeWidth;
-    var r = this.radius_ + renderOptions.strokeWidth;
-    var d = this.radius_ * Math.cos(Math.PI/4);
+    var r = this._radius + renderOptions.strokeWidth;
+    var d = this._radius * Math.cos(Math.PI/4);
     context.moveTo(r + d, r - d);
     context.lineTo(r - d, r + d);
     context.stroke();
@@ -38538,19 +38538,19 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
  * @inheritDoc
  */
 ol.style.FontSymbol.prototype.getChecksum = function() {
-  var strokeChecksum = (this.stroke_!==null) ? this.stroke_.getChecksum() : '-';
-  var fillChecksum = (this.fill_!==null) ? this.fill_.getChecksum() : '-';
+  var strokeChecksum = (this._stroke!==null) ? this._stroke.getChecksum() : '-';
+  var fillChecksum = (this._fill!==null) ? this._fill.getChecksum() : '-';
   var recalculate = (this.checksums_===null)
     || (strokeChecksum != this.checksums_[1] 
     || fillChecksum != this.checksums_[2] 
-    || this.radius_ != this.checksums_[3] 
-    || this.form_+"-"+this.glyphs_ != this.checksums_[4]
+    || this._radius != this.checksums_[3] 
+    || this._form+"-"+this.glyphs_ != this.checksums_[4]
   );
   if (recalculate) {
     var checksum = 'c' + strokeChecksum + fillChecksum 
-      + ((this.radius_ !== void 0) ? this.radius_.toString() : '-')
-      + this.form_+"-"+this.glyphs_;
-    this.checksums_ = [checksum, strokeChecksum, fillChecksum, this.radius_, this.form_+"-"+this.glyphs_];
+      + ((this._radius !== void 0) ? this._radius.toString() : '-')
+      + this._form+"-"+this.glyphs_;
+    this.checksums_ = [checksum, strokeChecksum, fillChecksum, this._radius, this._form+"-"+this.glyphs_];
   }
   return this.checksums_[0];
 };
