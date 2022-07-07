@@ -1,0 +1,257 @@
+{
+    "version": 8,
+    "name": "PCI",
+    "glyphs": "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+  "metadata": {"maputnik:renderer": "ol"},
+  "sources": {
+    "pci": {
+      "type": "vector",
+      "url": "https://wxs.ign.fr/latuile/geoportail/tms/1.0.0/PCI/metadata.json"
+      }
+    },
+    "transition": {
+        "duration": 300,
+        "delay": 0
+    },
+    "layers": [
+      {
+        "id": "departement_line",
+        "type": "line",
+        "source": "pci",
+        "source-layer": "departement",
+        "paint": {"line-color": "#6a00ff"},
+        "minzoom": 5,
+        "layout": {"line-join": "bevel"}
+      },
+      {
+        "id": "departement_label",
+        "type": "symbol",
+        "source": "pci",
+        "source-layer": "departement",
+        "layout": {
+          "text-field": "{insee_dep}",
+          "text-font": [
+            "Open Sans Bold Italic"
+          ],
+          "text-size": 14
+        },
+        "paint": {
+          "text-color": "#6a00ff",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 2
+        },
+        "minzoom": 6,
+        "maxzoom": 11
+      },
+        {
+            "id": "commune",
+            "type": "line",
+            "source": "pci",
+            "source-layer": "commune",
+            "paint": {
+              "line-color": "#6a00ff"
+            }
+        },
+        {
+            "id": "nom_com",
+            "type": "symbol",
+            "source": "pci",
+            "source-layer": "commune",
+            "layout": {
+              "text-field": "{nom_com}",
+              "text-size": 14,
+              "text-anchor": "center",
+              "text-keep-upright": true,
+              "text-max-angle": 45,
+              "text-padding": 1,
+              "text-font": [
+                "Open Sans Bold Italic"
+              ]
+            },
+            "paint": {
+              "text-color": "#6a00ff",
+              "text-halo-color": "#ffffff",
+              "text-halo-width": 2
+            }
+        },
+        {
+          "id": "parcelle_fill",
+          "type": "fill",
+          "source": "pci",
+          "source-layer": "parcelle",
+          "minzoom": 15,
+          "maxzoom": 17,
+          "paint": {
+            "fill-color": "#ff8000",
+            "fill-opacity": 0.2
+          }
+        },
+        {
+          "id": "parcelle-limit",
+          "type": "line",
+          "source": "pci",
+          "source-layer": "parcelle",
+          "paint": {
+            "line-color": "#ff8000",
+            "line-width": 1
+          },
+          "layout": {"line-join": "bevel"},
+          "minzoom": 15,
+          "maxzoom": 17
+        },
+        {
+          "id": "parcelle",
+          "type": "line",
+          "source": "pci",
+          "source-layer": "parcelle",
+          "paint": {
+            "line-color": "#ff8000",
+            "line-width": 3
+          },
+          "layout": {"line-join": "bevel"},
+          "minzoom": 17,
+          "maxzoom": 21
+        },
+        {
+          "id": "batiment",
+          "type": "fill",
+          "source": "pci",
+          "source-layer": "batiment",
+          "minzoom": 17,
+          "paint": {
+            "fill-color": "#dfccff",
+            "fill-opacity": 0.4
+          }
+        },
+        {
+          "id": "batiment_line",
+          "type": "line",
+          "source": "pci",
+          "source-layer": "batiment",
+          "paint": {"line-color": "#b580ff"},
+          "layout": {"line-join": "bevel"},
+          "minzoom": 17
+        },
+        {
+          "id": "batiment-leger",
+          "type": "fill",
+          "source": "pci",
+          "source-layer": "batiment",
+          "minzoom": 17,
+          "filter": [
+            "==",
+            "type",
+            "Construction légère"
+          ],
+          "paint": {
+            "fill-color": "#DFCCFF",
+            "fill-opacity": 0.4
+          }
+        },
+        {
+          "id": "batiment-dur",
+          "type": "fill",
+          "source": "pci",
+          "source-layer": "batiment",
+          "minzoom": 17,
+          "paint": {
+            "fill-color": "#C17C74",
+            "fill-opacity": 0.4
+          },
+          "filter": [
+            "==",
+            "type",
+            "Bâtiment en dur"
+          ]
+        },
+        {
+          "id": "borne",
+          "type": "circle",
+          "source": "pci",
+          "source-layer": "borne_limite_propriete",
+          "maxzoom": 24,
+          "minzoom": 17,
+          "paint": {
+            "circle-color": "#ff8000",
+            "circle-stroke-color": "#000000",
+            "circle-stroke-width": 1
+          }
+        },
+        {
+          "id": "feuille-copy",
+          "type": "line",
+          "source": "pci",
+          "source-layer": "feuille",
+          "paint": {
+            "line-color": "#929292",
+            "line-width": 3
+          },
+          "minzoom": 14,
+          "maxzoom": 24,
+          "layout": {
+            "line-cap": "butt",
+            "line-join": "bevel"
+          }
+        },
+        {
+          "id": "feuille",
+          "type": "line",
+          "source": "pci",
+          "source-layer": "feuille",
+          "paint": {
+            "line-color": "#ff8000",
+            "line-width": 1
+          },
+          "minzoom": 14,
+          "maxzoom": 24,
+          "layout": {
+            "line-cap": "butt",
+            "line-join": "bevel"
+          }
+        },
+        {
+          "id": "feuille_label",
+          "type": "symbol",
+          "source": "pci",
+          "source-layer": "feuille",
+          "layout": {
+            "text-field": "{section}",
+            "text-font": [
+              "Open Sans Bold Italic"
+            ],
+            "text-size": 14
+          },
+          "paint": {
+            "text-color": "#ff8000",
+            "text-halo-color": "#ffffff",
+            "text-halo-width": 2
+          },
+          "minzoom": 14,
+          "maxzoom": 16
+        },
+        {
+          "id": "localisant",
+          "type": "symbol",
+          "source": "pci",
+          "source-layer": "localisant",
+          "minzoom": 17,
+          "maxzoom": 21,
+          "layout": {
+            "text-field": "{numero}",
+            "text-size": 14,
+            "text-anchor": "center",
+            "text-keep-upright": true,
+            "text-max-angle": 45,
+            "text-padding": 1,
+            "text-font": [
+              "Open Sans Bold Italic"
+            ]
+          },
+          "paint": {
+            "text-color": "#6a00ff",
+            "text-halo-color": "#ffffff",
+            "text-halo-width": 2
+          }
+        }
+    ]
+}

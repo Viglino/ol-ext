@@ -78,16 +78,20 @@
   
 <script>
 
-var d3 = (document.location.search === '?3D')
+var d3 = (/3D/.test(document.location.search))
 
 // Mapbox map
 var map = new mapboxgl.Map({
   container: 'map',
-/* style: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/standard.json',
-* + add : glyphs = "http://fonts.openmaptiles.org/{fontstack}/{range}.pbf"
-* + replace : Source Sans Pro => Open Sans
-*/
+  /*
+  style: 'https://wxs.ign.fr/essentiels/static/vectorTiles/styles/PLAN.IGN/standard.json',
+  style: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/standard.json',
+  + add : glyphs = "http://fonts.openmaptiles.org/{fontstack}/{range}.pbf"
+  + replace : Source Sans Pro => Open Sans
+  */
   style: './standard.json',
+  // style: 'https://wxs.ign.fr/parcellaire/static/vectorTiles/styles/PCI/pci.json',
+  // style: './pci.json',
   center: d3 ? [2.324, 48.847] : [3, 47],
   zoom: d3 ? 14 : 5,
   pitch: d3 ? 90 : 0,
@@ -130,6 +134,24 @@ map.on('wheel',function() { rotate(false) });
 
 // 3D Buildings
 map.on('load', function () {
+  if (/gpp/.test(document.location.search)) {
+    map.addSource('gpp-tiles', {
+      'type': 'raster',
+      'tiles': [
+        'https://wxs.ign.fr/ortho/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS.BDORTHO&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix={z}&TileCol={x}&TileRow={y}'
+      ],
+      'tileSize': 256,
+      'attribution': 'IGN-Géoservices'
+    });
+    map.addLayer({
+      'id': 'gpp-ortho',
+      'type': 'raster',
+      'source': 'gpp-tiles',
+      'minzoom': 0,
+      'maxzoom': 22
+    })
+  }
+
   if (d3) {
     // Load bati json to get color style
     var ajax = new XMLHttpRequest();
@@ -161,7 +183,9 @@ map.on('load', function () {
         });
       }
     };
+    
     ajax.open("GET", "./standard.json", true);
+
     ajax.send();
     /* One color for all
     map.addLayer({

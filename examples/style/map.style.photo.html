@@ -113,6 +113,7 @@
           kind: $('#kind').val(),
           shadow: $("#shadow").prop('checked')?5:0,
           onload: function() { vector.changed(); },
+          displacement: [0, $('#kind').val() === 'anchored' ? 20 : 0],
           stroke: new ol.style.Stroke({
             width: Number($("#border").val()) + (sel ? 3 : 0),
             color: sel ? 'red' : '#fff'
@@ -146,7 +147,9 @@
   // Control Select 
   var select = new ol.interaction.Select({
     condition: ol.events.condition.click,
-    style: function (feature, resolution) { return getFeatureStyle(feature, resolution, true); }
+    style: function (feature, resolution) { 
+      return getFeatureStyle(feature, resolution, true); 
+    }
   })
   map.addInteraction(select);
   

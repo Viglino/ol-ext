@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.26
+ * @version v3.2.27
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -2542,7 +2542,6 @@ ol.ext.input.Collection.prototype.refresh = function() {
 /** Color picker
  * @constructor
  * @extends {ol.ext.input.PopupBase}
- * @fires change:color
  * @fires color
  * @param {*} options
  *  @param {string} [options.className]
@@ -3004,6 +3003,7 @@ ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
 /** Checkbox input
  * @constructor
  * @extends {ol.ext.input.Base}
+ * @fires change:value
  * @param {*} options
  *  @param {string} [options.className]
  *  @param {Element} [options.input] input element, if non create one (use parent to tell where)
@@ -3511,7 +3511,7 @@ ol.legend.Legend.getLegendImage = function(item, canvas, row) {
   };
   var width = size[0] + 2 * item.margin;
   var height = item.lineHeight || (size[1] + 2 * item.margin);
-  var ratio = ol.has.DEVICE_PIXEL_RATIO;
+  var ratio = item.pixelratio || ol.has.DEVICE_PIXEL_RATIO;
   if (!canvas) {
     row = 0;
     canvas = document.createElement('canvas');
@@ -3590,26 +3590,39 @@ ol.legend.Legend.getLegendImage = function(item, canvas, row) {
   cy += (row*height) || 0;
   for (i=0; s= style[i]; i++) {
     vectorContext.setStyle(s);
+    ctx.save();
+    var geom;
     switch (typeGeom) {
       case ol.geom.Point:
       case 'Point':
-      case 'MultiPoint':
-        vectorContext.drawGeometry(new ol.geom.Point([cx, cy]));
+      case 'MultiPoint': {
+        geom = new ol.geom.Point([cx, cy]);
         break;
+      }
       case ol.geom.LineString:
       case 'LineString':
-      case 'MultiLineString': 
-        ctx.save();
-          ctx.rect(item.margin * ratio, 0, size[0] *  ratio, canvas.height);
-          ctx.clip();
-          vectorContext.drawGeometry(new ol.geom.LineString([[cx-sx, cy], [cx+sx, cy]]));
-        ctx.restore();
+      case 'MultiLineString': {
+        // Clip lines
+        ctx.rect(item.margin * ratio, 0, size[0] *  ratio, canvas.height);
+        ctx.clip();
+        geom = new ol.geom.LineString([[cx-sx, cy], [cx+sx, cy]]);
         break;
+      }
       case ol.geom.Polygon:
       case 'Polygon':
-      case 'MultiPolygon': 
-        vectorContext.drawGeometry(new ol.geom.Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]));
+      case 'MultiPolygon': {
+        geom = new ol.geom.Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]);
         break;
+      }
+    }
+    // Geometry function?
+    if (s.getGeometryFunction()) {
+      geom = s.getGeometryFunction()(new ol.Feature(geom));
+      ctx.restore();
+      vectorContext.drawGeometry(geom);
+    } else {
+      vectorContext.drawGeometry(geom);
+      ctx.restore();
     }
   }
   ctx.restore();
@@ -8960,14 +8973,14 @@ ol.control.Imageline.prototype.setMap = function (map) {
 	}
 };
 /** Set layers to use in the control
- * @param {Array<ol.Layer} layers
+ * @param {Array<ol.Layer>} layers
  */
 ol.control.Imageline.prototype.setLayers = function (layers) {
   this._sources = this._getSources(layers);
 };
 /** Get source from a set of layers
- * @param {Array<ol.Layer} layers
- * @returns {Array<ol.source.Vector}
+ * @param {Array<ol.Layer>} layers
+ * @returns {Array<ol.source.Vector>}
  * @private
  */
 ol.control.Imageline.prototype._getSources = function (layers) {
@@ -9520,8 +9533,8 @@ ol.control.IsochroneGeoportail.prototype._error = function() {
  */
 ol.control.LayerPopup = function(options) {
   options = options || {};
-	options.switcherClass="ol-layerswitcher-popup";
-	if (options.mouseover!==false) options.mouseover=true;
+	options.switcherClass = 'ol-layerswitcher-popup' + (options.switcherClass ? ' ' + options.switcherClass : '');
+	if (options.mouseover!==false) options.mouseover = true;
 	ol.control.LayerSwitcher.call(this, options);
 };
 ol.ext.inherits(ol.control.LayerPopup, ol.control.LayerSwitcher);
@@ -9539,17 +9552,17 @@ ol.control.LayerPopup.prototype.drawList = function(ul, layers) {
     e.preventDefault(); 
 		var l = self._getLayerForLI(this);
 		self.switchLayerVisibility(l,layers);
-		if (e.type=="touchstart") self.element.classList.add("ol-collapsed");
+		if (e.type === 'touchstart') self.element.classList.add('ol-collapsed');
 	};
 	layers.forEach(function(layer) {
     if (self.displayInLayerSwitcher(layer)) {
       var d = ol.ext.element.create('LI', {
-        html: layer.get("title") || layer.get("name"),
+        html: layer.get('title') || layer.get('name'),
         on: { 'click touchstart': setVisibility },
         parent: ul
       });
       self._setLayerForLI(d, layer);
-			if (self.testLayerVisibility(layer)) d.classList.add("ol-layer-hidden");
+			if (self.testLayerVisibility(layer)) d.classList.add('ol-layer-hidden');
 			if (layer.getVisible()) d.classList.add('ol-visible');
 		}
 	});
@@ -17742,12 +17755,12 @@ ol.control.WMTSCapabilities.prototype.getRequestParam = function(options) {
  * @returns {*}
  * @private
  */
-ol.control.WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, maxZoom) {
+ol.control.WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, maxZoom, tilePrefix) {
   var matrixIds = new Array();
   var resolutions = new Array();
   var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
   for (var z=0; z <= (maxZoom ? maxZoom : 20) ; z++) {
-    var id = tileMatrixSet !== 'PM' ? tileMatrixSet+':'+z : z;
+    var id = tilePrefix ? tileMatrixSet+':'+z : z;
     matrixIds[z] = id ; 
     resolutions[z] = size / Math.pow(2, z);
   }
@@ -17762,11 +17775,12 @@ ol.control.WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, 
  * @param {sting} tileMatrixSet
  * @param {number} minZoom
  * @param {number} maxZoom
+ * @param {boolean} tilePrefix
  * @returns {ol.tilegrid.WMTS}
  * @private
  */
-ol.control.WMTSCapabilities.prototype.getTileGrid = function(tileMatrixSet, minZoom, maxZoom) {
-  return new ol.tilegrid.WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom));
+ol.control.WMTSCapabilities.prototype.getTileGrid = function(tileMatrixSet, minZoom, maxZoom, tilePrefix) {
+  return new ol.tilegrid.WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom, tilePrefix));
 };
 /** Return a WMTS options for the given capabilities
  * @param {*} caps layer capabilities (read from the capabilities)
@@ -17789,6 +17803,7 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     this.showError({ type: 'TileMatrix' });
     return;
   }
+  var tilePrefix = tmatrix.TileMatrixSetLimits[0].TileMatrix.split(':').length > 1;
   tmatrix.TileMatrixSetLimits.forEach(function(tm) {
     var zoom = tm.TileMatrix.split(':').pop();
     minZoom = Math.min(minZoom, parseInt(zoom));
@@ -17809,6 +17824,7 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     format: caps.Format[0] || 'image/jpeg',
     projection: 'EPSG:3857',
     //tileGrid: tg,
+    tilePrefix: tilePrefix,
     minZoom: minZoom,
     maxZoom: maxZoom,
     style: caps.Style ? caps.Style[0].Identifier : 'normal',
@@ -17835,7 +17851,7 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     source_opt.tileGrid = 'TILEGRID';
     var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
     tso = tso.replace('"TILEGRID"', 'new ol.tilegrid.WMTS('
-      + JSON.stringify(this._getTG(source_opt.matrixSet, source_opt.minZoom, source_opt.maxZoom), null, '\t').replace(/\n/g, '\n\t\t')
+      + JSON.stringify(this._getTG(source_opt.matrixSet, source_opt.minZoom, source_opt.maxZoom, source_opt.tilePrefix), null, '\t').replace(/\n/g, '\n\t\t')
       + ')'
     );
     delete source_opt.tileGrid;
@@ -17925,7 +17941,7 @@ ol.control.WMTSCapabilities.prototype._getFormOptions = function() {
  */
 ol.control.WMTSCapabilities.prototype.getLayerFromOptions = function (options) {
   if (!options) return;
-  options.source.tileGrid = this.getTileGrid(options.source.matrixSet, options.source.minZoom, options.source.maxZoom);
+  options.source.tileGrid = this.getTileGrid(options.source.matrixSet, options.source.minZoom, options.source.maxZoom, options.source.tilePrefix);
   options.layer.source = new ol.source.WMTS(options.source);
   var layer = new ol.layer.Tile(options.layer);
   // Restore options
@@ -25397,7 +25413,7 @@ ol.interaction.Split = function(options) {
   // Cursor
   this.cursor_ = options.cursor;
   // List of source to split
-  this.sources_ = this.setSources(options.sources);
+  this.setSources(options.sources);
   if (options.features) {
     this.sources_.push (new ol.source.Vector({ features: options.features }));
   }
@@ -25643,7 +25659,7 @@ ol.interaction.Split.prototype.handleMoveEvent = function(e) {
  * @extends {ol.interaction.Interaction}
  * @fires  beforesplit, aftersplit
  * @param {options} 
- *  @param {ol.source.Vector|Array{ol.source.Vector}} options.source The target source (or array of source) with features to be split (configured with useSpatialIndex set to true)
+ *  @param {ol.source.Vector|Array<ol.source.Vector>} options.source The target source (or array of source) with features to be split (configured with useSpatialIndex set to true)
  *  @param {ol.source.Vector} options.triggerSource Any newly created or modified features from this source will be used to split features on the target source. If none is provided the target source is used instead.
  *  @param {ol.Collection.<ol.Feature>} options.features A collection of feature to be split (replace source target).
  *  @param {ol.Collection.<ol.Feature>} options.triggerFeatures Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).
@@ -38153,8 +38169,9 @@ ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
  *  @param {number} [options.fontSize=1] size of the font compare to the radius, fontSize greater than 1 will exceed the symbol extent
  *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
  *  @param {boolean} options.gradient true to display a gradient on the symbol
- *  @param {number} [options.offsetX=0] default 0
- *  @param {number} [options.offsetY=0] default 0
+ *  @param {Array<number>} [options.displacement] to use with ol > 6
+ * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
+ * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
  *  @param {_ol_style_Fill_} options.fill
  *  @param {_ol_style_Stroke_} options.stroke
  * @extends {ol.style.RegularShape}
@@ -38167,25 +38184,29 @@ ol.style.FontSymbol = function(options) {
   if (options.stroke) {
     strokeWidth = options.stroke.getWidth();
   }
+  if (!options.displacement) {
+    options.displacement = [options.offsetX || 0, -options.offsetY || 0];
+  }
+  if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
+  this._color = options.color;
+  this._fontSize = options.fontSize || 1;
+  this._fontStyle = options.fontStyle || '';
+  this._stroke = options.stroke;
+  this._fill = options.fill;
+  this._radius = options.radius -strokeWidth;
+  this._form = options.form || "none";
+  this._gradient = options.gradient;
+  this._offset = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
+  if (options.glyph) this._glyph = this.getGlyph(options.glyph);
+  else this._glyph = this.getTextGlyph(options.text||'', options.font);
   ol.style.RegularShape.call (this, { 
     radius: options.radius, 
-    fill:options.fill,
-    rotation:options.rotation, 
+    fill: options.fill,
+    rotation: options.rotation, 
+    displacement: options.displacement,
     rotateWithView: options.rotateWithView 
   });
-  if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
-  this.color_ = options.color;
-  this.fontSize_ = options.fontSize || 1;
-  this.fontStyle_ = options.fontStyle || '';
-  this.stroke_ = options.stroke;
-  this.fill_ = options.fill;
-  this.radius_ = options.radius -strokeWidth;
-  this.form_ = options.form || "none";
-  this.gradient_ = options.gradient;
-  this.offset_ = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
-  if (options.glyph) this.glyph_ = this.getGlyph(options.glyph);
-  else this.glyph_ = this.getTextGlyph(options.text||'', options.font);
-  this.renderMarker_();
+  if (!this.getDisplacement) this.getImage();
 };
 ol.ext.inherits(ol.style.FontSymbol, ol.style.RegularShape);
 /** Cool stuff to get the image symbol for a style
@@ -38238,23 +38259,23 @@ ol.style.FontSymbol.addDefs = function(font, glyphs) {
 ol.style.FontSymbol.prototype.clone = function() {
   var g = new ol.style.FontSymbol({
     glyph: '',
-    color: this.color_,
-    fontSize: this.fontSize_,
-    fontStyle: this.fontStyle_,
-    stroke: this.stroke_,
-    fill: this.fill_,
-    radius: this.radius_ + (this.stroke_ ? this.stroke_.getWidth():0),
-    form: this.form_,
-    gradient: this.gradient_,
-    offsetX: this.offset_[0],
-    offsetY: this.offset_[1],
+    color: this._color,
+    fontSize: this._fontSize,
+    fontStyle: this._fontStyle,
+    stroke: this._stroke,
+    fill: this._fill,
+    radius: this._radius + (this._stroke ? this._stroke.getWidth():0),
+    form: this._form,
+    gradient: this._gradient,
+    offsetX: this._offset[0],
+    offsetY: this._offset[1],
     opacity: this.getOpacity(),
     rotation: this.getRotation(),
     rotateWithView: this.getRotateWithView()
   });
   g.setScale(this.getScale());
-  g.glyph_ = this.glyph_;
-  g.renderMarker_();
+  g.glyph_ = this._glyph;
+  g.getImage();
   return g;
 };
 /** Get the fill style for the symbol.
@@ -38262,14 +38283,14 @@ ol.style.FontSymbol.prototype.clone = function() {
  * @api
  */
 ol.style.FontSymbol.prototype.getFill = function() {
-  return this.fill_;
+  return this._fill;
 };
 /** Get the stroke style for the symbol.
  * @return {_ol_style_Stroke_} Stroke style.
  * @api
  */
 ol.style.FontSymbol.prototype.getStroke = function() {
-  return this.stroke_;
+  return this._stroke;
 };
 /** Get the glyph definition for the symbol.
  * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
@@ -38278,7 +38299,7 @@ ol.style.FontSymbol.prototype.getStroke = function() {
  */
 ol.style.FontSymbol.prototype.getGlyph = function(name) {
   if (name) return ol.style.FontSymbol.prototype.defs.glyphs[name] || { font:'sans-serif', char:name.charAt(0), theme:'none', name:'none', search:'' };
-  else return this.glyph_;
+  else return this._glyph;
 };
 /** Get glyph definition given a text and a font
  * @param {string|undefined} text
@@ -38296,7 +38317,7 @@ ol.style.FontSymbol.prototype.getTextGlyph = function(text, font) {
  */
 ol.style.FontSymbol.prototype.getGlyphName = function() {
   for (var i in ol.style.FontSymbol.prototype.defs.glyphs) {
-    if (ol.style.FontSymbol.prototype.defs.glyphs[i] === this.glyph_) return i;
+    if (ol.style.FontSymbol.prototype.defs.glyphs[i] === this._glyph) return i;
   }
   return '';
 };
@@ -38308,28 +38329,22 @@ ol.style.FontSymbol.prototype.getGlyphName = function() {
 ol.style.FontSymbol.prototype.getFontInfo = function(glyph) {
   return ol.style.FontSymbol.prototype.defs.fonts[glyph.font];
 }
-/** @private
+/**
+ * Get the image icon.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {HTMLCanvasElement} Image or Canvas element.
+ * @api
  */
-ol.style.FontSymbol.prototype.renderMarker_ = function(pixelratio) {
-  if (!pixelratio) {
-    if (this.getPixelRatio) {
-      pixelratio = window.devicePixelRatio;
-      this.renderMarker_(pixelratio);
-      if (this.getPixelRatio && pixelratio!==1) this.renderMarker_(1); 
-    } else {
-      this.renderMarker_(1);
-    }
-    return;
-  }
+ol.style.FontSymbol.prototype.getImage = function(pixelratio) {
+  pixelratio = pixelratio || 1;
+  // get canvas
+  var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
   var strokeStyle;
   var strokeWidth = 0;
-  if (this.stroke_) {
-    strokeStyle = ol.color.asString(this.stroke_.getColor());
-    strokeWidth = this.stroke_.getWidth();
+  if (this._stroke) {
+    strokeStyle = ol.color.asString(this._stroke.getColor());
+    strokeWidth = this._stroke.getWidth();
   }
-  // get canvas
-  var canvas = this.getImage(pixelratio);
-  //console.log(this.getImage().width+" / "+(2 * (this.radius_ + strokeWidth) + 1));
   /** @type {ol.style.FontSymbol.RenderOptions} */
   var renderOptions = {
     strokeStyle: strokeStyle,
@@ -38341,13 +38356,12 @@ ol.style.FontSymbol.prototype.renderMarker_ = function(pixelratio) {
   context.clearRect(0, 0, canvas.width, canvas.height);
   this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
   // Set anchor / displacement
-  if (this.setDisplacement) {
-    this.setDisplacement([this.offset_[0], -this.offset_[1]])
-  } else {
+  if (!this.getDisplacement) {
     var a = this.getAnchor();
-    a[0] = canvas.width / 2 - this.offset_[0];
-    a[1] = canvas.width / 2 - this.offset_[1];
+    a[0] = canvas.width / 2 - this._offset[0];
+    a[1] = canvas.width / 2 - this._offset[1];
   }
+  return canvas;
 };
 /**
  * @private
@@ -38355,15 +38369,16 @@ ol.style.FontSymbol.prototype.renderMarker_ = function(pixelratio) {
  * @param {CanvasRenderingContext2D} context
  */
 ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
-  var s = 2*this.radius_+renderOptions.strokeWidth+1;
+  var s = 2 * this._radius + renderOptions.strokeWidth;
   var w = renderOptions.strokeWidth/2;
   var c = renderOptions.size / 2;
   // Transfo to place the glyph at the right place
-  var transfo = { fac:1, posX:renderOptions.size / 2, posY:renderOptions.size / 2 };
+  var transfo = { fac:1, posX: renderOptions.size / 2, posY: renderOptions.size / 2 };
   context.lineJoin = 'round';
+  context.lineCap = 'round';
   context.beginPath();
   // Draw the path with the form
-  switch (this.form_) {
+  switch (this._form) {
     case "none": {
       transfo.fac=1;  
       break;
@@ -38374,34 +38389,34 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
       break;
     }
     case "poi": {
-      context.arc ( c, c -0.4*this.radius_, 0.6*this.radius_, 0.15*Math.PI, 0.85*Math.PI, true);
+      context.arc ( c, c -0.4*this._radius, 0.6*this._radius, 0.15*Math.PI, 0.85*Math.PI, true);
       context.lineTo ( c-0.89*0.05*s, (0.95+0.45*0.05)*s+w);
       context.arc ( c, 0.95*s+w, 0.05*s, 0.85*Math.PI, 0.15*Math.PI, true);
-      transfo = { fac:0.45, posX:c, posY:c -0.35*this.radius_ };
+      transfo = { fac:0.45, posX:c, posY:c -0.35*this._radius };
       break;
     }
     case "bubble": {
-      context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.4*Math.PI, 0.6*Math.PI, true);
+      context.arc ( c, c -0.2*this._radius, 0.8*this._radius, 0.4*Math.PI, 0.6*Math.PI, true);
       context.lineTo ( 0.5*s+w, s+w);
-      transfo = { fac:0.7, posX:c, posY:c -0.2*this.radius_ };
+      transfo = { fac:0.7, posX:c, posY:c -0.2*this._radius };
       break;
     }
     case "marker": {
-      context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.25*Math.PI, 0.75*Math.PI, true);
+      context.arc ( c, c -0.2*this._radius, 0.8*this._radius, 0.25*Math.PI, 0.75*Math.PI, true);
       context.lineTo ( 0.5*s+w, s+w);
-      transfo = { fac:0.7, posX: c, posY: c -0.2*this.radius_ };
+      transfo = { fac:0.7, posX: c, posY: c -0.2*this._radius };
       break;
     }
     case "coma": {
-      context.moveTo ( c + 0.8*this.radius_, c -0.2*this.radius_);
+      context.moveTo ( c + 0.8*this._radius, c -0.2*this._radius);
       context.quadraticCurveTo ( 0.95*s+w, 0.75*s+w, 0.5*s+w, s+w);
-      context.arc ( c, c -0.2*this.radius_, 0.8*this.radius_, 0.45*Math.PI, 0, false);
-      transfo = { fac:0.7, posX: c, posY: c -0.2*this.radius_ };
+      context.arc ( c, c -0.2*this._radius, 0.8*this._radius, 0.45*Math.PI, 0, false);
+      transfo = { fac:0.7, posX: c, posY: c -0.2*this._radius };
       break;
     }
     default: {
       var pts;
-      switch (this.form_) {
+      switch (this._form) {
         case "shield": {
           pts = [ 0.05,0, 0.95,0, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0 ]; 
           transfo.posY = 0.45*s+w ;
@@ -38468,19 +38483,19 @@ ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
  * @param {number} y The origin for the symbol (y).
  */
 ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y, pixelratio) {
-  var fcolor = this.fill_ ? this.fill_.getColor() : "#000";
-  var scolor = this.stroke_ ? this.stroke_.getColor() : "#000";
-  if (this.form_ == "none" && this.stroke_ && this.fill_) {
-    scolor = this.fill_.getColor();
-    fcolor = this.stroke_.getColor();
+  var fcolor = this._fill ? this._fill.getColor() : "#000";
+  var scolor = this._stroke ? this._stroke.getColor() : "#000";
+  if (this._form == "none" && this._stroke && this._fill) {
+    scolor = this._fill.getColor();
+    fcolor = this._stroke.getColor();
   }
   // reset transform
   context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
   // then move to (x, y)
   context.translate(x, y);
   var tr = this.drawPath_(renderOptions, context, pixelratio);
-  if (this.fill_) {
-    if (this.gradient_ && this.form_!="none") {
+  if (this._fill) {
+    if (this._gradient && this._form!="none") {
       var grd = context.createLinearGradient(0,0,renderOptions.size/2,renderOptions.size);
       grd.addColorStop (1, ol.color.asString(fcolor));
       grd.addColorStop (0, ol.color.asString(scolor));
@@ -38490,30 +38505,30 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
     }
     context.fill();
   }
-  if (this.stroke_ && renderOptions.strokeWidth) {
+  if (this._stroke && renderOptions.strokeWidth) {
     context.strokeStyle = renderOptions.strokeStyle;
     context.lineWidth = renderOptions.strokeWidth;
     context.stroke();
   }
   // Draw the symbol
-  if (this.glyph_.char) {
-    context.font = this.fontStyle_ +' '
-      + (2*tr.fac*(this.radius_)*this.fontSize_)+"px "
-      + this.glyph_.font;
+  if (this._glyph.char) {
+    context.font = this._fontStyle +' '
+      + (2*tr.fac*(this._radius)*this._fontSize)+"px "
+      + this._glyph.font;
     context.strokeStyle = context.fillStyle;
-    context.lineWidth = renderOptions.strokeWidth * (this.form_ == "none" ? 2:1);
-    context.fillStyle = ol.color.asString(this.color_ || scolor);
+    context.lineWidth = renderOptions.strokeWidth * (this._form == "none" ? 2:1);
+    context.fillStyle = ol.color.asString(this._color || scolor);
     context.textAlign = "center";
     context.textBaseline = "middle";
-    var t = this.glyph_.char;
+    var t = this._glyph.char;
     if (renderOptions.strokeWidth && scolor!="transparent") context.strokeText(t, tr.posX, tr.posY);
     context.fillText(t, tr.posX, tr.posY);
   }
-  if (this.form_=="ban" && this.stroke_ && renderOptions.strokeWidth) {
+  if (this._form=="ban" && this._stroke && renderOptions.strokeWidth) {
     context.strokeStyle = renderOptions.strokeStyle;
     context.lineWidth = renderOptions.strokeWidth;
-    var r = this.radius_ + renderOptions.strokeWidth;
-    var d = this.radius_ * Math.cos(Math.PI/4);
+    var r = this._radius + renderOptions.strokeWidth;
+    var d = this._radius * Math.cos(Math.PI/4);
     context.moveTo(r + d, r - d);
     context.lineTo(r - d, r + d);
     context.stroke();
@@ -38523,19 +38538,19 @@ ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, 
  * @inheritDoc
  */
 ol.style.FontSymbol.prototype.getChecksum = function() {
-  var strokeChecksum = (this.stroke_!==null) ? this.stroke_.getChecksum() : '-';
-  var fillChecksum = (this.fill_!==null) ? this.fill_.getChecksum() : '-';
+  var strokeChecksum = (this._stroke!==null) ? this._stroke.getChecksum() : '-';
+  var fillChecksum = (this._fill!==null) ? this._fill.getChecksum() : '-';
   var recalculate = (this.checksums_===null)
     || (strokeChecksum != this.checksums_[1] 
     || fillChecksum != this.checksums_[2] 
-    || this.radius_ != this.checksums_[3] 
-    || this.form_+"-"+this.glyphs_ != this.checksums_[4]
+    || this._radius != this.checksums_[3] 
+    || this._form+"-"+this.glyphs_ != this.checksums_[4]
   );
   if (recalculate) {
     var checksum = 'c' + strokeChecksum + fillChecksum 
-      + ((this.radius_ !== void 0) ? this.radius_.toString() : '-')
-      + this.form_+"-"+this.glyphs_;
-    this.checksums_ = [checksum, strokeChecksum, fillChecksum, this.radius_, this.form_+"-"+this.glyphs_];
+      + ((this._radius !== void 0) ? this._radius.toString() : '-')
+      + this._form+"-"+this.glyphs_;
+    this.checksums_ = [checksum, strokeChecksum, fillChecksum, this._radius, this._form+"-"+this.glyphs_];
   }
   return this.checksums_[0];
 };
@@ -38559,16 +38574,18 @@ ol.style.FontSymbol.prototype.getChecksum = function() {
  *  @param {ol.style.Stroke} options.stroke
  *  @param {String} options.src image src
  *  @param {String} options.crossOrigin The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
- *  @param {Number} options.offsetX Horizontal offset in pixels. Default is 0.
- *  @param {Number} options.offsetY Vertical offset in pixels. Default is 0.
- *  @param {function} options.onload callback when image is loaded (to redraw the layer)
+ *  @param {Array<number>} [options.displacement] to use with ol > 6
+ * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
+ * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
+ *  @param {function} [options.onload] callback when image is loaded (to redraw the layer)
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
 ol.style.Photo = function(options) {
   options = options || {};
-  this.sanchor_ = options.kind=="anchored" ? 8:0;
+  if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0]
+  this.sanchor_ = (options.kind==="anchored" ? 8 : 0);
   this._shadow = (Number(options.shadow) || 0);
   if (!options.stroke) {
     options.stroke = new ol.style.Stroke({ width: 0, color: "#000"})
@@ -38580,12 +38597,13 @@ ol.style.Photo = function(options) {
   ol.style.RegularShape.call (this, {
     radius: options.radius + strokeWidth + this.sanchor_/2 + this._shadow/2, 
     points: 0,
+    displacement: [ options.displacement[0] || 0, (options.displacement[1] || 0) + this.sanchor_],
     // No fill to create a hit detection Image (v5) or transparent (v6) 
     fill: ol.style.RegularShape.prototype.render ? new ol.style.Fill({ color: [0,0,0,0] }) : null
   });
   // Hack to get the hit detection Image (v4.6.5 ?)
   if (!this.getHitDetectionImage) {
-    var img = this.getImage();
+    var img = ol.style.RegularShape.prototype.getImage.call(this);
     if (!this.hitDetectionCanvas_) {
       for (var i in this) {
         if (this[i] && this[i].getContext && this[i]!==img) {
@@ -38602,6 +38620,8 @@ ol.style.Photo = function(options) {
     this.getHitDetectionImage = function() {
       return hit;
     }
+    // Calculate image
+    setTimeout(function() { this.getImage(); }.bind(this))
   }
   this._stroke = options.stroke;
   this._fill = options.fill;
@@ -38614,7 +38634,6 @@ ol.style.Photo = function(options) {
   this._onload = options.onload;
   if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
   if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
-  this.renderPhoto_();
 };
 ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
 /** Set photo offset
@@ -38622,7 +38641,7 @@ ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
  */
 ol.style.Photo.prototype.setOffset = function(offset) {
   this._offset = [offset[0]||0, offset[1]||0];
-  this.renderPhoto_();
+  this.getImage();
 };
 /**
  * Clones the style. 
@@ -38643,7 +38662,7 @@ ol.style.Photo.prototype.clone = function() {
     opacity: this.getOpacity(),
     rotation: this.getRotation()
   });
-  i.renderPhoto_();
+  i.getImage();
   return i;
 };
 /**
@@ -38735,32 +38754,30 @@ ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth, pixel
   context.closePath();
 };
 /**
- * @private
+ * Get the image icon.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {HTMLCanvasElement} Image or Canvas element.
+ * @api
  */
-ol.style.Photo.prototype.renderPhoto_ = function(pixelratio) {
-  if (!pixelratio) {
-    if (this.getPixelRatio) {
-      pixelratio = window.devicePixelRatio;
-      this.renderPhoto_(pixelratio);
-    } else {
-      this.renderPhoto_(1);
-    }
-    return;
-  }
+ol.style.Photo.prototype.getImage = function(pixelratio) {
+  pixelratio = pixelratio || 1;
+  var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
+  if (this._gethit) return canvas;
   var strokeStyle;
   var strokeWidth = 0;
   if (this._stroke) {
     strokeStyle = ol.color.asString(this._stroke.getColor());
     strokeWidth = this._stroke.getWidth();
   }
-  var canvas = this.getImage(pixelratio);
   // Draw hitdetection image
-  var context = this.getHitDetectionImage().getContext('2d');
-  context.save();
-  context.setTransform(1,0,0,1,0,0)
-  this.drawBack_(context,"#000",strokeWidth, 1);
-  context.fill();
-  context.restore();
+  this._gethit = true;
+    var context = this.getHitDetectionImage().getContext('2d');
+    context.save();
+    context.setTransform(1,0,0,1,0,0)
+    this.drawBack_(context, "#000", strokeWidth, 1);
+    context.fill();
+    context.restore();
+  this._gethit = false;
   // Draw the image
   context = canvas.getContext('2d');
   context.save();
@@ -38781,31 +38798,32 @@ ol.style.Photo.prototype.renderPhoto_ = function(pixelratio) {
   img.src = this._src;
   // Draw image
   if (img.width) {
-    self.drawImage_(img);
+    self.drawImage_(canvas, img, pixelratio);
   } else {
     img.onload = function() {
-      self.drawImage_(img);
+      self.drawImage_(canvas, img, pixelratio);
       // Force change (?!)
       // self.setScale(1);
       if (self._onload) self._onload();
     };
   }
-  // Set anchor
-  var a = this.getAnchor();
-  a[0] = (canvas.width/pixelratio - this._shadow)/2  - this._offset[0];
-  if (this.sanchor_) {
-    a[1] = canvas.height/pixelratio - this._shadow - this._offset[1];
-  } else {
-    a[1] = (canvas.height/pixelratio - this._shadow)/2 - this._offset[1];
+  // Set anchor (ol < 6)
+  if (!this.getDisplacement) {
+    var a = this.getAnchor();
+    a[0] = (canvas.width/pixelratio - this._shadow)/2  - this._offset[0];
+    if (this.sanchor_) {
+      a[1] = canvas.height/pixelratio - this._shadow - this._offset[1];
+    } else {
+      a[1] = (canvas.height/pixelratio - this._shadow)/2 - this._offset[1];
+    }
   }
+  return canvas;
 };
 /**
  * Draw an timage when loaded
  * @private
  */
-ol.style.Photo.prototype.drawImage_ = function(img) {
-  var pixelratio = window.devicePixelRatio;
-  var canvas = this.getImage(pixelratio);
+ol.style.Photo.prototype.drawImage_ = function(canvas, img, pixelratio) {
   // Remove the circle on the canvas
   var context = (canvas.getContext('2d'));
   var strokeWidth = 0;
@@ -39208,20 +39226,26 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
  *  @param {ol.style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
  *  @param {number} options.radius point radius
  * 	@param {number} options.blur lur radius, default radius/3
- * 	@param {number} options.offsetX x offset, default 0
- * 	@param {number} options.offsetY y offset, default 0
+ *  @param {Array<number>} [options.displacement] to use with ol > 6
+ * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
+ * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
  * @extends {ol.style.RegularShape}
  * @api
  */
 ol.style.Shadow = function(options) {
   options = options || {};
-  if (!options.fill) options.fill = new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
-  ol.style.RegularShape.call (this,{ radius: options.radius, fill: options.fill });
-  this._fill = options.fill;
+  this._fill = options.fill || new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
   this._radius = options.radius;
   this._blur = options.blur===0 ? 0 : options.blur || options.radius/3;
   this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
-  this.renderShadow_();
+  if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0];
+  ol.style.RegularShape.call (this, { 
+    radius: options.radius, 
+    fill: options.fill,
+    displacement: options.displacement
+  });
+  // ol < 6
+  if (!this.setDisplacement) this.getImage();
 };
 ol.ext.inherits(ol.style.Shadow, ol.style.RegularShape);
 /**
@@ -39241,21 +39265,15 @@ ol.style.Shadow.prototype.clone = function() {
   return s;
 };
 /**
- * @private
+ * Get the image icon.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {HTMLCanvasElement} Image or Canvas element.
+ * @api
  */
-ol.style.Shadow.prototype.renderShadow_ = function(pixelratio) {	
-  if (!pixelratio) {
-    if (this.getPixelRatio) {
-      pixelratio = window.devicePixelRatio;
-      this.renderShadow_(pixelratio);
-      if (this.getPixelRatio && pixelratio!==1) this.renderShadow_(1); 
-    } else {
-      this.renderShadow_(1);
-    }
-    return;
-  }
+ol.style.Shadow.prototype.getImage = function(pixelratio) {
+  pixelratio = pixelratio || 1;
   var radius = this._radius;
-  var canvas = this.getImage(pixelratio);
+  var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
   // Remove the circle on the canvas
   var context = (canvas.getContext('2d'));
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -39263,20 +39281,23 @@ ol.style.Shadow.prototype.renderShadow_ = function(pixelratio) {
   context.beginPath();
     context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
     context.scale(1,0.5);
-    context.arc(radius, -radius, radius-this._blur, 0, 2 * Math.PI, false);
+    context.arc(radius, -radius, radius - this._blur, 0, 2 * Math.PI, false);
     context.fillStyle = '#000';
     context.shadowColor = this._fill.getColor();
-    context.shadowBlur = 0.7*this._blur*pixelratio;
+    context.shadowBlur = 0.7 * this._blur * pixelratio;
     context.shadowOffsetX = 0;
-    context.shadowOffsetY = 1.5*radius*pixelratio;
+    context.shadowOffsetY = 1.5 * radius * pixelratio;
   context.closePath();
   context.fill();
   context.shadowColor = 'transparent';
   context.restore();
   // Set anchor
-  var a = this.getAnchor();
-  a[0] = canvas.width /2 - this._offset[0];
-  a[1] = canvas.height /2 - this._offset[1];
+  if (!this.getDisplacement) {
+    var a = this.getAnchor();
+    a[0] = canvas.width /2 - this._offset[0];
+    a[1] = canvas.height /2 - this._offset[1];
+  }
+  return canvas;
 }
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 

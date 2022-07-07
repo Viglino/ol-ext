@@ -1,4 +1,4 @@
-/*	Copyright (c) 2015 Jean-Marc VIGLINO,
+/*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 *
@@ -18,69 +18,70 @@ import ol_style_RegularShape from 'ol/style/RegularShape'
  *  @param {ol.style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
  *  @param {number} options.radius point radius
  * 	@param {number} options.blur lur radius, default radius/3
- * 	@param {number} options.offsetX x offset, default 0
- * 	@param {number} options.offsetY y offset, default 0
+ *  @param {Array<number>} [options.displacement] to use with ol > 6
+ * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
+ * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
  * @extends {ol_style_RegularShape}
  * @api
  */
-class ol_style_Shadow {
-  constructor(options) {
-    options = options || {};
-    if (!options.fill)
-      options.fill = new ol_style_Fill({ color: "rgba(0,0,0,0.5)" });
-    ol_style_RegularShape.call(this, { radius: options.radius, fill: options.fill });
+var ol_style_Shadow = function(options) {
+  options = options || {};
+  this._fill = options.fill || new ol_style_Fill({ color: "rgba(0,0,0,0.5)" });
+  this._radius = options.radius;
+  this._blur = options.blur===0 ? 0 : options.blur || options.radius/3;
+  this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
+  if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0];
 
-    this._fill = options.fill;
-    this._radius = options.radius;
-    this._blur = options.blur === 0 ? 0 : options.blur || options.radius / 3;
-    this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
+  ol_style_RegularShape.call (this, { 
+    radius: options.radius, 
+    fill: options.fill,
+    displacement: options.displacement
+  });
 
-    this.renderShadow_();
-  }
-  /**
-   * Clones the style.
-   * @return {ol_style_Shadow}
-   */
-  clone() {
-    var s = new ol_style_Shadow({
-      fill: this._fill,
-      radius: this._radius,
-      blur: this._blur,
-      offsetX: this._offset[0],
-      offsetY: this._offset[1]
-    });
-    s.setScale(this.getScale());
-    s.setOpacity(this.getOpacity());
-    return s;
-  }
-  /**
-   * @private
-   */
-  renderShadow_(pixelratio) {
-    if (!pixelratio) {
-      if (this.getPixelRatio) {
-        pixelratio = window.devicePixelRatio;
-        this.renderShadow_(pixelratio);
-        if (this.getPixelRatio && pixelratio !== 1)
-          this.renderShadow_(1);
-      } else {
-        this.renderShadow_(1);
-      }
-      return;
-    }
+  // ol < 6
+  if (!this.setDisplacement) this.getImage();
+};
+ol_ext_inherits(ol_style_Shadow, ol_style_RegularShape);
 
-    var radius = this._radius;
+/**
+ * Clones the style. 
+ * @return {ol_style_Shadow}
+ */
+ol_style_Shadow.prototype.clone = function() {
+  var s = new ol_style_Shadow({
+    fill: this._fill,
+    radius: this._radius,
+    blur: this._blur,
+    offsetX: this._offset[0],
+    offsetY: this._offset[1]
+  });
+  s.setScale(this.getScale());
+  s.setOpacity(this.getOpacity());
+  return s;
+};
 
-    var canvas = this.getImage(pixelratio);
-    // Remove the circle on the canvas
-    var context = (canvas.getContext('2d'));
+/**
+ * Get the image icon.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {HTMLCanvasElement} Image or Canvas element.
+ * @api
+ */
+ol_style_Shadow.prototype.getImage = function(pixelratio) {
+  pixelratio = pixelratio || 1;
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.save();
-    context.beginPath();
+  var radius = this._radius;
+  
+  var canvas = ol_style_RegularShape.prototype.getImage.call(this, pixelratio);
+
+  // Remove the circle on the canvas
+  var context = (canvas.getContext('2d'));
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.save();
+  context.beginPath();
     context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
 
-    context.scale(1, 0.5);
+    context.scale(1,0.5);
     context.arc(radius, -radius, radius - this._blur, 0, 2 * Math.PI, false);
     context.fillStyle = '#000';
 
@@ -89,20 +90,20 @@ class ol_style_Shadow {
     context.shadowOffsetX = 0;
     context.shadowOffsetY = 1.5 * radius * pixelratio;
 
-    context.closePath();
-    context.fill();
+  context.closePath();
+  context.fill();
 
-    context.shadowColor = 'transparent';
-    context.restore();
-
-    // Set anchor
+  context.shadowColor = 'transparent';
+  context.restore();
+    
+  // Set anchor
+  if (!this.getDisplacement) {
     var a = this.getAnchor();
-    a[0] = canvas.width / 2 - this._offset[0];
-    a[1] = canvas.height / 2 - this._offset[1];
+    a[0] = canvas.width /2 - this._offset[0];
+    a[1] = canvas.height /2 - this._offset[1];
   }
+
+  return canvas;
 }
-ol_ext_inherits(ol_style_Shadow, ol_style_RegularShape);
-
-
 
 export default ol_style_Shadow
