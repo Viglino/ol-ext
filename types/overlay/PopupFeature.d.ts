@@ -72,7 +72,7 @@ export function ol_Overlay_PopupFeature_localString(locales: string, options: an
  *  @param {Number|Array<number>} options.offsetBox an offset box
  *  @param {ol.OverlayPositioning | string | undefined} options.positionning
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
- *  @param {Template|function} options.template A template with a list of properties to use in the popup or a function that takes a feature and returns a Template
+ *  @param {Template|function} [options.template] A template with a list of properties to use in the popup or a function that takes a feature and returns a Template, default use all feature properties
  *  @param {ol.interaction.Select} options.select a select interaction to get features from
  *  @param {boolean} options.keepSelection keep original selection, otherwise set selection to the current popup feature and add a counter to change current feature, default false
  *  @param {boolean} options.canFix Enable popup to be fixed, default false
@@ -84,9 +84,9 @@ declare class ol_Overlay_PopupFeature {
     constructor(options: any);
     _select: any;
     /** Set the template
-     * @param {Template} template A template with a list of properties to use in the popup
+     * @param {Template} [template] A template with a list of properties to use in the popup, default use all features properties
      */
-    setTemplate(template: Template): void;
+    setTemplate(template?: Template): void;
     _template: Template;
     /**
      * @private

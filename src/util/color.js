@@ -30,9 +30,9 @@ var ol_color_toHSL = function(rgb, round) {
     }
   }
 
-  var hsl = [ 
-    Math.round(h*60*round)/round, 
-    Math.round(s*100*round)/round, 
+  var hsl = [
+    Math.round(h*60*round)/round,
+    Math.round(s*100*round)/round,
     Math.round(l*100*round)/round
   ];
   if (rgb.length>3) hsl[3] = rgb[3];
@@ -71,9 +71,9 @@ var ol_color_fromHSL = function(hsl, round) {
     b = hue2rgb(p, q, h - 1/3);
   }
 
-  var rgb = [ 
-    Math.round(r * 255*round) / round, 
-    Math.round(g * 255*round) / round, 
+  var rgb = [
+    Math.round(r * 255*round) / round,
+    Math.round(g * 255*round) / round,
     Math.round(b * 255*round) / round
   ];
   if (hsl.length>3) rgb[3] = hsl[3];
@@ -109,9 +109,9 @@ var ol_color_toHSV = function(rgb, round) {
     }
   }
 
-  var hsv = [ 
-    Math.round(h*60*round)/round, 
-    Math.round(s*100*round)/round, 
+  var hsv = [
+    Math.round(h*60*round)/round,
+    Math.round(s*100*round)/round,
     Math.round(v*100*round)/round
   ];
   if (rgb.length>3) hsv[3] = rgb[3];
@@ -145,9 +145,9 @@ var ol_color_fromHSV = function(hsv, round) {
     case 5: r = v, g = p, b = q; break;
   }
 
-  var rgb = [ 
-    Math.round(r * 255*round) / round, 
-    Math.round(g * 255*round) / round, 
+  var rgb = [
+    Math.round(r * 255*round) / round,
+    Math.round(g * 255*round) / round,
     Math.round(b * 255*round) / round
   ];
   if (hsv.length>3) rgb[3] = hsv[3];
@@ -156,7 +156,7 @@ var ol_color_fromHSV = function(hsv, round) {
 
 /** Converts an HSL color value to RGB.
  * @param {ol/color~Color|string} rgb
- * @returns {string} 
+ * @returns {string}
  */
 var ol_color_toHexa = function(rgb) {
   return '#' + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);

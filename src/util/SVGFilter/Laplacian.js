@@ -15,33 +15,36 @@ import ol_ext_SVGFilter from '../../util/SVGFilter'
  *  @param {boolean} options.grayscale get grayscale image, default false,
  *  @param {boolean} options.alpha get alpha channel, default false
  */
-var ol_ext_SVGFilter_Laplacian = function(options) {
-  options = options || {};
+class ol_ext_SVGFilter_Laplacian {
+  constructor(options) {
+    options = options || {};
 
-  ol_ext_SVGFilter.call(this, { id: options.id });
+    ol_ext_SVGFilter.call(this, { id: options.id });
 
-  var operation = {
-    feoperation: 'feConvolveMatrix',
-    in: 'SourceGraphic',
-    preserveAlpha: true,
-    result: 'C1'
-  };
-  if (options.neighbours===4) {
-    operation.kernelMatrix = [
-       0, -1,  0,
-      -1,  4, -1,
-       0, -1,  0
-    ];
-  } else {
-    operation.kernelMatrix = [
-      -1, -1, -1,
-      -1,  8, -1,
-      -1, -1, -1
-    ];
+    var operation = {
+      feoperation: 'feConvolveMatrix',
+      in: 'SourceGraphic',
+      preserveAlpha: true,
+      result: 'C1'
+    };
+    if (options.neighbours === 4) {
+      operation.kernelMatrix = [
+        0, -1, 0,
+        -1, 4, -1,
+        0, -1, 0
+      ];
+    } else {
+      operation.kernelMatrix = [
+        -1, -1, -1,
+        -1, 8, -1,
+        -1, -1, -1
+      ];
+    }
+    this.addOperation(operation);
+    if (options.grayscale) this.grayscale();
+    else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
   }
-  this.addOperation(operation);
-  if (options.grayscale) this.grayscale();
-  else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
+
 };
 ol_ext_inherits(ol_ext_SVGFilter_Laplacian, ol_ext_SVGFilter);
 

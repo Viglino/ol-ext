@@ -4,21 +4,21 @@ export default ol_interaction_Split;
  * @extends {ol_interaction_Interaction}
  * @fires  beforesplit, aftersplit, pointermove
  * @param {*}
- *  @param {ol.source.Vector|Array<ol.source.Vector>} options.source a list of source to split (configured with useSpatialIndex set to true)
- *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split
+ *  @param {ol.source.Vector|Array<ol.source.Vector>} [options.sources] a list of source to split (configured with useSpatialIndex set to true), if none use map visible layers.
+ *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split (instead of a list of sources)
  *  @param {integer} options.snapDistance distance (in px) to snap to an object, default 25px
  *	@param {string|undefined} options.cursor cursor name to display when hovering an objet
  *  @param {function|undefined} opttion.filter a filter that takes a feature and return true if it can be clipped, default always split.
- *  @param ol_style_Style | Array<ol_style_Style> | false | undefined} options.featureStyle Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
+ *  @param Style | Array<ol_style_Style> | false | undefined} options.featureStyle Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
  *  @param {ol_style_Style | Array<ol_style_Style> | undefined} options.sketchStyle Style for the sektch features.
- *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
+ *  @param {number} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
  */
 declare class ol_interaction_Split {
     constructor(options: any);
     snapDistance_: any;
     tolerance_: any;
     cursor_: any;
-    sources_: any;
+    sources_: void;
     filterSplit_: any;
     overlayLayer_: ol_layer_Vector<ol_source_Vector<import("ol/geom/Geometry").default>>;
     /**
@@ -28,6 +28,14 @@ declare class ol_interaction_Split {
      * @api stable
      */
     setMap(map: ol.Map): void;
+    /** Get sources to split features in
+     * @return {Array<ol.source.Vector>}
+     */
+    getSources(): Array<ol.source.Vector>;
+    /** Set sources to split features in
+     * @param {ol.source.Vector|Array<ol.source.Vector>} [sources]
+     */
+    setSources(sources?: ol.source.Vector | Array<ol.source.Vector>): void;
     /** Get closest feature at pixel
      * @param {ol.Pixel}
      * @return {ol.feature}

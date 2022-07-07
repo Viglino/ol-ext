@@ -56,7 +56,7 @@ ol_View.prototype.flyTo = function(options, done) {
 
 /** Start a tour on the map
  * @param {Array<viewTourDestinations>|Array<Array>} destinations an array of destinations or an array of [x,y,zoom,destinationType]
- * @param {Object} options 
+ * @param {Object} options
  *  @param {number} [options.delay=750] delay between 2 destination
  *  @param {string} [options.type] animation type (flyTo, moveTo) to use if not defined in destinations
  *  @param {function} [options.easing] easing function used during the animation if not defined in destinations
@@ -81,7 +81,7 @@ ol_View.prototype.takeTour = function(destinations, options) {
               this.animate(dest, next);
               break;
             }
-            case 'flightTo': 
+            case 'flightTo':
             default: {
               this.flyTo(dest, next);
               break;

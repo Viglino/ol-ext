@@ -14,7 +14,7 @@ var ol_ext_element = {};
  * Create an element
  * @param {string} tagName The element tag, use 'TEXT' to create a text node
  * @param {*} options
- *  @param {string} options.className className The element class name 
+ *  @param {string} options.className className The element class name
  *  @param {Element} options.parent Parent to append the element as child
  *  @param {Element|string} [options.html] Content of the element (if text is not set)
  *  @param {string} [options.text] Text content (if html is not set)
@@ -57,7 +57,7 @@ ol_ext_element.create = function (tagName, options) {
               ol_ext_element.create('OPTION', {
                 html: i,
                 value: options.options[i],
-                parent: elt          
+                parent: elt
               })
             }
           }
@@ -269,7 +269,7 @@ ol_ext_element.getStyle = function(el, styleProp) {
     });
     value = el.currentStyle[styleProp];
     // convert other units to pixels on IE
-    if (/^\d+(em|pt|%|ex)?$/i.test(value)) { 
+    if (/^\d+(em|pt|%|ex)?$/i.test(value)) {
       return (function(value) {
         var oldLeft = el.style.left, oldRsLeft = el.runtimeStyle.left;
         el.runtimeStyle.left = el.currentStyle.left;
@@ -303,7 +303,7 @@ ol_ext_element.outerWidth = function(elt) {
 
 /** Get element offset rect
  * @param {DOMElement} elt
- * @return {*} 
+ * @return {*}
  */
 ol_ext_element.offsetRect = function(elt) {
   var rect = elt.getBoundingClientRect();
@@ -315,7 +315,7 @@ ol_ext_element.offsetRect = function(elt) {
   }
 };
 
-/** Get element offset 
+/** Get element offset
  * @param {ELement} elt
  * @returns {Object} top/left offset
  */
@@ -330,8 +330,8 @@ ol_ext_element.getFixedOffset = function(elt) {
     if (ol_ext_element.getStyle(parent, 'position') === 'absolute'
       && ol_ext_element.getStyle(parent, 'transform') !== "none") {
       var r = parent.getBoundingClientRect();
-      offset.left += r.left; 
-      offset.top += r.top; 
+      offset.left += r.left;
+      offset.top += r.top;
       return offset;
     }
     return getOffset(parent.offsetParent)
@@ -342,7 +342,7 @@ ol_ext_element.getFixedOffset = function(elt) {
 /** Get element offset rect
  * @param {DOMElement} elt
  * @param {boolean} fixed get fixed position
- * @return {Object} 
+ * @return {Object}
  */
 ol_ext_element.positionRect = function(elt, fixed) {
   var gleft = 0;
@@ -366,7 +366,7 @@ ol_ext_element.positionRect = function(elt, fixed) {
       r.right = r.top + elt.offsetWidth;
       return r;
     }
-  }; 
+  };
   return getRect(elt.offsetParent);
 }
 
@@ -375,7 +375,7 @@ ol_ext_element.positionRect = function(elt, fixed) {
  * @param {DOMElement} elt
  * @param {*} options
  *  @param {function} [options.onmove] a function that takes a boolean indicating that the div is scrolling
- *  @param {boolean} [options.vertical=false] 
+ *  @param {boolean} [options.vertical=false]
  *  @param {boolean} [options.animate=true] add kinetic to scroll
  *  @param {boolean} [options.mousewheel=false] enable mousewheel to scroll
  *  @param {boolean} [options.minibar=false] add a mini scrollbar to the parent element (only vertical scrolling)
@@ -422,7 +422,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
       else scrollContainer.classList.remove('ol-100pc');
     }
   }
-  
+
   // Handle pointer down
   var onPointerDown = function(e) {
     // Prevent scroll
@@ -455,7 +455,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
       if (delta) onmove(true);
     }
   };
-  
+
   // Animate scroll
   var animate = function(to) {
     var step = (to>0) ? Math.min(100, to/2) : Math.max(-100, to/2);
@@ -472,7 +472,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
       }, 40);
     }
   }
-  
+
   // Initialize scroll container for minibar
   var scrollContainer, scrollbar;
   if (options.vertical && options.minibar) {
@@ -493,12 +493,12 @@ ol_ext_element.scrollDiv = function(elt, options) {
       });
       // Handle mousewheel
       if (options.mousewheel) {
-        ol_ext_element.addListener(scrollContainer, 
-          ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
+        ol_ext_element.addListener(scrollContainer,
+          ['mousewheel', 'DOMMouseScroll', 'onmousewheel'],
           function(e) { onMouseWheel(e) }
         );
-        ol_ext_element.addListener(scrollbar, 
-          ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
+        ol_ext_element.addListener(scrollbar,
+          ['mousewheel', 'DOMMouseScroll', 'onmousewheel'],
           function(e) { onMouseWheel(e) }
         );
       }
@@ -523,7 +523,7 @@ ol_ext_element.scrollDiv = function(elt, options) {
   elt.style['touch-action'] = 'none';
   elt.style['overflow'] = 'hidden';
   elt.classList.add('ol-scrolldiv');
-  
+
   // Start scrolling
   ol_ext_element.addListener(elt, ['pointerdown'], function(e) {
     isbar = false;
@@ -573,18 +573,18 @@ ol_ext_element.scrollDiv = function(elt, options) {
     return false;
   }
   if (options.mousewheel) { // && !elt.classList.contains('ol-touch')) {
-    ol_ext_element.addListener(elt, 
-      ['mousewheel', 'DOMMouseScroll', 'onmousewheel'], 
+    ol_ext_element.addListener(elt,
+      ['mousewheel', 'DOMMouseScroll', 'onmousewheel'],
       onMouseWheel
     );
   }
 
-  return { 
+  return {
     refresh: updateMinibar
   }
 };
 
-/** Dispatch an event to an Element 
+/** Dispatch an event to an Element
  * @param {string} eventName
  * @param {Element} element
  */
