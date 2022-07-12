@@ -21715,7 +21715,7 @@ ol.interaction.DragOverlay.prototype.removeOverlay = function (ov) {
  * @fires modifyend
  * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
  * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
- * 	@param {Array<ol.Feature> | ol.Collection<ol.Feature> | function | undefined} options.features An array or a collection of features the interaction applies on or a function that takes a feature and a layer and returns true if the feature is a candidate
+ * 	@param {Array<ol.Feature> | ol.Collection<ol.Feature> | function | undefined} options.featureFilter An array or a collection of features the interaction applies on or a function that takes a feature and a layer and returns true if the feature is a candidate
  * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
  */
 ol.interaction.DrawHole = function(options) {
@@ -21749,10 +21749,10 @@ ol.interaction.DrawHole = function(options) {
     }
   }
   // Features to apply on 
-  if (typeof(options.features) === 'function') {
-    this._features = options.features;
-  } else if (options.features) {
-    var features = options.features;
+  if (typeof(options.featureFilter) === 'function') {
+    this._features = options.featureFilter;
+  } else if (options.featureFilter) {
+    var features = options.featureFilter;
     this._features = function(f) {
       if (features.indexOf) {
         return !!features[features.indexOf(f)];
@@ -24385,6 +24385,7 @@ ol.interaction.ModifyTouch.prototype.getPopupContent = function() {
  * @fires offsetting
  * @fires offsetend
  * @param {any} options
+ *	@param {function} [options.filter] a function that takes a feature and a layer and return true if the feature can be modified
  *	@param {ol.layer.Vector | Array<ol.layer.Vector>} options.layers list of feature to transform 
  *	@param {ol.Collection.<ol.Feature>} options.features collection of feature to transform
  *	@param {ol.source.Vector | undefined} options.source source to duplicate feature when ctrl key is down
@@ -24400,6 +24401,7 @@ ol.interaction.Offset = function(options) {
     handleMoveEvent: this.handleMoveEvent_,
     handleUpEvent: this.handleUpEvent_
   });
+  this._filter = options.filter;
 	// Collection of feature to transform
 	this.features_ = options.features;
 	// List of layers to transform
@@ -24435,6 +24437,7 @@ ol.interaction.Offset.prototype.getFeatureAtPixel_ = function(e) {
 	return this.getMap().forEachFeatureAtPixel(e.pixel,
 		function(feature, layer) {
       var current;
+      if (self._filter && !self._filter(feature, layer)) return false;
 			// feature belong to a layer
 			if (self.layers_) {
         for (var i=0; i<self.layers_.length; i++) {
@@ -25386,7 +25389,7 @@ ol.ext.inherits(ol.interaction.SnapLayerPixel, ol.interaction.Interaction);
  *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split (instead of a list of sources)
  *  @param {integer} options.snapDistance distance (in px) to snap to an object, default 25px
  *	@param {string|undefined} options.cursor cursor name to display when hovering an objet
- *  @param {function|undefined} opttion.filter a filter that takes a feature and return true if it can be clipped, default always split.
+ *  @param {function|undefined} options.filter a filter that takes a feature and return true if it can be clipped, default always split.
  *  @param ol.style.Style | Array<ol.style.Style> | false | undefined} options.featureStyle Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
  *  @param {ol.style.Style | Array<ol.style.Style> | undefined} options.sketchStyle Style for the sektch features. 
  *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
