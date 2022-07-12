@@ -38976,7 +38976,7 @@ ol.style.Profile.prototype._renderLine = function(geom, g, l, e) {
   ctx.save();
     ctx.fillStyle = ol.color.asString(this.getFill().getColor());
     ctx.strokeStyle = ol.color.asString(this.getStroke().getColor());
-    ctx.strokeWidth = this.getStroke().getWidth();
+    ctx.lineWidth = this.getStroke().getWidth();
     var p0 = geom[0];
     var ez = this.getScale() * e.pixelRatio;
     for (i=1; p=geom[i]; i++) {
