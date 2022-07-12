@@ -21,7 +21,7 @@ import ol_interaction_Select from 'ol/interaction/Select'
  * @fires modifyend
  * @param {olx.interaction.DrawHoleOptions} options extend olx.interaction.DrawOptions
  * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
- * 	@param {Array<ol.Feature> | ol.Collection<ol.Feature> | function | undefined} options.features An array or a collection of features the interaction applies on or a function that takes a feature and a layer and returns true if the feature is a candidate
+ * 	@param {Array<ol.Feature> | ol.Collection<ol.Feature> | function | undefined} options.featureFilter An array or a collection of features the interaction applies on or a function that takes a feature and a layer and returns true if the feature is a candidate
  * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
  */
 var ol_interaction_DrawHole = function(options) {
@@ -60,10 +60,10 @@ var ol_interaction_DrawHole = function(options) {
   }
 
   // Features to apply on 
-  if (typeof(options.features) === 'function') {
-    this._features = options.features;
-  } else if (options.features) {
-    var features = options.features;
+  if (typeof(options.featureFilter) === 'function') {
+    this._features = options.featureFilter;
+  } else if (options.featureFilter) {
+    var features = options.featureFilter;
     this._features = function(f) {
       if (features.indexOf) {
         return !!features[features.indexOf(f)];
