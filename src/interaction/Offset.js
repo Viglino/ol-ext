@@ -17,6 +17,7 @@ import ol_style_Style_defaultStyle from '../style/defaultStyle'
  * @fires offsetting
  * @fires offsetend
  * @param {any} options
+ *	@param {function} [options.filter] a function that takes a feature and a layer and return true if the feature can be modified
  *	@param {ol.layer.Vector | Array<ol.layer.Vector>} options.layers list of feature to transform 
  *	@param {ol.Collection.<ol.Feature>} options.features collection of feature to transform
  *	@param {ol.source.Vector | undefined} options.source source to duplicate feature when ctrl key is down
@@ -34,6 +35,7 @@ var ol_interaction_Offset = function(options) {
     handleUpEvent: this.handleUpEvent_
   });
     
+  this._filter = options.filter;
 	// Collection of feature to transform
 	this.features_ = options.features;
 	// List of layers to transform
@@ -72,6 +74,7 @@ ol_interaction_Offset.prototype.getFeatureAtPixel_ = function(e) {
 	return this.getMap().forEachFeatureAtPixel(e.pixel,
 		function(feature, layer) {
       var current;
+      if (self._filter && !self._filter(feature, layer)) return false;
 			// feature belong to a layer
 			if (self.layers_) {
         for (var i=0; i<self.layers_.length; i++) {

@@ -26,7 +26,7 @@ import '../geom/LineStringSplitAt'
  *  @param {ol.Collection.<ol.Feature>} options.features collection of feature to split (instead of a list of sources)
  *  @param {integer} options.snapDistance distance (in px) to snap to an object, default 25px
  *	@param {string|undefined} options.cursor cursor name to display when hovering an objet
- *  @param {function|undefined} opttion.filter a filter that takes a feature and return true if it can be clipped, default always split.
+ *  @param {function|undefined} options.filter a filter that takes a feature and return true if it can be clipped, default always split.
  *  @param ol_style_Style | Array<ol_style_Style> | false | undefined} options.featureStyle Style for the selected features, choose false if you don't want feature selection. By default the default edit style is used.
  *  @param {ol_style_Style | Array<ol_style_Style> | undefined} options.sketchStyle Style for the sektch features. 
  *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split.  Default is 1e-10.
