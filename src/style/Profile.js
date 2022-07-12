@@ -126,7 +126,7 @@ ol_style_Profile.prototype._renderLine = function(geom, g, l, e) {
 
     ctx.fillStyle = ol_color_asString(this.getFill().getColor());
     ctx.strokeStyle = ol_color_asString(this.getStroke().getColor());
-    ctx.strokeWidth = this.getStroke().getWidth();
+    ctx.lineWidth = this.getStroke().getWidth();
 
     var p0 = geom[0];
     var ez = this.getScale() * e.pixelRatio;
