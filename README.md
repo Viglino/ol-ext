@@ -72,10 +72,6 @@ The library will be available in the `node_modules/openlayers-ext/dist` director
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>
 ````
 
-### dependencies
-
-Using ol-ext prior to v3.1 some controls still depend on jQuery.
-
 ### supported Browsers
 
 ol-ext runs on all modern browsers that support HTML5 and ECMAScript 5. This includes Chrome, Firefox, Safari and Edge. For older browsers and platforms like Internet Explorer (down to version 9) and Android 4.x, polyfills for for `requestAnimationFrame`, `Element.prototype.classList`, `Object.assign`and `URL`.
