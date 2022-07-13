@@ -48,7 +48,9 @@ class ol_Overlay_Fixed {
         this.setPosition(this.getMap().getCoordinateFromPixel(this._pixel));
       }
     }
+
   }
+
 }
 ol_ext_inherits(ol_Overlay_Fixed, ol_Overlay);
 
