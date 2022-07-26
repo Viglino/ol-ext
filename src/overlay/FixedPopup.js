@@ -282,7 +282,7 @@ ol_Overlay_FixedPopup.prototype.setPixelPosition = function (pix, position) {
     else pix[0] = mapSize[0]/2 + pix[0];
   }
   if (pix) this._pixel = pix;
-  if (map && this._pixel) {
+  if (map && map.getTargetElement() && this._pixel) {
     this.updateRenderedPosition(this._pixel, mapSize);
     // Prevent outside
     var outside = false;
