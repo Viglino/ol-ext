@@ -1,4 +1,4 @@
-﻿import {ol_ext_inherits} from '../util/ext'
+import {ol_ext_inherits} from '../util/ext'
 import ol_control_WMSCapabilities from './WMSCapabilities';
 
 import ol_View from 'ol/View'
@@ -124,7 +124,7 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   var minZoom = Infinity, maxZoom = -Infinity;
   var tmatrix;
   caps.TileMatrixSetLink.forEach(function(tm) {
-    if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857') {
+    if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857' || tm.TileMatrixSet === 'webmercator') {
       tmatrix = tm;
       caps.TileMatrixSet = tm.TileMatrixSet;
     }
@@ -133,12 +133,17 @@ ol_control_WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     this.showError({ type: 'TileMatrix' });
     return;
   }
-  var tilePrefix = tmatrix.TileMatrixSetLimits[0].TileMatrix.split(':').length > 1;
-  tmatrix.TileMatrixSetLimits.forEach(function(tm) {
-    var zoom = tm.TileMatrix.split(':').pop();
-    minZoom = Math.min(minZoom, parseInt(zoom));
-    maxZoom = Math.max(maxZoom, parseInt(zoom));
-  });
+  if (tmatrix.TileMatrixSetLimits) {
+    var tilePrefix = tmatrix.TileMatrixSetLimits[0].TileMatrix.split(':').length > 1;
+    tmatrix.TileMatrixSetLimits.forEach(function(tm) {
+      var zoom = tm.TileMatrix.split(':').pop();
+      minZoom = Math.min(minZoom, parseInt(zoom));
+      maxZoom = Math.max(maxZoom, parseInt(zoom));
+    });
+  } else {
+    minZoom = 0;
+    maxZoom = 20;
+  }
 
   var view = new ol_View();
   view.setZoom(minZoom);

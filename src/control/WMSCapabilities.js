@@ -1,4 +1,4 @@
-﻿/* 
+/* 
   Using WMS Layer with EPSG:4326 projection.
   The tiles will be reprojected to map pojection (EPSG:3857).
   NB: reduce tileSize to minimize deformations on small scales.
@@ -632,7 +632,7 @@ ol_control_WMSCapabilities.prototype.showCapabilities = function(caps) {
               html: options.data.abstract,
               parent: this._elements.data
             });
-            if (options.data.legend.length) {
+            if (options.data.legend && options.data.legend.length) {
               this._elements.legend.src = options.data.legend[0];
               this._elements.legend.classList.add('visible');
             } else {
