@@ -1,0 +1,188 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Graticule control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+    <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  
+  <!-- Proj4 -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14/proj4.js"></script>
+  
+  <style>
+    #map {
+      background: #fff;
+      border:1px solid #000;
+      padding:1em;
+      width: 100%;
+      height: calc(100vh - 10em);
+      box-sizing: border-box;
+    }
+    .ol-mouse-position {
+      top: auto;
+      bottom: 1em;
+      left: 50%;
+      right:auto;
+      position: absolute;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.5);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Graticule control</h1>
+  </a>
+  <div class="info">
+    This example use <i>ol.control.Graticule</i> show a MGRS graticule on the map (use precision and intervals options) -
+    <a href="https://codesandbox.io/s/mgrs-forked-q6q17i?file=/main.js">original idea Mike-000</a>
+  </div>
+
+  <!-- Map div -->
+  <div id="map"></div>
+
+  <script type="text/javascript">
+// Define UTM zones
+var utmProjs = [];
+for (let zone = 1; zone <= 60; zone++) {
+  var code = 'EPSG:' + (32600 + zone);
+  proj4.defs(
+    code,
+    '+proj=utm +zone=' + zone + ' +ellps=WGS84 +datum=WGS84 +units=m +no_defs'
+  );
+  ol.proj.proj4.register(proj4);
+  utmProjs[zone] = ol.proj.get(code);
+}
+
+var llProj = ol.proj.get('EPSG:4326');
+
+var midpointX = 500000;
+var width = midpointX * 2;
+
+// Convert UTM coords from lonlat
+function ll2utm(ll) {
+  var world = Math.floor((ll[0] + 180) / 360);
+  var lon = (((ll[0] % 360) + 540) % 360) - 180; // normalise any wrapx
+  var lat = ll[1];
+  var zone = Math.floor((180 + lon) / 6) + 1;
+  var zoneCoord = ol.proj.transform([lon, lat], llProj, utmProjs[zone]);
+  var coord = [zoneCoord[0] + (zone - 1) * width, zoneCoord[1]];
+  coord[0] += world * 60 * width;
+  return coord;
+}
+
+// Convert UTM coords to lonlat
+function utm2ll(coord) {
+  var world = Math.floor(coord[0] / (60 * width));
+  var zone = (Math.floor(coord[0] / width) % 60) + 1;
+  var c0 = coord[0] % width;
+  var c1 = coord[1];
+  var ll = ol.proj.transform([c0, c1], utmProjs[zone], llProj);
+  if (Math.floor((180 + ll[0]) / 6) + 1 != zone) {
+    ll[0] = (zone - (c0 < midpointX ? 1 : 0)) * 6 - 180;
+  }
+  ll[0] += world * 360;
+  return ll;
+}
+
+// Define MGRS (UTM) projection / transform
+const mgrs = new ol.proj.Projection({
+  code: 'MGRS',
+  units: 'm',
+  extent: [0, -10000000, 60 * width, 10000000],
+  global: true,
+});
+ol.proj.addProjection(mgrs);
+ol.proj.addCoordinateTransforms(llProj, mgrs, ll2utm, utm2ll);
+
+// Create map
+const map = new ol.Map({
+  layers: [
+    new ol.layer.Tile({
+      source: new ol.source.OSM(),
+    }),
+  ],
+  target: 'map',
+  controls: ol.control.defaults({attribution: false}),
+  view: new ol.View({
+    center: [259289, 5872518],
+    zoom: 6,
+  }),
+});
+
+// Add transform
+const viewProj = map.getView().getProjection();
+ol.proj.addCoordinateTransforms(
+  viewProj,
+  mgrs,
+  function (coord) {
+    return ll2utm(ol.proj.transform(coord, viewProj, llProj));
+  },
+  function (coord) {
+    return ol.proj.transform(utm2ll(coord), llProj, viewProj);
+  }
+);
+
+// Create Graticule with intervals / precisions
+map.addControl(
+  new ol.control.Graticule({
+    projection: 'MGRS',
+    step: 1000,
+    stepCoord: 1,
+    intervals: [
+      1000000,
+      500000,
+      200000,
+      100000,
+      50000,
+      20000,
+      10000,
+      5000,
+      2000,
+      1000,
+    ],
+    precision: 50000,
+    formatCoord: function (coord, position) {
+      if (position === 'left' || position === 'right') {
+        const y = coord + 10000000;
+        const index = Math.floor(y / 1000000);
+        const code = 'CDEFGHJKLMNPQRSTUVWX'.charAt(index);
+        const kmy = (1000 + (Math.floor(y / 1000) % 1000)).toString().slice(1);
+        return code + (kmy === '000' ? '' : ' ' + kmy);
+      } else {
+        const zone = (100 + (Math.floor(coord / width) % 60) + 1)
+          .toString()
+          .slice(1);
+        const kmx = (1000 + (Math.floor(coord / 1000) % 1000))
+          .toString()
+          .slice(1);
+        return zone + (kmx === '000' ? '' : ' ' + kmx);
+      }
+    },
+  })
+);
+  </script>
+
+</body>
+</html>

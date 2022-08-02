@@ -8360,18 +8360,20 @@ ol.control.Globe.prototype.setCenter = function (center, show)
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/**
- * Draw a graticule on the map.
- *
+/** Draw a graticule on the map.
  * @constructor
+ * @author mike-000 https://github.com/mike-000
+ * @author Jean-Marc Viglino https://github.com/viglino
  * @extends {ol.control.CanvasBase}
  * @param {Object=} _ol_control_ options.
  *  @param {ol.projectionLike} options.projection projection to use for the graticule, default EPSG:4326 
  *  @param {number} options.maxResolution max resolution to display the graticule
  *  @param {ol.style.Style} options.style Style to use for drawing the graticule, default black.
- *  @param {number} options.step step beetween lines (in proj units), default 1
+ *  @param {number} options.step step between lines (in proj units), default 1
  *  @param {number} options.stepCoord show a coord every stepCoord, default 1
- *  @param {number} options.spacing spacing beetween lines (in px), default 40px 
+ *  @param {number} options.spacing spacing between lines (in px), default 40px 
+ *  @param {Array<number>} options.intervals array (in desending order) of intervals (in proj units) constraining which lines will be displayed, default is no contraint (any multiple of step can be used)
+ *  @param {number} options.precision precision interval (in proj units) of displayed lines, if the line interval exceeds this more calculations will be used to display curved lines more accurately
  *  @param {number} options.borderWidth width of the border (in px), default 5px 
  *  @param {number} options.margin margin of the border (in px), default 0px 
  *  @param {number} options.formatCoord a function that takes a coordinate and a position and return the formated coordinate
@@ -8395,6 +8397,8 @@ ol.control.Graticule = function(options) {
   this.set('step', options.step || 0.1);
   this.set('stepCoord', options.stepCoord || 1);
   this.set('spacing', options.spacing || 40);
+  this.set('intervals', options.intervals);
+  this.set('precision', options.precision);
   this.set('margin', options.margin || 0);
   this.set('borderWidth', options.borderWidth || 5);
   this.set('stroke', options.stroke!==false);
@@ -8455,6 +8459,22 @@ ol.control.Graticule.prototype._draw = function (e) {
     step *= dt;
     if (step>this.fac) step = Math.round(step/this.fac)*this.fac;
   }
+  var intervals = this.get('intervals');
+  if (Array.isArray(intervals)) {
+    var interval = intervals[0];
+    for (var i = 0, ii = intervals.length; i < ii; ++i) {
+      if (step >= intervals[i]) {
+        break;
+      }
+      interval = intervals[i];
+    }
+    step = interval;
+  }
+  var precision = this.get('precision');
+  var calcStep = step;
+  if (precision > 0 && step > precision) {
+    calcStep = step / Math.ceil(step / precision);
+  }
   xmin = (Math.floor(xmin/step))*step -step;
   ymin = (Math.floor(ymin/step))*step -step;
   xmax = (Math.floor(xmax/step))*step +2*step;
@@ -8482,7 +8502,7 @@ ol.control.Graticule.prototype._draw = function (e) {
       p0 = map.getPixelFromCoordinate(p0);
       if (hasLines) ctx.moveTo(p0[0], p0[1]);
       p = p0;
-      for (y=ymin+step; y<=ymax; y+=step)
+      for (y=ymin+calcStep; y<=ymax; y+=calcStep)
       {	p1 = ol.proj.transform ([x, y], proj, map.getView().getProjection());
         p1 = map.getPixelFromCoordinate(p1);
         if (hasLines) ctx.lineTo(p1[0], p1[1]);
@@ -8496,7 +8516,7 @@ ol.control.Graticule.prototype._draw = function (e) {
       p0 = map.getPixelFromCoordinate(p0);
       if (hasLines) ctx.moveTo(p0[0], p0[1]);
       p = p0;
-      for (x=xmin+step; x<=xmax; x+=step)
+      for (x=xmin+calcStep; x<=xmax; x+=calcStep)
       {	p1 = ol.proj.transform ([x, y], proj, map.getView().getProjection());
         p1 = map.getPixelFromCoordinate(p1);
         if (hasLines) ctx.lineTo(p1[0], p1[1]);
@@ -17431,7 +17451,7 @@ ol.control.WMSCapabilities.prototype.showCapabilities = function(caps) {
               html: options.data.abstract,
               parent: this._elements.data
             });
-            if (options.data.legend.length) {
+            if (options.data.legend && options.data.legend.length) {
               this._elements.legend.src = options.data.legend[0];
               this._elements.legend.classList.add('visible');
             } else {
@@ -17796,7 +17816,7 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   var minZoom = Infinity, maxZoom = -Infinity;
   var tmatrix;
   caps.TileMatrixSetLink.forEach(function(tm) {
-    if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857') {
+    if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857' || tm.TileMatrixSet === 'webmercator') {
       tmatrix = tm;
       caps.TileMatrixSet = tm.TileMatrixSet;
     }
@@ -17805,12 +17825,17 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     this.showError({ type: 'TileMatrix' });
     return;
   }
-  var tilePrefix = tmatrix.TileMatrixSetLimits[0].TileMatrix.split(':').length > 1;
-  tmatrix.TileMatrixSetLimits.forEach(function(tm) {
-    var zoom = tm.TileMatrix.split(':').pop();
-    minZoom = Math.min(minZoom, parseInt(zoom));
-    maxZoom = Math.max(maxZoom, parseInt(zoom));
-  });
+  if (tmatrix.TileMatrixSetLimits) {
+    var tilePrefix = tmatrix.TileMatrixSetLimits[0].TileMatrix.split(':').length > 1;
+    tmatrix.TileMatrixSetLimits.forEach(function(tm) {
+      var zoom = tm.TileMatrix.split(':').pop();
+      minZoom = Math.min(minZoom, parseInt(zoom));
+      maxZoom = Math.max(maxZoom, parseInt(zoom));
+    });
+  } else {
+    minZoom = 0;
+    maxZoom = 20;
+  }
   var view = new ol.View();
   view.setZoom(minZoom);
   var layer_opt = {
