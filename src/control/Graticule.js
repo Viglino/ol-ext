@@ -22,9 +22,11 @@ import ol_control_CanvasBase from './CanvasBase'
  *  @param {ol.projectionLike} options.projection projection to use for the graticule, default EPSG:4326 
  *  @param {number} options.maxResolution max resolution to display the graticule
  *  @param {ol_style_Style} options.style Style to use for drawing the graticule, default black.
- *  @param {number} options.step step beetween lines (in proj units), default 1
+ *  @param {number} options.step step between lines (in proj units), default 1
  *  @param {number} options.stepCoord show a coord every stepCoord, default 1
- *  @param {number} options.spacing spacing beetween lines (in px), default 40px 
+ *  @param {number} options.spacing spacing between lines (in px), default 40px 
+ *  @param {Array<number>} options.intervals array (in desending order) of intervals (in proj units) constraining which lines will be displayed, default is no contraint (any multiple of step can be used)
+ *  @param {number} options.precision precision interval (in proj units) of displayed lines, if the line interval exceeds this more calculations will be used to display curved lines more accurately
  *  @param {number} options.borderWidth width of the border (in px), default 5px 
  *  @param {number} options.margin margin of the border (in px), default 0px 
  *  @param {number} options.formatCoord a function that takes a coordinate and a position and return the formated coordinate
@@ -53,6 +55,8 @@ var ol_control_Graticule = function(options) {
   this.set('step', options.step || 0.1);
   this.set('stepCoord', options.stepCoord || 1);
   this.set('spacing', options.spacing || 40);
+  this.set('intervals', options.intervals);
+  this.set('precision', options.precision);
   this.set('margin', options.margin || 0);
   this.set('borderWidth', options.borderWidth || 5);
   this.set('stroke', options.stroke!==false);
@@ -122,6 +126,23 @@ ol_control_Graticule.prototype._draw = function (e) {
     if (step>this.fac) step = Math.round(step/this.fac)*this.fac;
   }
 
+  var intervals = this.get('intervals');
+  if (Array.isArray(intervals)) {
+    var interval = intervals[0];
+    for (let i = 0, ii = intervals.length; i < ii; ++i) {
+      if (step >= intervals[i]) {
+        break;
+      }
+      interval = intervals[i];
+    }
+    step = interval;
+  }
+  var precision = this.get('precision');
+  var calcStep = step;
+  if (precision > 0 && step > precision) {
+    calcStep = step / Math.ceil(step / precision);
+  }
+
   xmin = (Math.floor(xmin/step))*step -step;
   ymin = (Math.floor(ymin/step))*step -step;
   xmax = (Math.floor(xmax/step))*step +2*step;
@@ -155,7 +176,7 @@ ol_control_Graticule.prototype._draw = function (e) {
       p0 = map.getPixelFromCoordinate(p0);
       if (hasLines) ctx.moveTo(p0[0], p0[1]);
       p = p0;
-      for (y=ymin+step; y<=ymax; y+=step)
+      for (y=ymin+calcStep; y<=ymax; y+=calcStep)
       {	p1 = ol_proj_transform ([x, y], proj, map.getView().getProjection());
         p1 = map.getPixelFromCoordinate(p1);
         if (hasLines) ctx.lineTo(p1[0], p1[1]);
@@ -169,7 +190,7 @@ ol_control_Graticule.prototype._draw = function (e) {
       p0 = map.getPixelFromCoordinate(p0);
       if (hasLines) ctx.moveTo(p0[0], p0[1]);
       p = p0;
-      for (x=xmin+step; x<=xmax; x+=step)
+      for (x=xmin+calcStep; x<=xmax; x+=calcStep)
       {	p1 = ol_proj_transform ([x, y], proj, map.getView().getProjection());
         p1 = map.getPixelFromCoordinate(p1);
         if (hasLines) ctx.lineTo(p1[0], p1[1]);
