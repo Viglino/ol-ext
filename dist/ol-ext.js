@@ -14172,7 +14172,7 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
  *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
  *  @param {string | undefined} options.reverseTitle Title to use for the reverse geocoding button tooltip, default "Click on the map..."
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
- *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
+ *  @param {number | undefined} options.typing a delay on each typing to start autocompletion (ms), default -1 (disabled). NB: default nominatim policy forbids auto-complete usage...
  *  @param {integer | undefined} options.minLength minimum length to start searching, default 3
  *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *
@@ -14182,7 +14182,7 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
 ol.control.SearchNominatim = function(options) {
   options = options || {};
   options.className = options.className || 'nominatim';
-  options.typing = options.typing || 500;
+  options.typing = options.typing || -1;
   options.url = options.url || 'https://nominatim.openstreetmap.org/search';
   options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
   ol.control.SearchJSON.call(this, options);
