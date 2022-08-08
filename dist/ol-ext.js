@@ -38288,7 +38288,9 @@ ol.style.FontSymbol.addDefs = function(font, glyphs) {
  */
 ol.style.FontSymbol.prototype.clone = function() {
   var g = new ol.style.FontSymbol({
-    glyph: '',
+    //glyph: this._glyph,
+    text: this._glyph.char,
+    font: this._glyph.font,
     color: this._color,
     fontSize: this._fontSize,
     fontStyle: this._fontStyle,
@@ -38304,8 +38306,6 @@ ol.style.FontSymbol.prototype.clone = function() {
     rotateWithView: this.getRotateWithView()
   });
   g.setScale(this.getScale());
-  g.glyph_ = this._glyph;
-  g.getImage();
   return g;
 };
 /** Get the fill style for the symbol.
