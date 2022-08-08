@@ -126,7 +126,9 @@ ol_style_FontSymbol.addDefs = function(font, glyphs) {
  */
 ol_style_FontSymbol.prototype.clone = function() {
   var g = new ol_style_FontSymbol({
-    glyph: '',
+    //glyph: this._glyph,
+    text: this._glyph.char,
+    font: this._glyph.font,
     color: this._color,
     fontSize: this._fontSize,
     fontStyle: this._fontStyle,
@@ -142,8 +144,6 @@ ol_style_FontSymbol.prototype.clone = function() {
     rotateWithView: this.getRotateWithView()
   });
   g.setScale(this.getScale());
-  g.glyph_ = this._glyph;
-  g.getImage();
   return g;
 };
 
