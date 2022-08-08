@@ -2439,6 +2439,10 @@ ol.ext.input.Collection = function(options) {
   }.bind(this));
 };
 ol.ext.inherits(ol.ext.input.Collection, ol.Object);
+/** Remove listener from collection */
+ol.ext.input.Collection.prototype.removeCollection = function() {
+  this.collection.un('change:length', this._update);
+}
 /** Select an item
  * @param {*} item
  */

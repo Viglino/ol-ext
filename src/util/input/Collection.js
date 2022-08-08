@@ -37,6 +37,11 @@ var ol_ext_input_Collection = function(options) {
 };
 ol_ext_inherits(ol_ext_input_Collection, ol_Object);
 
+/** Remove listener from collection */
+ol_ext_input_Collection.prototype.removeCollection = function() {
+  this.collection.un('change:length', this._update);
+}
+
 /** Select an item
  * @param {*} item
  */
