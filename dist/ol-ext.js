@@ -2423,25 +2423,40 @@ ol.ext.input.Collection = function(options) {
     className: ('ol-collection-list '+(options.className||'')).trim(),
     parent: options.target
   })
-  this.collection = options.collection;
   this._title = (typeof(options.getTitle) === 'function' ? options.getTitle : function(elt) { return elt.title });
-  this.refresh();
-  this.collection.on('change:length', function() { 
-    if (!this._reorder) {
-      this.refresh();
-      var pos = this.getSelectPosition();
-      if (pos < 0) {
-        this.dispatchEvent({ type: 'item:select', position: -1, item: null });
-      } else {
-        this.dispatchEvent({ type: 'item:order', position: pos, item: this._currentItem });
-      }
-    }
-  }.bind(this));
+  this.setCollection(options.collection);
 };
 ol.ext.inherits(ol.ext.input.Collection, ol.Object);
-/** Remove listener from collection */
+/** Remove current collection (listeners)
+ * /!\ remove collection when input list is removed from the DOM
+ */
 ol.ext.input.Collection.prototype.removeCollection = function() {
-  this.collection.un('change:length', this._update);
+  if (this.collection) {
+    this.collection.un('change:length', this._update);
+    this.collection = null;
+  }
+}
+/** Set the collection
+ * @param {ol.Collection} collection
+ */
+ol.ext.input.Collection.prototype.setCollection = function(collection) {
+  this.removeCollection();
+  this.collection = collection;
+  this.refresh();
+  if (this.collection) {
+    this._update = function() { 
+      if (!this._reorder) {
+        this.refresh();
+        var pos = this.getSelectPosition();
+        if (pos < 0) {
+          this.dispatchEvent({ type: 'item:select', position: -1, item: null });
+        } else {
+          this.dispatchEvent({ type: 'item:order', position: pos, item: this._currentItem });
+        }
+      }
+    }.bind(this);
+    this.collection.on('change:length', this._update);
+  }
 }
 /** Select an item
  * @param {*} item
@@ -2476,6 +2491,7 @@ ol.ext.input.Collection.prototype.getSelect = function() {
  * @returns {number}
  */
 ol.ext.input.Collection.prototype.getSelectPosition = function() {
+  if (!this.collection) return -1;
   return this.collection.getArray().indexOf(this._currentItem);
 };
 /** Redraw the list
@@ -2483,6 +2499,7 @@ ol.ext.input.Collection.prototype.getSelectPosition = function() {
 ol.ext.input.Collection.prototype.refresh = function() {
   this.element.innerHTML = '';
   this._listElt = [];
+  if (!this.collection) return;
   this.collection.forEach((item, pos) => {
     var li = ol.ext.element.create('LI', {
       html: this._title(item),
