@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.28
+ * @version v3.2.29
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -2423,22 +2423,41 @@ ol.ext.input.Collection = function(options) {
     className: ('ol-collection-list '+(options.className||'')).trim(),
     parent: options.target
   })
-  this.collection = options.collection;
   this._title = (typeof(options.getTitle) === 'function' ? options.getTitle : function(elt) { return elt.title });
-  this.refresh();
-  this.collection.on('change:length', function() { 
-    if (!this._reorder) {
-      this.refresh();
-      var pos = this.getSelectPosition();
-      if (pos < 0) {
-        this.dispatchEvent({ type: 'item:select', position: -1, item: null });
-      } else {
-        this.dispatchEvent({ type: 'item:order', position: pos, item: this._currentItem });
-      }
-    }
-  }.bind(this));
+  this.setCollection(options.collection);
 };
 ol.ext.inherits(ol.ext.input.Collection, ol.Object);
+/** Remove current collection (listeners)
+ * /!\ remove collection when input list is removed from the DOM
+ */
+ol.ext.input.Collection.prototype.removeCollection = function() {
+  if (this.collection) {
+    this.collection.un('change:length', this._update);
+    this.collection = null;
+  }
+}
+/** Set the collection
+ * @param {ol.Collection} collection
+ */
+ol.ext.input.Collection.prototype.setCollection = function(collection) {
+  this.removeCollection();
+  this.collection = collection;
+  this.refresh();
+  if (this.collection) {
+    this._update = function() { 
+      if (!this._reorder) {
+        this.refresh();
+        var pos = this.getSelectPosition();
+        if (pos < 0) {
+          this.dispatchEvent({ type: 'item:select', position: -1, item: null });
+        } else {
+          this.dispatchEvent({ type: 'item:order', position: pos, item: this._currentItem });
+        }
+      }
+    }.bind(this);
+    this.collection.on('change:length', this._update);
+  }
+}
 /** Select an item
  * @param {*} item
  */
@@ -2472,6 +2491,7 @@ ol.ext.input.Collection.prototype.getSelect = function() {
  * @returns {number}
  */
 ol.ext.input.Collection.prototype.getSelectPosition = function() {
+  if (!this.collection) return -1;
   return this.collection.getArray().indexOf(this._currentItem);
 };
 /** Redraw the list
@@ -2479,6 +2499,7 @@ ol.ext.input.Collection.prototype.getSelectPosition = function() {
 ol.ext.input.Collection.prototype.refresh = function() {
   this.element.innerHTML = '';
   this._listElt = [];
+  if (!this.collection) return;
   this.collection.forEach((item, pos) => {
     var li = ol.ext.element.create('LI', {
       html: this._title(item),
@@ -3553,9 +3574,9 @@ ol.legend.Legend.getLegendImage = function(item, canvas, row) {
       var img = s.getImage();
       // Refresh legend on image load
       if (img) {
-        var imgElt = img.getImage();
+        var imgElt = img.getPhoto ? img.getPhoto() : img.getImage();
         // Check image is loaded
-        if (imgElt && imgElt.complete && !imgElt.naturalWidth) {
+        if (imgElt && imgElt instanceof HTMLImageElement && !imgElt.naturalWidth) {
           if (typeof(item.onload) === 'function') {
             imgElt.addEventListener('load', function() {
               setTimeout(function() { 
@@ -5495,7 +5516,9 @@ ol.control.LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
   // Other properties
   listeners.push(layer.on('propertychange', (function(e) {
     if (e.key === 'displayInLayerSwitcher'
-      || e.key === 'openInLayerSwitcher') {
+      || e.key === 'openInLayerSwitcher'
+      || e.key === 'title'
+      || e.key === 'name') {
       this.drawPanel(e);
     }
   }).bind(this)));
@@ -8358,18 +8381,20 @@ ol.control.Globe.prototype.setCenter = function (center, show)
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/**
- * Draw a graticule on the map.
- *
+/** Draw a graticule on the map.
  * @constructor
+ * @author mike-000 https://github.com/mike-000
+ * @author Jean-Marc Viglino https://github.com/viglino
  * @extends {ol.control.CanvasBase}
  * @param {Object=} _ol_control_ options.
  *  @param {ol.projectionLike} options.projection projection to use for the graticule, default EPSG:4326 
  *  @param {number} options.maxResolution max resolution to display the graticule
  *  @param {ol.style.Style} options.style Style to use for drawing the graticule, default black.
- *  @param {number} options.step step beetween lines (in proj units), default 1
+ *  @param {number} options.step step between lines (in proj units), default 1
  *  @param {number} options.stepCoord show a coord every stepCoord, default 1
- *  @param {number} options.spacing spacing beetween lines (in px), default 40px 
+ *  @param {number} options.spacing spacing between lines (in px), default 40px 
+ *  @param {Array<number>} options.intervals array (in desending order) of intervals (in proj units) constraining which lines will be displayed, default is no contraint (any multiple of step can be used)
+ *  @param {number} options.precision precision interval (in proj units) of displayed lines, if the line interval exceeds this more calculations will be used to display curved lines more accurately
  *  @param {number} options.borderWidth width of the border (in px), default 5px 
  *  @param {number} options.margin margin of the border (in px), default 0px 
  *  @param {number} options.formatCoord a function that takes a coordinate and a position and return the formated coordinate
@@ -8393,6 +8418,8 @@ ol.control.Graticule = function(options) {
   this.set('step', options.step || 0.1);
   this.set('stepCoord', options.stepCoord || 1);
   this.set('spacing', options.spacing || 40);
+  this.set('intervals', options.intervals);
+  this.set('precision', options.precision);
   this.set('margin', options.margin || 0);
   this.set('borderWidth', options.borderWidth || 5);
   this.set('stroke', options.stroke!==false);
@@ -8453,6 +8480,22 @@ ol.control.Graticule.prototype._draw = function (e) {
     step *= dt;
     if (step>this.fac) step = Math.round(step/this.fac)*this.fac;
   }
+  var intervals = this.get('intervals');
+  if (Array.isArray(intervals)) {
+    var interval = intervals[0];
+    for (var i = 0, ii = intervals.length; i < ii; ++i) {
+      if (step >= intervals[i]) {
+        break;
+      }
+      interval = intervals[i];
+    }
+    step = interval;
+  }
+  var precision = this.get('precision');
+  var calcStep = step;
+  if (precision > 0 && step > precision) {
+    calcStep = step / Math.ceil(step / precision);
+  }
   xmin = (Math.floor(xmin/step))*step -step;
   ymin = (Math.floor(ymin/step))*step -step;
   xmax = (Math.floor(xmax/step))*step +2*step;
@@ -8480,7 +8523,7 @@ ol.control.Graticule.prototype._draw = function (e) {
       p0 = map.getPixelFromCoordinate(p0);
       if (hasLines) ctx.moveTo(p0[0], p0[1]);
       p = p0;
-      for (y=ymin+step; y<=ymax; y+=step)
+      for (y=ymin+calcStep; y<=ymax; y+=calcStep)
       {	p1 = ol.proj.transform ([x, y], proj, map.getView().getProjection());
         p1 = map.getPixelFromCoordinate(p1);
         if (hasLines) ctx.lineTo(p1[0], p1[1]);
@@ -8494,7 +8537,7 @@ ol.control.Graticule.prototype._draw = function (e) {
       p0 = map.getPixelFromCoordinate(p0);
       if (hasLines) ctx.moveTo(p0[0], p0[1]);
       p = p0;
-      for (x=xmin+step; x<=xmax; x+=step)
+      for (x=xmin+calcStep; x<=xmax; x+=calcStep)
       {	p1 = ol.proj.transform ([x, y], proj, map.getView().getProjection());
         p1 = map.getPixelFromCoordinate(p1);
         if (hasLines) ctx.lineTo(p1[0], p1[1]);
@@ -14150,7 +14193,7 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
  *  @param {string | undefined} options.title Title to use for the search button tooltip, default "Search"
  *  @param {string | undefined} options.reverseTitle Title to use for the reverse geocoding button tooltip, default "Click on the map..."
  *  @param {string | undefined} options.placeholder placeholder, default "Search..."
- *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
+ *  @param {number | undefined} options.typing a delay on each typing to start autocompletion (ms), default -1 (disabled). NB: default nominatim policy forbids auto-complete usage...
  *  @param {integer | undefined} options.minLength minimum length to start searching, default 3
  *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  *
@@ -14160,7 +14203,7 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
 ol.control.SearchNominatim = function(options) {
   options = options || {};
   options.className = options.className || 'nominatim';
-  options.typing = options.typing || 500;
+  options.typing = options.typing || -1;
   options.url = options.url || 'https://nominatim.openstreetmap.org/search';
   options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
   ol.control.SearchJSON.call(this, options);
@@ -17429,7 +17472,7 @@ ol.control.WMSCapabilities.prototype.showCapabilities = function(caps) {
               html: options.data.abstract,
               parent: this._elements.data
             });
-            if (options.data.legend.length) {
+            if (options.data.legend && options.data.legend.length) {
               this._elements.legend.src = options.data.legend[0];
               this._elements.legend.classList.add('visible');
             } else {
@@ -17794,7 +17837,7 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
   var minZoom = Infinity, maxZoom = -Infinity;
   var tmatrix;
   caps.TileMatrixSetLink.forEach(function(tm) {
-    if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857') {
+    if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857' || tm.TileMatrixSet === 'webmercator') {
       tmatrix = tm;
       caps.TileMatrixSet = tm.TileMatrixSet;
     }
@@ -17803,12 +17846,17 @@ ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent)
     this.showError({ type: 'TileMatrix' });
     return;
   }
-  var tilePrefix = tmatrix.TileMatrixSetLimits[0].TileMatrix.split(':').length > 1;
-  tmatrix.TileMatrixSetLimits.forEach(function(tm) {
-    var zoom = tm.TileMatrix.split(':').pop();
-    minZoom = Math.min(minZoom, parseInt(zoom));
-    maxZoom = Math.max(maxZoom, parseInt(zoom));
-  });
+  if (tmatrix.TileMatrixSetLimits) {
+    var tilePrefix = tmatrix.TileMatrixSetLimits[0].TileMatrix.split(':').length > 1;
+    tmatrix.TileMatrixSetLimits.forEach(function(tm) {
+      var zoom = tm.TileMatrix.split(':').pop();
+      minZoom = Math.min(minZoom, parseInt(zoom));
+      maxZoom = Math.max(maxZoom, parseInt(zoom));
+    });
+  } else {
+    minZoom = 0;
+    maxZoom = 20;
+  }
   var view = new ol.View();
   view.setZoom(minZoom);
   var layer_opt = {
@@ -33947,7 +33995,7 @@ ol.Overlay.FixedPopup.prototype.setPixelPosition = function (pix, position) {
     else pix[0] = mapSize[0]/2 + pix[0];
   }
   if (pix) this._pixel = pix;
-  if (map && this._pixel) {
+  if (map && map.getTargetElement() && this._pixel) {
     this.updateRenderedPosition(this._pixel, mapSize);
     // Prevent outside
     var outside = false;
@@ -38261,7 +38309,9 @@ ol.style.FontSymbol.addDefs = function(font, glyphs) {
  */
 ol.style.FontSymbol.prototype.clone = function() {
   var g = new ol.style.FontSymbol({
-    glyph: '',
+    //glyph: this._glyph,
+    text: this._glyph.char,
+    font: this._glyph.font,
     color: this._color,
     fontSize: this._fontSize,
     fontStyle: this._fontStyle,
@@ -38277,8 +38327,6 @@ ol.style.FontSymbol.prototype.clone = function() {
     rotateWithView: this.getRotateWithView()
   });
   g.setScale(this.getScale());
-  g.glyph_ = this._glyph;
-  g.getImage();
   return g;
 };
 /** Get the fill style for the symbol.
@@ -38623,8 +38671,6 @@ ol.style.Photo = function(options) {
     this.getHitDetectionImage = function() {
       return hit;
     }
-    // Calculate image
-    setTimeout(function() { this.getImage(); }.bind(this))
   }
   this._stroke = options.stroke;
   this._fill = options.fill;
@@ -38637,6 +38683,8 @@ ol.style.Photo = function(options) {
   this._onload = options.onload;
   if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
   if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
+  // Calculate image
+  this.getImage();
 };
 ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
 /** Set photo offset
@@ -38821,6 +38869,12 @@ ol.style.Photo.prototype.getImage = function(pixelratio) {
     }
   }
   return canvas;
+};
+/** Returns the photo image
+ * @returns {HTMLImageElement}
+ */
+ol.style.Photo.prototype.getPhoto = function() {
+  return this.img_;
 };
 /**
  * Draw an timage when loaded
@@ -39279,20 +39333,21 @@ ol.style.Shadow.prototype.getImage = function(pixelratio) {
   var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
   // Remove the circle on the canvas
   var context = (canvas.getContext('2d'));
-  context.clearRect(0, 0, canvas.width, canvas.height);
   context.save();
-  context.beginPath();
-    context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
-    context.scale(1,0.5);
-    context.arc(radius, -radius, radius - this._blur, 0, 2 * Math.PI, false);
-    context.fillStyle = '#000';
-    context.shadowColor = this._fill.getColor();
-    context.shadowBlur = 0.7 * this._blur * pixelratio;
-    context.shadowOffsetX = 0;
-    context.shadowOffsetY = 1.5 * radius * pixelratio;
-  context.closePath();
-  context.fill();
-  context.shadowColor = 'transparent';
+    context.resetTransform();
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.beginPath();
+      context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
+      context.scale(1,0.5);
+      context.arc(radius, -radius, radius - this._blur, 0, 2 * Math.PI, false);
+      context.fillStyle = '#000';
+      context.shadowColor = this._fill.getColor();
+      context.shadowBlur = 0.7 * this._blur * pixelratio;
+      context.shadowOffsetX = 0;
+      context.shadowOffsetY = 1.5 * radius * pixelratio;
+    context.closePath();
+    context.fill();
+    context.shadowColor = 'transparent';
   context.restore();
   // Set anchor
   if (!this.getDisplacement) {

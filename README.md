@@ -30,7 +30,7 @@ undo/redo mechanisms
 
 ### NPM packages
 
-ol-ext exist as ES6 modules ([ol-ext](https://www.npmjs.com/package/ol-ext)) and as pure js (deprecated! [openlayers-ext](https://www.npmjs.com/package/openlayers-ext)).
+ol-ext exists as ES6 modules ([ol-ext](https://www.npmjs.com/package/ol-ext)) and as pure js (deprecated! [openlayers-ext](https://www.npmjs.com/package/openlayers-ext)).
 
 ### using ol-ext in a webpack
 
@@ -39,15 +39,20 @@ ol-ext exist as ES6 modules ([ol-ext](https://www.npmjs.com/package/ol-ext)) and
 npm install ol-ext
 ````
 
-See the following examples for more detail on bundling OpenLayers with your application:
+See the following examples for more detail on bundling ol-ext with your application:
 
 * Using [webpack](https://github.com/darkscript/ol-ol-ext-webpack-example)
 * Using [parcel](https://github.com/Viglino/ol-ext-parcel-bundler)
 * Using [angular](https://github.com/Viglino/ol-ext-angular)
 
+**Typescript declarations** are avaliable at [Siedlerchr/types-ol-ext](https://github.com/Siedlerchr/types-ol-ext).
+```
+npm i -D @types/ol-ext@npm:@siedlerchr/types-ol-ext
+```
+
 ### using ol-ext in a web page
 
-* For use in a web page install the npm [openlayers-ext package](https://www.npmjs.com/package/openlayers-ext):
+* For use in a web page install the npm [openlayers-ext package](https://www.npmjs.com/package/openlayers-ext) (deprecated):
 ````
 npm install openlayers-ext
 ````
@@ -66,10 +71,6 @@ The library will be available in the `node_modules/openlayers-ext/dist` director
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>
 ````
-
-### dependencies
-
-Using ol-ext prior to v3.1 some controls still depend on jQuery.
 
 ### supported Browsers
 

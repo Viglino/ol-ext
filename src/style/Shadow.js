@@ -76,24 +76,25 @@ ol_style_Shadow.prototype.getImage = function(pixelratio) {
   // Remove the circle on the canvas
   var context = (canvas.getContext('2d'));
 
-  context.clearRect(0, 0, canvas.width, canvas.height);
   context.save();
-  context.beginPath();
-    context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
+    context.resetTransform();
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.beginPath();
+      context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
 
-    context.scale(1,0.5);
-    context.arc(radius, -radius, radius - this._blur, 0, 2 * Math.PI, false);
-    context.fillStyle = '#000';
+      context.scale(1,0.5);
+      context.arc(radius, -radius, radius - this._blur, 0, 2 * Math.PI, false);
+      context.fillStyle = '#000';
 
-    context.shadowColor = this._fill.getColor();
-    context.shadowBlur = 0.7 * this._blur * pixelratio;
-    context.shadowOffsetX = 0;
-    context.shadowOffsetY = 1.5 * radius * pixelratio;
+      context.shadowColor = this._fill.getColor();
+      context.shadowBlur = 0.7 * this._blur * pixelratio;
+      context.shadowOffsetX = 0;
+      context.shadowOffsetY = 1.5 * radius * pixelratio;
 
-  context.closePath();
-  context.fill();
+    context.closePath();
+    context.fill();
 
-  context.shadowColor = 'transparent';
+    context.shadowColor = 'transparent';
   context.restore();
     
   // Set anchor
