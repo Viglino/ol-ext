@@ -3574,9 +3574,9 @@ ol.legend.Legend.getLegendImage = function(item, canvas, row) {
       var img = s.getImage();
       // Refresh legend on image load
       if (img) {
-        var imgElt = img.getImage();
+        var imgElt = img.getPhoto ? img.getPhoto() : img.getImage();
         // Check image is loaded
-        if (imgElt && imgElt.complete && !imgElt.naturalWidth) {
+        if (imgElt && imgElt instanceof HTMLImageElement && !imgElt.naturalWidth) {
           if (typeof(item.onload) === 'function') {
             imgElt.addEventListener('load', function() {
               setTimeout(function() { 
@@ -38671,8 +38671,6 @@ ol.style.Photo = function(options) {
     this.getHitDetectionImage = function() {
       return hit;
     }
-    // Calculate image
-    setTimeout(function() { this.getImage(); }.bind(this))
   }
   this._stroke = options.stroke;
   this._fill = options.fill;
@@ -38685,6 +38683,8 @@ ol.style.Photo = function(options) {
   this._onload = options.onload;
   if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
   if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
+  // Calculate image
+  this.getImage();
 };
 ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
 /** Set photo offset
@@ -38869,6 +38869,12 @@ ol.style.Photo.prototype.getImage = function(pixelratio) {
     }
   }
   return canvas;
+};
+/** Returns the photo image
+ * @returns {HTMLImageElement}
+ */
+ol.style.Photo.prototype.getPhoto = function() {
+  return this.img_;
 };
 /**
  * Draw an timage when loaded
