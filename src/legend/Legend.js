@@ -378,9 +378,9 @@ ol_legend_Legend.getLegendImage = function(item, canvas, row) {
       var img = s.getImage();
       // Refresh legend on image load
       if (img) {
-        var imgElt = img.getImage();
+        var imgElt = img.getPhoto ? img.getPhoto() : img.getImage();
         // Check image is loaded
-        if (imgElt && imgElt.complete && !imgElt.naturalWidth) {
+        if (imgElt && imgElt instanceof HTMLImageElement && !imgElt.naturalWidth) {
           if (typeof(item.onload) === 'function') {
             imgElt.addEventListener('load', function() {
               setTimeout(function() { 

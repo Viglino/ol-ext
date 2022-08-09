@@ -70,8 +70,6 @@ var ol_style_Photo = function(options) {
     this.getHitDetectionImage = function() {
       return hit;
     }
-    // Calculate image
-    setTimeout(function() { this.getImage(); }.bind(this))
   }
 
   this._stroke = options.stroke;
@@ -89,6 +87,9 @@ var ol_style_Photo = function(options) {
 
   if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
   if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
+
+  // Calculate image
+  this.getImage();
 };
 ol_ext_inherits(ol_style_Photo, ol_style_RegularShape);
 
@@ -286,6 +287,13 @@ ol_style_Photo.prototype.getImage = function(pixelratio) {
   }
 
   return canvas;
+};
+
+/** Returns the photo image
+ * @returns {HTMLImageElement}
+ */
+ol_style_Photo.prototype.getPhoto = function() {
+  return this.img_;
 };
 
 /**
