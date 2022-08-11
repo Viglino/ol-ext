@@ -141,14 +141,14 @@ ol_ext_input_Range.prototype.getValue2 = function() {
 /** Get the current min value
  * @return {number}
  */
-ol_ext_input_Range.prototype.getMin = function() {
-  return parseFloat(this.getValue());
+ ol_ext_input_Range.prototype.getMin = function() {
+  return Math.min(parseFloat(this.getValue()), parseFloat(this.getValue2()));
 }
 
 /** Get the current max value
  * @return {number}
  */
 ol_ext_input_Range.prototype.getMax = function() {
-  return parseFloat(this.getValue2());
+  return Math.max(parseFloat(this.getValue()), parseFloat(this.getValue2()));
 }
 export default ol_ext_input_Range
