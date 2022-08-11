@@ -883,6 +883,7 @@ ol_control_LayerSwitcher.prototype.drawList = function(ul, collection) {
         e.preventDefault();
         var op = Math.max ( 0, Math.min( 1, e.offsetX / ol_ext_element.getStyle(this, 'width')));
         self._getLayerForLI(this.parentNode.parentNode).setOpacity(op);
+        this.parentNode.querySelectorAll('.layerswitcher-opacity-label')[0].innerHTML = Math.round(op * 100);
       },
       parent: d
     });
