@@ -348,6 +348,66 @@ ol.ext.SVGOperation.prototype.appendChild = function(operation) {
   }
 };
 
+/** Text file reader. 
+ * Large files are read in chunks and returned line by line to and progress and prevent ùemory leaks.
+ * @param {Object} options
+ *  @param {number} [options.chunkSize=1E6]
+ */
+ol.ext.TextStreamReader = function(options) {
+  options = options || {};
+  this.chunkSize_ = options.chunkSize || 1E6;
+}
+/** Set reader chunk size
+ * @param {number} [chunkSize=1E6]
+ */
+ol.ext.TextStreamReader.prototype.setChunkSize = function(s) {
+  this.chunkSize_ = s || 1E6;
+}
+/** Read a text file line by line
+ * @param {File} file
+ * @param {function} getLine a function that gets the current line as argument. Return false to stop reading
+ * @param {function} [progress] a function that gets the progress (beetween 0,1) and a boolean set to true on end
+ */
+ol.ext.TextStreamReader.prototype.read = function(file, getLine, progress) {
+  var fileSize = (file.size - 1);
+  var chunkSize = this.chunkSize_;
+  var chunk = 0;
+  var residue = '';
+  // New reader
+  var reader = new FileReader();
+  // Parse chunk line by line
+  reader.onload = function(e) {
+    // Get lines
+    var lines = e.target.result.replace(/\r/g,'').split('\n')
+    lines[0] = residue +  lines[0] || '';
+    residue = lines.pop();
+    // getLine by line
+    for (var i=0; i<lines.length; i++) {
+      if (getLine(lines[i]) === false) {
+        // Stop condition
+        if (progress) progress(chunk / fileSize, true);
+        return;
+      };
+    }
+    if (progress) progress(chunk / fileSize, false);
+    // Red next chunk
+    chunk += chunkSize;
+    if (chunk < fileSize) {
+      readChunk();
+    } else {
+      if (residue) getLine(residue, 1);
+      if (progress) progress(1, true);
+    }
+  }
+  // Read chunk
+  function readChunk() {
+    var blob = file.slice(chunk, chunk + chunkSize);
+    reader.readAsText(blob);
+  }
+  // Start
+  readChunk();
+}
+
 // Prevent overwrite
 if (ol.View.prototype.flyTo)  {
   console.warn('[OL-EXT] ol/View~View.flyTo redefinition')
@@ -3145,14 +3205,14 @@ ol.ext.input.Range.prototype.getValue2 = function() {
 /** Get the current min value
  * @return {number}
  */
-ol.ext.input.Range.prototype.getMin = function() {
-  return parseFloat(this.getValue());
+ ol.ext.input.Range.prototype.getMin = function() {
+  return Math.min(parseFloat(this.getValue()), parseFloat(this.getValue2()));
 }
 /** Get the current max value
  * @return {number}
  */
 ol.ext.input.Range.prototype.getMax = function() {
-  return parseFloat(this.getValue2());
+  return Math.max(parseFloat(this.getValue()), parseFloat(this.getValue2()));
 }
 
 /** Checkbox input
@@ -6019,6 +6079,7 @@ ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
         e.preventDefault();
         var op = Math.max ( 0, Math.min( 1, e.offsetX / ol.ext.element.getStyle(this, 'width')));
         self._getLayerForLI(this.parentNode.parentNode).setOpacity(op);
+        this.parentNode.querySelectorAll('.layerswitcher-opacity-label')[0].innerHTML = Math.round(op * 100);
       },
       parent: d
     });
