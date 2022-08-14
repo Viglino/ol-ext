@@ -67,8 +67,24 @@ var map=new ol.Map({	target: 'map',
   layers: [ new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' }) ]
 });
 
+var idw = new ol.source.IDW({
+  // Source that contains the data
+  source: new ol.source.Vector(),
+  // Use val as weight property
+  weight: function(f) { return f.getGeometry().getCoordinates()[2] / max * 100; }
+});
+var max = 1;
+idw.getSource().on('addfeature', function(e) {
+  max = Math.max(max, e.feature.getGeometry().getCoordinates()[2]);
+})
+map.addLayer (new ol.layer.Image({
+  title: 'IDW',
+  source: idw,
+  opacity: .5
+}));
+
 var vector = new ol.layer.Vector({
-  source: new ol.source.Vector
+  source: idw.getSource()
 });
 map.addLayer(vector);
 
@@ -90,7 +106,6 @@ window.addEventListener('drop', function(e) {
 function parseFile(files) {
   var file = files.pop();
   if (!file) return;
-  var reader = new ol.ext.TextStreamReader();
 
   dialog.show({
     title: 'Loading...',
@@ -99,13 +114,14 @@ function parseFile(files) {
   console.time();
 
   var dem = {};
-  var step = 50;
+  var tileSize = 50;
 
-  reader.read(file, (line) => {
-    // Read a new line
+  var reader = new ol.ext.TextStreamReader({ file: file });
+  reader.readLines((line) => {
+    // Read a new line / collect coords
     var d = line.split(',');
-    if (d.length) {
-      var id = Math.round(d[0]/step) + '-' + Math.round(d[1]/step);
+    if (d.length > 1) {
+      var id = Math.round(d[0]/tileSize) + '-' + Math.round(d[1]/tileSize);
       if (!dem[id]) {
         dem[id] = [
           parseFloat(d[0]),
@@ -117,6 +133,7 @@ function parseFile(files) {
   }, function(t, end) {
     // on end
     if (end) {
+      // Add features
       var features = [];
       Object.keys(dem).forEach(function(d) {
         var pt = new ol.geom.Point(dem[d])
@@ -127,6 +144,7 @@ function parseFile(files) {
       map.getView().fit(vector.getSource().getExtent());
       dialog.close();
       console.timeEnd();
+      // read nex tile
       if (files.length) parseFile(files);
     } else {
       // On progress
