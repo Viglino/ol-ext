@@ -25,6 +25,7 @@
 	<!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 	<script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+  
 	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 	
 	<!-- ol-ext -->
@@ -136,6 +137,24 @@
     if ($('#random').prop('checked')) $('#value').val(Math.round(Math.random()*100));
   })
   map.addInteraction(draw);
+
+  // Add a set of features
+  function addFeatures(size) {
+    size = size || 100;
+    var ext = map.getView().calculateExtent();
+    var dx = ext[2]-ext[0];
+    var dy = ext[3]-ext[1];
+    var features = [];
+    for (var i=0; i<size; ++i){
+      var f = new ol.Feature(new ol.geom.Point([
+        ext[0]+dx*Math.random(), 
+        ext[1]+dy*Math.random()
+      ]));
+      f.set('val', Math.round(Math.random()*100));
+      features.push(f);
+    }
+    idw.getSource().addFeatures(features)
+  }
 
 	</script>
 </body>

@@ -30345,7 +30345,7 @@ ol.source.IDW.prototype.calculateImage = function(extent, resolution, pixelRatio
   for (y = 0; y < height; y++) {
     for (x = 0; x < width; x++) {
       var t = 0, b = 0;
-      for (var i = 0; i < pts.length; ++i) {
+      for(var i = 0; i < pts.length; ++i) {
         var dx = x -  pts[i][0];
         var dy = y -  pts[i][1];
         var d = dx*dx + dy*dy;
