@@ -7656,7 +7656,7 @@ ol.control.EditBar.prototype._setSelectInteraction = function (options) {
     });
     this.addControl(selectCtrl);
     sel.on('change:active', function() {
-      sel.getFeatures().clear();
+      if (!sel.getActive()) sel.getFeatures().clear();
     });
   }
 };
