@@ -76,6 +76,8 @@
       <br/>
       The default weight convertion function converts values from 0 (blue) to 100 (red). 
       You can use values up to 128 (magenta). Upper values turn around the color wheel.
+      <br/>
+      The <i>worker</i> option let you calculate the distance map in a worker.
     </p>
     <ul>
     </ul>
@@ -107,6 +109,8 @@
 
   // IDW source
   var idw = new ol.source.IDW({
+    // useWorker: true,
+    // scale: 8,
     // Source that contains the data
     source: new ol.source.Vector(),
     // Use val as weight property
@@ -117,6 +121,7 @@
     source: idw,
     opacity: .5
   }));
+
   map.addLayer(new ol.layer.Vector({
     title: 'source',
     source: idw.getSource(),
