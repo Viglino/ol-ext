@@ -400,7 +400,7 @@ ol.ext.TextStreamReader.prototype.readLines = function(getLine, progress) {
         // Stop condition
         if (progress) progress(this.chunk_ / this.fileSize_, true);
         return;
-      };
+      }
     }
     if (progress) progress(this.chunk_ / this.fileSize_, false);
     // Red next chunk
@@ -539,6 +539,51 @@ ol.View.prototype.takeTour = function(destinations, options) {
     }
   }.bind(this)
   next(true);
+};
+
+/** Worker helper to create a worker from code
+ * @constructor
+ * @param {function} mainFn main worker function
+ * @param {object} options
+ *  @param {function} [options.onMessage] a callback function to get worker result
+ */
+ol.ext.Worker = function(mainFn, options) {
+  var lines = ['var mainFn = '+ mainFn.toString() + `
+    self.addEventListener("message", function(event) {
+      var result = mainFn(event);
+      self.postMessage(result);
+    });`
+  ];
+  this.code_ =  URL.createObjectURL(new Blob(lines, {type: 'text/javascript'}));
+  this.onMessage_ = options.onMessage;
+  this.start();
+};
+/** Terminate current worker and start a new one
+ */
+ol.ext.Worker.prototype.start = function() {
+  if (this.worker) this.worker.terminate();
+  this.worker = new Worker(this.code_);
+  this.worker.addEventListener('message', function(e) {
+    this.onMessage_(e.data);
+  }.bind(this));
+};
+/** Terminate a worker */
+ol.ext.Worker.prototype.terminate = function() {
+  this.worker.terminate();
+};
+/** Post a new message to the worker
+ * @param {object} message
+ * @param {boolean} [restart=false] stop the worker and restart a new one
+ */
+ol.ext.Worker.prototype.postMessage = function(message, restart) {
+  if (restart) this.start();
+  this.worker.postMessage(message);
+};
+/** Set onMessage callback
+ * @param {function} fn a callback function to get worker result
+ */
+ol.ext.Worker.prototype.onMessage = function(fn) {
+  this.onMessage_ = fn
 };
 
 /** Converts an RGB color value to HSL.
@@ -15787,12 +15832,13 @@ ol.control.Swipe.prototype.precomposeLeft = function(e) {
       var topRight = this._transformPt(e, [mapSize[0], 0]);
       var fullWidth = topRight[0] - bottomLeft[0];
       var fullHeight = topRight[1] - bottomLeft[1];
+      var width, height;
       if (this.get('orientation') === "vertical") {
-        var width = Math.round(fullWidth * this.get('position'));
-        var height = fullHeight;
+        width = Math.round(fullWidth * this.get('position'));
+        height = fullHeight;
       } else {
-        var width = fullWidth;
-        var height = Math.round((fullHeight * this.get('position')));
+        width = fullWidth;
+        height = Math.round((fullHeight * this.get('position')));
         bottomLeft[1] += fullHeight - height;
       }
       ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
@@ -15834,13 +15880,14 @@ ol.control.Swipe.prototype.precomposeRight = function(e) {
       var topRight = this._transformPt(e, [mapSize[0], 0]);
       var fullWidth = topRight[0] - bottomLeft[0];
       var fullHeight = topRight[1] - bottomLeft[1];
+      var width, height;
       if (this.get('orientation') === "vertical") {
-        var height = fullHeight;
-        var width = Math.round(fullWidth * (1-this.get('position')));
+        height = fullHeight;
+        width = Math.round(fullWidth * (1-this.get('position')));
         bottomLeft[0] += fullWidth - width;
       } else {
-        var width = fullWidth;
-        var height = Math.round(fullHeight * (1-this.get('position')));
+        width = fullWidth;
+        height = Math.round(fullHeight * (1-this.get('position')));
       }
       ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
     }
@@ -25647,7 +25694,7 @@ ol.interaction.Split.prototype.setMap = function(map) {
 ol.interaction.Split.prototype.getSources = function() {
   if (!this.sources_ && this.getMap()) {
     var sources = []
-    function getSources(layers) {
+    var getSources = function(layers) {
       layers.forEach(function(layer) {
         if (layer.getVisible()) {
           if (layer.getSource && layer.getSource() instanceof ol.source.Vector) {
@@ -30232,8 +30279,11 @@ ol.source.HexBin.prototype.getHexFeatures = function () {
  * @see https://en.wikipedia.org/wiki/Inverse_distance_weighting
  * @constructor 
  * @extends {ol.source.ImageCanvas}
+ * @fire drawstart
+ * @fire drawend
  * @param {*} [options]
  *  @param {ol.source.vector} options.source a source to interpolate
+ *  @param {boolean} [options.useWorker=false] use worker to calculate the distance map (may cause flickering on small data sets). Source will fire drawstart, drawend while calculating
  *  @param {number} [options.scale=4] scale factor, use large factor to enhance performances (but minor accuracy)
  *  @param {string|function} options.weight The feature attribute to use for the weight or a function that returns a weight from a feature. Weight values should range from 0 to 100. Default use the weight attribute of the feature.
  */
@@ -30247,6 +30297,12 @@ ol.source.IDW = function(options) {
     this.changed();
   }.bind(this));
   ol.source.ImageCanvas.call (this, options);
+  if (options.useWorker) {
+    this.worker = new ol.ext.Worker(this.computeImage, {
+      onMessage:  this.onImageData.bind(this)
+    })
+  }
+  this._position = { extent: [], resolution: 0 }
   this.set('scale', options.scale || 4);
   this._weight = typeof(options.weight) === 'function' ? options.weight : function(f) { return f.get(options.weight||'weight'); }
 };
@@ -30255,34 +30311,6 @@ ol.ext.inherits(ol.source.IDW, ol.source.ImageCanvas);
  */
 ol.source.IDW.prototype.getSource = function() {
   return this._source;
-};
-/** Convert hue to rgb factor
- * @param {number} h
- * @return {number}
- * @private
- */
-ol.source.IDW.prototype.hue2rgb = function(h) {
-  h = (h + 6) % 6;
-  if (h < 1) return Math.round(h * 255);
-  if (h < 3) return 255;
-  if (h < 4) return Math.round((4 - h) * 255);
-  return 0;
-};
-/** Get color for a value. Return an array of RGBA values.
- * @param {number} v value
- * @returns {Array<number>} 
- * @api
- */
-ol.source.IDW.prototype.getColor = function(v) {
-  // Get hue
-  var h = 4 - (0.04 * v);
-  // Convert to RGB
-  return [
-    this.hue2rgb(h + 2), 
-    this.hue2rgb(h),
-    this.hue2rgb(h - 2),
-    255
-  ]
 };
 /** Apply the value to the map RGB. Overwrite this function to set your own colors.
  * @param {number} v value
@@ -30309,37 +30337,40 @@ ol.source.IDW.prototype.getValue = function(coord) {
   var v = this._canvas.getContext('2d').getImageData(Math.round(pt[0]), Math.round(pt[1]), 1, 1).data;
   return (v);
 };
-/** Calculate IDW at extent / resolution
- * @param {ol/extent/Extent} extent
- * @param {number} resolution
- * @param {number} pixelRatio
- * @param {ol/size/Size} size
- * @return {HTMLCanvasElement}
- * @private
- */
-ol.source.IDW.prototype.calculateImage = function(extent, resolution, pixelRatio, size) {
-  if (!this._source) return this._canvas;
-  // Calculation canvas at small resolution
-  var canvas = document.createElement('CANVAS');
-  var width = canvas.width = Math.round(size[0] / (this.get('scale')*pixelRatio));
-  var height = canvas.height = Math.round(size[1] / (this.get('scale')*pixelRatio));
-  var ctx = canvas.getContext('2d');
-  var imageData = ctx.getImageData(0, 0, width, height);
-  // Transform coords to pixel / value
-  var pts = [];
-  var dw = width / (extent[2]-extent[0]);
-  var dh = height / (extent[1]-extent[3]);
-  var tr = this.transform = function(xy, v) {
+/** Compute image data */
+ol.source.IDW.prototype.computeImage = function(e) {
+  /** Convert hue to rgb factor
+   * @param {number} h
+   * @return {number}
+   * @private
+   */
+  var hue2rgb = function(h) {
+    h = (h + 6) % 6;
+    if (h < 1) return Math.round(h * 255);
+    if (h < 3) return 255;
+    if (h < 4) return Math.round((4 - h) * 255);
+    return 0;
+  };
+  /** Get color for a value. Return an array of RGBA values.
+   * @param {number} v value
+   * @returns {Array<number>} 
+   * @api
+   */
+  var getColor = function(v) {
+    // Get hue
+    var h = 4 - (0.04 * v);
+    // Convert to RGB
     return [
-      (xy[0]-extent[0]) * dw,
-      (xy[1]-extent[3]) * dh,
-      v
-    ];
-  }
-  // Get features / weight
-  this._source.getFeatures().forEach(function(f) {
-    pts.push(tr(f.getGeometry().getFirstCoordinate(), this._weight(f)));
-  }.bind(this));
+      hue2rgb(h + 2), 
+      hue2rgb(h),
+      hue2rgb(h - 2),
+      255
+    ]
+  };
+  var pts = e.data.pts;
+  var width = e.data.width;
+  var height = e.data.height;
+  var imageData = new Uint8ClampedArray(width*height*4);
   // Compute image
   var x, y;
   for (y = 0; y < height; y++) {
@@ -30359,20 +30390,92 @@ ol.source.IDW.prototype.calculateImage = function(extent, resolution, pixelRatio
         t += inv * pts[i][2];
         b += inv;
       }
-      this.setData(t/b, imageData.data, (y*width + x)*4);
+      // Set color
+      var color = getColor(t/b);
+      // Convert to RGB
+      var pos = (y*width + x)*4;
+      imageData[pos] = color[0];
+      imageData[pos+1] = color[1];
+      imageData[pos+2] = color[2];
+      imageData[pos+3] = color[3];
     }
   }
-  ctx.putImageData(imageData, 0, 0);
-  /* DEBUG : Draw points * /
-  pts.forEach(function(p) {
-    ctx.fillRect(p[0], p[1], 1, 1);
-  });
-  /**/
-  // Draw full resolution canvas
-  this._canvas.width = Math.round(size[0]);
-  this._canvas.height = Math.round(size[1]);
-  this._canvas.getContext('2d').drawImage(canvas, 0, 0, size[0], size[1]);
+  return { type: 'image', data: imageData, width: width, height: height };
+}
+/** Calculate IDW at extent / resolution
+ * @param {ol/extent/Extent} extent
+ * @param {number} resolution
+ * @param {number} pixelRatio
+ * @param {ol/size/Size} size
+ * @return {HTMLCanvasElement}
+ * @private
+ */
+ol.source.IDW.prototype.calculateImage = function(extent, resolution, pixelRatio, size) {
+  if (!this._source) return this._canvas;
+  if (this._updated) {
+    this._updated = false;
+    return this._canvas
+  }
+  // Calculation canvas at small resolution
+  var width =  Math.round(size[0] / (this.get('scale')*pixelRatio));
+  var height = Math.round(size[1] / (this.get('scale')*pixelRatio));
+  // Transform coords to pixel / value
+  var pts = [];
+  var dw = width / (extent[2]-extent[0]);
+  var dh = height / (extent[1]-extent[3]);
+  var tr = this.transform = function(xy, v) {
+    return [
+      (xy[0]-extent[0]) * dw,
+      (xy[1]-extent[3]) * dh,
+      v
+    ];
+  }
+  // Get features / weight
+  this._source.getFeatures().forEach(function(f) {
+    pts.push(tr(f.getGeometry().getFirstCoordinate(), this._weight(f)));
+  }.bind(this));
+  if (this.worker) {
+    // kill old worker and star new one
+    this.worker.postMessage({ pts: pts, width: width, height: height }, true);
+    this.dispatchEvent({ type: 'drawstart' })
+    // Move the canvas position meanwhile
+    if (this._canvas.width !== Math.round(size[0]) 
+      || this._canvas.height !== Math.round(size[1])
+      || this._position.resolution !== resolution 
+      || this._position.extent[0] !== extent[0]
+      || this._position.extent[1] !== extent[1]
+    ) {
+      this._canvas.width = Math.round(size[0])
+      this._canvas.height = Math.round(size[1]);
+    }
+    this._position.extent = extent;
+    this._position.resolution = resolution;
+  } else {
+    this._canvas.width = Math.round(size[0]);
+    this._canvas.height = Math.round(size[1]);
+    var imageData = this.computeImage({ data: { pts: pts, width: width, height: height } })
+    this.onImageData(imageData);
+  }
   return this._canvas;
+}
+/** Display data when ready
+ * @private
+ */
+ol.source.IDW.prototype.onImageData = function(imageData) {
+  // Calculation canvas at small resolution
+  var canvas = this._internal = document.createElement('CANVAS');
+  canvas.width = imageData.width;
+  canvas.height = imageData.height;
+  var ctx = canvas.getContext('2d');
+  ctx.putImageData(new ImageData(imageData.data, imageData.width, imageData.height), 0, 0);
+  // Draw full resolution canvas
+  this._canvas.getContext('2d').drawImage(canvas, 0, 0, this._canvas.width, this._canvas.height);
+  // Force redraw
+  if (this.worker) {
+    this.dispatchEvent({ type: 'drawend' })
+    this._updated = true;
+    this.changed();
+  }
 }
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,

@@ -309,15 +309,16 @@ ol_control_Swipe.prototype.precomposeLeft = function(e) {
       // get render coordinates and dimensions given CSS coordinates
       var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
       var topRight = this._transformPt(e, [mapSize[0], 0]);
-    
+      
       var fullWidth = topRight[0] - bottomLeft[0];
       var fullHeight = topRight[1] - bottomLeft[1];
+      var width, height;
       if (this.get('orientation') === "vertical") {
-        var width = Math.round(fullWidth * this.get('position'));
-        var height = fullHeight;
+        width = Math.round(fullWidth * this.get('position'));
+        height = fullHeight;
       } else {
-        var width = fullWidth;
-        var height = Math.round((fullHeight * this.get('position')));
+        width = fullWidth;
+        height = Math.round((fullHeight * this.get('position')));
         bottomLeft[1] += fullHeight - height;
       }
       ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
@@ -364,13 +365,14 @@ ol_control_Swipe.prototype.precomposeRight = function(e) {
     
       var fullWidth = topRight[0] - bottomLeft[0];
       var fullHeight = topRight[1] - bottomLeft[1];
+      var width, height;
       if (this.get('orientation') === "vertical") {
-        var height = fullHeight;
-        var width = Math.round(fullWidth * (1-this.get('position')));
+        height = fullHeight;
+        width = Math.round(fullWidth * (1-this.get('position')));
         bottomLeft[0] += fullWidth - width;
       } else {
-        var width = fullWidth;
-        var height = Math.round(fullHeight * (1-this.get('position')));
+        width = fullWidth;
+        height = Math.round(fullHeight * (1-this.get('position')));
       }
       ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
     }

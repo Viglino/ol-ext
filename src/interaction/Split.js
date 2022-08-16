@@ -148,7 +148,7 @@ ol_interaction_Split.prototype.setMap = function(map) {
 ol_interaction_Split.prototype.getSources = function() {
   if (!this.sources_ && this.getMap()) {
     var sources = []
-    function getSources(layers) {
+    var getSources = function(layers) {
       layers.forEach(function(layer) {
         if (layer.getVisible()) {
           if (layer.getSource && layer.getSource() instanceof ol_source_Vector) {

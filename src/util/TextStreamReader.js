@@ -5,7 +5,7 @@
  *  @param {File} [options.file]
  *  @param {number} [options.chunkSize=1E6]
  */
-ol_ext_TextStreamReader = function(options) {
+var ol_ext_TextStreamReader = function(options) {
   options = options || {};
   this.setChunkSize(options.chunkSize);
   this.setFile(options.file);
@@ -55,7 +55,7 @@ ol_ext_TextStreamReader.prototype.readLines = function(getLine, progress) {
         // Stop condition
         if (progress) progress(this.chunk_ / this.fileSize_, true);
         return;
-      };
+      }
     }
     if (progress) progress(this.chunk_ / this.fileSize_, false);
     // Red next chunk
