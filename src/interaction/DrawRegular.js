@@ -52,7 +52,7 @@ var ol_interaction_DrawRegular = function(options) {
   // Allow rotation when centered + square
   this.canRotate_ = (options.canRotate !== false);
   // Specify custom geometry name
-  this.geometryName_ = options.geometryName;
+  this.geometryName_ = options.geometryName || 'geometry';
 
   // Number of sides (default=0: circle)
   this.setSides(options.sides);
@@ -390,7 +390,7 @@ ol_interaction_DrawRegular.prototype.start_ = function(evt) {
     this.center_ = evt.coordinate;
     this.coord_ = null;
     var f = this.feature_ = new ol_Feature({});
-    f.setGeometryName(this.geometryName_);
+    f.setGeometryName(this.geometryName_ || 'geometry');
     f.setGeometry(new ol_geom_Polygon([[evt.coordinate,evt.coordinate,evt.coordinate]]));
     this.drawSketch_(evt);
     this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
