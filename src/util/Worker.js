@@ -12,7 +12,7 @@ var ol_ext_Worker = function(mainFn, options) {
       self.postMessage(result);
     });`
   ];
-  this.code_ =  URL.createObjectURL(new Blob(lines, {type: 'text/javascript'}));
+  this.code_ = URL.createObjectURL(new Blob(lines, {type: 'text/javascript'}));
   this.onMessage_ = options.onMessage;
   this.start();
 };

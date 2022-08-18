@@ -554,7 +554,7 @@ ol.ext.Worker = function(mainFn, options) {
       self.postMessage(result);
     });`
   ];
-  this.code_ =  URL.createObjectURL(new Blob(lines, {type: 'text/javascript'}));
+  this.code_ = URL.createObjectURL(new Blob(lines, {type: 'text/javascript'}));
   this.onMessage_ = options.onMessage;
   this.start();
 };
@@ -22140,7 +22140,7 @@ ol.interaction.DrawRegular = function(options) {
   // Allow rotation when centered + square
   this.canRotate_ = (options.canRotate !== false);
   // Specify custom geometry name
-  this.geometryName_ = options.geometryName;
+  this.geometryName_ = options.geometryName || 'geometry';
   // Number of sides (default=0: circle)
   this.setSides(options.sides);
   // Style
@@ -22451,7 +22451,7 @@ ol.interaction.DrawRegular.prototype.start_ = function(evt) {
     this.center_ = evt.coordinate;
     this.coord_ = null;
     var f = this.feature_ = new ol.Feature({});
-    f.setGeometryName(this.geometryName_);
+    f.setGeometryName(this.geometryName_ || 'geometry');
     f.setGeometry(new ol.geom.Polygon([[evt.coordinate,evt.coordinate,evt.coordinate]]));
     this.drawSketch_(evt);
     this.dispatchEvent({ type:'drawstart', feature: f, pixel: evt.pixel, coordinate: evt.coordinate });
