@@ -6,9 +6,11 @@ import {asArray as ol_color_asArray} from 'ol/color'
  * @param {number} [round=100]
  * @returns {Array<number>} hsl as h:[0,360], s:[0,100], l:[0,100]
  */
-var ol_color_toHSL = function(rgb, round) {
-  if (round===undefined) round = 100;
-  if (!Array.isArray(rgb)) rgb = ol_color_asArray(rgb);
+function ol_color_toHSL(rgb, round) {
+  if (round === undefined)
+    round = 100;
+  if (!Array.isArray(rgb))
+    rgb = ol_color_asArray(rgb);
   var r = rgb[0] / 255;
   var g = rgb[1] / 255;
   var b = rgb[2] / 255;
@@ -31,11 +33,12 @@ var ol_color_toHSL = function(rgb, round) {
   }
 
   var hsl = [
-    Math.round(h*60*round)/round,
-    Math.round(s*100*round)/round,
-    Math.round(l*100*round)/round
+    Math.round(h * 60 * round) / round,
+    Math.round(s * 100 * round) / round,
+    Math.round(l * 100 * round) / round
   ];
-  if (rgb.length>3) hsl[3] = rgb[3];
+  if (rgb.length > 3)
+    hsl[3] = rgb[3];
   return hsl;
 }
 
@@ -123,8 +126,9 @@ var ol_color_toHSV = function(rgb, round) {
  * @param {number} [round=1000]
  * @returns {Array<number>} rgb
  */
-var ol_color_fromHSV = function(hsv, round) {
-  if (round===undefined) round = 1000
+function ol_color_fromHSV(hsv, round) {
+  if (round === undefined)
+    round = 1000;
   var h = hsv[0] / 360;
   var s = hsv[1] / 100;
   var v = hsv[2] / 100;
@@ -146,11 +150,12 @@ var ol_color_fromHSV = function(hsv, round) {
   }
 
   var rgb = [
-    Math.round(r * 255*round) / round,
-    Math.round(g * 255*round) / round,
-    Math.round(b * 255*round) / round
+    Math.round(r * 255 * round) / round,
+    Math.round(g * 255 * round) / round,
+    Math.round(b * 255 * round) / round
   ];
-  if (hsv.length>3) rgb[3] = hsv[3];
+  if (hsv.length > 3)
+    rgb[3] = hsv[3];
   return rgb;
 }
 
@@ -158,7 +163,7 @@ var ol_color_fromHSV = function(hsv, round) {
  * @param {ol/color~Color|string} rgb
  * @returns {string}
  */
-var ol_color_toHexa = function(rgb) {
+function ol_color_toHexa(rgb) {
   return '#' + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
 }
 

@@ -1,4 +1,5 @@
-# ol-ext
+# ol-ex
+
 *Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol)*.
 
 [![](https://img.shields.io/npm/v/ol-ext.svg)](https://www.npmjs.com/package/ol-ext)
@@ -7,18 +8,18 @@
 ![](https://img.shields.io/npm/dw/ol-ext)
 ![](https://img.shields.io/npm/l/ol-ext.svg)
 
-[ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions, popup to use with Openlayers.    
+[ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions, popup to use with Openlayers.
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
 
-**Keywords:** 
+**Keywords:**
 Storymap,
 Timeline control,
-CSS popup, 
-Font Awesome symbols, 
-charts for statistical map (pie/bar), 
+CSS popup,
+Font Awesome symbols,
+charts for statistical map (pie/bar),
 layer switcher,
 control bar,
-wikipedia layer, 
+wikipedia layer,
 legend control,
 search,
 animations,
@@ -35,6 +36,7 @@ ol-ext exists as ES6 modules ([ol-ext](https://www.npmjs.com/package/ol-ext)) an
 ### using ol-ext in a webpack
 
 * For use with webpack, Rollup, Browserify, or other module bundlers, install the npm [ol-ext package](https://www.npmjs.com/package/ol-ext) and link to the node_modules directory:
+
 ````
 npm install ol-ext
 ````
@@ -46,6 +48,7 @@ See the following examples for more detail on bundling ol-ext with your applicat
 * Using [angular](https://github.com/Viglino/ol-ext-angular)
 
 **Typescript declarations** are avaliable at [Siedlerchr/types-ol-ext](https://github.com/Siedlerchr/types-ol-ext).
+
 ```
 npm i -D @types/ol-ext@npm:@siedlerchr/types-ol-ext
 ```
@@ -53,10 +56,13 @@ npm i -D @types/ol-ext@npm:@siedlerchr/types-ol-ext
 ### using ol-ext in a web page
 
 * For use in a web page install the npm [openlayers-ext package](https://www.npmjs.com/package/openlayers-ext) (deprecated):
+
 ````
 npm install openlayers-ext
 ````
+
 The library will be available in the `node_modules/openlayers-ext/dist` directory. You can find individual files in the `node_modules/openlayers-ext/lib` directory.
+
 * You can download the [scripts](dist) of the ./dist directory of the repository in your project and insert the .js and .css in your page.
 * If you just want to add a `<script>` tag to test things out, you can link directly to the builds from the github rawgit (not recommended in production).
 * For compatibility with older browsers and platforms (like Internet Explorer down to version 9 and Android 4.x), the OpenLayers needs to be transpiled (e.g. using Babel) and bundled with polyfills for `requestAnimationFrame`, `Element.prototype.classList`, `Object.assign`and `URL`.
@@ -75,7 +81,6 @@ The library will be available in the `node_modules/openlayers-ext/dist` director
 ### supported Browsers
 
 ol-ext runs on all modern browsers that support HTML5 and ECMAScript 5. This includes Chrome, Firefox, Safari and Edge. For older browsers and platforms like Internet Explorer (down to version 9) and Android 4.x, polyfills for for `requestAnimationFrame`, `Element.prototype.classList`, `Object.assign`and `URL`.
-
 
 ## Documentation
 
@@ -99,7 +104,7 @@ ol-ext is licensed under the French Opensource **BSD** compatible CeCILL-B FREE 
 Some resources (mapping services and API) used in this sofware may have a specific license.  
 You must check before use.
 
-> [Full text license in English](https://cecill.info/licences/Licence_CeCILL-B_V1-en.txt)    
+> [Full text license in English](https://cecill.info/licences/Licence_CeCILL-B_V1-en.txt)
 > [Full text license in French](https://cecill.info/licences/Licence_CeCILL-B_V1-fr.txt)
 
 For convenience you can use the BSD licence instead when publish content to webpack.
