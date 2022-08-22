@@ -89,7 +89,7 @@ ol.ext.Ajax.get({
 });
 
 // Load base styles
-['standard', 'gris', 'accentue', 'attenue', 'classique', 'epure'].forEach(function(s) {
+['standard', 'gris', 'transparent', 'accentue', 'attenue', 'classique', 'epure'].forEach(function(s) {
   var sel = document.getElementById('styles');
   ol.ext.element.create('OPTION', {
     value: s,

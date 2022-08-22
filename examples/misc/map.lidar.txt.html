@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>ol-ext: Tinkerbell interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Add some magic to yours ol3 maps" />
+  <meta name="keywords" content="ol3, interaction, Tinker Bell, sparkle, cursor" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  
+  <!-- filesaver-js -->
+	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <!-- Proj4 -->
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14/proj4.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    [data-loading] {
+      opacity: .5
+    }
+    #map {
+      position: fixed;
+      top: 5em;
+      left: 0;
+      bottom: .5em;
+      right: 0;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: </h1>
+  </a>
+  <div class="info">
+  </div>
+
+  <!-- the map -->
+  <div id="map"></div>
+
+<script type="text/javascript">
+// Define proj4 projection
+proj4.defs("EPSG:2154","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+if (ol.proj.proj4 && ol.proj.proj4.register) ol.proj.proj4.register(proj4);
+
+var plan = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
+plan.addFilter(new ol.filter.CSS({ filter: 'grayscale(1)'}))
+// The map
+var map=new ol.Map({	target: 'map',
+  view: new ol.View({
+    zoom: 6,
+    center: [267702, 5868654]
+  }),
+  layers: [ plan ]
+});
+
+var idw = new ol.source.IDW({
+  useWorker: true,
+  scale: 10,
+  // Source that contains the data
+  source: new ol.source.Vector(),
+  // Use val as weight property
+  weight: function(f) { return (f.getGeometry().getCoordinates()[2] - min) / (max - min) * 100; }
+});
+var max = -Infinity;
+var min = Infinity;
+idw.getSource().on('addfeature', function(e) {
+  max = Math.max(max, e.feature.getGeometry().getCoordinates()[2]);
+  min = Math.min(min, e.feature.getGeometry().getCoordinates()[2]);
+})
+map.addLayer (new ol.layer.Image({
+  title: 'IDW',
+  source: idw,
+  opacity: .5
+}));
+
+var vector = new ol.layer.Vector({
+  title: 'Points',
+  visible: false,
+  source: idw.getSource()
+});
+map.addLayer(vector);
+
+map.addControl(new ol.control.LayerSwitcher);
+
+var dialog = new ol.control.Dialog();
+map.addControl(dialog);
+
+window.addEventListener('dragenter', function(e) { e.preventDefault(); });
+window.addEventListener('dragover', function(e) { e.preventDefault(); });
+window.addEventListener('dragleave', function(e) { e.preventDefault(); });
+window.addEventListener('drop', function(e) { 
+  e.preventDefault(); 
+  if (e.dataTransfer) {
+    var files = [];
+    for (var i=0; i < e.dataTransfer.files.length; i++) files.push(e.dataTransfer.files[i]);
+    parseFile(files);
+  }
+});
+
+function parseFile(files) {
+  var file = files.pop();
+  if (!file) return;
+
+  dialog.show({
+    title: 'Loading...',
+    max: 1
+  })
+  console.time();
+
+  var dem = {};
+  var tileSize = 50;
+
+  var reader = new ol.ext.TextStreamReader({ file: file });
+  reader.readLines((line) => {
+    // Read a new line / collect coords
+    var d = line.split(',');
+    if (d.length > 1) {
+      var id = Math.round(d[0]/tileSize) + '-' + Math.round(d[1]/tileSize);
+      if (!dem[id]) {
+        dem[id] = [
+          parseFloat(d[0]),
+          parseFloat(d[1]),
+          parseFloat(d[2])
+        ]
+      }
+    }
+  }, function(t, end) {
+    // on end
+    if (end) {
+      // Add features
+      var features = [];
+      Object.keys(dem).forEach(function(d) {
+        var pt = new ol.geom.Point(dem[d])
+        pt.transform('EPSG:2154', map.getView().getProjection())
+        features.push(new ol.Feature(pt));
+      });
+      vector.getSource().addFeatures(features);
+      map.getView().fit(vector.getSource().getExtent());
+      dialog.close();
+      console.timeEnd();
+      // read nex tile
+      if (files.length) parseFile(files);
+    } else {
+      // On progress
+      dialog.setProgress(t);
+    }
+  })
+}
+</script>
+
+</body>
+</html>
