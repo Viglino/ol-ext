@@ -45,7 +45,7 @@ class ol_ext_SVGFilter_Laplacian {
     else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
   }
 
-};
+}
 ol_ext_inherits(ol_ext_SVGFilter_Laplacian, ol_ext_SVGFilter);
 
 export default ol_ext_SVGFilter_Laplacian

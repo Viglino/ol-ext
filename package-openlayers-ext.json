@@ -4,7 +4,7 @@
   "description": "A set of cool extensions for OpenLayers (ol).",
   "main": "index.js",
   "peerDependencies": {
-    "ol": ">= 4.6.5"
+    "ol": ">= 7.0.0"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
