@@ -19,22 +19,22 @@ ol_ext_olVersion = parseInt(ol_ext_olVersion[0])*100 + parseInt(ol_ext_olVersion
  * @param {ol.style.Style} s
  * @return {ol.style.Style}
  */
-var ol_ext_getVectorContextStyle = function(e, s) {
+function ol_ext_getVectorContextStyle(e, s) {
   var ratio = e.frameState.pixelRatio;
 
   // Bug with Icon images
   if (ol_ext_olVersion > 605 && ratio !== 1 && (s.getImage() instanceof ol_style_Icon)) {
     s = s.clone();
     var img = s.getImage();
-    img.setScale(img.getScale()*ratio);
+    img.setScale(img.getScale() * ratio);
     /* BUG anchor don't use ratio */
     var anchor = img.getAnchor();
     if (img.setDisplacement) {
       var disp = img.getDisplacement();
       if (disp) {
-        disp[0] -= anchor[0]/ratio;
-        disp[1] += anchor[1]/ratio;
-        img.setAnchor([0,0]);
+        disp[0] -= anchor[0] / ratio;
+        disp[1] += anchor[1] / ratio;
+        img.setAnchor([0, 0]);
       }
     } else {
       if (anchor) {

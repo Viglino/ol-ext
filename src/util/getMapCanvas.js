@@ -2,8 +2,9 @@
  * @param {ol.Map} map
  * @return {canvas}
  */
-var ol_ext_getMapCanvas = function(map) {
-  if (!map) return null;
+function ol_ext_getMapCanvas(map) {
+  if (!map)
+    return null;
   var canvas = map.getViewport().getElementsByClassName('ol-fixedoverlay')[0];
   if (!canvas) {
     if (map.getViewport().querySelector('.ol-layers')) {
@@ -12,7 +13,7 @@ var ol_ext_getMapCanvas = function(map) {
       canvas.className = 'ol-fixedoverlay';
       map.getViewport().querySelector('.ol-layers').after(canvas);
       // Clear before new compose
-      map.on('precompose', function (e){
+      map.on('precompose', function (e) {
         canvas.width = map.getSize()[0] * e.frameState.pixelRatio;
         canvas.height = map.getSize()[1] * e.frameState.pixelRatio;
       });
@@ -21,7 +22,7 @@ var ol_ext_getMapCanvas = function(map) {
     }
   }
   return canvas;
-};
+}
 
 export default ol_ext_getMapCanvas
   

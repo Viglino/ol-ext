@@ -13,10 +13,10 @@ if (window.ol && !ol.ext) {
  * @function module:ol.inherits
  * @api
  */
-var ol_ext_inherits = function(child,parent) {
+function ol_ext_inherits(child, parent) {
   child.prototype = Object.create(parent.prototype);
   child.prototype.constructor = child;
-};
+}
 
 // Compatibilty with ol > 5 to be removed when v6 is out
 if (window.ol) {
