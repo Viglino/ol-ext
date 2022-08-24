@@ -36,15 +36,15 @@ function transform() {
         // Prevent ol_has_DEVICE_PIXEL_RATIO
         //content = content.replace(/ol_has_DEVICE_PIXEL_RATIO/g,"ol.has.DEVICE_PIXEL_RATIO");
         // change ol_namespace_Class_Att => ol.namespace.Class.Att
-        content = content.replace(/(\bol_([a-z,A-Z]*)_([a-z,A-Z,4]*)_([a-z,A-Z]*)\b)/g,"ol.$2.$3.$4");
+        content = content.replace(/(\bol_([a-z,A-Z]*)_([a-z,A-Z,4]*)_([a-z,A-Z]*)\b)/g, "ol.$2.$3.$4");
         // change ol_namespace_Class => ol.namespace.Class
-        content = content.replace(/(\bol_([a-z,A-Z]*)_([a-z,A-Z]*))/g,"ol.$2.$3");
+        content = content.replace(/(\bol_([a-z,A-Z]*)_([a-z,A-Z]*))/g, "ol.$2.$3");
         // change ol_Class => ol.namespace.Class
-        content = content.replace(/(\bol_([a-z,A-Z]*))/g,"ol.$2");
+        content = content.replace(/(\bol_([a-z,A-Z]*))/g, "ol.$2");
         // change var ol.Class => ol.Class
-        content = content.replace(/(\bvar ol\.([a-z,A-Z]*))/g,"ol.$2");
+        content = content.replace(/(\bvar ol\.([a-z,A-Z]*))/g, "ol.$2");
         // remove import / export
-        content = content.replace(/\bimport (.*)|\bexport (.*)/g,"");
+        content = content.replace(/\bimport (.*)|\bexport (.*)/g, "");
         // remove empty lines
         content = content.replace(/\r/gm, '');
         content = content.replace(/^\s*[\n]/gm, '');

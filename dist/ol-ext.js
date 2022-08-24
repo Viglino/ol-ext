@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v3.2.29
+ * @version v3.2.30
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -37194,10 +37194,6 @@ ol.Map.prototype.pulse = function(coords, options)
 *  Add a chart style to display charts (pies or bars) on a map 
 */
 /**
- * @requires ol.style.Circle
- * @requires ol.structs.IHasChecksum
- */
-/**
  * @classdesc
  * Set chart style for vector features.
  *
@@ -37219,35 +37215,227 @@ ol.Map.prototype.pulse = function(coords, options)
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.Chart = function(opt_options) {
-  var options = opt_options || {};
-  var strokeWidth = 0;
-  if (opt_options.stroke) strokeWidth = opt_options.stroke.getWidth();
-  ol.style.RegularShape.call (this, {
-    radius: options.radius + strokeWidth, 
-    fill: new ol.style.Fill({color: [0,0,0]}),
-    rotation: options.rotation,
-    displacement: options.displacement,
-    snapToPixel: options.snapToPixel
-  });
-  if (options.scale) this.setScale(options.scale);
-  this._stroke = options.stroke;
-  this._radius = options.radius || 20;
-  this._donutratio = options.donutRatio || 0.5;
-  this._type = options.type;
-  this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
-  this._animation = (typeof(options.animation) == 'number') ? { animate:true, step:options.animation } : this._animation = { animate:false, step:1 };
-  this._max = options.max;
-  this._data = options.data;
-  if (options.colors instanceof Array) {
-    this._colors = options.colors;
-  } else {
-    this._colors = ol.style.Chart.colors[options.colors];
-    if(!this._colors) this._colors = ol.style.Chart.colors.classic;
+ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
+  constructor(opt_options) {
+    var options = opt_options || {};
+    var strokeWidth = 0;
+    if (opt_options.stroke)
+      strokeWidth = opt_options.stroke.getWidth();
+    super({
+      radius: options.radius + strokeWidth,
+      fill: new ol.style.Fill({ color: [0, 0, 0] }),
+      rotation: options.rotation,
+      displacement: options.displacement,
+      snapToPixel: options.snapToPixel
+    });
+    this.setScale(options.scale || 1);
+    this._stroke = options.stroke;
+    this._radius = options.radius || 20;
+    this._donutratio = options.donutRatio || 0.5;
+    this._type = options.type;
+    this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
+    this._animation = (typeof (options.animation) == 'number') ? { animate: true, step: options.animation } : this._animation = { animate: false, step: 1 };
+    this._max = options.max;
+    this._data = options.data;
+    if (options.colors instanceof Array) {
+      this._colors = options.colors;
+    } else {
+      this._colors = ol.style.Chart.colors[options.colors];
+      if (!this._colors)
+        this._colors = ol.style.Chart.colors.classic;
+    }
+    this.renderChart_();
   }
-  this.renderChart_();
-};
-ol.ext.inherits(ol.style.Chart, ol.style.RegularShape);
+  /**
+   * Clones the style.
+   * @return {ol.style.Chart}
+   */
+  clone() {
+    var s = new ol.style.Chart({
+      type: this._type,
+      radius: this._radius,
+      rotation: this.getRotation(),
+      scale: this.getScale(),
+      data: this.getData(),
+      snapToPixel: this.getSnapToPixel ? this.getSnapToPixel() : false,
+      stroke: this._stroke,
+      colors: this._colors,
+      offsetX: this._offset[0],
+      offsetY: this._offset[1],
+      animation: this._animation
+    });
+    s.setScale(this.getScale());
+    s.setOpacity(this.getOpacity());
+    return s;
+  }
+  /** Get data associatied with the chart
+  */
+  getData() {
+    return this._data;
+  }
+  /** Set data associatied with the chart
+  *	@param {Array<number>}
+  */
+  setData(data) {
+    this._data = data;
+    this.renderChart_();
+  }
+  /** Get symbol radius
+  */
+  getRadius() {
+    return this._radius;
+  }
+  /** Set symbol radius
+  *	@param {number} symbol radius
+  *	@param {number} donut ratio
+  */
+  setRadius(radius, ratio) {
+    this._radius = radius;
+    this.donuratio_ = ratio || this.donuratio_;
+    this.renderChart_();
+  }
+  /** Set animation step
+  *	@param {false|number} false to stop animation or the step of the animation [0,1]
+  */
+  setAnimation(step) {
+    if (step === false) {
+      if (this._animation.animate == false)
+        return;
+      this._animation.animate = false;
+    } else {
+      if (this._animation.step == step)
+        return;
+      this._animation.animate = true;
+      this._animation.step = step;
+    }
+    this.renderChart_();
+  }
+  /** @private
+  */
+  renderChart_(pixelratio) {
+    if (!pixelratio) {
+      if (this.getPixelRatio) {
+        pixelratio = window.devicePixelRatio;
+        this.renderChart_(pixelratio);
+        if (this.getPixelRatio && pixelratio !== 1)
+          this.renderChart_(1);
+      } else {
+        this.renderChart_(1);
+      }
+      return;
+    }
+    var strokeStyle;
+    var strokeWidth = 0;
+    if (this._stroke) {
+      strokeStyle = ol.color.asString(this._stroke.getColor());
+      strokeWidth = this._stroke.getWidth();
+    }
+    // no atlas manager is used, create a new canvas
+    var canvas = this.getImage(pixelratio);
+    // draw the circle on the canvas
+    var context = (canvas.getContext('2d'));
+    context.save();
+    // reset transform
+    context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.lineJoin = 'round';
+    var sum = 0;
+    var i, c;
+    for (i = 0; i < this._data.length; i++) {
+      sum += this._data[i];
+    }
+    // then move to (x, y)
+    context.translate(0, 0);
+    var step = this._animation.animate ? this._animation.step : 1;
+    //console.log(this._animation.step)
+    // Draw pie
+    switch (this._type) {
+      case "donut":
+      case "pie3D":
+      case "pie": {
+        var a, a0 = Math.PI * (step - 1.5);
+        c = canvas.width / 2 / pixelratio;
+        context.strokeStyle = strokeStyle;
+        context.lineWidth = strokeWidth;
+        context.save();
+        if (this._type == "pie3D") {
+          context.translate(0, c * 0.3);
+          context.scale(1, 0.7);
+          context.beginPath();
+          context.fillStyle = "#369";
+          context.arc(c, c * 1.4, this._radius * step, 0, 2 * Math.PI);
+          context.fill();
+          context.stroke();
+        }
+        if (this._type == "donut") {
+          context.save();
+          context.beginPath();
+          context.rect(0, 0, 2 * c, 2 * c);
+          context.arc(c, c, this._radius * step * this._donutratio, 0, 2 * Math.PI);
+          context.clip("evenodd");
+        }
+        for (i = 0; i < this._data.length; i++) {
+          context.beginPath();
+          context.moveTo(c, c);
+          context.fillStyle = this._colors[i % this._colors.length];
+          a = a0 + 2 * Math.PI * this._data[i] / sum * step;
+          context.arc(c, c, this._radius * step, a0, a);
+          context.closePath();
+          context.fill();
+          context.stroke();
+          a0 = a;
+        }
+        if (this._type == "donut") {
+          context.restore();
+          context.beginPath();
+          context.strokeStyle = strokeStyle;
+          context.lineWidth = strokeWidth;
+          context.arc(c, c, this._radius * step * this._donutratio, Math.PI * (step - 1.5), a0);
+          context.stroke();
+        }
+        context.restore();
+        break;
+      }
+      case "bar":
+      default: {
+        var max = 0;
+        if (this._max) {
+          max = this._max;
+        } else {
+          for (i = 0; i < this._data.length; i++) {
+            if (max < this._data[i])
+              max = this._data[i];
+          }
+        }
+        var s = Math.min(5, 2 * this._radius / this._data.length);
+        c = canvas.width / 2 / pixelratio;
+        var b = canvas.width / pixelratio - strokeWidth;
+        var x, x0 = c - this._data.length * s / 2;
+        context.strokeStyle = strokeStyle;
+        context.lineWidth = strokeWidth;
+        for (i = 0; i < this._data.length; i++) {
+          context.beginPath();
+          context.fillStyle = this._colors[i % this._colors.length];
+          x = x0 + s;
+          var h = this._data[i] / max * 2 * this._radius * step;
+          context.rect(x0, b - h, s, h);
+          //console.log ( x0+", "+(b-this._data[i]/max*2*this._radius)+", "+x+", "+b);
+          context.closePath();
+          context.fill();
+          context.stroke();
+          x0 = x;
+        }
+      }
+    }
+    context.restore();
+    // Set Anchor
+    if (!this.setDisplacement) {
+      var anchor = this.getAnchor();
+      anchor[0] = c - this._offset[0];
+      anchor[1] = c - this._offset[1];
+    }
+  }
+}
 /** Default color set: classic, dark, pale, pastel, neon
 */
 ol.style.Chart.colors = {
@@ -37257,191 +37445,6 @@ ol.style.Chart.colors = {
   "pastel":	["#fb4","#79c","#f66","#7d7","#acc","#fdd","#ff9","#b9b"], 
   "neon":		["#ff0","#0ff","#0f0","#f0f","#f00","#00f"]
 }
-/**
- * Clones the style. 
- * @return {ol.style.Chart}
- */
-ol.style.Chart.prototype.clone = function() {
-  var s = new ol.style.Chart({
-    type: this._type,
-    radius: this._radius,
-    rotation: this.getRotation(),
-    scale: this.getScale(),
-    data: this.getData(),
-    snapToPixel: this.getSnapToPixel ? this.getSnapToPixel() : false,
-    stroke: this._stroke,
-    colors: this._colors,
-    offsetX: this._offset[0],
-    offsetY: this._offset[1],
-    animation: this._animation
-  });
-  s.setScale(this.getScale());
-  s.setOpacity(this.getOpacity());
-  return s;
-};
-/** Get data associatied with the chart
-*/
-ol.style.Chart.prototype.getData = function() {
-  return this._data;
-}
-/** Set data associatied with the chart
-*	@param {Array<number>}
-*/
-ol.style.Chart.prototype.setData = function(data) {
-  this._data = data;
-  this.renderChart_();
-}
-/** Get symbol radius
-*/
-ol.style.Chart.prototype.getRadius = function() {
-  return this._radius;
-}
-/** Set symbol radius
-*	@param {number} symbol radius
-*	@param {number} donut ratio
-*/
-ol.style.Chart.prototype.setRadius = function(radius, ratio) {
-  this._radius = radius;
-  this.donuratio_ = ratio || this.donuratio_;
-  this.renderChart_();
-}
-/** Set animation step 
-*	@param {false|number} false to stop animation or the step of the animation [0,1]
-*/
-ol.style.Chart.prototype.setAnimation = function(step) {
-  if (step===false) {
-    if (this._animation.animate == false) return;
-    this._animation.animate = false;
-  } else {
-    if (this._animation.step == step) return;
-    this._animation.animate = true;
-    this._animation.step = step;
-  }
-  this.renderChart_();
-}
-/** @private
-*/
-ol.style.Chart.prototype.renderChart_ = function(pixelratio) {
-  if (!pixelratio) {
-    if (this.getPixelRatio) {
-      pixelratio = window.devicePixelRatio;
-      this.renderChart_(pixelratio);
-      if (this.getPixelRatio && pixelratio!==1) this.renderChart_(1); 
-    } else {
-      this.renderChart_(1);
-    }
-    return;
-  }
-  var strokeStyle;
-  var strokeWidth = 0;
-  if (this._stroke)  {
-    strokeStyle = ol.color.asString(this._stroke.getColor());
-    strokeWidth = this._stroke.getWidth();
-  }
-  // no atlas manager is used, create a new canvas
-  var canvas = this.getImage(pixelratio);
-  // draw the circle on the canvas
-  var context = (canvas.getContext('2d'));
-  context.save();
-  // reset transform
-  context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.lineJoin = 'round';
-  var sum=0;
-  var i, c;
-  for (i=0; i<this._data.length; i++) {
-    sum += this._data[i];
-  }
-  // then move to (x, y)
-  context.translate(0,0);
-  var step = this._animation.animate ? this._animation.step : 1;
-  //console.log(this._animation.step)
-  // Draw pie
-  switch (this._type) {
-    case "donut":
-    case "pie3D":
-    case "pie": {
-      var a, a0 = Math.PI * (step-1.5);
-      c = canvas.width/2/pixelratio;
-      context.strokeStyle = strokeStyle;
-      context.lineWidth = strokeWidth;
-      context.save();
-      if (this._type=="pie3D") {
-        context.translate(0, c*0.3);
-        context.scale(1, 0.7);
-        context.beginPath();
-        context.fillStyle = "#369";
-        context.arc ( c, c*1.4, this._radius *step, 0, 2*Math.PI);
-        context.fill();
-        context.stroke();
-      }
-      if (this._type=="donut") {
-        context.save();
-        context.beginPath();
-        context.rect ( 0,0,2*c,2*c );
-        context.arc ( c, c, this._radius *step *this._donutratio, 0, 2*Math.PI);
-        context.clip("evenodd");
-      }
-      for (i=0; i<this._data.length; i++) {
-        context.beginPath();
-        context.moveTo(c,c);
-        context.fillStyle = this._colors[i%this._colors.length];
-        a = a0 + 2*Math.PI*this._data[i]/sum *step;
-        context.arc ( c, c, this._radius *step, a0, a);
-        context.closePath();
-        context.fill();
-        context.stroke();
-        a0 = a;
-      }
-      if (this._type=="donut") {
-        context.restore();
-        context.beginPath();
-        context.strokeStyle = strokeStyle;
-        context.lineWidth = strokeWidth;
-        context.arc ( c, c, this._radius *step *this._donutratio, Math.PI * (step-1.5), a0);
-        context.stroke();
-      }
-      context.restore();
-      break;
-    }
-    case "bar":
-    default: {
-      var max=0;
-      if (this._max) {
-        max = this._max;
-      } else {
-        for (i=0; i<this._data.length; i++) {
-          if (max < this._data[i]) max = this._data[i];
-        }
-      }
-      var s = Math.min(5,2*this._radius/this._data.length);
-      c = canvas.width/2/pixelratio;
-      var b = canvas.width/pixelratio - strokeWidth;
-      var x, x0 = c - this._data.length*s/2
-      context.strokeStyle = strokeStyle;
-      context.lineWidth = strokeWidth;
-      for (i=0; i<this._data.length; i++) {
-        context.beginPath();
-        context.fillStyle = this._colors[i%this._colors.length];
-        x = x0 + s;
-        var h = this._data[i]/max*2*this._radius *step;
-        context.rect ( x0, b-h, s, h);
-        //console.log ( x0+", "+(b-this._data[i]/max*2*this._radius)+", "+x+", "+b);
-        context.closePath();
-        context.fill();
-        context.stroke();
-        x0 = x;
-      }
-    }
-  }
-  context.restore();
-  // Set Anchor
-  if (!this.setDisplacement) {
-    var anchor = this.getAnchor();
-    anchor[0] = c - this._offset[0];
-    anchor[1] = c - this._offset[1];
-  }
-};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -37464,261 +37467,277 @@ ol.style.Chart.prototype.renderChart_ = function(pixelratio) {
 *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
 *	@param {number} options.scale pattern scale 
 * @extends {ol.style.Fill}
-* @implements {ol.structs.IHasChecksum}
 * @api
 */
-ol.style.FillPattern = function(options) {
-  if (!options) options = {};
-  var pattern;
-  var canvas = this.canvas_ = document.createElement('canvas');
-  var scale = Number(options.scale)>0 ? Number(options.scale) : 1;
-  var ratio = scale*ol.has.DEVICE_PIXEL_RATIO || ol.has.DEVICE_PIXEL_RATIO;
-  var ctx = canvas.getContext('2d');
-  if (options.image) {
-    options.image.load();
-    var i;
-    var img = options.image.getImage();
-    if (img.width) {
-      canvas.width = Math.round(img.width *ratio);
-      canvas.height = Math.round(img.height *ratio);
-      ctx.globalAlpha = typeof(options.opacity) == 'number' ? options.opacity:1;
-      ctx.drawImage(img, 0,0, img.width, img.height, 0, 0, canvas.width, canvas.height);
-      pattern = ctx.createPattern(canvas, 'repeat');
+ol.style.FillPattern = class olstyleFillPattern extends ol.style.Fill {
+  constructor(options) {
+    super();
+    options = options || {};
+    var pattern;
+    var canvas = this.canvas_ = document.createElement('canvas');
+    var scale = Number(options.scale) > 0 ? Number(options.scale) : 1;
+    var ratio = scale * ol.has.DEVICE_PIXEL_RATIO || ol.has.DEVICE_PIXEL_RATIO;
+    var ctx = canvas.getContext('2d');
+    if (options.image) {
+      options.image.load();
+      var i;
+      var img = options.image.getImage();
+      if (img.width) {
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        ctx.globalAlpha = typeof (options.opacity) == 'number' ? options.opacity : 1;
+        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
+        pattern = ctx.createPattern(canvas, 'repeat');
+      } else {
+        var self = this;
+        pattern = [0, 0, 0, 0];
+        img.onload = function () {
+          canvas.width = Math.round(img.width * ratio);
+          canvas.height = Math.round(img.height * ratio);
+          ctx.globalAlpha = typeof (options.opacity) == 'number' ? options.opacity : 1;
+          ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
+          pattern = ctx.createPattern(canvas, 'repeat');
+          self.setColor(pattern);
+        };
+      }
     } else {
-      var self = this;
-      pattern = [0,0,0,0];
-      img.onload = function () {
-        canvas.width = Math.round(img.width *ratio);
-        canvas.height = Math.round(img.height *ratio);
-        ctx.globalAlpha = typeof(options.opacity) == 'number' ? options.opacity:1;
-        ctx.drawImage(img, 0,0, img.width, img.height, 0, 0, canvas.width, canvas.height);
-        pattern = ctx.createPattern(canvas, 'repeat');
-        self.setColor(pattern);
-      }
-    }
-  } else {
-    var pat = this.getPattern_(options);
-    canvas.width = Math.round(pat.width *ratio);
-    canvas.height = Math.round(pat.height *ratio);
-    ctx.beginPath();
-    if (options.fill) {
-      ctx.fillStyle = ol.color.asString(options.fill.getColor());
-      ctx.fillRect(0,0, canvas.width, canvas.height);
-    }
-    ctx.scale(ratio,ratio);
-    ctx.lineCap = "round";
-    ctx.lineWidth = pat.stroke || 1;
-    ctx.fillStyle = ol.color.asString(options.color||"#000");
-    ctx.strokeStyle = ol.color.asString(options.color||"#000");
-    if (pat.circles) for (i=0; i<pat.circles.length; i++) {
-      var ci = pat.circles[i]; 
+      var pat = this.getPattern_(options);
+      canvas.width = Math.round(pat.width * ratio);
+      canvas.height = Math.round(pat.height * ratio);
       ctx.beginPath();
-      ctx.arc(ci[0], ci[1], ci[2], 0,2*Math.PI);
-      if (pat.fill) ctx.fill();
-      if (pat.stroke) ctx.stroke();
-    }
-    if (!pat.repeat) pat.repeat=[[0,0]];
-    if (pat.char) {
-      ctx.font = pat.font || (pat.width)+"px Arial";
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      if (pat.angle) {
-        ctx.fillText(pat.char, pat.width/4, pat.height/4);
-        ctx.fillText(pat.char, 5*pat.width/4, 5*pat.height/4);
-        ctx.fillText(pat.char, pat.width/4, 5*pat.height/4);
-        ctx.fillText(pat.char, 5*pat.width/4, pat.height/4);
-        ctx.fillText(pat.char, 3*pat.width/4, 3*pat.height/4);
-        ctx.fillText(pat.char, -pat.width/4, -pat.height/4);
-        ctx.fillText(pat.char, 3*pat.width/4, -pat.height/4);
-        ctx.fillText(pat.char, -pat.width/4, 3*pat.height/4);
+      if (options.fill) {
+        ctx.fillStyle = ol.color.asString(options.fill.getColor());
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
-      else ctx.fillText(pat.char, pat.width/2, pat.height/2);
-    }
-    if (pat.lines) for (i=0; i<pat.lines.length; i++) for (var r=0; r<pat.repeat.length; r++) {
-      var li = pat.lines[i];
-      ctx.beginPath();
-      ctx.moveTo(li[0]+pat.repeat[r][0],li[1]+pat.repeat[r][1]);
-      for (var k=2; k<li.length; k+=2) {
-        ctx.lineTo(li[k]+pat.repeat[r][0],li[k+1]+pat.repeat[r][1]);
+      ctx.scale(ratio, ratio);
+      ctx.lineCap = "round";
+      ctx.lineWidth = pat.stroke || 1;
+      ctx.fillStyle = ol.color.asString(options.color || "#000");
+      ctx.strokeStyle = ol.color.asString(options.color || "#000");
+      if (pat.circles)
+        for (i = 0; i < pat.circles.length; i++) {
+          var ci = pat.circles[i];
+          ctx.beginPath();
+          ctx.arc(ci[0], ci[1], ci[2], 0, 2 * Math.PI);
+          if (pat.fill)
+            ctx.fill();
+          if (pat.stroke)
+            ctx.stroke();
+        }
+      if (!pat.repeat)
+        pat.repeat = [[0, 0]];
+      if (pat.char) {
+        ctx.font = pat.font || (pat.width) + "px Arial";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        if (pat.angle) {
+          ctx.fillText(pat.char, pat.width / 4, pat.height / 4);
+          ctx.fillText(pat.char, 5 * pat.width / 4, 5 * pat.height / 4);
+          ctx.fillText(pat.char, pat.width / 4, 5 * pat.height / 4);
+          ctx.fillText(pat.char, 5 * pat.width / 4, pat.height / 4);
+          ctx.fillText(pat.char, 3 * pat.width / 4, 3 * pat.height / 4);
+          ctx.fillText(pat.char, -pat.width / 4, -pat.height / 4);
+          ctx.fillText(pat.char, 3 * pat.width / 4, -pat.height / 4);
+          ctx.fillText(pat.char, -pat.width / 4, 3 * pat.height / 4);
+        }
+        else
+          ctx.fillText(pat.char, pat.width / 2, pat.height / 2);
       }
-      if (pat.fill) ctx.fill();
-      if (pat.stroke) ctx.stroke();
-      ctx.save()
-      ctx.strokeStyle = 'red';
-      ctx.strokeWidth = 0.1;
-      //ctx.strokeRect(0,0,canvas.width,canvas.height);
-      ctx.restore()
-    }
-    pattern = ctx.createPattern(canvas, 'repeat');
-    if (options.offset) {
-      var offset = options.offset;
-      if (typeof(offset) == "number") offset = [offset,offset];
-      if (offset instanceof Array) {
-        var dx = Math.round((offset[0]*ratio));
-        var dy = Math.round((offset[1]*ratio));
-        // New pattern
-        ctx.scale(1/ratio,1/ratio)
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.translate(dx,dy);
-        ctx.fillStyle = pattern;
-        ctx.fillRect(-dx, -dy, canvas.width,canvas.height);
-        pattern = ctx.createPattern(canvas, 'repeat');
+      if (pat.lines)
+        for (i = 0; i < pat.lines.length; i++)
+          for (var r = 0; r < pat.repeat.length; r++) {
+            var li = pat.lines[i];
+            ctx.beginPath();
+            ctx.moveTo(li[0] + pat.repeat[r][0], li[1] + pat.repeat[r][1]);
+            for (var k = 2; k < li.length; k += 2) {
+              ctx.lineTo(li[k] + pat.repeat[r][0], li[k + 1] + pat.repeat[r][1]);
+            }
+            if (pat.fill)
+              ctx.fill();
+            if (pat.stroke)
+              ctx.stroke();
+            ctx.save();
+            ctx.strokeStyle = 'red';
+            ctx.strokeWidth = 0.1;
+            //ctx.strokeRect(0,0,canvas.width,canvas.height);
+            ctx.restore();
+          }
+      pattern = ctx.createPattern(canvas, 'repeat');
+      if (options.offset) {
+        var offset = options.offset;
+        if (typeof (offset) == "number")
+          offset = [offset, offset];
+        if (offset instanceof Array) {
+          var dx = Math.round((offset[0] * ratio));
+          var dy = Math.round((offset[1] * ratio));
+          // New pattern
+          ctx.scale(1 / ratio, 1 / ratio);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.translate(dx, dy);
+          ctx.fillStyle = pattern;
+          ctx.fillRect(-dx, -dy, canvas.width, canvas.height);
+          pattern = ctx.createPattern(canvas, 'repeat');
+        }
       }
     }
+    // Set pattern as fill color
+    this.setColor(pattern)
   }
-  ol.style.Fill.call (this, { color: pattern });
-};
-ol.ext.inherits(ol.style.FillPattern, ol.style.Fill);
-/**
- * Clones the style. 
- * @return {ol.style.FillPattern}
- */
-ol.style.FillPattern.prototype.clone = function() {
-  var s = ol.style.Fill.prototype.clone.call(this);
-  s.canvas_ = this.canvas_;
-  return s;
-};
-/** Get canvas used as pattern
-*	@return {canvas}
-*/
-ol.style.FillPattern.prototype.getImage = function() {
-  return this.canvas_;
-}
-/** Get pattern
-*	@param {olx.style.FillPatternOption}
-*/
-ol.style.FillPattern.prototype.getPattern_ = function(options) {
-  var pat = ol.style.FillPattern.prototype.patterns[options.pattern]
-    || ol.style.FillPattern.prototype.patterns.dot;
-  var d = Math.round(options.spacing)||10;
-  var size;
-  switch (options.pattern) {
-    case 'dot':
-    // fallsthrough
-    case 'circle': {
-      size = options.size===0 ? 0 : options.size/2 || 2;
-      if (!options.angle) {
-        pat.width = pat.height = d;
-        pat.circles = [[ d/2, d/2, size ]]
-        if (options.pattern=='circle') {
-          pat.circles = pat.circles.concat([
-            [ d/2+d, d/2, size ],
-            [ d/2-d, d/2, size ],
-            [ d/2, d/2+d, size ],
-            [ d/2, d/2-d, size ],
-            [ d/2+d, d/2+d, size ],
-            [ d/2+d, d/2-d, size ],
-            [ d/2-d, d/2+d, size ],
-            [ d/2-d, d/2-d, size ] 
-          ]);
-        }
-      } else {
-        d = pat.width = pat.height = Math.round(d*1.4);
-        pat.circles = [[ d/4, d/4, size ], [ 3*d/4, 3*d/4, size ]];
-        if (options.pattern=='circle') {
-          pat.circles = pat.circles.concat([
-            [ d/4+d, d/4, size ],
-            [ d/4, d/4+d, size ],
-            [ 3*d/4-d, 3*d/4, size ],
-            [ 3*d/4, 3*d/4-d, size ],
-            [ d/4+d, d/4+d, size ], 
-            [ 3*d/4-d, 3*d/4-d, size ] 
-          ]);
-        }
-      }
-      break;
-    }
-    case 'tile':
-    // fallsthrough
-    case 'square': {
-      size = options.size===0 ? 0 : options.size/2 || 2;
-      if (!options.angle) {
-        pat.width = pat.height = d;
-        pat.lines = [[ d/2-size, d/2-size, d/2+size, d/2-size, d/2+size, d/2+size, d/2-size,d/2+size, d/2-size, d/2-size ]]
-      } else {
-        pat.width = pat.height = d;
-        //size *= Math.sqrt(2);
-        pat.lines = [[ d/2-size,d/2, d/2,d/2-size, d/2+size,d/2, d/2,d/2+size, d/2-size,d/2 ]]
-      }
-      if (options.pattern=='square') pat.repeat = [[0,0], [0,d], [d,0], [0,-d], [-d,0], [-d,-d], [d,d], [-d,d], [d,-d] ]
-      break;
-    }
-    case 'cross': {
-      // Limit angle to 0 | 45
-      if (options.angle) options.angle = 45;
-    }
-    // fallsthrough
-    case 'hatch': {
-      var a = Math.round(((options.angle||0)-90)%360);
-      if (a>180) a -= 360;
-      a *= Math.PI/180;
-      var cos = Math.cos(a);
-      var sin = Math.sin(a);
-      if (Math.abs(sin)<0.0001) {
-        pat.width = pat.height = d;	
-        pat.lines = [ [ 0,0.5, d, 0.5 ] ];
-        pat.repeat = [ [0,0], [0,d] ];
-      } else if (Math.abs(cos)<0.0001) {
-        pat.width = pat.height = d;	
-        pat.lines = [ [ 0.5,0, 0.5, d] ];
-        pat.repeat = [ [0,0], [d,0] ];
-        if (options.pattern=='cross') {
-          pat.lines.push ([ 0,0.5, d, 0.5 ]);
-          pat.repeat.push([0,d]);
-        }
-      } else {
-        var w = pat.width = Math.round(Math.abs(d/sin)) || 1;
-        var h = pat.height = Math.round(Math.abs(d/cos)) || 1;
-        if (options.pattern=='cross') {
-          pat.lines = [ [-w,-h, 2*w,2*h], [2*w,-h, -w,2*h] ];
-          pat.repeat = [ [0,0] ];
-        } else if (cos*sin>0) {
-          pat.lines = [ [-w,-h, 2*w,2*h] ];
-          pat.repeat = [ [0,0], [w,0], [0,h] ];
-        } else  {
-          pat.lines = [ [2*w,-h, -w,2*h] ];
-          pat.repeat = [ [0,0], [-w,0], [0,h] ];
-        }
-      }
-      pat.stroke = options.size===0 ? 0 : options.size||4;
-      break;
-    }
-    default: break;
+  /** Static fuction to add char patterns
+   * @param {title}
+   * @param {*} options
+   *  @param {integer} [options.size=10] default 10
+   *  @param {integer} [options. width=10] default 10
+   *  @param {integer} [options.height=10] default 10
+   *  @param {Array<circles>} [options.circles]
+   *  @param {Array<pointlist>} [options.lines]
+   *  @param {integer} [options.stroke]
+   *  @param {bool} [options.fill]
+   *  @param {char} [option.char]
+   *  @param {string} [font="10px Arial"]
+   */
+  static addPattern(title, options) {
+    if (!options)
+      options = {};
+    ol.style.FillPattern.patterns[title || options.char] = {
+      width: options.width || options.size || 10,
+      height: options.height || options.size || 10,
+      font: options.font,
+      char: options.char,
+      circles: options.circles,
+      lines: options.lines,
+      repeat: options.repeat,
+      stroke: options.stroke,
+      angle: options.angle,
+      fill: options.fill
+    };
   }
-  return pat
-}
-/** Static fuction to add char patterns
- * @param {title} 
- * @param {*} options
- *  @param {integer} [options.size=10] default 10
- *  @param {integer} [options. width=10] default 10
- *  @param {integer} [options.height=10] default 10
- *  @param {Array<circles>} [options.circles]
- *  @param {Array<pointlist>} [options.lines]
- *  @param {integer} [options.stroke]
- *  @param {bool} [options.fill]
- *  @param {char} [option.char]
- *  @param {string} [font="10px Arial"]
- */
-ol.style.FillPattern.addPattern = function (title, options) {
-  if (!options) options={};
-  ol.style.FillPattern.prototype.patterns[title || options.char] = {
-    width: options.width || options.size || 10,
-    height: options.height || options.size || 10,
-    font: options.font,
-    char: options.char,
-    circles: options.circles,
-    lines: options.lines,
-    repeat: options.repeat,
-    stroke: options.stroke,
-    angle: options.angle,
-    fill: options.fill
+  /**
+   * Clones the style.
+   * @return {ol.style.FillPattern}
+   */
+  clone() {
+    var s = super.clone();
+    s.canvas_ = this.canvas_;
+    return s;
+  }
+  /** Get canvas used as pattern
+  *	@return {canvas}
+  */
+  getImage() {
+    return this.canvas_;
+  }
+  /** Get pattern
+  *	@param {olx.style.FillPatternOption}
+  */
+  getPattern_(options) {
+    var pat = ol.style.FillPattern.patterns[options.pattern]
+      || ol.style.FillPattern.patterns.dot;
+    var d = Math.round(options.spacing) || 10;
+    var size;
+    switch (options.pattern) {
+      case 'dot':
+      // fallsthrough
+      case 'circle': {
+        size = options.size === 0 ? 0 : options.size / 2 || 2;
+        if (!options.angle) {
+          pat.width = pat.height = d;
+          pat.circles = [[d / 2, d / 2, size]];
+          if (options.pattern == 'circle') {
+            pat.circles = pat.circles.concat([
+              [d / 2 + d, d / 2, size],
+              [d / 2 - d, d / 2, size],
+              [d / 2, d / 2 + d, size],
+              [d / 2, d / 2 - d, size],
+              [d / 2 + d, d / 2 + d, size],
+              [d / 2 + d, d / 2 - d, size],
+              [d / 2 - d, d / 2 + d, size],
+              [d / 2 - d, d / 2 - d, size]
+            ]);
+          }
+        } else {
+          d = pat.width = pat.height = Math.round(d * 1.4);
+          pat.circles = [[d / 4, d / 4, size], [3 * d / 4, 3 * d / 4, size]];
+          if (options.pattern == 'circle') {
+            pat.circles = pat.circles.concat([
+              [d / 4 + d, d / 4, size],
+              [d / 4, d / 4 + d, size],
+              [3 * d / 4 - d, 3 * d / 4, size],
+              [3 * d / 4, 3 * d / 4 - d, size],
+              [d / 4 + d, d / 4 + d, size],
+              [3 * d / 4 - d, 3 * d / 4 - d, size]
+            ]);
+          }
+        }
+        break;
+      }
+      case 'tile':
+      // fallsthrough
+      case 'square': {
+        size = options.size === 0 ? 0 : options.size / 2 || 2;
+        if (!options.angle) {
+          pat.width = pat.height = d;
+          pat.lines = [[d / 2 - size, d / 2 - size, d / 2 + size, d / 2 - size, d / 2 + size, d / 2 + size, d / 2 - size, d / 2 + size, d / 2 - size, d / 2 - size]];
+        } else {
+          pat.width = pat.height = d;
+          //size *= Math.sqrt(2);
+          pat.lines = [[d / 2 - size, d / 2, d / 2, d / 2 - size, d / 2 + size, d / 2, d / 2, d / 2 + size, d / 2 - size, d / 2]];
+        }
+        if (options.pattern == 'square')
+          pat.repeat = [[0, 0], [0, d], [d, 0], [0, -d], [-d, 0], [-d, -d], [d, d], [-d, d], [d, -d]];
+        break;
+      }
+      case 'cross': {
+        // Limit angle to 0 | 45
+        if (options.angle)
+          options.angle = 45;
+      }
+      // fallsthrough
+      case 'hatch': {
+        var a = Math.round(((options.angle || 0) - 90) % 360);
+        if (a > 180)
+          a -= 360;
+        a *= Math.PI / 180;
+        var cos = Math.cos(a);
+        var sin = Math.sin(a);
+        if (Math.abs(sin) < 0.0001) {
+          pat.width = pat.height = d;
+          pat.lines = [[0, 0.5, d, 0.5]];
+          pat.repeat = [[0, 0], [0, d]];
+        } else if (Math.abs(cos) < 0.0001) {
+          pat.width = pat.height = d;
+          pat.lines = [[0.5, 0, 0.5, d]];
+          pat.repeat = [[0, 0], [d, 0]];
+          if (options.pattern == 'cross') {
+            pat.lines.push([0, 0.5, d, 0.5]);
+            pat.repeat.push([0, d]);
+          }
+        } else {
+          var w = pat.width = Math.round(Math.abs(d / sin)) || 1;
+          var h = pat.height = Math.round(Math.abs(d / cos)) || 1;
+          if (options.pattern == 'cross') {
+            pat.lines = [[-w, -h, 2 * w, 2 * h], [2 * w, -h, -w, 2 * h]];
+            pat.repeat = [[0, 0]];
+          } else if (cos * sin > 0) {
+            pat.lines = [[-w, -h, 2 * w, 2 * h]];
+            pat.repeat = [[0, 0], [w, 0], [0, h]];
+          } else {
+            pat.lines = [[2 * w, -h, -w, 2 * h]];
+            pat.repeat = [[0, 0], [-w, 0], [0, h]];
+          }
+        }
+        pat.stroke = options.size === 0 ? 0 : options.size || 4;
+        break;
+      }
+      default: break;
+    }
+    return pat;
   }
 }
 /** Patterns definitions
  * @see pattern generator http://www.imagico.de/map/jsdotpattern.php
  */
-ol.style.FillPattern.prototype.patterns = {
+ol.style.FillPattern.patterns = {
   "hatch": {
     width:5,
     height:5,
@@ -38431,40 +38450,384 @@ ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.FontSymbol = function(options) {
-  options = options || {};
-  var strokeWidth = 0;
-  if (options.stroke) {
-    strokeWidth = options.stroke.getWidth();
+ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
+  constructor(options) {
+    options = options || {};
+    var strokeWidth = 0;
+    if (options.stroke) {
+      strokeWidth = options.stroke.getWidth();
+    }
+    if (!options.displacement) {
+      options.displacement = [options.offsetX || 0, -options.offsetY || 0];
+    }
+    super ({
+      radius: options.radius,
+      fill: options.fill,
+      rotation: options.rotation,
+      displacement: options.displacement,
+      rotateWithView: options.rotateWithView
+    });
+    if (typeof (options.opacity) == "number")
+      this.setOpacity(options.opacity);
+    this._color = options.color;
+    this._fontSize = options.fontSize || 1;
+    this._fontStyle = options.fontStyle || '';
+    this._stroke = options.stroke;
+    this._fill = options.fill;
+    this._radius = options.radius - strokeWidth;
+    this._form = options.form || "none";
+    this._gradient = options.gradient;
+    this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
+    if (options.glyph)
+      this._glyph = this.getGlyph(options.glyph);
+    else
+      this._glyph = this.getTextGlyph(options.text || '', options.font);
+    if (!this.getDisplacement)
+      this.getImage();
   }
-  if (!options.displacement) {
-    options.displacement = [options.offsetX || 0, -options.offsetY || 0];
+  /** Static function : add new font defs
+   * @param {String|Object} font the font desciption
+   * @param {} glyphs a key / value list of glyph definitions.
+   * 		Each key is the name of the glyph,
+   * 		the value is an object that code the font, the caracter code,
+   * 		the name and a search string for the glyph.
+   */
+  static addDefs(font, glyphs) {
+    var thefont = font;
+    if (typeof (font) == 'string')
+      thefont = { font: font, name: font, copyright: '' };
+    if (!thefont.font || typeof (thefont.font) !== 'string') {
+      console.log('bad font def');
+      return;
+    }
+    var fontname = thefont.font;
+    ol.style.FontSymbol.defs.fonts[fontname] = thefont;
+    for (var i in glyphs) {
+      var g = glyphs[i];
+      if (typeof (g) === 'string' && g.length == 1)
+        g = { char: g };
+        ol.style.FontSymbol.defs.glyphs[i] = {
+        font: thefont.font,
+        char: g.char || '' + String.fromCharCode(g.code) || '',
+        theme: g.theme || thefont.name,
+        name: g.name || i,
+        search: g.search || ''
+      };
+    }
   }
-  if (typeof(options.opacity)=="number") this.setOpacity(options.opacity);
-  this._color = options.color;
-  this._fontSize = options.fontSize || 1;
-  this._fontStyle = options.fontStyle || '';
-  this._stroke = options.stroke;
-  this._fill = options.fill;
-  this._radius = options.radius -strokeWidth;
-  this._form = options.form || "none";
-  this._gradient = options.gradient;
-  this._offset = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
-  if (options.glyph) this._glyph = this.getGlyph(options.glyph);
-  else this._glyph = this.getTextGlyph(options.text||'', options.font);
-  ol.style.RegularShape.call (this, { 
-    radius: options.radius, 
-    fill: options.fill,
-    rotation: options.rotation, 
-    displacement: options.displacement,
-    rotateWithView: options.rotateWithView 
-  });
-  if (!this.getDisplacement) this.getImage();
-};
-ol.ext.inherits(ol.style.FontSymbol, ol.style.RegularShape);
-/** Cool stuff to get the image symbol for a style
- * @param {number} ratio pixelratio
+  /** Clones the style.
+   * @return {ol.style.FontSymbol}
+   */
+  clone() {
+    var g = new ol.style.FontSymbol({
+      //glyph: this._glyph,
+      text: this._glyph.char,
+      font: this._glyph.font,
+      color: this._color,
+      fontSize: this._fontSize,
+      fontStyle: this._fontStyle,
+      stroke: this._stroke,
+      fill: this._fill,
+      radius: this._radius + (this._stroke ? this._stroke.getWidth() : 0),
+      form: this._form,
+      gradient: this._gradient,
+      offsetX: this._offset[0],
+      offsetY: this._offset[1],
+      opacity: this.getOpacity(),
+      rotation: this.getRotation(),
+      rotateWithView: this.getRotateWithView()
+    });
+    g.setScale(this.getScale());
+    return g;
+  }
+  /** Get the fill style for the symbol.
+   * @return {ol.style.Fill} Fill style.
+   * @api
+   */
+  getFill() {
+    return this._fill;
+  }
+  /** Get the stroke style for the symbol.
+   * @return {_ol_style_Stroke_} Stroke style.
+   * @api
+   */
+  getStroke() {
+    return this._stroke;
+  }
+  /** Get the glyph definition for the symbol.
+   * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
+   * @return {*}
+   * @api
+   */
+  getGlyph(name) {
+    if (name)
+      return ol.style.FontSymbol.defs.glyphs[name] || { font: 'sans-serif', char: name.charAt(0), theme: 'none', name: 'none', search: '' };
+    else
+      return this._glyph;
+  }
+  /** Get glyph definition given a text and a font
+   * @param {string|undefined} text
+   * @param {string} [font] the font for the text
+   * @return {*}
+   * @api
+   */
+  getTextGlyph(text, font) {
+    return { font: font || 'sans-serif', char: String(text), theme: 'none', name: 'none', search: '' };
+  }
+  /**
+   * Get the glyph name.
+   * @return {string} the name
+   * @api
+   */
+  getGlyphName() {
+    for (var i in ol.style.FontSymbol.defs.glyphs) {
+      if (ol.style.FontSymbol.defs.glyphs[i] === this._glyph)
+        return i;
+    }
+    return '';
+  }
+  /**
+   * Get the stroke style for the symbol.
+   * @return {_ol_style_Stroke_} Stroke style.
+   * @api
+   */
+  getFontInfo(glyph) {
+    return ol.style.FontSymbol.defs.fonts[glyph.font];
+  }
+  /**
+   * Get the image icon.
+   * @param {number} pixelRatio Pixel ratio.
+   * @return {HTMLCanvasElement} Image or Canvas element.
+   * @api
+   */
+  getImage(pixelratio) {
+    pixelratio = pixelratio || 1;
+    // get canvas
+    var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
+    var strokeStyle;
+    var strokeWidth = 0;
+    if (this._stroke) {
+      strokeStyle = ol.color.asString(this._stroke.getColor());
+      strokeWidth = this._stroke.getWidth();
+    }
+    /** @type {ol.style.FontSymbol.RenderOptions} */
+    var renderOptions = {
+      strokeStyle: strokeStyle,
+      strokeWidth: strokeWidth,
+      size: canvas.width / pixelratio,
+    };
+    // draw the circle on the canvas
+    var context = (canvas.getContext('2d'));
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
+    // Set anchor / displacement
+    if (!this.getDisplacement) {
+      var a = this.getAnchor();
+      a[0] = canvas.width / 2 - this._offset[0];
+      a[1] = canvas.width / 2 - this._offset[1];
+    }
+    return canvas;
+  }
+  /**
+   * @private
+   * @param {ol.style.FontSymbol.RenderOptions} renderOptions
+   * @param {CanvasRenderingContext2D} context
+   */
+  drawPath_(renderOptions, context) {
+    var s = 2 * this._radius + renderOptions.strokeWidth;
+    var w = renderOptions.strokeWidth / 2;
+    var c = renderOptions.size / 2;
+    // Transfo to place the glyph at the right place
+    var transfo = { fac: 1, posX: renderOptions.size / 2, posY: renderOptions.size / 2 };
+    context.lineJoin = 'round';
+    context.lineCap = 'round';
+    context.beginPath();
+    // Draw the path with the form
+    switch (this._form) {
+      case "none": {
+        transfo.fac = 1;
+        break;
+      }
+      case "circle":
+      case "ban": {
+        context.arc(c, c, s / 2, 0, 2 * Math.PI, true);
+        break;
+      }
+      case "poi": {
+        context.arc(c, c - 0.4 * this._radius, 0.6 * this._radius, 0.15 * Math.PI, 0.85 * Math.PI, true);
+        context.lineTo(c - 0.89 * 0.05 * s, (0.95 + 0.45 * 0.05) * s + w);
+        context.arc(c, 0.95 * s + w, 0.05 * s, 0.85 * Math.PI, 0.15 * Math.PI, true);
+        transfo = { fac: 0.45, posX: c, posY: c - 0.35 * this._radius };
+        break;
+      }
+      case "bubble": {
+        context.arc(c, c - 0.2 * this._radius, 0.8 * this._radius, 0.4 * Math.PI, 0.6 * Math.PI, true);
+        context.lineTo(0.5 * s + w, s + w);
+        transfo = { fac: 0.7, posX: c, posY: c - 0.2 * this._radius };
+        break;
+      }
+      case "marker": {
+        context.arc(c, c - 0.2 * this._radius, 0.8 * this._radius, 0.25 * Math.PI, 0.75 * Math.PI, true);
+        context.lineTo(0.5 * s + w, s + w);
+        transfo = { fac: 0.7, posX: c, posY: c - 0.2 * this._radius };
+        break;
+      }
+      case "coma": {
+        context.moveTo(c + 0.8 * this._radius, c - 0.2 * this._radius);
+        context.quadraticCurveTo(0.95 * s + w, 0.75 * s + w, 0.5 * s + w, s + w);
+        context.arc(c, c - 0.2 * this._radius, 0.8 * this._radius, 0.45 * Math.PI, 0, false);
+        transfo = { fac: 0.7, posX: c, posY: c - 0.2 * this._radius };
+        break;
+      }
+      default: {
+        var pts;
+        switch (this._form) {
+          case "shield": {
+            pts = [0.05, 0, 0.95, 0, 0.95, 0.8, 0.5, 1, 0.05, 0.8, 0.05, 0];
+            transfo.posY = 0.45 * s + w;
+            break;
+          }
+          case "blazon": {
+            pts = [0.1, 0, 0.9, 0, 0.9, 0.8, 0.6, 0.8, 0.5, 1, 0.4, 0.8, 0.1, 0.8, 0.1, 0];
+            transfo.fac = 0.8;
+            transfo.posY = 0.4 * s + w;
+            break;
+          }
+          case "bookmark": {
+            pts = [0.05, 0, 0.95, 0, 0.95, 1, 0.5, 0.8, 0.05, 1, 0.05, 0];
+            transfo.fac = 0.9;
+            transfo.posY = 0.4 * s + w;
+            break;
+          }
+          case "hexagon": {
+            pts = [0.05, 0.2, 0.5, 0, 0.95, 0.2, 0.95, 0.8, 0.5, 1, 0.05, 0.8, 0.05, 0.2];
+            transfo.fac = 0.9;
+            transfo.posY = 0.5 * s + w;
+            break;
+          }
+          case "diamond": {
+            pts = [0.25, 0, 0.75, 0, 1, 0.2, 1, 0.4, 0.5, 1, 0, 0.4, 0, 0.2, 0.25, 0];
+            transfo.fac = 0.75;
+            transfo.posY = 0.35 * s + w;
+            break;
+          }
+          case "triangle": {
+            pts = [0, 0, 1, 0, 0.5, 1, 0, 0];
+            transfo.fac = 0.6;
+            transfo.posY = 0.3 * s + w;
+            break;
+          }
+          case "sign": {
+            pts = [0.5, 0.05, 1, 0.95, 0, 0.95, 0.5, 0.05];
+            transfo.fac = 0.7;
+            transfo.posY = 0.65 * s + w;
+            break;
+          }
+          case "lozenge": {
+            pts = [0.5, 0, 1, 0.5, 0.5, 1, 0, 0.5, 0.5, 0];
+            transfo.fac = 0.7;
+            break;
+          }
+          case "square":
+          default: {
+            pts = [0, 0, 1, 0, 1, 1, 0, 1, 0, 0];
+            break;
+          }
+        }
+        for (var i = 0; i < pts.length; i += 2)
+          context.lineTo(pts[i] * s + w, pts[i + 1] * s + w);
+      }
+    }
+    context.closePath();
+    return transfo;
+  }
+  /**
+   * @private
+   * @param {ol.style.FontSymbol.RenderOptions} renderOptions
+   * @param {CanvasRenderingContext2D} context
+   * @param {number} x The origin for the symbol (x).
+   * @param {number} y The origin for the symbol (y).
+   */
+  drawMarker_(renderOptions, context, x, y, pixelratio) {
+    var fcolor = this._fill ? this._fill.getColor() : "#000";
+    var scolor = this._stroke ? this._stroke.getColor() : "#000";
+    if (this._form == "none" && this._stroke && this._fill) {
+      scolor = this._fill.getColor();
+      fcolor = this._stroke.getColor();
+    }
+    // reset transform
+    context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
+    // then move to (x, y)
+    context.translate(x, y);
+    var tr = this.drawPath_(renderOptions, context, pixelratio);
+    if (this._fill) {
+      if (this._gradient && this._form != "none") {
+        var grd = context.createLinearGradient(0, 0, renderOptions.size / 2, renderOptions.size);
+        grd.addColorStop(1, ol.color.asString(fcolor));
+        grd.addColorStop(0, ol.color.asString(scolor));
+        context.fillStyle = grd;
+      } else {
+        context.fillStyle = ol.color.asString(fcolor);
+      }
+      context.fill();
+    }
+    if (this._stroke && renderOptions.strokeWidth) {
+      context.strokeStyle = renderOptions.strokeStyle;
+      context.lineWidth = renderOptions.strokeWidth;
+      context.stroke();
+    }
+    // Draw the symbol
+    if (this._glyph.char) {
+      context.font = this._fontStyle + ' '
+        + (2 * tr.fac * (this._radius) * this._fontSize) + "px "
+        + this._glyph.font;
+      context.strokeStyle = context.fillStyle;
+      context.lineWidth = renderOptions.strokeWidth * (this._form == "none" ? 2 : 1);
+      context.fillStyle = ol.color.asString(this._color || scolor);
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      var t = this._glyph.char;
+      if (renderOptions.strokeWidth && scolor != "transparent")
+        context.strokeText(t, tr.posX, tr.posY);
+      context.fillText(t, tr.posX, tr.posY);
+    }
+    if (this._form == "ban" && this._stroke && renderOptions.strokeWidth) {
+      context.strokeStyle = renderOptions.strokeStyle;
+      context.lineWidth = renderOptions.strokeWidth;
+      var r = this._radius + renderOptions.strokeWidth;
+      var d = this._radius * Math.cos(Math.PI / 4);
+      context.moveTo(r + d, r - d);
+      context.lineTo(r - d, r + d);
+      context.stroke();
+    }
+  }
+  /**
+   * @inheritDoc
+   */
+  getChecksum() {
+    var strokeChecksum = (this._stroke !== null) ? this._stroke.getChecksum() : '-';
+    var fillChecksum = (this._fill !== null) ? this._fill.getChecksum() : '-';
+    var recalculate = (this.checksums_ === null)
+      || (strokeChecksum != this.checksums_[1]
+        || fillChecksum != this.checksums_[2]
+        || this._radius != this.checksums_[3]
+        || this._form + "-" + this.glyphs_ != this.checksums_[4]
+      );
+    if (recalculate) {
+      var checksum = 'c' + strokeChecksum + fillChecksum
+        + ((this._radius !== void 0) ? this._radius.toString() : '-')
+        + this._form + "-" + this.glyphs_;
+      this.checksums_ = [checksum, strokeChecksum, fillChecksum, this._radius, this._form + "-" + this.glyphs_];
+    }
+    return this.checksums_[0];
+  }
+}
+/** Font defs
  */
+ol.style.FontSymbol.defs = { 'fonts':{}, 'glyphs':{} };
+/* Cool stuff to get the image symbol for a style
+ * @param {number} ratio pixelratio
+ * /
 ol.style.Image.prototype.getImagePNG = function(ratio) {
   ratio = ratio || window.devicePixelRatio;
   var canvas = this.getImage(ratio);
@@ -38475,338 +38838,7 @@ ol.style.Image.prototype.getImagePNG = function(ratio) {
     return false;
   }
 }
-/** Font defs
- */
-ol.style.FontSymbol.prototype.defs = { 'fonts':{}, 'glyphs':{} };
-/** Static function : add new font defs 
- * @param {String|Object} font the font desciption
- * @param {} glyphs a key / value list of glyph definitions. 
- * 		Each key is the name of the glyph, 
- * 		the value is an object that code the font, the caracter code, 
- * 		the name and a search string for the glyph.
- */
-ol.style.FontSymbol.addDefs = function(font, glyphs) {
-  var thefont = font;
-  if (typeof(font) == 'string') thefont = { font:font, name:font, copyright:'' };
-  if (!thefont.font || typeof(thefont.font) !== 'string') {
-    console.log('bad font def');
-    return;
-  }
-  var fontname = thefont.font;
-  ol.style.FontSymbol.prototype.defs.fonts[fontname] = thefont;
-  for (var i in glyphs) {
-    var g = glyphs[i];
-    if (typeof(g) === 'string' && g.length==1) g = { char: g };
-    ol.style.FontSymbol.prototype.defs.glyphs[i] = {
-      font: thefont.font,
-      char: g.char || ''+String.fromCharCode(g.code) || '',
-      theme: g.theme || thefont.name,
-      name: g.name || i,
-      search: g.search || ''
-    };
-  }
-};
-/** Clones the style. 
- * @return {ol.style.FontSymbol}
- */
-ol.style.FontSymbol.prototype.clone = function() {
-  var g = new ol.style.FontSymbol({
-    //glyph: this._glyph,
-    text: this._glyph.char,
-    font: this._glyph.font,
-    color: this._color,
-    fontSize: this._fontSize,
-    fontStyle: this._fontStyle,
-    stroke: this._stroke,
-    fill: this._fill,
-    radius: this._radius + (this._stroke ? this._stroke.getWidth():0),
-    form: this._form,
-    gradient: this._gradient,
-    offsetX: this._offset[0],
-    offsetY: this._offset[1],
-    opacity: this.getOpacity(),
-    rotation: this.getRotation(),
-    rotateWithView: this.getRotateWithView()
-  });
-  g.setScale(this.getScale());
-  return g;
-};
-/** Get the fill style for the symbol.
- * @return {ol.style.Fill} Fill style.
- * @api
- */
-ol.style.FontSymbol.prototype.getFill = function() {
-  return this._fill;
-};
-/** Get the stroke style for the symbol.
- * @return {_ol_style_Stroke_} Stroke style.
- * @api
- */
-ol.style.FontSymbol.prototype.getStroke = function() {
-  return this._stroke;
-};
-/** Get the glyph definition for the symbol.
- * @param {string|undefined} name a glyph name to get the definition, default return the glyph definition for the style.
- * @return {*}
- * @api
- */
-ol.style.FontSymbol.prototype.getGlyph = function(name) {
-  if (name) return ol.style.FontSymbol.prototype.defs.glyphs[name] || { font:'sans-serif', char:name.charAt(0), theme:'none', name:'none', search:'' };
-  else return this._glyph;
-};
-/** Get glyph definition given a text and a font
- * @param {string|undefined} text
- * @param {string} [font] the font for the text
- * @return {*}
- * @api
- */
-ol.style.FontSymbol.prototype.getTextGlyph = function(text, font) {
-  return { font: font || 'sans-serif', char:String(text), theme:'none', name:'none', search:'' };
-};
-/**
- * Get the glyph name.
- * @return {string} the name
- * @api
- */
-ol.style.FontSymbol.prototype.getGlyphName = function() {
-  for (var i in ol.style.FontSymbol.prototype.defs.glyphs) {
-    if (ol.style.FontSymbol.prototype.defs.glyphs[i] === this._glyph) return i;
-  }
-  return '';
-};
-/**
- * Get the stroke style for the symbol.
- * @return {_ol_style_Stroke_} Stroke style.
- * @api
- */
-ol.style.FontSymbol.prototype.getFontInfo = function(glyph) {
-  return ol.style.FontSymbol.prototype.defs.fonts[glyph.font];
-}
-/**
- * Get the image icon.
- * @param {number} pixelRatio Pixel ratio.
- * @return {HTMLCanvasElement} Image or Canvas element.
- * @api
- */
-ol.style.FontSymbol.prototype.getImage = function(pixelratio) {
-  pixelratio = pixelratio || 1;
-  // get canvas
-  var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
-  var strokeStyle;
-  var strokeWidth = 0;
-  if (this._stroke) {
-    strokeStyle = ol.color.asString(this._stroke.getColor());
-    strokeWidth = this._stroke.getWidth();
-  }
-  /** @type {ol.style.FontSymbol.RenderOptions} */
-  var renderOptions = {
-    strokeStyle: strokeStyle,
-    strokeWidth: strokeWidth,
-    size: canvas.width/pixelratio,
-  };
-  // draw the circle on the canvas
-  var context = (canvas.getContext('2d'));
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
-  // Set anchor / displacement
-  if (!this.getDisplacement) {
-    var a = this.getAnchor();
-    a[0] = canvas.width / 2 - this._offset[0];
-    a[1] = canvas.width / 2 - this._offset[1];
-  }
-  return canvas;
-};
-/**
- * @private
- * @param {ol.style.FontSymbol.RenderOptions} renderOptions
- * @param {CanvasRenderingContext2D} context
- */
-ol.style.FontSymbol.prototype.drawPath_ = function(renderOptions, context) {
-  var s = 2 * this._radius + renderOptions.strokeWidth;
-  var w = renderOptions.strokeWidth/2;
-  var c = renderOptions.size / 2;
-  // Transfo to place the glyph at the right place
-  var transfo = { fac:1, posX: renderOptions.size / 2, posY: renderOptions.size / 2 };
-  context.lineJoin = 'round';
-  context.lineCap = 'round';
-  context.beginPath();
-  // Draw the path with the form
-  switch (this._form) {
-    case "none": {
-      transfo.fac=1;  
-      break;
-    }
-    case "circle":
-    case "ban": {
-      context.arc ( c, c, s/2, 0, 2 * Math.PI, true);
-      break;
-    }
-    case "poi": {
-      context.arc ( c, c -0.4*this._radius, 0.6*this._radius, 0.15*Math.PI, 0.85*Math.PI, true);
-      context.lineTo ( c-0.89*0.05*s, (0.95+0.45*0.05)*s+w);
-      context.arc ( c, 0.95*s+w, 0.05*s, 0.85*Math.PI, 0.15*Math.PI, true);
-      transfo = { fac:0.45, posX:c, posY:c -0.35*this._radius };
-      break;
-    }
-    case "bubble": {
-      context.arc ( c, c -0.2*this._radius, 0.8*this._radius, 0.4*Math.PI, 0.6*Math.PI, true);
-      context.lineTo ( 0.5*s+w, s+w);
-      transfo = { fac:0.7, posX:c, posY:c -0.2*this._radius };
-      break;
-    }
-    case "marker": {
-      context.arc ( c, c -0.2*this._radius, 0.8*this._radius, 0.25*Math.PI, 0.75*Math.PI, true);
-      context.lineTo ( 0.5*s+w, s+w);
-      transfo = { fac:0.7, posX: c, posY: c -0.2*this._radius };
-      break;
-    }
-    case "coma": {
-      context.moveTo ( c + 0.8*this._radius, c -0.2*this._radius);
-      context.quadraticCurveTo ( 0.95*s+w, 0.75*s+w, 0.5*s+w, s+w);
-      context.arc ( c, c -0.2*this._radius, 0.8*this._radius, 0.45*Math.PI, 0, false);
-      transfo = { fac:0.7, posX: c, posY: c -0.2*this._radius };
-      break;
-    }
-    default: {
-      var pts;
-      switch (this._form) {
-        case "shield": {
-          pts = [ 0.05,0, 0.95,0, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0 ]; 
-          transfo.posY = 0.45*s+w ;
-          break;
-        }
-        case "blazon": {
-          pts = [ 0.1,0, 0.9,0, 0.9,0.8, 0.6,0.8, 0.5,1, 0.4,0.8, 0.1,0.8, 0.1,0 ]; 
-          transfo.fac = 0.8;
-          transfo.posY = 0.4*s+w ;
-          break;
-        }
-        case "bookmark": {
-          pts = [ 0.05,0, 0.95,0, 0.95,1, 0.5,0.8, 0.05,1, 0.05,0 ]; 
-          transfo.fac = 0.9;
-          transfo.posY = 0.4*s+w ;
-          break;
-        }
-        case "hexagon": {
-          pts = [ 0.05,0.2, 0.5,0, 0.95,0.2, 0.95,0.8, 0.5,1, 0.05,0.8, 0.05,0.2 ]; 
-          transfo.fac = 0.9;
-          transfo.posY = 0.5*s+w ;
-          break;
-        }
-        case "diamond": {
-          pts = [ 0.25,0, 0.75,0, 1,0.2, 1,0.4, 0.5,1, 0,0.4, 0,0.2, 0.25,0 ]; 
-          transfo.fac = 0.75 ;
-          transfo.posY = 0.35*s+w ;
-          break;
-        }
-        case "triangle": {
-          pts = [ 0,0, 1,0, 0.5,1, 0,0 ]; 
-          transfo.fac = 0.6 ;
-          transfo.posY = 0.3*s+w ;
-          break;
-        }
-        case "sign": {
-          pts = [ 0.5,0.05, 1,0.95, 0,0.95, 0.5,0.05 ]; 
-          transfo.fac = 0.7 ;
-          transfo.posY = 0.65*s+w ;
-          break;
-        }
-        case "lozenge": {
-          pts = [ 0.5,0, 1,0.5, 0.5,1, 0,0.5, 0.5,0 ]; 
-          transfo.fac = 0.7;
-          break;
-        }
-        case "square": 
-        default: {
-          pts = [ 0,0, 1,0, 1,1, 0,1, 0,0 ]; 
-          break;
-        }
-      }
-      for (var i=0; i<pts.length; i+=2) context.lineTo ( pts[i]*s+w, pts[i+1]*s+w);
-    }
-  }
-  context.closePath();
-  return transfo;
-}
-/**
- * @private
- * @param {ol.style.FontSymbol.RenderOptions} renderOptions
- * @param {CanvasRenderingContext2D} context
- * @param {number} x The origin for the symbol (x).
- * @param {number} y The origin for the symbol (y).
- */
-ol.style.FontSymbol.prototype.drawMarker_ = function(renderOptions, context, x, y, pixelratio) {
-  var fcolor = this._fill ? this._fill.getColor() : "#000";
-  var scolor = this._stroke ? this._stroke.getColor() : "#000";
-  if (this._form == "none" && this._stroke && this._fill) {
-    scolor = this._fill.getColor();
-    fcolor = this._stroke.getColor();
-  }
-  // reset transform
-  context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
-  // then move to (x, y)
-  context.translate(x, y);
-  var tr = this.drawPath_(renderOptions, context, pixelratio);
-  if (this._fill) {
-    if (this._gradient && this._form!="none") {
-      var grd = context.createLinearGradient(0,0,renderOptions.size/2,renderOptions.size);
-      grd.addColorStop (1, ol.color.asString(fcolor));
-      grd.addColorStop (0, ol.color.asString(scolor));
-      context.fillStyle = grd;
-    } else {
-      context.fillStyle = ol.color.asString(fcolor);
-    }
-    context.fill();
-  }
-  if (this._stroke && renderOptions.strokeWidth) {
-    context.strokeStyle = renderOptions.strokeStyle;
-    context.lineWidth = renderOptions.strokeWidth;
-    context.stroke();
-  }
-  // Draw the symbol
-  if (this._glyph.char) {
-    context.font = this._fontStyle +' '
-      + (2*tr.fac*(this._radius)*this._fontSize)+"px "
-      + this._glyph.font;
-    context.strokeStyle = context.fillStyle;
-    context.lineWidth = renderOptions.strokeWidth * (this._form == "none" ? 2:1);
-    context.fillStyle = ol.color.asString(this._color || scolor);
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    var t = this._glyph.char;
-    if (renderOptions.strokeWidth && scolor!="transparent") context.strokeText(t, tr.posX, tr.posY);
-    context.fillText(t, tr.posX, tr.posY);
-  }
-  if (this._form=="ban" && this._stroke && renderOptions.strokeWidth) {
-    context.strokeStyle = renderOptions.strokeStyle;
-    context.lineWidth = renderOptions.strokeWidth;
-    var r = this._radius + renderOptions.strokeWidth;
-    var d = this._radius * Math.cos(Math.PI/4);
-    context.moveTo(r + d, r - d);
-    context.lineTo(r - d, r + d);
-    context.stroke();
-  }
-};
-/**
- * @inheritDoc
- */
-ol.style.FontSymbol.prototype.getChecksum = function() {
-  var strokeChecksum = (this._stroke!==null) ? this._stroke.getChecksum() : '-';
-  var fillChecksum = (this._fill!==null) ? this._fill.getChecksum() : '-';
-  var recalculate = (this.checksums_===null)
-    || (strokeChecksum != this.checksums_[1] 
-    || fillChecksum != this.checksums_[2] 
-    || this._radius != this.checksums_[3] 
-    || this._form+"-"+this.glyphs_ != this.checksums_[4]
-  );
-  if (recalculate) {
-    var checksum = 'c' + strokeChecksum + fillChecksum 
-      + ((this._radius !== void 0) ? this._radius.toString() : '-')
-      + this._form+"-"+this.glyphs_;
-    this.checksums_ = [checksum, strokeChecksum, fillChecksum, this._radius, this._form+"-"+this.glyphs_];
-  }
-  return this.checksums_[0];
-};
+*/
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -38835,89 +38867,285 @@ ol.style.FontSymbol.prototype.getChecksum = function() {
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.Photo = function(options) {
-  options = options || {};
-  if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0]
-  this.sanchor_ = (options.kind==="anchored" ? 8 : 0);
-  this._shadow = (Number(options.shadow) || 0);
-  if (!options.stroke) {
-    options.stroke = new ol.style.Stroke({ width: 0, color: "#000"})
-  }
-  var strokeWidth = options.stroke.getWidth();
-  if (strokeWidth<0) strokeWidth = 0;
-  if (options.kind=='folio') strokeWidth += 6;
-  options.stroke.setWidth(strokeWidth);
-  ol.style.RegularShape.call (this, {
-    radius: options.radius + strokeWidth + this.sanchor_/2 + this._shadow/2, 
-    points: 0,
-    displacement: [ options.displacement[0] || 0, (options.displacement[1] || 0) + this.sanchor_],
-    // No fill to create a hit detection Image (v5) or transparent (v6) 
-    fill: ol.style.RegularShape.prototype.render ? new ol.style.Fill({ color: [0,0,0,0] }) : null
-  });
-  // Hack to get the hit detection Image (v4.6.5 ?)
-  if (!this.getHitDetectionImage) {
-    var img = ol.style.RegularShape.prototype.getImage.call(this);
-    if (!this.hitDetectionCanvas_) {
-      for (var i in this) {
-        if (this[i] && this[i].getContext && this[i]!==img) {
-          this.hitDetectionCanvas_ = this[i];
-          break;
+ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
+  constructor(options) {
+    options = options || {}
+    if (!options.displacement)
+      options.displacement = [options.offsetX || 0, -options.offsetY || 0]
+    var sanchor = (options.kind === "anchored" ? 8 : 0)
+    var shadow = (Number(options.shadow) || 0)
+    if (!options.stroke) {
+      options.stroke = new ol.style.Stroke({ width: 0, color: "#000" })
+    }
+    var strokeWidth = options.stroke.getWidth()
+    if (strokeWidth < 0) strokeWidth = 0;
+    if (options.kind == 'folio') strokeWidth += 6;
+    options.stroke.setWidth(strokeWidth)
+    super({
+      radius: options.radius + strokeWidth + sanchor / 2 + shadow / 2,
+      points: 0,
+      displacement: [options.displacement[0] || 0, (options.displacement[1] || 0) + sanchor],
+      // No fill to create a hit detection Image (v5) or transparent (v6) 
+      fill: ol.style.RegularShape.prototype.render ? new ol.style.Fill({ color: [0, 0, 0, 0] }) : null
+    })
+    this.sanchor_ = sanchor;
+    this._shadow = shadow;
+    // Hack to get the hit detection Image (v4.6.5 ?)
+    if (!this.getHitDetectionImage) {
+      var img = ol.style.RegularShape.prototype.getImage.call(this)
+      if (!this.hitDetectionCanvas_) {
+        for (var i in this) {
+          if (this[i] && this[i].getContext && this[i] !== img) {
+            this.hitDetectionCanvas_ = this[i]
+            break
+          }
         }
       }
+      // Clone canvas for hit detection (old versions)
+      this.hitDetectionCanvas_ = document.createElement('canvas')
+      this.hitDetectionCanvas_.width = img.width
+      this.hitDetectionCanvas_.height = img.height
+      var hit = this.hitDetectionCanvas_
+      this.getHitDetectionImage = function () {
+        return hit
+      }
     }
-    // Clone canvas for hit detection (old versions)
-    this.hitDetectionCanvas_ = document.createElement('canvas');
-    this.hitDetectionCanvas_.width = img.width;
-    this.hitDetectionCanvas_.height = img.height;
-    var hit = this.hitDetectionCanvas_
-    this.getHitDetectionImage = function() {
-      return hit;
-    }
+    this._stroke = options.stroke
+    this._fill = options.fill
+    this._crop = options.crop
+    this._crossOrigin = options.crossOrigin
+    this._kind = options.kind || "default"
+    this._radius = options.radius
+    this._src = options.src
+    this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0]
+    this._onload = options.onload
+    if (typeof (options.opacity) == 'number')
+      this.setOpacity(options.opacity)
+    if (typeof (options.rotation) == 'number')
+      this.setRotation(options.rotation)
+    // Calculate image
+    this.getImage()
   }
-  this._stroke = options.stroke;
-  this._fill = options.fill;
-  this._crop = options.crop;
-  this._crossOrigin = options.crossOrigin;
-  this._kind = options.kind || "default";
-  this._radius = options.radius;
-  this._src = options.src;
-  this._offset = [options.offsetX ? options.offsetX :0, options.offsetY ? options.offsetY :0];
-  this._onload = options.onload;
-  if (typeof(options.opacity)=='number') this.setOpacity(options.opacity);
-  if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
-  // Calculate image
-  this.getImage();
-};
-ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
-/** Set photo offset
- * @param {ol.pixel} offset
- */
-ol.style.Photo.prototype.setOffset = function(offset) {
-  this._offset = [offset[0]||0, offset[1]||0];
-  this.getImage();
-};
-/**
- * Clones the style. 
- * @return {ol.style.Photo}
- */
-ol.style.Photo.prototype.clone = function() {
-  var i = new ol.style.Photo({
-    stroke: this._stroke,
-    fill: this._fill,
-    shadow: this._shadow,
-    crop: this._crop,
-    crossOrigin: this._crossOrigin,
-    kind: this._kind,
-    radius: this._radius,
-    src: this._src,
-    offsetX: this._offset[0],
-    offsetY: this._offset[1],
-    opacity: this.getOpacity(),
-    rotation: this.getRotation()
-  });
-  i.getImage();
-  return i;
-};
+  /** Set photo offset
+   * @param {ol.pixel} offset
+   */
+  setOffset(offset) {
+    this._offset = [offset[0] || 0, offset[1] || 0]
+    this.getImage()
+  }
+  /**
+   * Clones the style.
+   * @return {ol.style.Photo}
+   */
+  clone() {
+    var i = new ol.style.Photo({
+      stroke: this._stroke,
+      fill: this._fill,
+      shadow: this._shadow,
+      crop: this._crop,
+      crossOrigin: this._crossOrigin,
+      kind: this._kind,
+      radius: this._radius,
+      src: this._src,
+      offsetX: this._offset[0],
+      offsetY: this._offset[1],
+      opacity: this.getOpacity(),
+      rotation: this.getRotation()
+    })
+    i.getImage()
+    return i
+  }
+  /**
+   * Draw the form without the image
+   * @private
+   */
+  drawBack_(context, color, strokeWidth, pixelratio) {
+    var shadow = this._shadow
+    var canvas = context.canvas
+    context.beginPath()
+    context.fillStyle = color
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    var width = canvas.width / pixelratio
+    var height = canvas.height / pixelratio
+    switch (this._kind) {
+      case 'square': {
+        context.rect(0, 0, width - shadow, height - shadow)
+        break
+      }
+      case 'circle': {
+        context.arc(this._radius + strokeWidth, this._radius + strokeWidth, this._radius + strokeWidth, 0, 2 * Math.PI, false)
+        break
+      }
+      case 'folio': {
+        var offset = 6
+        strokeWidth -= offset
+        context.strokeStyle = 'rgba(0,0,0,0.5)'
+        context.lineWidth = 1
+        var w = width - shadow - 2 * offset
+        var a = Math.atan(6 / w)
+        context.save()
+        context.rotate(-a)
+        context.translate(-6, 2)
+        context.beginPath()
+        context.rect(offset, offset, w, w)
+        context.stroke()
+        context.fill()
+        context.restore()
+        context.save()
+        context.translate(6, -1)
+        context.rotate(a)
+        context.beginPath()
+        context.rect(offset, offset, w, w)
+        context.stroke()
+        context.fill()
+        context.restore()
+        context.beginPath()
+        context.rect(offset, offset, w, w)
+        context.stroke()
+        break
+      }
+      case 'anchored': {
+        context.roundRect(this.sanchor_ / 2, 0, width - this.sanchor_ - shadow, height - this.sanchor_ - shadow, strokeWidth)
+        context.moveTo(width / 2 - this.sanchor_ - shadow / 2, height - this.sanchor_ - shadow)
+        context.lineTo(width / 2 + this.sanchor_ - shadow / 2, height - this.sanchor_ - shadow)
+        context.lineTo(width / 2 - shadow / 2, height - shadow); break
+      }
+      default: {
+        // roundrect
+        context.roundRect(0, 0, width - shadow, height - shadow, strokeWidth)
+        break
+      }
+    }
+    context.closePath()
+  }
+  /**
+   * Get the image icon.
+   * @param {number} pixelRatio Pixel ratio.
+   * @return {HTMLCanvasElement} Image or Canvas element.
+   * @api
+   */
+  getImage(pixelratio) {
+    pixelratio = pixelratio || 1
+    var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio)
+    if (this._gethit)
+      return canvas
+    var strokeStyle
+    var strokeWidth = 0
+    if (this._stroke) {
+      strokeStyle = ol.color.asString(this._stroke.getColor())
+      strokeWidth = this._stroke.getWidth()
+    }
+    // Draw hitdetection image
+    this._gethit = true
+    var context = this.getHitDetectionImage().getContext('2d')
+    context.save()
+    context.setTransform(1, 0, 0, 1, 0, 0)
+    this.drawBack_(context, "#000", strokeWidth, 1)
+    context.fill()
+    context.restore()
+    this._gethit = false
+    // Draw the image
+    context = canvas.getContext('2d')
+    context.save()
+    context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0)
+    this.drawBack_(context, strokeStyle, strokeWidth, pixelratio)
+    // Draw a shadow
+    if (this._shadow) {
+      context.shadowColor = 'rgba(0,0,0,0.5)'
+      context.shadowBlur = pixelratio * this._shadow / 2
+      context.shadowOffsetX = pixelratio * this._shadow / 2
+      context.shadowOffsetY = pixelratio * this._shadow / 2
+    }
+    context.fill()
+    context.restore()
+    var self = this
+    var img = this.img_ = new Image()
+    if (this._crossOrigin)
+      img.crossOrigin = this._crossOrigin
+    img.src = this._src
+    // Draw image
+    if (img.width) {
+      self.drawImage_(canvas, img, pixelratio)
+    } else {
+      img.onload = function () {
+        self.drawImage_(canvas, img, pixelratio)
+        // Force change (?!)
+        // self.setScale(1);
+        if (self._onload)
+          self._onload()
+      }
+    }
+    // Set anchor (ol < 6)
+    if (!this.getDisplacement) {
+      var a = this.getAnchor()
+      a[0] = (canvas.width / pixelratio - this._shadow) / 2 - this._offset[0]
+      if (this.sanchor_) {
+        a[1] = canvas.height / pixelratio - this._shadow - this._offset[1]
+      } else {
+        a[1] = (canvas.height / pixelratio - this._shadow) / 2 - this._offset[1]
+      }
+    }
+    return canvas
+  }
+  /** Returns the photo image
+   * @returns {HTMLImageElement}
+   */
+  getPhoto() {
+    return this.img_
+  }
+  /**
+   * Draw an timage when loaded
+   * @private
+   */
+  drawImage_(canvas, img, pixelratio) {
+    // Remove the circle on the canvas
+    var context = (canvas.getContext('2d'))
+    var strokeWidth = 0
+    if (this._stroke)
+      strokeWidth = this._stroke.getWidth()
+    var size = 2 * this._radius
+    context.save()
+    if (ol.style.RegularShape.prototype.render)
+      context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0)
+    if (this._kind == 'circle') {
+      context.beginPath()
+      context.arc(this._radius + strokeWidth, this._radius + strokeWidth, this._radius, 0, 2 * Math.PI, false)
+      context.clip()
+    }
+    var s, x, y, w, h, sx, sy, sw, sh
+    // Crop the image to a square vignette
+    if (this._crop) {
+      s = Math.min(img.width / size, img.height / size)
+      sw = sh = s * size
+      sx = (img.width - sw) / 2
+      sy = (img.height - sh) / 2
+      x = y = 0
+      w = h = size + 1
+    } else {
+      // Fit the image to the size
+      s = Math.min(size / img.width, size / img.height)
+      sx = sy = 0
+      sw = img.width
+      sh = img.height
+      w = s * sw
+      h = s * sh
+      x = (size - w) / 2
+      y = (size - h) / 2
+    }
+    x += strokeWidth + this.sanchor_ / 2
+    y += strokeWidth
+    context.drawImage(img, sx, sy, sw, sh, x, y, w, h)
+    // Draw a circle to avoid aliasing on clip
+    if (this._kind == 'circle' && strokeWidth) {
+      context.beginPath()
+      context.strokeStyle = ol.color.asString(this._stroke.getColor())
+      context.lineWidth = strokeWidth / 4
+      context.arc(this._radius + strokeWidth, this._radius + strokeWidth, this._radius, 0, 2 * Math.PI, false)
+      context.stroke()
+    }
+    context.restore()
+  }
+}
 /**
  * Draws a rounded rectangle using the current state of the canvas. 
  * Draw a rectangle if the radius is null.
@@ -38942,191 +39170,6 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
     this.closePath();
   }
   return this;
-};
-/**
- * Draw the form without the image
- * @private
- */
-ol.style.Photo.prototype.drawBack_ = function(context, color, strokeWidth, pixelratio) {
-  var shadow = this._shadow;
-  var canvas = context.canvas;
-  context.beginPath();
-  context.fillStyle = color;
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  var width = canvas.width/pixelratio;
-  var height = canvas.height/pixelratio;
-  switch (this._kind) {
-    case 'square': {
-      context.rect(0,0, width-shadow, height-shadow);
-      break;
-    }
-    case 'circle': {
-      context.arc(this._radius+strokeWidth, this._radius+strokeWidth, this._radius+strokeWidth, 0, 2 * Math.PI, false);
-      break;
-    }
-    case 'folio': {
-      var offset = 6;
-      strokeWidth -= offset;
-      context.strokeStyle = 'rgba(0,0,0,0.5)';
-      context.lineWidth = 1;
-      var w = width-shadow-2*offset;
-      var a = Math.atan(6/w);
-      context.save();
-      context.rotate(-a);
-      context.translate(-6,2);
-      context.beginPath();
-      context.rect(offset,offset,w,w);
-      context.stroke();
-      context.fill();
-      context.restore();
-      context.save();
-      context.translate(6,-1);
-      context.rotate(a);
-      context.beginPath();
-      context.rect(offset,offset,w,w);
-      context.stroke();
-      context.fill();
-      context.restore();
-      context.beginPath();
-      context.rect(offset,offset,w,w);
-      context.stroke();
-      break;
-    }
-    case 'anchored': {
-      context.roundRect(this.sanchor_/2,0,width-this.sanchor_-shadow, height-this.sanchor_-shadow, strokeWidth);
-      context.moveTo(width/2-this.sanchor_-shadow/2,height-this.sanchor_-shadow);
-      context.lineTo(width/2+this.sanchor_-shadow/2,height-this.sanchor_-shadow);
-      context.lineTo(width/2-shadow/2,height-shadow);break;
-    }
-    default: {
-      // roundrect
-      context.roundRect(0,0,width-shadow, height-shadow, strokeWidth);
-      break;
-    }
-  }
-  context.closePath();
-};
-/**
- * Get the image icon.
- * @param {number} pixelRatio Pixel ratio.
- * @return {HTMLCanvasElement} Image or Canvas element.
- * @api
- */
-ol.style.Photo.prototype.getImage = function(pixelratio) {
-  pixelratio = pixelratio || 1;
-  var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
-  if (this._gethit) return canvas;
-  var strokeStyle;
-  var strokeWidth = 0;
-  if (this._stroke) {
-    strokeStyle = ol.color.asString(this._stroke.getColor());
-    strokeWidth = this._stroke.getWidth();
-  }
-  // Draw hitdetection image
-  this._gethit = true;
-    var context = this.getHitDetectionImage().getContext('2d');
-    context.save();
-    context.setTransform(1,0,0,1,0,0)
-    this.drawBack_(context, "#000", strokeWidth, 1);
-    context.fill();
-    context.restore();
-  this._gethit = false;
-  // Draw the image
-  context = canvas.getContext('2d');
-  context.save();
-  context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
-  this.drawBack_(context,strokeStyle,strokeWidth, pixelratio);
-  // Draw a shadow
-  if (this._shadow) {
-    context.shadowColor = 'rgba(0,0,0,0.5)';
-    context.shadowBlur = pixelratio*this._shadow/2;
-    context.shadowOffsetX = pixelratio*this._shadow/2;
-    context.shadowOffsetY = pixelratio*this._shadow/2;
-  }
-  context.fill();
-  context.restore();
-  var self = this;
-  var img = this.img_ = new Image();
-  if (this._crossOrigin) img.crossOrigin = this._crossOrigin;
-  img.src = this._src;
-  // Draw image
-  if (img.width) {
-    self.drawImage_(canvas, img, pixelratio);
-  } else {
-    img.onload = function() {
-      self.drawImage_(canvas, img, pixelratio);
-      // Force change (?!)
-      // self.setScale(1);
-      if (self._onload) self._onload();
-    };
-  }
-  // Set anchor (ol < 6)
-  if (!this.getDisplacement) {
-    var a = this.getAnchor();
-    a[0] = (canvas.width/pixelratio - this._shadow)/2  - this._offset[0];
-    if (this.sanchor_) {
-      a[1] = canvas.height/pixelratio - this._shadow - this._offset[1];
-    } else {
-      a[1] = (canvas.height/pixelratio - this._shadow)/2 - this._offset[1];
-    }
-  }
-  return canvas;
-};
-/** Returns the photo image
- * @returns {HTMLImageElement}
- */
-ol.style.Photo.prototype.getPhoto = function() {
-  return this.img_;
-};
-/**
- * Draw an timage when loaded
- * @private
- */
-ol.style.Photo.prototype.drawImage_ = function(canvas, img, pixelratio) {
-  // Remove the circle on the canvas
-  var context = (canvas.getContext('2d'));
-  var strokeWidth = 0;
-  if (this._stroke) strokeWidth = this._stroke.getWidth();
-  var size = 2*this._radius;
-  context.save();
-  if (ol.style.RegularShape.prototype.render) context.setTransform(pixelratio,0,0,pixelratio,0,0);
-  if (this._kind=='circle') {
-    context.beginPath();
-    context.arc(this._radius+strokeWidth, this._radius+strokeWidth, this._radius, 0, 2 * Math.PI, false);
-    context.clip();
-  }
-  var s, x, y, w, h, sx, sy, sw, sh;
-  // Crop the image to a square vignette
-  if (this._crop) {
-    s = Math.min (img.width/size, img.height/size);
-    sw = sh = s*size;
-    sx = (img.width-sw)/2;
-    sy = (img.height-sh)/2;
-    x = y = 0;
-    w = h = size+1;
-  } else {
-    // Fit the image to the size
-    s = Math.min (size/img.width, size/img.height);
-    sx = sy = 0;
-    sw = img.width;
-    sh = img.height;
-    w = s*sw;
-    h = s*sh;
-    x = (size-w)/2;
-    y = (size-h)/2;
-  }
-  x += strokeWidth + this.sanchor_/2;
-  y += strokeWidth;
-  context.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-  // Draw a circle to avoid aliasing on clip
-  if (this._kind=='circle' && strokeWidth) {
-    context.beginPath();
-    context.strokeStyle = ol.color.asString(this._stroke.getColor());
-    context.lineWidth = strokeWidth/4;
-    context.arc(this._radius+strokeWidth, this._radius+strokeWidth, this._radius, 0, 2 * Math.PI, false);
-    context.stroke();
-  }
-  context.restore();
 };
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO, 
@@ -39584,233 +39627,251 @@ ol.style.Shadow.prototype.getImage = function(pixelratio) {
  * @implements {ol.structs.IHasChecksum}
  * @api
  */
-ol.style.StrokePattern = function(options)
-{	if (!options) options = {};
-	var pattern, i;
-	var canvas = this.canvas_ = document.createElement('canvas');
-	var scale = Number(options.scale)>0 ? Number(options.scale) : 1;
-	var ratio = scale*ol.has.DEVICE_PIXEL_RATIO || ol.has.DEVICE_PIXEL_RATIO;
-	var ctx = canvas.getContext('2d');
-	if (options.image)
-	{	options.image.load();
-		var img = options.image.getImage();
-		if (img.width)
-		{	canvas.width = Math.round(img.width *ratio);
-			canvas.height = Math.round(img.height *ratio);
-			ctx.globalAlpha = typeof(options.opacity) == 'number' ? options.opacity:1;
-			ctx.drawImage(img, 0,0, img.width, img.height, 0, 0, canvas.width, canvas.height);
-			pattern = ctx.createPattern(canvas, 'repeat');
-		}
-		else 
-		{	var self = this;
-			pattern = [0,0,0,0];
-			img.onload = function ()
-			{	canvas.width = Math.round(img.width *ratio);
-				canvas.height = Math.round(img.height *ratio);
-				ctx.globalAlpha = typeof(options.opacity) == 'number' ? options.opacity:1;
-				ctx.drawImage(img, 0,0, img.width, img.height, 0, 0, canvas.width, canvas.height);
-				pattern = ctx.createPattern(canvas, 'repeat');
-				self.setColor(pattern);
+ol.style.StrokePattern = class olstyleStrokePattern extends ol.style.Stroke {
+	constructor(options) {
+		super(options)
+		options = options || {}
+		var pattern, i;
+		var canvas = this.canvas_ = document.createElement('canvas')
+		var scale = Number(options.scale) > 0 ? Number(options.scale) : 1
+		var ratio = scale * ol.has.DEVICE_PIXEL_RATIO || ol.has.DEVICE_PIXEL_RATIO
+		var ctx = canvas.getContext('2d')
+		if (options.image) {
+			options.image.load()
+			var img = options.image.getImage()
+			if (img.width) {
+				canvas.width = Math.round(img.width * ratio)
+				canvas.height = Math.round(img.height * ratio)
+				ctx.globalAlpha = typeof (options.opacity) == 'number' ? options.opacity : 1
+				ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height)
+				pattern = ctx.createPattern(canvas, 'repeat')
+			} else {
+				var self = this
+				pattern = [0, 0, 0, 0]
+				img.onload = function () {
+					canvas.width = Math.round(img.width * ratio)
+					canvas.height = Math.round(img.height * ratio)
+					ctx.globalAlpha = typeof (options.opacity) == 'number' ? options.opacity : 1
+					ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height)
+					pattern = ctx.createPattern(canvas, 'repeat')
+					self.setColor(pattern)
+				}
+			}
+		} else {
+			var pat = this.getPattern_(options)
+			canvas.width = Math.round(pat.width * ratio)
+			canvas.height = Math.round(pat.height * ratio)
+			ctx.beginPath()
+			if (options.fill) {
+				ctx.fillStyle = ol.color.asString(options.fill.getColor())
+				ctx.fillRect(0, 0, canvas.width, canvas.height)
+			}
+			ctx.scale(ratio, ratio)
+			ctx.lineCap = "round"
+			ctx.lineWidth = pat.stroke || 1
+			ctx.fillStyle = ol.color.asString(options.color || "#000")
+			ctx.strokeStyle = ol.color.asString(options.color || "#000")
+			if (pat.circles)
+				for (i = 0; i < pat.circles.length; i++) {
+					var ci = pat.circles[i]
+					ctx.beginPath()
+					ctx.arc(ci[0], ci[1], ci[2], 0, 2 * Math.PI)
+					if (pat.fill)
+						ctx.fill()
+					if (pat.stroke)
+						ctx.stroke()
+				}
+			if (!pat.repeat)
+				pat.repeat = [[0, 0]]
+			if (pat.char) {
+				ctx.font = pat.font || (pat.width) + "px Arial"
+				ctx.textAlign = 'center'
+				ctx.textBaseline = 'middle'
+				if (pat.angle) {
+					ctx.fillText(pat.char, pat.width / 4, pat.height / 4)
+					ctx.fillText(pat.char, 5 * pat.width / 4, 5 * pat.height / 4)
+					ctx.fillText(pat.char, pat.width / 4, 5 * pat.height / 4)
+					ctx.fillText(pat.char, 5 * pat.width / 4, pat.height / 4)
+					ctx.fillText(pat.char, 3 * pat.width / 4, 3 * pat.height / 4)
+					ctx.fillText(pat.char, -pat.width / 4, -pat.height / 4)
+					ctx.fillText(pat.char, 3 * pat.width / 4, -pat.height / 4)
+					ctx.fillText(pat.char, -pat.width / 4, 3 * pat.height / 4)
+				}
+				else
+					ctx.fillText(pat.char, pat.width / 2, pat.height / 2)
+			}
+			if (pat.lines)
+				for (i = 0; i < pat.lines.length; i++)
+					for (var r = 0; r < pat.repeat.length; r++) {
+						var li = pat.lines[i]
+						ctx.beginPath()
+						ctx.moveTo(li[0] + pat.repeat[r][0], li[1] + pat.repeat[r][1])
+						for (var k = 2; k < li.length; k += 2) {
+							ctx.lineTo(li[k] + pat.repeat[r][0], li[k + 1] + pat.repeat[r][1])
+						}
+						if (pat.fill)
+							ctx.fill()
+						if (pat.stroke)
+							ctx.stroke()
+						ctx.save()
+						ctx.strokeStyle = 'red'
+						ctx.strokeWidth = 0.1
+						//ctx.strokeRect(0,0,canvas.width,canvas.height);
+						ctx.restore()
+					}
+			pattern = ctx.createPattern(canvas, 'repeat')
+			if (options.offset) {
+				var offset = options.offset
+				if (typeof (offset) == "number")
+					offset = [offset, offset]
+				if (offset instanceof Array) {
+					var dx = Math.round((offset[0] * ratio))
+					var dy = Math.round((offset[1] * ratio))
+					// New pattern
+					ctx.scale(1 / ratio, 1 / ratio)
+					ctx.clearRect(0, 0, canvas.width, canvas.height)
+					ctx.translate(dx, dy)
+					ctx.fillStyle = pattern
+					ctx.fillRect(-dx, -dy, canvas.width, canvas.height)
+					pattern = ctx.createPattern(canvas, 'repeat')
+				}
 			}
 		}
+		this.setColor (pattern);
 	}
-	else
-	{	var pat = this.getPattern_(options);
-		canvas.width = Math.round(pat.width *ratio);
-		canvas.height = Math.round(pat.height *ratio);
-		ctx.beginPath();
-		if (options.fill) 
-		{	ctx.fillStyle = ol.color.asString(options.fill.getColor());
-			ctx.fillRect(0,0, canvas.width, canvas.height);
-		}
-		ctx.scale(ratio,ratio);
-		ctx.lineCap = "round";
-		ctx.lineWidth = pat.stroke || 1;
-		ctx.fillStyle = ol.color.asString(options.color||"#000");
-		ctx.strokeStyle = ol.color.asString(options.color||"#000");
-		if (pat.circles) for (i=0; i<pat.circles.length; i++)
-		{	var ci = pat.circles[i]; 
-			ctx.beginPath();
-			ctx.arc(ci[0], ci[1], ci[2], 0,2*Math.PI);
-			if (pat.fill) ctx.fill();
-			if (pat.stroke) ctx.stroke();
-		}
-		if (!pat.repeat) pat.repeat=[[0,0]];
-		if (pat.char)
-		{	ctx.font = pat.font || (pat.width)+"px Arial";
-			ctx.textAlign = 'center';
-			ctx.textBaseline = 'middle';
-			if (pat.angle) 
-			{	ctx.fillText(pat.char, pat.width/4, pat.height/4);
-				ctx.fillText(pat.char, 5*pat.width/4, 5*pat.height/4);
-				ctx.fillText(pat.char, pat.width/4, 5*pat.height/4);
-				ctx.fillText(pat.char, 5*pat.width/4, pat.height/4);
-				ctx.fillText(pat.char, 3*pat.width/4, 3*pat.height/4);
-				ctx.fillText(pat.char, -pat.width/4, -pat.height/4);
-				ctx.fillText(pat.char, 3*pat.width/4, -pat.height/4);
-				ctx.fillText(pat.char, -pat.width/4, 3*pat.height/4);
-			}
-			else ctx.fillText(pat.char, pat.width/2, pat.height/2);
-		}
-		if (pat.lines) for (i=0; i<pat.lines.length; i++) for (var r=0; r<pat.repeat.length; r++)
-		{	var li = pat.lines[i];
-			ctx.beginPath();
-			ctx.moveTo(li[0]+pat.repeat[r][0],li[1]+pat.repeat[r][1]);
-			for (var k=2; k<li.length; k+=2)
-			{	ctx.lineTo(li[k]+pat.repeat[r][0],li[k+1]+pat.repeat[r][1]);
-			}
-			if (pat.fill) ctx.fill();
-			if (pat.stroke) ctx.stroke();
-			ctx.save()
-			ctx.strokeStyle = 'red';
-			ctx.strokeWidth = 0.1;
-			//ctx.strokeRect(0,0,canvas.width,canvas.height);
-			ctx.restore()
-		}
-		pattern = ctx.createPattern(canvas, 'repeat');
-		if (options.offset)
-		{	var offset = options.offset;
-			if (typeof(offset) == "number") offset = [offset,offset];
-			if (offset instanceof Array) 
-			{	var dx = Math.round((offset[0]*ratio));
-				var dy = Math.round((offset[1]*ratio));
-				// New pattern
-				ctx.scale(1/ratio,1/ratio)
-				ctx.clearRect(0,0,canvas.width,canvas.height);
-				ctx.translate(dx,dy);
-				ctx.fillStyle = pattern;
-				ctx.fillRect(-dx, -dy, canvas.width,canvas.height);
-				pattern = ctx.createPattern(canvas, 'repeat');
-			}
-		}
+	/**
+	 * Clones the style.
+	 * @return {ol.style.StrokePattern}
+	 */
+	clone() {
+		var s = ol.style.Fill.prototype.clone.call(this)
+		s.canvas_ = this.canvas_
+		return s
 	}
-	options.color = pattern;
-	ol.style.Stroke.call (this, options);
-};
-ol.ext.inherits(ol.style.StrokePattern, ol.style.Stroke);
-/**
- * Clones the style. 
- * @return {ol.style.StrokePattern}
- */
-ol.style.StrokePattern.prototype.clone = function() {
-	var s = ol.style.Fill.prototype.clone.call(this);
-	s.canvas_ = this.canvas_;
-	return s;
-};
-/** Get canvas used as pattern
-*	@return {canvas}
-*/
-ol.style.StrokePattern.prototype.getImage = function()
-{	return this.canvas_;
+	/** Get canvas used as pattern
+	*	@return {canvas}
+	*/
+	getImage() {
+		return this.canvas_
+	}
+	/** Get pattern
+	*	@param {olx.style.FillPatternOption}
+	*/
+	getPattern_(options) {
+		var pat = ol.style.FillPattern.patterns[options.pattern]
+			|| ol.style.FillPattern.patterns.dot
+		var d = Math.round(options.spacing) || 10
+		var size
+		//	var d2 = Math.round(d/2)+0.5;
+		switch (options.pattern) {
+			case 'dot':
+			case 'circle':
+				{
+					size = options.size === 0 ? 0 : options.size / 2 || 2
+					if (!options.angle) {
+						pat.width = pat.height = d
+						pat.circles = [[d / 2, d / 2, size]]
+						if (options.pattern == 'circle') {
+							pat.circles = pat.circles.concat([
+								[d / 2 + d, d / 2, size],
+								[d / 2 - d, d / 2, size],
+								[d / 2, d / 2 + d, size],
+								[d / 2, d / 2 - d, size],
+								[d / 2 + d, d / 2 + d, size],
+								[d / 2 + d, d / 2 - d, size],
+								[d / 2 - d, d / 2 + d, size],
+								[d / 2 - d, d / 2 - d, size]
+							])
+						}
+					}
+					else {
+						d = pat.width = pat.height = Math.round(d * 1.4)
+						pat.circles = [[d / 4, d / 4, size], [3 * d / 4, 3 * d / 4, size]]
+						if (options.pattern == 'circle') {
+							pat.circles = pat.circles.concat([
+								[d / 4 + d, d / 4, size],
+								[d / 4, d / 4 + d, size],
+								[3 * d / 4 - d, 3 * d / 4, size],
+								[3 * d / 4, 3 * d / 4 - d, size],
+								[d / 4 + d, d / 4 + d, size],
+								[3 * d / 4 - d, 3 * d / 4 - d, size]
+							])
+						}
+					}
+					break
+				}
+			case 'tile':
+			case 'square':
+				{
+					size = options.size === 0 ? 0 : options.size / 2 || 2
+					if (!options.angle) {
+						pat.width = pat.height = d
+						pat.lines = [[d / 2 - size, d / 2 - size, d / 2 + size, d / 2 - size, d / 2 + size, d / 2 + size, d / 2 - size, d / 2 + size, d / 2 - size, d / 2 - size]]
+					}
+					else {
+						pat.width = pat.height = d
+						//size *= Math.sqrt(2);
+						pat.lines = [[d / 2 - size, d / 2, d / 2, d / 2 - size, d / 2 + size, d / 2, d / 2, d / 2 + size, d / 2 - size, d / 2]]
+					}
+					if (options.pattern == 'square')
+						pat.repeat = [[0, 0], [0, d], [d, 0], [0, -d], [-d, 0], [-d, -d], [d, d], [-d, d], [d, -d]]
+					break
+				}
+			case 'cross':
+				{ // Limit angle to 0 | 45
+					if (options.angle)
+						options.angle = 45
+				}
+			// fallthrough
+			case 'hatch':
+				{
+					var a = Math.round(((options.angle || 0) - 90) % 360)
+					if (a > 180)
+						a -= 360
+					a *= Math.PI / 180
+					var cos = Math.cos(a)
+					var sin = Math.sin(a)
+					if (Math.abs(sin) < 0.0001) {
+						pat.width = pat.height = d
+						pat.lines = [[0, 0.5, d, 0.5]]
+						pat.repeat = [[0, 0], [0, d]]
+					}
+					else if (Math.abs(cos) < 0.0001) {
+						pat.width = pat.height = d
+						pat.lines = [[0.5, 0, 0.5, d]]
+						pat.repeat = [[0, 0], [d, 0]]
+						if (options.pattern == 'cross') {
+							pat.lines.push([0, 0.5, d, 0.5])
+							pat.repeat.push([0, d])
+						}
+					}
+					else {
+						var w = pat.width = Math.round(Math.abs(d / sin)) || 1
+						var h = pat.height = Math.round(Math.abs(d / cos)) || 1
+						if (options.pattern == 'cross') {
+							pat.lines = [[-w, -h, 2 * w, 2 * h], [2 * w, -h, -w, 2 * h]]
+							pat.repeat = [[0, 0]]
+						}
+						else if (cos * sin > 0) {
+							pat.lines = [[-w, -h, 2 * w, 2 * h]]
+							pat.repeat = [[0, 0], [w, 0], [0, h]]
+						}
+						else {
+							pat.lines = [[2 * w, -h, -w, 2 * h]]
+							pat.repeat = [[0, 0], [-w, 0], [0, h]]
+						}
+					}
+					pat.stroke = options.size === 0 ? 0 : options.size || 4
+					break
+				}
+			default: {
+				break
+			}
+		}
+		return pat
+	}
 }
-/** Get pattern
-*	@param {olx.style.FillPatternOption}
-*/
-ol.style.StrokePattern.prototype.getPattern_ = function(options)
-{	var pat = ol.style.FillPattern.prototype.patterns[options.pattern]
-		|| ol.style.FillPattern.prototype.patterns.dot;
-	var d = Math.round(options.spacing)||10;
-	var size;
-//	var d2 = Math.round(d/2)+0.5;
-	switch (options.pattern)
-	{	case 'dot':
-		case 'circle':
-		{	size = options.size===0 ? 0 : options.size/2 || 2;
-			if (!options.angle)
-			{	pat.width = pat.height = d;
-				pat.circles = [[ d/2, d/2, size ]]
-				if (options.pattern=='circle')
-				{	pat.circles = pat.circles.concat([
-						[ d/2+d, d/2, size ],
-						[ d/2-d, d/2, size ],
-						[ d/2, d/2+d, size ],
-						[ d/2, d/2-d, size ],
-						[ d/2+d, d/2+d, size ],
-						[ d/2+d, d/2-d, size ],
-						[ d/2-d, d/2+d, size ],
-						[ d/2-d, d/2-d, size ] ])
-				}
-			}
-			else
-			{	d = pat.width = pat.height = Math.round(d*1.4);
-				pat.circles = [[ d/4, d/4, size ], [ 3*d/4, 3*d/4, size ]];
-				if (options.pattern=='circle')
-				{	pat.circles = pat.circles.concat([
-						[ d/4+d, d/4, size ],
-						[ d/4, d/4+d, size ],
-						[ 3*d/4-d, 3*d/4, size ],
-						[ 3*d/4, 3*d/4-d, size ],
-						[ d/4+d, d/4+d, size ], 
-						[ 3*d/4-d, 3*d/4-d, size ] ]);
-				}
-			}
-			break;
-		}
-		case 'tile':
-		case 'square':
-		{	size = options.size===0 ? 0 : options.size/2 || 2;
-			if (!options.angle)
-			{	pat.width = pat.height = d;
-				pat.lines = [[ d/2-size, d/2-size, d/2+size, d/2-size, d/2+size, d/2+size, d/2-size,d/2+size, d/2-size, d/2-size ]]
-			}
-			else
-			{	pat.width = pat.height = d;
-				//size *= Math.sqrt(2);
-				pat.lines = [[ d/2-size,d/2, d/2,d/2-size, d/2+size,d/2, d/2,d/2+size, d/2-size,d/2 ]]
-			}
-			if (options.pattern=='square') pat.repeat = [[0,0], [0,d], [d,0], [0,-d], [-d,0], [-d,-d], [d,d], [-d,d], [d,-d] ]
-			break;
-		}
-		case 'cross':
-		{	// Limit angle to 0 | 45
-			if (options.angle) options.angle = 45;
-		}
-		// fallthrough
-		case 'hatch':
-		{	var a = Math.round(((options.angle||0)-90)%360);
-			if (a>180) a -= 360;
-			a *= Math.PI/180;
-			var cos = Math.cos(a);
-			var sin = Math.sin(a);
-			if (Math.abs(sin)<0.0001)
-			{	pat.width = pat.height = d;	
-				pat.lines = [ [ 0,0.5, d, 0.5 ] ];
-				pat.repeat = [ [0,0], [0,d] ];
-			}
-			else  if (Math.abs(cos)<0.0001)
-			{	pat.width = pat.height = d;	
-				pat.lines = [ [ 0.5,0, 0.5, d] ];
-				pat.repeat = [ [0,0], [d,0] ];
-				if (options.pattern=='cross') 
-				{	pat.lines.push ([ 0,0.5, d, 0.5 ]);
-					pat.repeat.push([0,d]);
-				}
-			}
-			else
-			{	var w = pat.width = Math.round(Math.abs(d/sin)) || 1;
-				var h = pat.height = Math.round(Math.abs(d/cos)) || 1;
-				if (options.pattern=='cross')
-				{	pat.lines = [ [-w,-h, 2*w,2*h], [2*w,-h, -w,2*h] ];
-					pat.repeat = [ [0,0] ];
-				}
-				else if (cos*sin>0) 
-				{	pat.lines = [ [-w,-h, 2*w,2*h] ];
-					pat.repeat = [ [0,0], [w,0], [0,h] ];
-				}
-				else 
-				{	pat.lines = [ [2*w,-h, -w,2*h] ];
-					pat.repeat = [ [0,0], [-w,0], [0,h] ];
-				}
-			}
-			pat.stroke = options.size===0 ? 0 : options.size||4;
-			break;
-		}
-		default: {
-			break;
-		}
-	}
-	return pat
-};
+ol.ext.inherits(ol.style.StrokePattern, ol.style.Stroke);
 
 ol.style.Style.defaultStyle;
 (function() {

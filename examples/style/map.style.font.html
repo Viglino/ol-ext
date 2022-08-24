@@ -24,8 +24,8 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 
   <!-- ol-ext -->
@@ -296,9 +296,9 @@
     vector.changed();
   }
   // Fill font glyphs
-  var glyph = ol.style.FontSymbol.prototype.defs.glyphs;
+  var glyph = ol.style.FontSymbol.defs.glyphs;
   var opt = $(".options");
-  for (var font in ol.style.FontSymbol.prototype.defs.fonts) {
+  for (var font in ol.style.FontSymbol.defs.fonts) {
     $("<h2>").text(font+":").appendTo(opt);
     for (var i in glyph) {
       if (glyph[i].font == font) {
