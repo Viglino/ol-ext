@@ -5554,20 +5554,21 @@ ol.control.LayerSwitcher.prototype.setMap = function(map) {
 ol.control.LayerSwitcher.prototype.show = function() {
   this.element.classList.add('ol-forceopen');
   this.overflow();
-  self.dispatchEvent({ type: 'toggle', collapsed: false });
+  this.dispatchEvent({ type: 'toggle', collapsed: false });
 };
 /** Hide control
  */
 ol.control.LayerSwitcher.prototype.hide = function() {
   this.element.classList.remove('ol-forceopen');
   this.overflow();
-  self.dispatchEvent({ type: 'toggle', collapsed: true });
+  this.dispatchEvent({ type: 'toggle', collapsed: true });
 };
 /** Toggle control
  */
 ol.control.LayerSwitcher.prototype.toggle = function() {
   this.element.classList.toggle("ol-forceopen");
   this.overflow();
+  this.dispatchEvent({ type: 'toggle', collapsed: !this.isOpen() });
 };
 /** Is control open
  * @return {boolean}
