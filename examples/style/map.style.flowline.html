@@ -19,8 +19,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
@@ -182,7 +182,7 @@
     layers: [layer]
   });
 
-  // Default style to make the feature selectable
+  // Default style to make the feature selectable (ol<7)
   var defaultStyle = new ol.style.Style({
     stroke: new ol.style.Stroke({ color: [255, 255, 255, .1], width: 1 })
   });
@@ -195,7 +195,10 @@
     width2: Number($('.width2').val())
   });
   function getStyle(feature, res) {
+    /* ol < 7 need a style to make the feature selectable  
     return [ defaultStyle, flowStyle ];
+    */
+    return flowStyle;
   }
 
   // Nouvelle source de donnee

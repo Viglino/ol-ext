@@ -23437,172 +23437,181 @@ ol.interaction.GeolocationDraw.prototype.getPosition = function (loc) {
  *  @param {number | undefined} options.hitTolerance Hit-detection tolerance in pixels.
  *  @param { function | undefined } options.handleEvent Method called by the map to notify the interaction that a browser event was dispatched to the map. The function may return false to prevent the propagation of the event to other interactions in the map's interactions chain.
  */
-ol.interaction.Hover = function(options) {
-  if (!options) options={};
-  var self = this;
-  var dragging = false;
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      if (!self.getActive()) return true;
-      switch(e.type) {
-        case 'pointerdrag': { 
-          dragging = true;
-          break;
-        } 
-        case 'pointerup': { 
-          dragging = false;
-          break;
+ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interaction {
+  constructor(options) {
+    if (!options)
+    options = options || {};
+    var dragging = false;
+    super({
+      handleEvent: function (e) {
+        if (!self.getActive())
+          return true;
+        switch (e.type) {
+          case 'pointerdrag': {
+            dragging = true;
+            break;
+          }
+          case 'pointerup': {
+            dragging = false;
+            break;
+          }
+          case 'pointermove': {
+            if (!dragging) {
+              self.handleMove_(e);
+            }
+            break;
+          }
         }
-        case 'pointermove': {
-          if (!dragging) { 
-            self.handleMove_(e); 
-          } 
-          break;
-        }
+        if (options.handleEvent)
+          return options.handleEvent(e);
+        return true;
       }
-      if (options.handleEvent) return options.handleEvent(e);
-      return true; 
+    });
+    var self = this;
+    this.setLayerFilter(options.layerFilter);
+    if (options.layers && options.layers.length) {
+      this.setLayerFilter(function (l) {
+        return (options.layers.indexOf(l) >= 0);
+      });
     }
-  });
-  this.setLayerFilter (options.layerFilter);
-  if (options.layers && options.layers.length) {
-    this.setLayerFilter(function(l) {
-      return (options.layers.indexOf(l) >= 0);
-    })
-  } 
-  this.setFeatureFilter (options.featureFilter);
-  this.set('hitTolerance', options.hitTolerance)
-  this.setCursor (options.cursor);
-};
-ol.ext.inherits(ol.interaction.Hover, ol.interaction.Interaction);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.Hover.prototype.setMap = function(map) {
-  if (this.previousCursor_!==undefined && this.getMap()) {
-    this.getMap().getTargetElement().style.cursor = this.previousCursor_;
-    this.previousCursor_ = undefined;
+    this.setFeatureFilter(options.featureFilter);
+    this.set('hitTolerance', options.hitTolerance);
+    this.setCursor(options.cursor);
   }
-  ol.interaction.Interaction.prototype.setMap.call (this, map);
-};
-/** Activate / deactivate interaction
- * @param {boolean} b
- */
-ol.interaction.Hover.prototype.setActive = function(b) {
-  ol.interaction.Interaction.prototype.setActive.call (this, b);
-  if (this.cursor_ && this.getMap() && this.getMap().getTargetElement()) {
-    var style = this.getMap().getTargetElement().style;
-    if (this.previousCursor_ !== undefined) {
-      style.cursor = this.previousCursor_;
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this.previousCursor_ !== undefined && this.getMap()) {
+      this.getMap().getTargetElement().style.cursor = this.previousCursor_;
       this.previousCursor_ = undefined;
     }
+    ol.interaction.Interaction.prototype.setMap.call(this, map);
   }
-};
-/**
- * Set cursor on hover
- * @param { string } cursor css cursor propertie or a function that gets a feature, default: none
- * @api stable
- */
-ol.interaction.Hover.prototype.setCursor = function(cursor) {
-  if (!cursor && this.previousCursor_!==undefined && this.getMap()) {
-    this.getMap().getTargetElement().style.cursor = this.previousCursor_;
-    this.previousCursor_ = undefined;
-  }
-  this.cursor_ = cursor;
-};
-/** Feature filter to get only one feature
-* @param {function} filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature 
-*/
-ol.interaction.Hover.prototype.setFeatureFilter = function(filter) {
-  if (typeof (filter) == 'function') this.featureFilter_ = filter;
-  else this.featureFilter_ = function(){ return true; };
-};
-/** Feature filter to get only one feature
-* @param {function} filter a function with one argument, the layer to test. Return true to test the layer
-*/
-ol.interaction.Hover.prototype.setLayerFilter = function(filter) {
-  if (typeof (filter) == 'function') this.layerFilter_ = filter;
-  else this.layerFilter_ = function(){ return true; };
-};
-/** Get features whenmove
-* @param {ol.event} e "move" event
-*/
-ol.interaction.Hover.prototype.handleMove_ = function(e) {
-  var map = this.getMap();
-  if (map) {
-    //var b = map.hasFeatureAtPixel(e.pixel);
-    var feature, layer;
-    var self = this;
-    var b = map.forEachFeatureAtPixel(
-      e.pixel, 
-      function(f, l) {
-        if (self.featureFilter_.call(null,f,l)) {
-          feature = f;
-          layer = l;
-          return true;
-        } else {
-          feature = layer = null;
-          return false;
-        }
-      },{ 
-        hitTolerance: this.get('hitTolerance'),
-        layerFilter: self.layerFilter_ 
-      }
-    );
-    if (b) this.dispatchEvent({ 
-      type: 'hover', 
-      feature: feature, 
-      layer: layer, 
-      coordinate: e.coordinate, 
-      pixel: e.pixel, 
-      map: e.map, 
-      originalEvent: e.originalEvent,
-      dragging: e.dragging 
-    });
-    if (this.feature_===feature && this.layer_===layer){
-      /* ok */
-    } else {
-      this.feature_ = feature;
-      this.layer_ = layer;
-      if (feature) {
-        this.dispatchEvent({ 
-          type: 'enter', 
-          feature: feature, 
-          layer: layer, 
-          coordinate: e.coordinate, 
-          pixel: e.pixel, 
-          map: e.map, 
-          originalEvent: e.originalEvent,
-          dragging: e.dragging 
-        });
-      } else {
-        this.dispatchEvent({ 
-          type: 'leave', 
-          coordinate: e.coordinate, 
-          pixel: e.pixel, 
-          map: e.map, 
-          originalEvent: e.originalEvent,
-          dragging: e.dragging 
-        });
-      }
-    }
-    if (this.cursor_) {
-      var style = map.getTargetElement().style;
-      if (b) {
-        if (style.cursor != this.cursor_) {
-          this.previousCursor_ = style.cursor;
-          style.cursor = this.cursor_;
-        }
-      } else if (this.previousCursor_ !== undefined) {
+  /** Activate / deactivate interaction
+   * @param {boolean} b
+   */
+  setActive(b) {
+    ol.interaction.Interaction.prototype.setActive.call(this, b);
+    if (this.cursor_ && this.getMap() && this.getMap().getTargetElement()) {
+      var style = this.getMap().getTargetElement().style;
+      if (this.previousCursor_ !== undefined) {
         style.cursor = this.previousCursor_;
         this.previousCursor_ = undefined;
       }
     }
   }
-};
+  /**
+   * Set cursor on hover
+   * @param { string } cursor css cursor propertie or a function that gets a feature, default: none
+   * @api stable
+   */
+  setCursor(cursor) {
+    if (!cursor && this.previousCursor_ !== undefined && this.getMap()) {
+      this.getMap().getTargetElement().style.cursor = this.previousCursor_;
+      this.previousCursor_ = undefined;
+    }
+    this.cursor_ = cursor;
+  }
+  /** Feature filter to get only one feature
+  * @param {function} filter a function with two arguments, the feature and the layer of the feature. Return true to select the feature
+  */
+  setFeatureFilter(filter) {
+    if (typeof (filter) == 'function')
+      this.featureFilter_ = filter;
+    else
+      this.featureFilter_ = function () { return true; };
+  }
+  /** Feature filter to get only one feature
+  * @param {function} filter a function with one argument, the layer to test. Return true to test the layer
+  */
+  setLayerFilter(filter) {
+    if (typeof (filter) == 'function')
+      this.layerFilter_ = filter;
+    else
+      this.layerFilter_ = function () { return true; };
+  }
+  /** Get features whenmove
+  * @param {ol.event} e "move" event
+  */
+  handleMove_(e) {
+    var map = this.getMap();
+    if (map) {
+      //var b = map.hasFeatureAtPixel(e.pixel);
+      var feature, layer;
+      var self = this;
+      var b = map.forEachFeatureAtPixel(
+        e.pixel,
+        function (f, l) {
+          if (self.featureFilter_.call(null, f, l)) {
+            feature = f;
+            layer = l;
+            return true;
+          } else {
+            feature = layer = null;
+            return false;
+          }
+        }, {
+        hitTolerance: this.get('hitTolerance'),
+        layerFilter: self.layerFilter_
+      }
+      );
+      if (b)
+        this.dispatchEvent({
+          type: 'hover',
+          feature: feature,
+          layer: layer,
+          coordinate: e.coordinate,
+          pixel: e.pixel,
+          map: e.map,
+          originalEvent: e.originalEvent,
+          dragging: e.dragging
+        });
+      if (this.feature_ === feature && this.layer_ === layer) {
+        /* ok */
+      } else {
+        this.feature_ = feature;
+        this.layer_ = layer;
+        if (feature) {
+          this.dispatchEvent({
+            type: 'enter',
+            feature: feature,
+            layer: layer,
+            coordinate: e.coordinate,
+            pixel: e.pixel,
+            map: e.map,
+            originalEvent: e.originalEvent,
+            dragging: e.dragging
+          });
+        } else {
+          this.dispatchEvent({
+            type: 'leave',
+            coordinate: e.coordinate,
+            pixel: e.pixel,
+            map: e.map,
+            originalEvent: e.originalEvent,
+            dragging: e.dragging
+          });
+        }
+      }
+      if (this.cursor_) {
+        var style = map.getTargetElement().style;
+        if (b) {
+          if (style.cursor != this.cursor_) {
+            this.previousCursor_ = style.cursor;
+            style.cursor = this.cursor_;
+          }
+        } else if (this.previousCursor_ !== undefined) {
+          style.cursor = this.previousCursor_;
+          this.previousCursor_ = undefined;
+        }
+      }
+    }
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -33421,263 +33430,285 @@ popup.hide();
 *	 @param {boolean} [options.minibar=false] add a mini vertical bar
 * @api stable
 */
-ol.Overlay.Popup = function (options) {
-  options = options || {};
-  if (typeof(options.offsetBox)==='number') this.offsetBox = [options.offsetBox,options.offsetBox,options.offsetBox,options.offsetBox];
-  else this.offsetBox = options.offsetBox;
-  // Popup div
-  var element = document.createElement("div");
-  //element.classList.add('ol-overlaycontainer-stopevent');
-  options.element = element;
-  // Closebox
-  this.closeBox = options.closeBox;
-  this.onclose = options.onclose;
-  this.onshow = options.onshow;
-  ol.ext.element.create('BUTTON', {
-    className: 'closeBox' + (options.closeBox ? ' hasclosebox':''),
-    type: 'button',
-    click: function() {
-      this.hide();
-    }.bind(this),
-    parent: element
-  });
-  // Anchor div
-  if (options.anchor!==false) {
-    ol.ext.element.create('DIV', {
-      className: 'anchor',
+ol.Overlay.Popup = class olOverlayPopup extends ol.Overlay {
+  constructor(options) {
+    options = options || {};
+    // Popup div
+    var element = document.createElement("div");
+    //element.classList.add('ol-overlaycontainer-stopevent');
+    options.element = element;
+    super(options);
+    if (typeof (options.offsetBox) === 'number') {
+      this.offsetBox = [options.offsetBox, options.offsetBox, options.offsetBox, options.offsetBox];
+    } else {
+      this.offsetBox = options.offsetBox;
+    }
+    // Closebox
+    this.closeBox = options.closeBox;
+    this.onclose = options.onclose;
+    this.onshow = options.onshow;
+    ol.ext.element.create('BUTTON', {
+      className: 'closeBox' + (options.closeBox ? ' hasclosebox' : ''),
+      type: 'button',
+      click: function () {
+        this.hide();
+      }.bind(this),
       parent: element
-    })
-  }
-  // Content
-  this.content = ol.ext.element.create('DIV', { 
-    html: options.html || '',
-    className: "ol-popup-content",
-    parent: element
-  });
-  if (options.minibar) {
-    ol.ext.element.scrollDiv(this.content, {
-      vertical: true,
-      mousewheel: true,
-      minibar: true
     });
-  }
-  // Stop event
-  if (options.stopEvent) {
-    element.addEventListener("mousedown", function(e){ e.stopPropagation(); });
-    element.addEventListener("touchstart", function(e){ e.stopPropagation(); });
-  }
-  ol.Overlay.call(this, options);
-  this._elt = element;
-  // call setPositioning first in constructor so getClassPositioning is called only once
-  this.setPositioning(options.positioning || 'auto');
-  this.setPopupClass(options.popupClass || options.className || 'default');
-  if (options.anim) this.addPopupClass('anim');
-  // Show popup on timeout (for animation purposes)
-  if (options.position) {
-    setTimeout(function(){ this.show(options.position); }.bind(this));
-  }
-};
-ol.ext.inherits(ol.Overlay.Popup, ol.Overlay);
-/**
- * Get CSS class of the popup according to its positioning.
- * @private
- */
-ol.Overlay.Popup.prototype.getClassPositioning = function () {
-  var c = "";
-  var pos = this.getPositioning();
-  if (/bottom/.test(pos)) c += "ol-popup-bottom ";
-  if (/top/.test(pos)) c += "ol-popup-top ";
-  if (/left/.test(pos)) c += "ol-popup-left ";
-  if (/right/.test(pos)) c += "ol-popup-right ";
-  if (/^center/.test(pos)) c += "ol-popup-middle ";
-  if (/center$/.test(pos)) c += "ol-popup-center ";
-  return c;
-};
-/**
- * Set a close box to the popup.
- * @param {bool} b
- * @api stable
- */
-ol.Overlay.Popup.prototype.setClosebox = function (b) {
-  this.closeBox = b;
-  if (b) this.element.classList.add("hasclosebox");
-  else this.element.classList.remove("hasclosebox");
-};
-/**
- * Set the CSS class of the popup.
- * @param {string} c class name.
- * @api stable
- */
-ol.Overlay.Popup.prototype.setPopupClass = function (c) {
-  var classes = ["ol-popup"];
-  if (this.getVisible()) classes.push('visible');
-  this.element.className = "";
-  var classesPositioning = this.getClassPositioning().split(' ')
-    .filter(function(className) {
-      return className.length > 0;
+    // Anchor div
+    if (options.anchor !== false) {
+      ol.ext.element.create('DIV', {
+        className: 'anchor',
+        parent: element
+      });
+    }
+    // Content
+    this.content = ol.ext.element.create('DIV', {
+      html: options.html || '',
+      className: "ol-popup-content",
+      parent: element
     });
-  if (c) {
-    c.split(' ').filter(function(className) {
-      return className.length > 0;
-    })
-    .forEach(function(className) {
-      classes.push(className);
-    });
-  } else {
-    classes.push("default");
+    if (options.minibar) {
+      ol.ext.element.scrollDiv(this.content, {
+        vertical: true,
+        mousewheel: true,
+        minibar: true
+      });
+    }
+    // Stop event
+    if (options.stopEvent) {
+      element.addEventListener("mousedown", function (e) { e.stopPropagation(); });
+      element.addEventListener("touchstart", function (e) { e.stopPropagation(); });
+    }
+    this._elt = element;
+    // call setPositioning first in constructor so getClassPositioning is called only once
+    this.setPositioning(options.positioning || 'auto');
+    this.setPopupClass(options.popupClass || options.className || 'default');
+    if (options.anim)
+      this.addPopupClass('anim');
+    // Show popup on timeout (for animation purposes)
+    if (options.position) {
+      setTimeout(function () { this.show(options.position); }.bind(this));
+    }
   }
-  classesPositioning.forEach(function(className) {
-    classes.push(className);
-  });
-  if (this.closeBox) {
-    classes.push("hasclosebox");
+  /**
+   * Get CSS class of the popup according to its positioning.
+   * @private
+   */
+  getClassPositioning() {
+    var c = "";
+    var pos = this.getPositioning();
+    if (/bottom/.test(pos))
+      c += "ol-popup-bottom ";
+    if (/top/.test(pos))
+      c += "ol-popup-top ";
+    if (/left/.test(pos))
+      c += "ol-popup-left ";
+    if (/right/.test(pos))
+      c += "ol-popup-right ";
+    if (/^center/.test(pos))
+      c += "ol-popup-middle ";
+    if (/center$/.test(pos))
+      c += "ol-popup-center ";
+    return c;
   }
-  this.element.classList.add.apply(this.element.classList, classes);
-};
-/**
- * Add a CSS class to the popup.
- * @param {string} c class name.
- * @api stable
- */
-ol.Overlay.Popup.prototype.addPopupClass = function (c) {
-  this.element.classList.add(c);
-};
-/**
- * Remove a CSS class to the popup.
- * @param {string} c class name.
- * @api stable
- */
-ol.Overlay.Popup.prototype.removePopupClass = function (c) {
-  this.element.classList.remove(c);
-};
-/**
- * Set positionning of the popup
- * @param {ol.OverlayPositioning | string | undefined} pos an ol.OverlayPositioning 
- * 		or 'auto' to var the popup choose the best position
- * @api stable
- */
-ol.Overlay.Popup.prototype.setPositioning = function (pos) {
-  if (pos === undefined)
-    return;
-  if (/auto/.test(pos)) {
-    this.autoPositioning = pos.split('-');
-    if (this.autoPositioning.length==1) this.autoPositioning[1]="auto";
-  } else {
-    this.autoPositioning = false;
+  /**
+   * Set a close box to the popup.
+   * @param {bool} b
+   * @api stable
+   */
+  setClosebox(b) {
+    this.closeBox = b;
+    if (b)
+      this.element.classList.add("hasclosebox");
+    else
+      this.element.classList.remove("hasclosebox");
   }
-  pos = pos.replace(/auto/g,"center");
-  if (pos=="center") pos = "bottom-center";
-  this.setPositioning_(pos);
-};
-/** @private
- * @param {ol.OverlayPositioning | string | undefined} pos
- */
-ol.Overlay.Popup.prototype.setPositioning_ = function (pos) {
-  if (this.element) {
-    ol.Overlay.prototype.setPositioning.call(this, pos);
-    this.element.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
-    var classes = this.getClassPositioning().split(' ')
-      .filter(function(className) {
+  /**
+   * Set the CSS class of the popup.
+   * @param {string} c class name.
+   * @api stable
+   */
+  setPopupClass(c) {
+    var classes = ["ol-popup"];
+    if (this.getVisible())
+      classes.push('visible');
+    this.element.className = "";
+    var classesPositioning = this.getClassPositioning().split(' ')
+      .filter(function (className) {
         return className.length > 0;
       });
+    if (c) {
+      c.split(' ').filter(function (className) {
+        return className.length > 0;
+      })
+        .forEach(function (className) {
+          classes.push(className);
+        });
+    } else {
+      classes.push("default");
+    }
+    classesPositioning.forEach(function (className) {
+      classes.push(className);
+    });
+    if (this.closeBox) {
+      classes.push("hasclosebox");
+    }
     this.element.classList.add.apply(this.element.classList, classes);
   }
-};
-/** Check if popup is visible
-* @return {boolean}
-*/
-ol.Overlay.Popup.prototype.getVisible = function () {
-  return this.element.classList.contains("visible");
-};
-/**
- * Set the position and the content of the popup.
- * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
- * @param {string|undefined} html the HTML content (undefined = previous content).
- * @example
-var popup = new ol.Overlay.Popup();
-// Show popup
-popup.show([166000, 5992000], "Hello world!");
-// Move popup at coord with the same info
-popup.show([167000, 5990000]);
-// set new info
-popup.show("New informations");
-* @api stable
-*/
-ol.Overlay.Popup.prototype.show = function (coordinate, html) {
-  if (!html && typeof(coordinate)=='string') {
-    html = coordinate; 
-    coordinate = null;
+  /**
+   * Add a CSS class to the popup.
+   * @param {string} c class name.
+   * @api stable
+   */
+  addPopupClass(c) {
+    this.element.classList.add(c);
   }
-  if (coordinate===true) {
-    coordinate = this.getPosition();
+  /**
+   * Remove a CSS class to the popup.
+   * @param {string} c class name.
+   * @api stable
+   */
+  removePopupClass(c) {
+    this.element.classList.remove(c);
   }
-  var self = this;
-  var map = this.getMap();
-  if (!map) return;
-  if (html && html !== this.prevHTML) {
-    // Prevent flickering effect
-    this.prevHTML = html;
-    this.content.innerHTML = '';
-    if (html instanceof Element) {
-      this.content.appendChild(html);
+  /**
+   * Set positionning of the popup
+   * @param {ol.OverlayPositioning | string | undefined} pos an ol.OverlayPositioning
+   * 		or 'auto' to var the popup choose the best position
+   * @api stable
+   */
+  setPositioning(pos) {
+    if (pos === undefined)
+      return;
+    if (/auto/.test(pos)) {
+      this.autoPositioning = pos.split('-');
+      if (this.autoPositioning.length == 1)
+        this.autoPositioning[1] = "auto";
     } else {
-      ol.ext.element.create('DIV', {
-        html: html,
-        parent: this.content
-      })
+      this.autoPositioning = false;
     }
-    // Refresh when loaded (img)
-    Array.prototype.slice.call(this.content.querySelectorAll('img'))
-      .forEach(function(image) {
-        image.addEventListener('load', function() {
-          try { map.renderSync(); } catch(e) { /* ok */ }
-          self.content.dispatchEvent(new Event('scroll'));
+    pos = pos.replace(/auto/g, "center");
+    if (pos == "center")
+      pos = "bottom-center";
+    this.setPositioning_(pos);
+  }
+  /** @private
+   * @param {ol.OverlayPositioning | string | undefined} pos
+   */
+  setPositioning_(pos) {
+    if (this.element) {
+      ol.Overlay.prototype.setPositioning.call(this, pos);
+      this.element.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
+      var classes = this.getClassPositioning().split(' ')
+        .filter(function (className) {
+          return className.length > 0;
         });
-      });
-  }
-  if (coordinate) {
-    // Auto positionning
-    if (this.autoPositioning) {
-      var p = map.getPixelFromCoordinate(coordinate);
-      var s = map.getSize();
-      var pos=[];
-      if (this.autoPositioning[0]=='auto') {
-        pos[0] = (p[1]<s[1]/3) ? "top" : "bottom";
-      }
-      else pos[0] = this.autoPositioning[0];
-      pos[1] = (p[0]<2*s[0]/3) ? "left" : "right";
-      this.setPositioning_(pos[0]+"-"+pos[1]);
-      if (this.offsetBox) {
-        this.setOffset([this.offsetBox[pos[1]=="left"?2:0], this.offsetBox[pos[0]=="top"?3:1] ]);
-      }
-    } else {
-      if (this.offsetBox){
-        this.setOffset(this.offsetBox);
-      }
+      this.element.classList.add.apply(this.element.classList, classes);
     }
-    // Show
-    this.setPosition(coordinate);
-    // Set visible class (wait to compute the size/position first)
-    this.element.parentElement.style.display = '';
-    if (typeof (this.onshow) == 'function') this.onshow();
-    this.dispatchEvent({ type: 'show' })
-    this._tout = setTimeout (function() {
-      self.element.classList.add('visible'); 
-    }, 0);
   }
-};
-/**
- * Hide the popup
- * @api stable
- */
-ol.Overlay.Popup.prototype.hide = function () {
-  if (this.getPosition() == undefined) return;
-  if (typeof (this.onclose) == 'function') this.onclose();
-  this.setPosition(undefined);
-  if (this._tout) clearTimeout(this._tout);
-  this.element.classList.remove("visible");
-  this.dispatchEvent({ type: 'hide' });
-};
+  /** Check if popup is visible
+  * @return {boolean}
+  */
+  getVisible() {
+    return this.element.classList.contains("visible");
+  }
+  /**
+   * Set the position and the content of the popup.
+   * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
+   * @param {string|undefined} html the HTML content (undefined = previous content).
+   * @example
+  var popup = new ol.Overlay.Popup();
+  // Show popup
+  popup.show([166000, 5992000], "Hello world!");
+  // Move popup at coord with the same info
+  popup.show([167000, 5990000]);
+  // set new info
+  popup.show("New informations");
+  * @api stable
+  */
+  show(coordinate, html) {
+    if (!html && typeof (coordinate) == 'string') {
+      html = coordinate;
+      coordinate = null;
+    }
+    if (coordinate === true) {
+      coordinate = this.getPosition();
+    }
+    var self = this;
+    var map = this.getMap();
+    if (!map)
+      return;
+    if (html && html !== this.prevHTML) {
+      // Prevent flickering effect
+      this.prevHTML = html;
+      this.content.innerHTML = '';
+      if (html instanceof Element) {
+        this.content.appendChild(html);
+      } else {
+        ol.ext.element.create('DIV', {
+          html: html,
+          parent: this.content
+        });
+      }
+      // Refresh when loaded (img)
+      Array.prototype.slice.call(this.content.querySelectorAll('img'))
+        .forEach(function (image) {
+          image.addEventListener('load', function () {
+            try { map.renderSync(); } catch (e) { /* ok */ }
+            self.content.dispatchEvent(new Event('scroll'));
+          });
+        });
+    }
+    if (coordinate) {
+      // Auto positionning
+      if (this.autoPositioning) {
+        var p = map.getPixelFromCoordinate(coordinate);
+        var s = map.getSize();
+        var pos = [];
+        if (this.autoPositioning[0] == 'auto') {
+          pos[0] = (p[1] < s[1] / 3) ? "top" : "bottom";
+        }
+        else
+          pos[0] = this.autoPositioning[0];
+        pos[1] = (p[0] < 2 * s[0] / 3) ? "left" : "right";
+        this.setPositioning_(pos[0] + "-" + pos[1]);
+        if (this.offsetBox) {
+          this.setOffset([this.offsetBox[pos[1] == "left" ? 2 : 0], this.offsetBox[pos[0] == "top" ? 3 : 1]]);
+        }
+      } else {
+        if (this.offsetBox) {
+          this.setOffset(this.offsetBox);
+        }
+      }
+      // Show
+      this.setPosition(coordinate);
+      // Set visible class (wait to compute the size/position first)
+      this.element.parentElement.style.display = '';
+      if (typeof (this.onshow) == 'function')
+        this.onshow();
+      this.dispatchEvent({ type: 'show' });
+      this._tout = setTimeout(function () {
+        self.element.classList.add('visible');
+      }, 0);
+    }
+  }
+  /**
+   * Hide the popup
+   * @api stable
+   */
+  hide() {
+    if (this.getPosition() == undefined)
+      return;
+    if (typeof (this.onclose) == 'function')
+      this.onclose();
+    this.setPosition(undefined);
+    if (this._tout)
+      clearTimeout(this._tout);
+    this.element.classList.remove("visible");
+    this.dispatchEvent({ type: 'hide' });
+  }
+}
 
 /*	Copyright (c) 2020 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -38083,337 +38114,353 @@ ol.style.FillPattern.patterns = {
  *  @param {number} options.offset0 offset at line start
  *  @param {number} options.offset1 offset at line end
  */
-ol.style.FlowLine = function(options) {
-  if (!options) options = {};
-  ol.style.Style.call (this, { 
-    renderer: this._render.bind(this),
-    stroke: options.stroke,
-    text: options.text,
-    zIndex: options.zIndex,
-    geometry: options.geometry
-  });
-  // Draw only visible
-  this._visible = (options.visible !== false);
-  // Width
-  if (typeof options.width === 'function') {
-    this._widthFn = options.width;
-  } else {
-    this.setWidth(options.width);
-  }
-  this.setWidth2(options.width2);
-  // Color
-  if (typeof options.color === 'function') {
-    this._colorFn = options.color;
-  } else {
-    this.setColor(options.color);
-  }
-  this.setColor2(options.color2);
-  // LineCap
-  this.setLineCap(options.lineCap);
-  // Arrow
-  this.setArrow(options.arrow);
-  this.setArrowSize(options.arrowSize);
-  this.setArrowColor(options.arrowColor);
-  // Offset
-  this._offset = [0,0];
-  this.setOffset(options.offset0, 0);
-  this.setOffset(options.offset1, 1);
-  // Overlap
-  this._noOverlap = options.noOverlap;
-};
-ol.ext.inherits(ol.style.FlowLine, ol.style.Style);
-/** Set the initial width
- * @param {number} width width, default 0
- */
-ol.style.FlowLine.prototype.setWidth = function(width) {
-  this._width = width || 0;
-};
-/** Set the final width
- * @param {number} width width, default 0
- */
-ol.style.FlowLine.prototype.setWidth2 = function(width) {
-  this._width2 = width;
-};
-/** Get offset at start or end
- * @param {number} where 0=start, 1=end
- * @return {number} width
- */
-ol.style.FlowLine.prototype.getOffset = function(where) {
-  return this._offset[where];
-};
-/** Add an offset at start or end
- * @param {number} width
- * @param {number} where 0=start, 1=end
- */
-ol.style.FlowLine.prototype.setOffset = function(width, where) {
-  width = Math.max(0, parseFloat(width));
-  switch(where) {
-    case 0: {
-      this._offset[0] = width;
-      break;
+ol.style.FlowLine = class olstyleFlowLine extends ol.style.Style {
+  constructor(options) {
+    options = options || {}
+    super({
+      stroke: options.stroke,
+      text: options.text,
+      zIndex: options.zIndex,
+      geometry: options.geometry
+    })
+    this.setRenderer(this._render.bind(this))
+    // Draw only visible
+    this._visible = (options.visible !== false)
+    // Width
+    if (typeof options.width === 'function') {
+      this._widthFn = options.width
+    } else {
+      this.setWidth(options.width)
     }
-    case 1: {
-      this._offset[1] = width;
-      break;
+    this.setWidth2(options.width2)
+    // Color
+    if (typeof options.color === 'function') {
+      this._colorFn = options.color
+    } else {
+      this.setColor(options.color)
     }
+    this.setColor2(options.color2)
+    // LineCap
+    this.setLineCap(options.lineCap)
+    // Arrow
+    this.setArrow(options.arrow)
+    this.setArrowSize(options.arrowSize)
+    this.setArrowColor(options.arrowColor)
+    // Offset
+    this._offset = [0, 0]
+    this.setOffset(options.offset0, 0)
+    this.setOffset(options.offset1, 1)
+    // Overlap
+    this._noOverlap = options.noOverlap
   }
-};
-/** Set the LineCap
- * @param {steing} cap LineCap (round or butt), default butt
- */
-ol.style.FlowLine.prototype.setLineCap = function(cap) {
-  this._lineCap = (cap==='round' ? 'round' : 'butt');
-};
-/** Get the current width at step
- * @param {ol.feature} feature
- * @param {number} step current drawing step beetween [0,1] 
- * @return {number} 
- */
-ol.style.FlowLine.prototype.getWidth = function(feature, step) {
-  if (this._widthFn) return this._widthFn(feature, step);
-  var w2 = (typeof(this._width2) === 'number') ? this._width2 : this._width;
-  return this._width + (w2-this._width) * step;
-};
-/** Set the initial color
- * @param {ol.colorLike} color
- */
-ol.style.FlowLine.prototype.setColor = function(color) {
-  try{
-    this._color = ol.color.asArray(color);
-  } catch(e) {
-    this._color = [0,0,0,1];
+  /** Set the initial width
+   * @param {number} width width, default 0
+   */
+  setWidth(width) {
+    this._width = width || 0
   }
-};
-/** Set the final color
- * @param {ol.colorLike} color
- */
-ol.style.FlowLine.prototype.setColor2 = function(color) {
-  try {
-    this._color2 = ol.color.asArray(color);
-  } catch(e) {
-    this._color2 = null;    
+  /** Set the final width
+   * @param {number} width width, default 0
+   */
+  setWidth2(width) {
+    this._width2 = width
   }
-};
-/** Set the arrow color
- * @param {ol.colorLike} color
- */
-ol.style.FlowLine.prototype.setArrowColor = function(color) {
-  try {
-    this._acolor = ol.color.asString(color);
-  } catch(e) {
-    this._acolor = null;    
+  /** Get offset at start or end
+   * @param {number} where 0=start, 1=end
+   * @return {number} width
+   */
+  getOffset(where) {
+    return this._offset[where]
   }
-};
-/** Get the current color at step
- * @param {ol.feature} feature
- * @param {number} step current drawing step beetween [0,1] 
- * @return {string} 
- */
-ol.style.FlowLine.prototype.getColor = function(feature, step) {
-  if (this._colorFn) return ol.color.asString(this._colorFn(feature, step));
-  var color = this._color;
-  var color2 = this._color2 || this._color
-  return 'rgba('+
-          + Math.round(color[0] + (color2[0]-color[0]) * step) +','
-          + Math.round(color[1] + (color2[1]-color[1]) * step) +','
-          + Math.round(color[2] + (color2[2]-color[2]) * step) +','
-          + (color[3] + (color2[3]-color[3]) * step)
-          +')';
-};
-/** Get arrow
- */
-ol.style.FlowLine.prototype.getArrow = function() {
-  return this._arrow;
-};
-/** Set arrow
- * @param {number} n -1 | 0 | 1 | 2, default: 0
- */
-ol.style.FlowLine.prototype.setArrow = function(n) {
-  this._arrow = parseInt(n);
-  if (this._arrow < -1 || this._arrow > 2) this._arrow = 0;
-}
-/** getArrowSize
- * @return {ol.size}
- */
-ol.style.FlowLine.prototype.getArrowSize = function() {
-  return this._arrowSize || [16,16];
-};
-/** setArrowSize
- * @param {number|ol.size} size
- */
-ol.style.FlowLine.prototype.setArrowSize = function(size) {
-  if (Array.isArray(size)) this._arrowSize = size;
-  else if (typeof(size) === 'number') this._arrowSize = [size,size];
-};
-/** drawArrow
- * @param {CanvasRenderingContext2D} ctx 
- * @param {ol.coordinate} p0 
- * @param ol.coordinate} p1 
- * @param {number} width 
- * @param {number} ratio pixelratio
- * @private
- */
-ol.style.FlowLine.prototype.drawArrow = function (ctx, p0, p1, width, ratio) {
-  var asize = this.getArrowSize()[0] * ratio;
-  var l = ol.coordinate.dist2d(p0, p1);
-  var dx = (p0[0]-p1[0])/l;
-  var dy = (p0[1]-p1[1])/l;
-  width = Math.max(this.getArrowSize()[1]/2, width/2) * ratio;
-  ctx.beginPath();
-  ctx.moveTo(p0[0],p0[1]);
-  ctx.lineTo(p0[0]-asize*dx+width*dy, p0[1]-asize*dy-width*dx);
-  ctx.lineTo(p0[0]-asize*dx-width*dy, p0[1]-asize*dy+width*dx);
-  ctx.lineTo(p0[0],p0[1]);
-  ctx.fill();
-};
-/** Renderer function
- * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
- * @param {ol.render.State} e The olx.render.State of the layer renderer
- */
-ol.style.FlowLine.prototype._render = function(geom, e) {
-  if (e.geometry.getType()==='LineString') {
-    var i, g, p, ctx = e.context;
-    // Get geometry used at drawing
-    if (!this._visible) {
-      var a = e.pixelRatio / e.resolution;
-      var cos = Math.cos(e.rotation)
-      var sin = Math.sin(e.rotation)
-      g = e.geometry.getCoordinates();
-      var dx = geom[0][0] - g[0][0] * a *cos - g[0][1] * a *sin ;
-      var dy = geom[0][1] - g[0][0] * a * sin + g[0][1] * a * cos;
-      geom = [];
-      for (i=0; p=g[i]; i++) {
-        geom[i] = [
-          dx + p[0] * a * cos + p[1] * a * sin,
-          dy + p[0] * a * sin - p[1] * a * cos,
-          p[2]
-        ];
+  /** Add an offset at start or end
+   * @param {number} width
+   * @param {number} where 0=start, 1=end
+   */
+  setOffset(width, where) {
+    width = Math.max(0, parseFloat(width))
+    switch (where) {
+      case 0: {
+        this._offset[0] = width
+        break
+      }
+      case 1: {
+        this._offset[1] = width
+        break
       }
     }
-    var asize = this.getArrowSize()[0] * e.pixelRatio;
-    ctx.save();
-      // Offsets
-      if (this.getOffset(0)) this._splitAsize(geom, this.getOffset(0) * e.pixelRatio)
-      if (this.getOffset(1)) this._splitAsize(geom, this.getOffset(1) * e.pixelRatio, true)
-      // Arrow 1
-      if (geom.length>1 && (this.getArrow()===-1 || this.getArrow()===2)) {
-        p = this._splitAsize(geom, asize);
-        if (this._acolor) ctx.fillStyle = this._acolor;
-        else ctx.fillStyle = this.getColor(e.feature, 0);
-        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 0), e.pixelRatio);
-      }
-      // Arrow 2 
-      if (geom.length>1 && this.getArrow()>0) {
-        p = this._splitAsize(geom, asize, true);
-        if (this._acolor) ctx.fillStyle = this._acolor;
-        else ctx.fillStyle = this.getColor(e.feature, 1);
-        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 1), e.pixelRatio);
-      }
-      // Split into
-      var geoms = this._splitInto(geom, 255, 2);
-      var k = 0;
-      var nb = geoms.length;
-      // Draw
-      ctx.lineJoin = 'round';
-      ctx.lineCap = this._lineCap || 'butt';
-      if (geoms.length > 1) {
-        for (k=0; k<geoms.length; k++) {
-          var step = k/nb;
-          g = geoms[k];
-          ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio;
-          ctx.strokeStyle = this.getColor(e.feature, step);
-          ctx.beginPath();
-          ctx.moveTo(g[0][0],g[0][1]);
-          for (i=1; p=g[i]; i++) {
-            ctx.lineTo(p[0],p[1]);
-          }
-          ctx.stroke();
+  }
+  /** Set the LineCap
+   * @param {steing} cap LineCap (round or butt), default butt
+   */
+  setLineCap(cap) {
+    this._lineCap = (cap === 'round' ? 'round' : 'butt')
+  }
+  /** Get the current width at step
+   * @param {ol.feature} feature
+   * @param {number} step current drawing step beetween [0,1]
+   * @return {number}
+   */
+  getWidth(feature, step) {
+    if (this._widthFn)
+      return this._widthFn(feature, step)
+    var w2 = (typeof (this._width2) === 'number') ? this._width2 : this._width
+    return this._width + (w2 - this._width) * step
+  }
+  /** Set the initial color
+   * @param {ol.colorLike} color
+   */
+  setColor(color) {
+    try {
+      this._color = ol.color.asArray(color)
+    } catch (e) {
+      this._color = [0, 0, 0, 1]
+    }
+  }
+  /** Set the final color
+   * @param {ol.colorLike} color
+   */
+  setColor2(color) {
+    try {
+      this._color2 = ol.color.asArray(color)
+    } catch (e) {
+      this._color2 = null
+    }
+  }
+  /** Set the arrow color
+   * @param {ol.colorLike} color
+   */
+  setArrowColor(color) {
+    try {
+      this._acolor = ol.color.asString(color)
+    } catch (e) {
+      this._acolor = null
+    }
+  }
+  /** Get the current color at step
+   * @param {ol.feature} feature
+   * @param {number} step current drawing step beetween [0,1]
+   * @return {string}
+   */
+  getColor(feature, step) {
+    if (this._colorFn)
+      return ol.color.asString(this._colorFn(feature, step))
+    var color = this._color
+    var color2 = this._color2 || this._color
+    return 'rgba(' +
+      +Math.round(color[0] + (color2[0] - color[0]) * step) + ','
+      + Math.round(color[1] + (color2[1] - color[1]) * step) + ','
+      + Math.round(color[2] + (color2[2] - color[2]) * step) + ','
+      + (color[3] + (color2[3] - color[3]) * step)
+      + ')'
+  }
+  /** Get arrow
+   */
+  getArrow() {
+    return this._arrow
+  }
+  /** Set arrow
+   * @param {number} n -1 | 0 | 1 | 2, default: 0
+   */
+  setArrow(n) {
+    this._arrow = parseInt(n)
+    if (this._arrow < -1 || this._arrow > 2)
+      this._arrow = 0
+  }
+  /** getArrowSize
+   * @return {ol.size}
+   */
+  getArrowSize() {
+    return this._arrowSize || [16, 16]
+  }
+  /** setArrowSize
+   * @param {number|ol.size} size
+   */
+  setArrowSize(size) {
+    if (Array.isArray(size))
+      this._arrowSize = size
+    else if (typeof (size) === 'number')
+      this._arrowSize = [size, size]
+  }
+  /** drawArrow
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {ol.coordinate} p0
+   * @param ol.coordinate} p1
+   * @param {number} width
+   * @param {number} ratio pixelratio
+   * @private
+   */
+  drawArrow(ctx, p0, p1, width, ratio) {
+    var asize = this.getArrowSize()[0] * ratio
+    var l = ol.coordinate.dist2d(p0, p1)
+    var dx = (p0[0] - p1[0]) / l
+    var dy = (p0[1] - p1[1]) / l
+    width = Math.max(this.getArrowSize()[1] / 2, width / 2) * ratio
+    ctx.beginPath()
+    ctx.moveTo(p0[0], p0[1])
+    ctx.lineTo(p0[0] - asize * dx + width * dy, p0[1] - asize * dy - width * dx)
+    ctx.lineTo(p0[0] - asize * dx - width * dy, p0[1] - asize * dy + width * dx)
+    ctx.lineTo(p0[0], p0[1])
+    ctx.fill()
+  }
+  /** Renderer function
+   * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
+   * @param {ol.render.State} e The olx.render.State of the layer renderer
+   */
+  _render(geom, e) {
+    if (e.geometry.getType() === 'LineString') {
+      var i, g, p, ctx = e.context
+      // Get geometry used at drawing
+      if (!this._visible) {
+        var a = e.pixelRatio / e.resolution
+        var cos = Math.cos(e.rotation)
+        var sin = Math.sin(e.rotation)
+        g = e.geometry.getCoordinates()
+        var dx = geom[0][0] - g[0][0] * a * cos - g[0][1] * a * sin
+        var dy = geom[0][1] - g[0][0] * a * sin + g[0][1] * a * cos
+        geom = []
+        for (i = 0; p = g[i]; i++) {
+          geom[i] = [
+            dx + p[0] * a * cos + p[1] * a * sin,
+            dy + p[0] * a * sin - p[1] * a * cos,
+            p[2]
+          ]
         }
       }
-    ctx.restore();
-  }
-};
-/** Split extremity at
- * @param {ol.geom.LineString} geom
- * @param {number} asize
- * @param {boolean} end start=false or end=true, default false (start)
- */
-ol.style.FlowLine.prototype._splitAsize = function(geom, asize, end) {
-  var p, p1, p0;
-  var dl, d = 0;
-  if (end) p0 = geom.pop();
-  else p0 = geom.shift();
-  p = p0;
-  while(geom.length) {
-    if (end) p1 = geom.pop();
-    else p1 = geom.shift();
-    dl = ol.coordinate.dist2d(p,p1);
-    if (d+dl > asize) {
-      p = [p[0]+(p1[0]-p[0])*(asize-d)/dl, p[1]+(p1[1]-p[1])*(asize-d)/dl];
-      dl = ol.coordinate.dist2d(p,p0);
-      if (end) {
-        geom.push(p1);
-        geom.push(p);
-        geom.push([p[0]+(p0[0]-p[0])/dl, p[1]+(p0[1]-p[1])/dl]);
-      } else {
-        geom.unshift(p1);
-        geom.unshift(p);
-        geom.unshift([p[0]+(p0[0]-p[0])/dl, p[1]+(p0[1]-p[1])/dl]);
+      var asize = this.getArrowSize()[0] * e.pixelRatio
+      ctx.save()
+      // Offsets
+      if (this.getOffset(0))
+        this._splitAsize(geom, this.getOffset(0) * e.pixelRatio)
+      if (this.getOffset(1))
+        this._splitAsize(geom, this.getOffset(1) * e.pixelRatio, true)
+      // Arrow 1
+      if (geom.length > 1 && (this.getArrow() === -1 || this.getArrow() === 2)) {
+        p = this._splitAsize(geom, asize)
+        if (this._acolor)
+          ctx.fillStyle = this._acolor
+        else
+          ctx.fillStyle = this.getColor(e.feature, 0)
+        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 0), e.pixelRatio)
       }
-      break;
-    }
-    d += dl;
-    p = p1;
-  }
-  return [p0,p];
-};
-/** Split line geometry into equal length geometries
- * @param {Array<ol.coordinate>} geom
- * @param {number} nb number of resulting geometries, default 255
- * @param {number} nim minimum length of the resulting geometries, default 1
- */
-ol.style.FlowLine.prototype._splitInto = function(geom, nb, min) {
-  var i, p;
-  var dt = this._noOverlap ? 1 : .9;
-  // Split geom into equal length geoms
-  var geoms = [];
-  var dl, l = 0;
-  for (i=1; p=geom[i]; i++) {
-    l += ol.coordinate.dist2d(geom[i-1], p);
-  }
-  var length = Math.max (min||2, l/(nb||255));
-  var p0 = geom[0];
-  l = 0;
-  var g = [p0];
-  i = 1;
-  p = geom[1];
-  while (i < geom.length) {
-    var dx = p[0]-p0[0];
-    var dy = p[1]-p0[1];
-    dl = Math.sqrt(dx*dx + dy*dy);
-    if (l+dl > length) {
-      var d = (length-l) / dl;
-      g.push([ 
-        p0[0] + dx * d,  
-        p0[1] + dy * d 
-      ]);
-      geoms.push(g);
-      p0 =[ 
-        p0[0] + dx * d*dt,  
-        p0[1] + dy * d*dt
-      ];
-      g = [p0];
-      l = 0;
-    } else {
-      l += dl;
-      p0 = p;
-      g.push(p0);
-      i++;
-      p = geom[i];
+      // Arrow 2 
+      if (geom.length > 1 && this.getArrow() > 0) {
+        p = this._splitAsize(geom, asize, true)
+        if (this._acolor)
+          ctx.fillStyle = this._acolor
+        else
+          ctx.fillStyle = this.getColor(e.feature, 1)
+        this.drawArrow(ctx, p[0], p[1], this.getWidth(e.feature, 1), e.pixelRatio)
+      }
+      // Split into
+      var geoms = this._splitInto(geom, 255, 2)
+      var k = 0
+      var nb = geoms.length
+      // Draw
+      ctx.lineJoin = 'round'
+      ctx.lineCap = this._lineCap || 'butt'
+      if (geoms.length > 1) {
+        for (k = 0; k < geoms.length; k++) {
+          var step = k / nb
+          g = geoms[k]
+          ctx.lineWidth = this.getWidth(e.feature, step) * e.pixelRatio
+          ctx.strokeStyle = this.getColor(e.feature, step)
+          ctx.beginPath()
+          ctx.moveTo(g[0][0], g[0][1])
+          for (i = 1; p = g[i]; i++) {
+            ctx.lineTo(p[0], p[1])
+          }
+          ctx.stroke()
+        }
+      }
+      ctx.restore()
     }
   }
-  geoms.push(g);
-  return geoms;
+  /** Split extremity at
+   * @param {ol.geom.LineString} geom
+   * @param {number} asize
+   * @param {boolean} end start=false or end=true, default false (start)
+   */
+  _splitAsize(geom, asize, end) {
+    var p, p1, p0
+    var dl, d = 0
+    if (end)
+      p0 = geom.pop()
+    else
+      p0 = geom.shift()
+    p = p0
+    while (geom.length) {
+      if (end)
+        p1 = geom.pop()
+      else
+        p1 = geom.shift()
+      dl = ol.coordinate.dist2d(p, p1)
+      if (d + dl > asize) {
+        p = [p[0] + (p1[0] - p[0]) * (asize - d) / dl, p[1] + (p1[1] - p[1]) * (asize - d) / dl]
+        dl = ol.coordinate.dist2d(p, p0)
+        if (end) {
+          geom.push(p1)
+          geom.push(p)
+          geom.push([p[0] + (p0[0] - p[0]) / dl, p[1] + (p0[1] - p[1]) / dl])
+        } else {
+          geom.unshift(p1)
+          geom.unshift(p)
+          geom.unshift([p[0] + (p0[0] - p[0]) / dl, p[1] + (p0[1] - p[1]) / dl])
+        }
+        break
+      }
+      d += dl
+      p = p1
+    }
+    return [p0, p]
+  }
+  /** Split line geometry into equal length geometries
+   * @param {Array<ol.coordinate>} geom
+   * @param {number} nb number of resulting geometries, default 255
+   * @param {number} nim minimum length of the resulting geometries, default 1
+   */
+  _splitInto(geom, nb, min) {
+    var i, p
+    var dt = this._noOverlap ? 1 : .9
+    // Split geom into equal length geoms
+    var geoms = []
+    var dl, l = 0
+    for (i = 1; p = geom[i]; i++) {
+      l += ol.coordinate.dist2d(geom[i - 1], p)
+    }
+    var length = Math.max(min || 2, l / (nb || 255))
+    var p0 = geom[0]
+    l = 0
+    var g = [p0]
+    i = 1
+    p = geom[1]
+    while (i < geom.length) {
+      var dx = p[0] - p0[0]
+      var dy = p[1] - p0[1]
+      dl = Math.sqrt(dx * dx + dy * dy)
+      if (l + dl > length) {
+        var d = (length - l) / dl
+        g.push([
+          p0[0] + dx * d,
+          p0[1] + dy * d
+        ])
+        geoms.push(g)
+        p0 = [
+          p0[0] + dx * d * dt,
+          p0[1] + dy * d * dt
+        ]
+        g = [p0]
+        l = 0
+      } else {
+        l += dl
+        p0 = p
+        g.push(p0)
+        i++
+        p = geom[i]
+      }
+    }
+    geoms.push(g)
+    return geoms
+  }
 }
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
