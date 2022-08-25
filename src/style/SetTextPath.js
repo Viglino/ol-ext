@@ -6,7 +6,7 @@ import ol_style_Text from 'ol/style/Text'
 /** Add a setTextPath style to draw text along linestrings
 @toto letterpadding/spacing, wordpadding/spacing
 */
-(function()
+;(function()
 {
 /** Internal drawing function called on postcompose
 * @param {ol.eventPoscompose} e postcompose event

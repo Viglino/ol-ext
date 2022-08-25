@@ -2238,6 +2238,11 @@ body > .ol-ext-dialog > form {
   display: none;
 }
 
+.ol-control.ol-legend > ul,
+.ol-control.ol-legend > canvas {
+  margin: 2px;
+}
+
 .ol-control.ol-legend button.ol-closebox {
   display: block;
   position: absolute;

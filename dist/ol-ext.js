@@ -3402,240 +3402,382 @@ if (window.ol && !ol.legend) {
  *  @param { ol.style.Text | undefined } options.titleStyle a text style for the legend title, default textStyle + bold
  *  @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} options.style a style or a style function to use with features
  */
-ol.legend.Legend = function(options) {
-  options = options || {};
-  ol.Object.call(this);
-  this._items = new ol.Collection();
-  var listeners = [];
-  var tout;
-  this._items.on('add', function(e) {
-    listeners.push({
-      item: e.element,
-      on: e.element.on('change', function() {
-        this.refresh();
-      }.bind(this))
-    });
-    if (tout) {
-      clearTimeout(tout);
-      tout = null;
-    }
-    tout = setTimeout(function() { this.refresh(); }.bind(this), 0);
-  }.bind(this));
-  this._items.on('remove', function(e) {
-    for (var i=0; i<listeners; i++) {
-      if (e.element === listeners[i].item) {
-        ol.Observable.unByKey(listeners[i].on);
-        listeners.splice(i, 1);
-        break;
+ol.legend.Legend = class ollegendLegend extends ol.Object {
+  constructor(options) {
+    super()
+    options = options || {}
+    this._items = new ol.Collection()
+    var listeners = []
+    var tout
+    this._items.on('add', function (e) {
+      listeners.push({
+        item: e.element,
+        on: e.element.on('change', function () {
+          this.refresh()
+        }.bind(this))
+      })
+      if (tout) {
+        clearTimeout(tout)
+        tout = null
       }
-    }
-    if (tout) {
-      clearTimeout(tout);
-      tout = null;
-    }
-    tout = setTimeout(function() { this.refresh(); }.bind(this), 0);
-  }.bind(this));
-  this._listElement = ol.ext.element.create('UL', {
-    className: 'ol-legend'
-  });
-  this._canvas = document.createElement('canvas');
-  this.set('size', options.size || [40, 25], true);
-  this.set('margin', options.margin===0 ? 0 : options.margin || 10, true);
-  this._textStyle = options.textStyle || new ol.style.Text({ 
-    font: '16px sans-serif',
-    fill: new ol.style.Fill({
-      color: '#333'
-    }),
-    backgroundFill: new ol.style.Fill({
-      color: 'rgba(255,255,255,.8)'
+      tout = setTimeout(function () { this.refresh() }.bind(this), 0)
+    }.bind(this))
+    this._items.on('remove', function (e) {
+      for (var i = 0; i < listeners; i++) {
+        if (e.element === listeners[i].item) {
+          ol.Observable.unByKey(listeners[i].on)
+          listeners.splice(i, 1)
+          break
+        }
+      }
+      if (tout) {
+        clearTimeout(tout)
+        tout = null
+      }
+      tout = setTimeout(function () { this.refresh() }.bind(this), 0)
+    }.bind(this))
+    this._listElement = ol.ext.element.create('UL', {
+      className: 'ol-legend'
     })
-  });
-  this._title = new ol.legend.Item({ title: options.title || '', className: 'ol-title' });
-  if (options.titleStyle) {
-    this._titleStyle = options.titleStyle;
-  } else {
-    this._titleStyle = this._textStyle.clone();
-    this._titleStyle.setFont('bold '+this._titleStyle.getFont());
-  }
-  this.setStyle(options.style);
-  if (options.items instanceof Array) {
-    options.items.forEach(function(item){
-      this.addItem(item);
-    }.bind(this));
-  }
-  this.refresh();
-};
-ol.ext.inherits(ol.legend.Legend, ol.Object);
-/** Set legend title
- * @param {string} title
- */
-ol.legend.Legend.prototype.setTitle = function(title) {
-  this._title.setTitle(title);
-  this.refresh();
-};
-/** Get legend title
- * @returns {string}
- */
-ol.legend.Legend.prototype.getTitle = function() {
-  return this._title.get('title');
-};
-/** Get text Style
- * @returns {ol.style.Text}
- */
-ol.legend.Legend.prototype.getTextStyle = function() {
-  return this._textStyle;
-};
-/** Set legend size
- * @param {ol.size} size
- */
- ol.legend.Legend.prototype.set = function(key, value, opt_silent) {
-  ol.Object.prototype.set.call(this, key, value, opt_silent);
-  if (!opt_silent) this.refresh();
-};
-/** Get legend list element
- * @returns {Element}
- */
-ol.legend.Legend.prototype.getListElement = function() {
-  return this._listElement;
-};
-/** Get legend canvas
- * @returns {HTMLCanvasElement}
- */
-ol.legend.Legend.prototype.getCanvas = function() {
-  return this._canvas;
-};
-/** Set the style
- * @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} style a style or a style function to use with features
- */
-ol.legend.Legend.prototype.setStyle = function(style) {
-  this._style = style;
-  this.refresh();
-};
-/** Add a new item to the legend
- * @param {olLegendItemOptions|ol.legend.Item} item 
- */
-ol.legend.Legend.prototype.addItem = function(item) {
-  if (item instanceof ol.legend.Item) {
-    this._items.push(item);
-  } else {
-    this._items.push(new ol.legend.Item(item));
-  }
-};
-/** Get item collection
- * @param {ol.Collection} 
- */
-ol.legend.Legend.prototype.getItems = function() {
-  return this._items;
-};
-/** Draw legend text
- * @private
- */
-ol.legend.Legend.prototype._drawText = function(ctx, text, x, y) {
-  ctx.save();
-    ctx.scale(ol.has.DEVICE_PIXEL_RATIO, ol.has.DEVICE_PIXEL_RATIO);
-    text = text || '';
-    var txt = text.split('\n');
-    if (txt.length===1) {
-      ctx.fillText(text, x, y);
+    this._canvas = document.createElement('canvas')
+    this.set('size', options.size || [40, 25], true)
+    this.set('margin', options.margin === 0 ? 0 : options.margin || 10, true)
+    this._textStyle = options.textStyle || new ol.style.Text({
+      font: '16px sans-serif',
+      fill: new ol.style.Fill({
+        color: '#333'
+      }),
+      backgroundFill: new ol.style.Fill({
+        color: 'rgba(255,255,255,.8)'
+      })
+    })
+    this._title = new ol.legend.Item({ title: options.title || '', className: 'ol-title' })
+    if (options.titleStyle) {
+      this._titleStyle = options.titleStyle
     } else {
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(txt[0], x, y);
-      ctx.textBaseline = 'top';
-      ctx.fillText(txt[1], x, y);
+      this._titleStyle = this._textStyle.clone()
+      this._titleStyle.setFont('bold ' + this._titleStyle.getFont())
     }
-  ctx.restore();
-};
-/** Draw legend text 
- * @private
- */
-ol.legend.Legend.prototype._measureText = function(ctx, text) {
-  var txt = (text || '').split('\n');
-  if (txt.length===1) {
-    return ctx.measureText(text);
-  } else {
-    var m1 = ctx.measureText(txt[0]);
-    var m2 = ctx.measureText(txt[1]);
-    return { width: Math.max(m1.width, m2.width), height: m1.height + m2.height }
-  }
-};
-/** Refresh the legend
- */
-ol.legend.Legend.prototype.refresh = function() {
-  var table = this._listElement;
-  table.innerHTML = '';
-  var margin = this.get('margin');
-  var width = this.get('size')[0] + 2 * margin;
-  var height = this.get('lineHeight') || this.get('size')[1] + 2 * margin;
-  var canvas = this.getCanvas();
-  var ctx = canvas.getContext('2d');
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  var ratio = ol.has.DEVICE_PIXEL_RATIO;
-  // Calculate width
-  ctx.font = this._titleStyle.getFont();
-  var textWidth = this._measureText(ctx, this.getTitle('title')).width;
-  this._items.forEach(function(r) {
-    if (r.get('feature') || r.get('typeGeom') ) {
-      ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont();
-      textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width);
-    } else {
-      ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont();
-      textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width);
+    this.setStyle(options.style)
+    if (options.items instanceof Array) {
+      options.items.forEach(function (item) {
+        this.addItem(item)
+      }.bind(this))
     }
-  }.bind(this));
-  canvas.width = (textWidth + 2*margin) * ratio;
-  canvas.height = (this._items.getLength()+1) * height * ratio;
-  canvas.style.height = ((this._items.getLength()+1) * height) + 'px';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = ol.color.asString(this._textStyle.getFill().getColor());
-  // Add Title
-  if (this.getTitle()) {
-    table.appendChild(this._title.getElement([width, height], function(b) {
-      this.dispatchEvent({
-        type: 'select', 
-        index: -1,
-        symbol: b,
-        item: this._title
-      });
-    }.bind(this)));
-    ctx.font = this._titleStyle.getFont();
-    ctx.textAlign = 'center';
-    this._drawText(ctx, this.getTitle(), canvas.width/ratio/2, height/2);
+    this.refresh()
   }
-  // Add items
-  this._items.forEach(function(r,i) {
-    var index = i + (this.getTitle() ? 1 : 0);
-    table.appendChild(r.getElement([width, height], function(b) {
-      this.dispatchEvent({
-        type: 'select', 
-        index: i,
-        symbol: b,
-        item: r
-      });
-    }.bind(this)));
-    var item = r.getProperties();
-    ctx.textAlign = 'left';
-    if (item.feature || item.typeGeom) {
-      canvas = this.getLegendImage(item, canvas, index);
-      ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont();
-      this._drawText(ctx, r.get('title'), width + margin, (i+1.5)*height);
+  /** Get a symbol image for a given legend item
+   * @param {olLegendItemOptions} item
+   * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
+   * @param {int|undefined} row row number to draw in canvas, default 0
+   */
+  static getLegendImage(item, canvas, row) {
+    item = item || {}
+    if (typeof (item.margin) === 'undefined')
+      item.margin = 10
+    var size = item.size || [40, 25]
+    item.onload = item.onload || function () {
+      setTimeout(function () {
+        ol.legend.Legend.getLegendImage(item, canvas, row)
+      }, 100)
+    }
+    var width = size[0] + 2 * item.margin
+    var height = item.lineHeight || (size[1] + 2 * item.margin)
+    var ratio = item.pixelratio || ol.has.DEVICE_PIXEL_RATIO
+    if (!canvas) {
+      row = 0
+      canvas = document.createElement('canvas')
+      canvas.width = width * ratio
+      canvas.height = height * ratio
+    }
+    var ctx = canvas.getContext('2d')
+    ctx.save()
+    var vectorContext = ol.render.toContext(ctx, { pixelRatio: ratio })
+    var typeGeom = item.typeGeom
+    var style
+    var feature = item.feature
+    if (!feature && typeGeom) {
+      if (/Point/.test(typeGeom))
+        feature = new ol.Feature(new ol.geom.Point([0, 0]))
+      else if (/LineString/.test(typeGeom))
+        feature = new ol.Feature(new ol.geom.LineString([0, 0]))
+      else
+        feature = new ol.Feature(new ol.geom.Polygon([[0, 0]]))
+      if (item.properties)
+        feature.setProperties(item.properties)
+    }
+    if (feature) {
+      style = feature.getStyle()
+      if (typeof (style) === 'function')
+        style = style(feature)
+      if (!style) {
+        style = typeof (item.style) === 'function' ? item.style(feature) : item.style || []
+      }
+      typeGeom = feature.getGeometry().getType()
     } else {
-      ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont();
-      if (/\bcenter\b/.test(item.className)) {
-        ctx.textAlign = 'center';
-        this._drawText(ctx, r.get('title'), canvas.width/ratio/2, (i+1.5)*height);
-      } else {
-        this._drawText(ctx, r.get('title'), margin, (i+1.5)*height);
+      style = []
+    }
+    if (!(style instanceof Array))
+      style = [style]
+    var cx = width / 2
+    var cy = height / 2
+    var sx = size[0] / 2
+    var sy = size[1] / 2
+    var i, s
+    // Get point offset
+    if (typeGeom === 'Point') {
+      var extent = null
+      for (i = 0; s = style[i]; i++) {
+        var img = s.getImage()
+        // Refresh legend on image load
+        if (img) {
+          var imgElt = img.getPhoto ? img.getPhoto() : img.getImage()
+          // Check image is loaded
+          if (imgElt && imgElt instanceof HTMLImageElement && !imgElt.naturalWidth) {
+            if (typeof (item.onload) === 'function') {
+              imgElt.addEventListener('load', function () {
+                setTimeout(function () {
+                  item.onload()
+                }, 100)
+              })
+            }
+            img.load()
+          }
+          // Check anchor to center the image
+          if (img.getAnchor) {
+            var anchor = img.getAnchor()
+            if (anchor) {
+              var si = img.getSize()
+              var dx = anchor[0] - si[0]
+              var dy = anchor[1] - si[1]
+              if (!extent) {
+                extent = [dx, dy, dx + si[0], dy + si[1]]
+              } else {
+                ol.extent.extend(extent, [dx, dy, dx + si[0], dy + si[1]])
+              }
+            }
+          }
+        }
+      }
+      if (extent) {
+        cx = cx + (extent[2] + extent[0]) / 2
+        cy = cy + (extent[3] + extent[1]) / 2
       }
     }
-  }.bind(this));
-  // Done
-  this.dispatchEvent({
-    type: 'refresh',
-    width: width,
-    height: (this._items.length+1)*height
-  });
-};
+    // Draw image
+    cy += (row * height) || 0
+    for (i = 0; s = style[i]; i++) {
+      vectorContext.setStyle(s)
+      ctx.save()
+      var geom
+      switch (typeGeom) {
+        case ol.geom.Point:
+        case 'Point':
+        case 'MultiPoint': {
+          geom = new ol.geom.Point([cx, cy])
+          break
+        }
+        case ol.geom.LineString:
+        case 'LineString':
+        case 'MultiLineString': {
+          // Clip lines
+          ctx.rect(item.margin * ratio, 0, size[0] * ratio, canvas.height)
+          ctx.clip()
+          geom = new ol.geom.LineString([[cx - sx, cy], [cx + sx, cy]])
+          break
+        }
+        case ol.geom.Polygon:
+        case 'Polygon':
+        case 'MultiPolygon': {
+          geom = new ol.geom.Polygon([[[cx - sx, cy - sy], [cx + sx, cy - sy], [cx + sx, cy + sy], [cx - sx, cy + sy], [cx - sx, cy - sy]]])
+          break
+        }
+      }
+      // Geometry function?
+      if (s.getGeometryFunction()) {
+        geom = s.getGeometryFunction()(new ol.Feature(geom))
+        ctx.restore()
+        vectorContext.drawGeometry(geom)
+      } else {
+        vectorContext.drawGeometry(geom)
+        ctx.restore()
+      }
+    }
+    ctx.restore()
+    return canvas
+  }
+  /** Set legend title
+   * @param {string} title
+   */
+  setTitle(title) {
+    this._title.setTitle(title)
+    this.refresh()
+  }
+  /** Get legend title
+   * @returns {string}
+   */
+  getTitle() {
+    return this._title.get('title')
+  }
+  /** Get text Style
+   * @returns {ol.style.Text}
+   */
+  getTextStyle() {
+    return this._textStyle
+  }
+  /** Set legend size
+   * @param {ol.size} size
+   */
+  set(key, value, opt_silent) {
+    ol.Object.prototype.set.call(this, key, value, opt_silent)
+    if (!opt_silent)
+      this.refresh()
+  }
+  /** Get legend list element
+   * @returns {Element}
+   */
+  getListElement() {
+    return this._listElement
+  }
+  /** Get legend canvas
+   * @returns {HTMLCanvasElement}
+   */
+  getCanvas() {
+    return this._canvas
+  }
+  /** Set the style
+   * @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} style a style or a style function to use with features
+   */
+  setStyle(style) {
+    this._style = style
+    this.refresh()
+  }
+  /** Add a new item to the legend
+   * @param {olLegendItemOptions|ol.legend.Item} item
+   */
+  addItem(item) {
+    if (item instanceof ol.legend.Item) {
+      this._items.push(item)
+    } else {
+      this._items.push(new ol.legend.Item(item))
+    }
+  }
+  /** Get item collection
+   * @param {ol.Collection}
+   */
+  getItems() {
+    return this._items
+  }
+  /** Draw legend text
+   * @private
+   */
+  _drawText(ctx, text, x, y) {
+    ctx.save()
+    ctx.scale(ol.has.DEVICE_PIXEL_RATIO, ol.has.DEVICE_PIXEL_RATIO)
+    text = text || ''
+    var txt = text.split('\n')
+    if (txt.length === 1) {
+      ctx.fillText(text, x, y)
+    } else {
+      ctx.textBaseline = 'bottom'
+      ctx.fillText(txt[0], x, y)
+      ctx.textBaseline = 'top'
+      ctx.fillText(txt[1], x, y)
+    }
+    ctx.restore()
+  }
+  /** Draw legend text
+   * @private
+   */
+  _measureText(ctx, text) {
+    var txt = (text || '').split('\n')
+    if (txt.length === 1) {
+      return ctx.measureText(text)
+    } else {
+      var m1 = ctx.measureText(txt[0])
+      var m2 = ctx.measureText(txt[1])
+      return { width: Math.max(m1.width, m2.width), height: m1.height + m2.height }
+    }
+  }
+  /** Refresh the legend
+   */
+  refresh() {
+    var table = this._listElement
+    table.innerHTML = ''
+    var margin = this.get('margin')
+    var width = this.get('size')[0] + 2 * margin
+    var height = this.get('lineHeight') || this.get('size')[1] + 2 * margin
+    var canvas = this.getCanvas()
+    var ctx = canvas.getContext('2d')
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
+    var ratio = ol.has.DEVICE_PIXEL_RATIO
+    // Calculate width
+    ctx.font = this._titleStyle.getFont()
+    var textWidth = this._measureText(ctx, this.getTitle('title')).width
+    this._items.forEach(function (r) {
+      if (r.get('feature') || r.get('typeGeom')) {
+        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
+        textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width)
+      } else {
+        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
+        textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width)
+      }
+    }.bind(this))
+    canvas.width = (textWidth + 2 * margin) * ratio
+    canvas.height = (this._items.getLength() + 1) * height * ratio
+    canvas.style.height = ((this._items.getLength() + 1) * height) + 'px'
+    ctx.textBaseline = 'middle'
+    ctx.fillStyle = ol.color.asString(this._textStyle.getFill().getColor())
+    // Add Title
+    if (this.getTitle()) {
+      table.appendChild(this._title.getElement([width, height], function (b) {
+        this.dispatchEvent({
+          type: 'select',
+          index: -1,
+          symbol: b,
+          item: this._title
+        })
+      }.bind(this)))
+      ctx.font = this._titleStyle.getFont()
+      ctx.textAlign = 'center'
+      this._drawText(ctx, this.getTitle(), canvas.width / ratio / 2, height / 2)
+    }
+    // Add items
+    this._items.forEach(function (r, i) {
+      var index = i + (this.getTitle() ? 1 : 0)
+      table.appendChild(r.getElement([width, height], function (b) {
+        this.dispatchEvent({
+          type: 'select',
+          index: i,
+          symbol: b,
+          item: r
+        })
+      }.bind(this)))
+      var item = r.getProperties()
+      ctx.textAlign = 'left'
+      if (item.feature || item.typeGeom) {
+        canvas = this.getLegendImage(item, canvas, index)
+        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
+        this._drawText(ctx, r.get('title'), width + margin, (i + 1.5) * height)
+      } else {
+        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
+        if (/\bcenter\b/.test(item.className)) {
+          ctx.textAlign = 'center'
+          this._drawText(ctx, r.get('title'), canvas.width / ratio / 2, (i + 1.5) * height)
+        } else {
+          this._drawText(ctx, r.get('title'), margin, (i + 1.5) * height)
+        }
+      }
+    }.bind(this))
+    // Done
+    this.dispatchEvent({
+      type: 'refresh',
+      width: width,
+      height: (this._items.length + 1) * height
+    })
+  }
+}
 /** Get the image for a style 
  * @param {olLegendItemOptions} item 
  * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
@@ -3659,139 +3801,6 @@ ol.legend.Legend.prototype.getLegendImage = function(options, canvas, row) {
     }.bind(this)
   }, canvas, row);
 };
-/** Get a symbol image for a given legend item
- * @param {olLegendItemOptions} item 
- * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
- * @param {int|undefined} row row number to draw in canvas, default 0
- */
-ol.legend.Legend.getLegendImage = function(item, canvas, row) {
-  item = item || {};
-  if (typeof(item.margin) === 'undefined') item.margin = 10;
-  var size = item.size || [40,25];
-  item.onload = item.onload || function() {
-    setTimeout(function() { 
-      ol.legend.Legend.getLegendImage(item, canvas, row);
-    }, 100);
-  };
-  var width = size[0] + 2 * item.margin;
-  var height = item.lineHeight || (size[1] + 2 * item.margin);
-  var ratio = item.pixelratio || ol.has.DEVICE_PIXEL_RATIO;
-  if (!canvas) {
-    row = 0;
-    canvas = document.createElement('canvas');
-    canvas.width = width * ratio;
-    canvas.height = height * ratio;
-  }
-  var ctx = canvas.getContext('2d');
-  ctx.save();
-  var vectorContext = ol.render.toContext(ctx, { pixelRatio: ratio });
-  var typeGeom = item.typeGeom;
-  var style;
-  var feature = item.feature;
-  if (!feature && typeGeom) {
-    if (/Point/.test(typeGeom)) feature = new ol.Feature(new ol.geom.Point([0,0]));
-    else if (/LineString/.test(typeGeom)) feature = new ol.Feature(new ol.geom.LineString([0,0]));
-    else feature = new ol.Feature(new ol.geom.Polygon([[0,0]]));
-    if (item.properties) feature.setProperties(item.properties);
-  }
-  if (feature) {
-    style = feature.getStyle();
-    if (typeof(style)==='function') style = style(feature);
-    if (!style) {
-      style = typeof(item.style) === 'function' ? item.style(feature) : item.style || [];
-    }
-    typeGeom = feature.getGeometry().getType();
-  } else {
-    style = [];
-  }
-  if (!(style instanceof Array)) style = [style];
-  var cx = width/2;
-  var cy = height/2;
-  var sx = size[0]/2;
-  var sy = size[1]/2;
-  var i, s;
-  // Get point offset
-  if (typeGeom === 'Point') {
-    var extent = null;
-    for (i=0; s= style[i]; i++) {
-      var img = s.getImage();
-      // Refresh legend on image load
-      if (img) {
-        var imgElt = img.getPhoto ? img.getPhoto() : img.getImage();
-        // Check image is loaded
-        if (imgElt && imgElt instanceof HTMLImageElement && !imgElt.naturalWidth) {
-          if (typeof(item.onload) === 'function') {
-            imgElt.addEventListener('load', function() {
-              setTimeout(function() { 
-                item.onload()
-              }, 100);
-            });
-          }
-          img.load();
-        }
-        // Check anchor to center the image
-        if (img.getAnchor) {
-          var anchor = img.getAnchor();
-          if (anchor) {
-            var si = img.getSize();
-            var dx = anchor[0] - si[0];
-            var dy = anchor[1] - si[1];
-            if (!extent) {
-              extent = [dx, dy, dx+si[0], dy+si[1]];
-            } else {
-              ol.extent.extend(extent, [dx, dy, dx+si[0], dy+si[1]]);
-            }
-          }
-        }
-      }
-    }
-    if (extent) {
-      cx = cx + (extent[2] + extent[0])/2;
-      cy = cy + (extent[3] + extent[1])/2;
-    }
-  }
-  // Draw image
-  cy += (row*height) || 0;
-  for (i=0; s= style[i]; i++) {
-    vectorContext.setStyle(s);
-    ctx.save();
-    var geom;
-    switch (typeGeom) {
-      case ol.geom.Point:
-      case 'Point':
-      case 'MultiPoint': {
-        geom = new ol.geom.Point([cx, cy]);
-        break;
-      }
-      case ol.geom.LineString:
-      case 'LineString':
-      case 'MultiLineString': {
-        // Clip lines
-        ctx.rect(item.margin * ratio, 0, size[0] *  ratio, canvas.height);
-        ctx.clip();
-        geom = new ol.geom.LineString([[cx-sx, cy], [cx+sx, cy]]);
-        break;
-      }
-      case ol.geom.Polygon:
-      case 'Polygon':
-      case 'MultiPolygon': {
-        geom = new ol.geom.Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]);
-        break;
-      }
-    }
-    // Geometry function?
-    if (s.getGeometryFunction()) {
-      geom = s.getGeometryFunction()(new ol.Feature(geom));
-      ctx.restore();
-      vectorContext.drawGeometry(geom);
-    } else {
-      vectorContext.drawGeometry(geom);
-      ctx.restore();
-    }
-  }
-  ctx.restore();
-  return canvas;
-};
 
 /** ol/legend/Item options
  * @typedef {Object} olLegendItemOptions
@@ -3810,45 +3819,46 @@ ol.legend.Legend.getLegendImage = function(item, canvas, row) {
  * @fires select
  * @param {olLegendItemOptions} options
  */
-ol.legend.Item = function(options) {
-  options = options || {};
-  ol.Object.call(this, options);
-  if (options.feature) this.set('feature', options.feature.clone());
-};
-ol.ext.inherits(ol.legend.Item, ol.Object);
-/** Set the legend title
- * @param {string} title
- */
-ol.legend.Item.prototype.setTitle = function(title) {
-  this.set('title', title || '');
-  this.changed();
-};
-/** Get element
- * @param {ol.size} size symbol size
- */
-ol.legend.Item.prototype.getElement = function(size, onclick) {
-  var element = ol.ext.element.create('LI', {
-    className : this.get('className'),
-    click: function(e) {
-      onclick(false);
-      e.stopPropagation();
-    },
-    style: { height: size[1] + 'px' },
-    'aria-label': this.get('title')
-  });
-  ol.ext.element.create ('DIV', {
-    click: function(e) {
-      onclick(true);
-      e.stopPropagation();
-    },
-    style: {
-      width: size[0] + 'px',
-      height: size[1] + 'px'
-    },
-    parent: element
-  });
-  return element;
-};
+ol.legend.Item = class ollegendItem extends ol.Object {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    if (options.feature) this.set('feature', options.feature.clone());
+  }
+  /** Set the legend title
+   * @param {string} title
+   */
+  setTitle(title) {
+    this.set('title', title || '');
+    this.changed();
+  }
+  /** Get element
+   * @param {ol.size} size symbol size
+   */
+  getElement(size, onclick) {
+    var element = ol.ext.element.create('LI', {
+      className: this.get('className'),
+      click: function (e) {
+        onclick(false);
+        e.stopPropagation();
+      },
+      style: { height: size[1] + 'px' },
+      'aria-label': this.get('title')
+    });
+    ol.ext.element.create('DIV', {
+      click: function (e) {
+        onclick(true);
+        e.stopPropagation();
+      },
+      style: {
+        width: size[0] + 'px',
+        height: size[1] + 'px'
+      },
+      parent: element
+    });
+    return element;
+  }
+}
 
 /**
  * @classdesc 
@@ -3860,113 +3870,122 @@ ol.legend.Item.prototype.getElement = function(size, onclick) {
  * @param {Object=} options extend the ol.control options. 
  *  @param {ol.style.Style} options.style style used to draw the title.
  */
-ol.control.CanvasBase = function(options) {
-  if (!options) options = {};
-  // Define a style to draw on the canvas
-  this.setStyle(options.style);
-  ol.control.Control.call(this, options);
+ol.control.CanvasBase = class olcontrolCanvasBase extends ol.control.Control {
+  constructor(options) {
+    options = options || {}
+    super(options)
+    // Define a style to draw on the canvas
+    this.setStyle(options.style)
+  }
+  /**
+   * Remove the control from its current map and attach it to the new map.
+   * Subclasses may set up event handlers to get notified about changes to
+   * the map here.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    this.getCanvas(map)
+    var oldmap = this.getMap()
+    if (this._listener) {
+      ol.Observable.unByKey(this._listener)
+      this._listener = null
+    }
+    ol.control.Control.prototype.setMap.call(this, map)
+    if (oldmap) {
+      try { oldmap.renderSync()}  catch (e) { /* ok */ }
+    }
+    if (map) {
+      this._listener = map.on('postcompose', this._draw.bind(this))
+      // Get a canvas layer on top of the map
+    }
+  }
+  /** Get canvas overlay
+   */
+  getCanvas(map) {
+    return ol.ext.getMapCanvas(map)
+  }
+  /** Get map Canvas
+   * @private
+   */
+  getContext(e) {
+    var ctx = e.context
+    if (!ctx && this.getMap()) {
+      var c = this.getMap().getViewport().getElementsByClassName('ol-fixedoverlay')[0]
+      ctx = c ? c.getContext('2d') : null
+    }
+    return ctx
+  }
+  /** Set Style
+   * @api
+   */
+  setStyle(style) {
+    this._style = style || new ol.style.Style({})
+  }
+  /** Get style
+   * @api
+   */
+  getStyle() {
+    return this._style
+  }
+  /** Get stroke
+   * @api
+   */
+  getStroke() {
+    var t = this._style.getStroke()
+    if (!t)
+      this._style.setStroke(new ol.style.Stroke({ color: '#000', width: 1.25 }))
+    return this._style.getStroke()
+  }
+  /** Get fill
+   * @api
+   */
+  getFill() {
+    var t = this._style.getFill()
+    if (!t)
+      this._style.setFill(new ol.style.Fill({ color: '#fff' }))
+    return this._style.getFill()
+  }
+  /** Get stroke
+   * @api
+   */
+  getTextStroke() {
+    var t = this._style.getText()
+    if (!t)
+      t = new ol.style.Text({})
+    if (!t.getStroke())
+      t.setStroke(new ol.style.Stroke({ color: '#fff', width: 3 }))
+    return t.getStroke()
+  }
+  /** Get text fill
+   * @api
+   */
+  getTextFill() {
+    var t = this._style.getText()
+    if (!t)
+      t = new ol.style.Text({})
+    if (!t.getFill())
+      t.setFill(new ol.style.Fill({ color: '#fff' }))
+    return t.getFill()
+  }
+  /** Get text font
+   * @api
+   */
+  getTextFont() {
+    var t = this._style.getText()
+    if (!t)
+      t = new ol.style.Text({})
+    if (!t.getFont())
+      t.setFont('12px sans-serif')
+    return t.getFont()
+  }
+  /** Draw the control on canvas
+   * @protected
+   */
+  _draw( /* e */) {
+    console.warn('[CanvasBase] draw function not implemented.')
+  }
 }
-ol.ext.inherits(ol.control.CanvasBase, ol.control.Control);
-/**
- * Remove the control from its current map and attach it to the new map.
- * Subclasses may set up event handlers to get notified about changes to
- * the map here.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.control.CanvasBase.prototype.setMap = function (map) {
-  this.getCanvas(map);
-  var oldmap = this.getMap();
-  if (this._listener) {
-    ol.Observable.unByKey(this._listener);
-    this._listener = null;
-  }
-  ol.control.Control.prototype.setMap.call(this, map);
-  if (oldmap) {
-    try { oldmap.renderSync(); } catch(e) { /* ok */ }
-  }
-  if (map) {
-    this._listener = map.on('postcompose', this._draw.bind(this));
-    // Get a canvas layer on top of the map
-  }
-};
-/** Get canvas overlay
- */
-ol.control.CanvasBase.prototype.getCanvas = function(map) {
-  return ol.ext.getMapCanvas(map);
-};
-/** Get map Canvas
- * @private
- */
-ol.control.CanvasBase.prototype.getContext = function(e) {
-  var ctx = e.context;
-  if (!ctx && this.getMap()) {
-    var c = this.getMap().getViewport().getElementsByClassName('ol-fixedoverlay')[0];
-    ctx = c ? c.getContext('2d') : null;
-  }
-  return ctx;
-};
-/** Set Style
- * @api
- */
-ol.control.CanvasBase.prototype.setStyle = function(style) {
-  this._style = style ||  new ol.style.Style ({});
-};
-/** Get style
- * @api
- */
-ol.control.CanvasBase.prototype.getStyle = function() {
-  return this._style;
-};
-/** Get stroke
- * @api
- */
-ol.control.CanvasBase.prototype.getStroke = function() {
-  var t = this._style.getStroke();
-  if (!t) this._style.setStroke(new ol.style.Stroke ({ color:'#000', width:1.25 }));
-  return this._style.getStroke();
-};
-/** Get fill
- * @api
- */
-ol.control.CanvasBase.prototype.getFill = function() {
-  var t = this._style.getFill();
-  if (!t) this._style.setFill(new ol.style.Fill ({ color:'#fff' }));
-  return this._style.getFill();
-};
-/** Get stroke
- * @api
- */
-ol.control.CanvasBase.prototype.getTextStroke = function() {
-  var t = this._style.getText();
-  if (!t) t = new ol.style.Text({});
-  if (!t.getStroke()) t.setStroke(new ol.style.Stroke ({ color:'#fff', width:3 }));
-  return t.getStroke();
-};
-/** Get text fill
- * @api
- */
-ol.control.CanvasBase.prototype.getTextFill = function() {
-  var t = this._style.getText();
-  if (!t) t = new ol.style.Text({});
-  if (!t.getFill()) t.setFill(new ol.style.Fill ({ color:'#fff' }));
-  return t.getFill();
-};
-/** Get text font
- * @api
- */
-ol.control.CanvasBase.prototype.getTextFont = function() {
-  var t = this._style.getText();
-  if (!t) t = new ol.style.Text({});
-  if (!t.getFont()) t.setFont('12px sans-serif');
-  return t.getFont();
-};
-/** Draw the control on canvas
- * @protected
- */
-ol.control.CanvasBase.prototype._draw = function(/* e */) {
-  console.warn('[CanvasBase] draw function not implemented.');
-};
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -9932,82 +9951,83 @@ ol.control.LayerSwitcherImage.prototype.overflow = function(){};
  *  @param {boolean | undefined} options.collapsible Specify if legend can be collapsed, default true.
  *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  */
-ol.control.Legend = function(options) {
-  options = options || {};
-  var element = document.createElement('div');
-  if (options.target) {
-    element.className = options.className || 'ol-legend';
-  } else {
-    element.className = (options.className || 'ol-legend')
-      +' ol-unselectable ol-control'
-      +(options.collapsible===false ? ' ol-uncollapsible': ' ol-collapsed');
-    // Show on click
-    var button = document.createElement('button');
-    button.setAttribute('type', 'button');
-    button.addEventListener('click', function() {
-      this.toggle();
-    }.bind(this));
-    element.appendChild(button);
-    // Hide on click
-    button = document.createElement('button');
-    button.setAttribute('type', 'button');
-    button.className = 'ol-closebox';
-    button.addEventListener('click', function() {
-      this.toggle();
-    }.bind(this));
-    element.appendChild(button);
-  }
-  ol.control.CanvasBase.call(this, {
-    element: element,
-		target: options.target
-	});
-  // The legend
-  this._legend = options.legend;
-  this._legend.getCanvas().className = 'ol-legendImg';
-  element.appendChild(this._legend.getCanvas());
-  element.appendChild(this._legend.getListElement());
-  if (options.collapsible!==false && options.collapsed===false) this.show();
-  this._legend.on('select', function(e) {
-    this.dispatchEvent(e);
-  }.bind(this));
-  this._legend.on('refresh', function() {
-    if (this._onCanvas && this.getMap()) {
-      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+ol.control.Legend = class olcontrolLegend extends ol.control.CanvasBase {
+  constructor(options) {
+    options = options || {};
+    var element = document.createElement('div');
+    super({
+      element: element,
+      target: options.target
+    });
+    if (options.target) {
+      element.className = options.className || 'ol-legend';
+    } else {
+      element.className = (options.className || 'ol-legend')
+        + ' ol-unselectable ol-control'
+        + (options.collapsible === false ? ' ol-uncollapsible' : ' ol-collapsed');
+      // Show on click
+      var button = document.createElement('button');
+      button.setAttribute('type', 'button');
+      button.addEventListener('click', function () {
+        this.toggle();
+      }.bind(this));
+      element.appendChild(button);
+      // Hide on click
+      button = document.createElement('button');
+      button.setAttribute('type', 'button');
+      button.className = 'ol-closebox';
+      button.addEventListener('click', function () {
+        this.toggle();
+      }.bind(this));
+      element.appendChild(button);
     }
-  }.bind(this));
-};
-ol.ext.inherits(ol.control.Legend, ol.control.CanvasBase);
-/** Get the legend associated with the control
- * @returns {ol.legend.Legend}
- */
-ol.control.Legend.prototype.getLegend = function () {
-  return this._legend;
-};
-/** Draw control on canvas
- * @param {boolean} b draw on canvas.
- */
-ol.control.Legend.prototype.setCanvas = function (b) {
-  this._onCanvas = b;
-  this.element.style.visibility = b ? "hidden":"visible";
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+    // The legend
+    this._legend = options.legend;
+    this._legend.getCanvas().className = 'ol-legendImg';
+    element.appendChild(this._legend.getCanvas());
+    element.appendChild(this._legend.getListElement());
+    if (options.collapsible !== false && options.collapsed === false)
+      this.show();
+    this._legend.on('select', function (e) {
+      this.dispatchEvent(e);
+    }.bind(this));
+    this._legend.on('refresh', function () {
+      if (this._onCanvas && this.getMap()) {
+        try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+      }
+    }.bind(this));
   }
-};
-/** Is control on canvas
- * @returns {boolean}
- */
-ol.control.Legend.prototype.onCanvas = function () {
-  return !!this._onCanvas;
-};
-/** Draw legend on canvas
- * @private
- */
-ol.control.Legend.prototype._draw = function (e) {
-  if (this._onCanvas && !this.element.classList.contains('ol-collapsed')) {
-    var canvas = this._legend.getCanvas();
-    var ctx = this.getContext(e);
-    var h = ctx.canvas.height - canvas.height;
-    ctx.save();
+  /** Get the legend associated with the control
+   * @returns {ol.legend.Legend}
+   */
+  getLegend() {
+    return this._legend;
+  }
+  /** Draw control on canvas
+   * @param {boolean} b draw on canvas.
+   */
+  setCanvas(b) {
+    this._onCanvas = b;
+    this.element.style.visibility = b ? "hidden" : "visible";
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
+  }
+  /** Is control on canvas
+   * @returns {boolean}
+   */
+  onCanvas() {
+    return !!this._onCanvas;
+  }
+  /** Draw legend on canvas
+   * @private
+   */
+  _draw(e) {
+    if (this._onCanvas && !this.element.classList.contains('ol-collapsed')) {
+      var canvas = this._legend.getCanvas();
+      var ctx = this.getContext(e);
+      var h = ctx.canvas.height - canvas.height;
+      ctx.save();
       ctx.rect(0, h, canvas.width, canvas.height);
       var col = '#fff';
       if (this._legend.getTextStyle().getBackgroundFill()) {
@@ -10021,52 +10041,55 @@ ol.control.Legend.prototype._draw = function (e) {
       ctx.fill();
       ctx.drawImage(canvas, 0, h);
       ctx.restore();
-  }
-};
-/** Show control
- */
-ol.control.Legend.prototype.show = function() {
-  if (this.element.classList.contains('ol-collapsed')) {
-    this.element.classList.remove('ol-collapsed');
-    this.dispatchEvent({ type:'change:collapse', collapsed: false });
-    if (this.getMap()) {
-      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
     }
   }
-};
-/** Hide control
- */
-ol.control.Legend.prototype.hide = function() {
-  if (!this.element.classList.contains('ol-collapsed')) {
-    this.element.classList.add('ol-collapsed');
-    this.dispatchEvent({ type:'change:collapse', collapsed: true });
-    if (this.getMap()) {
-      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  /** Show control
+   */
+  show() {
+    if (this.element.classList.contains('ol-collapsed')) {
+      this.element.classList.remove('ol-collapsed');
+      this.dispatchEvent({ type: 'change:collapse', collapsed: false });
+      if (this.getMap()) {
+        try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+      }
     }
   }
-};
-/** Show/hide control
- * @returns {boolean}
- */
-ol.control.Legend.prototype.collapse = function(b) {
-  if (b===false) this.show();
-  else this.hide();
-};
-/** Is control collapsed
- * @returns {boolean}
- */
-ol.control.Legend.prototype.isCollapsed = function() {
-  return (this.element.classList.contains('ol-collapsed'));
-};
-/** Toggle control
- */
-ol.control.Legend.prototype.toggle = function() {
-  this.element.classList.toggle('ol-collapsed');
-  this.dispatchEvent({ type:'change:collapse', collapsed: this.element.classList.contains('ol-collapsed') });
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  /** Hide control
+   */
+  hide() {
+    if (!this.element.classList.contains('ol-collapsed')) {
+      this.element.classList.add('ol-collapsed');
+      this.dispatchEvent({ type: 'change:collapse', collapsed: true });
+      if (this.getMap()) {
+        try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+      }
+    }
   }
-};
+  /** Show/hide control
+   * @returns {boolean}
+   */
+  collapse(b) {
+    if (b === false)
+      this.show();
+    else
+      this.hide();
+  }
+  /** Is control collapsed
+   * @returns {boolean}
+   */
+  isCollapsed() {
+    return (this.element.classList.contains('ol-collapsed'));
+  }
+  /** Toggle control
+   */
+  toggle() {
+    this.element.classList.toggle('ol-collapsed');
+    this.dispatchEvent({ type: 'change:collapse', collapsed: this.element.classList.contains('ol-collapsed') });
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -12277,176 +12300,708 @@ ol.control.PrintDialog.prototype.getrintControl = function() {
  *  @param {boolean} [options.selectable=false] enable selection on the profil, default false
  *  @param {boolean} [options.zoomable=false] can zoom in the profil
  */
-ol.control.Profil = function(options) {
-  options = options || {};
-  this.info = options.info || ol.control.Profil.prototype.info;
-  var self = this;
-  var element;
-  if (options.target) {
-    element = document.createElement("div");
-    element.classList.add(options.className || "ol-profil");
-  } else {
-    element = document.createElement("div");
-    element.className = ((options.className || 'ol-profil') +' ol-unselectable ol-control ol-collapsed').trim();
-    this.button = document.createElement("button");
-    this.button.title =  options.title || 'Profile',
-    this.button.setAttribute('type','button');
-    var click_touchstart_function = function(e) {
-      self.toggle();
-      e.preventDefault();
-    };
-    this.button.addEventListener("click", click_touchstart_function);
-    this.button.addEventListener("touchstart", click_touchstart_function);
-    element.appendChild(this.button);
-  }
-  // Drawing style
-  if (options.style instanceof ol.style.Style) {
-    this._style = options.style;
-  } else {
-    this._style = new ol.style.Style({
-      text: new ol.style.Text(),
-      stroke: new ol.style.Stroke({
-        width: 1.5,
-        color: '#369'
-      })
-    });
-  }
-  if (!this._style.getText()) this._style.setText(new ol.style.Text());
-  // Selection style
-  if (options.selectStyle instanceof ol.style.Style) {
-    this._selectStyle = options.selectStyle;
-  } else {
-    this._selectStyle = new ol.style.Style({
-      fill: new ol.style.Fill({ color: '#369' })
-    });
-  }
-  var div_inner = document.createElement("div");
-      div_inner.classList.add("ol-inner");
-      element.appendChild(div_inner);
-  var div = document.createElement("div");
-      div.style.position = "relative";
-      div_inner.appendChild(div);
-  var ratio = this.ratio = 2;
-  this.canvas_ = document.createElement('canvas');
-  this.canvas_.width = (options.width || 300)*ratio;
-  this.canvas_.height = (options.height || 150)*ratio;
-  var styles = {
-    "msTransform":"scale(0.5,0.5)", "msTransformOrigin":"0 0",
-    "webkitTransform":"scale(0.5,0.5)", "webkitTransformOrigin":"0 0",
-    "mozTransform":"scale(0.5,0.5)", "mozTransformOrigin":"0 0",
-    "transform":"scale(0.5,0.5)", "transformOrigin":"0 0"
-  };
-  Object.keys(styles).forEach(function(style) {
-    if (style in self.canvas_.style) {
-      self.canvas_.style[style] = styles[style];
-    }
-  });
-  var div_to_canvas = document.createElement("div");
-  div.appendChild(div_to_canvas);
-  div_to_canvas.style.width = this.canvas_.width/ratio + "px";
-  div_to_canvas.style.height = this.canvas_.height/ratio + "px";
-  div_to_canvas.appendChild(this.canvas_);
-  div_to_canvas.addEventListener('pointerdown', this.onMove.bind(this));
-  document.addEventListener('pointerup', this.onMove.bind(this));
-  div_to_canvas.addEventListener('mousemove', this.onMove.bind(this));
-  div_to_canvas.addEventListener('touchmove', this.onMove.bind(this));
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.set('selectable', options.selectable);
-  // Offset in px
-  this.margin_ = { top:10*ratio, left:45*ratio, bottom:30*ratio, right:10*ratio };
-  if (!this.info.ytitle) this.margin_.left -= 20*ratio;
-  if (!this.info.xtitle) this.margin_.bottom -= 20*ratio;
-  // Cursor
-  this.bar_ = document.createElement("div");
-  this.bar_.classList.add("ol-profilbar");
-  this.bar_.style.top = (this.margin_.top/ratio)+"px";
-  this.bar_.style.height = (this.canvas_.height-this.margin_.top-this.margin_.bottom)/ratio+"px";
-  div.appendChild(this.bar_);
-  this.cursor_ = document.createElement("div");
-  this.cursor_.classList.add("ol-profilcursor");
-  div.appendChild(this.cursor_);
-  this.popup_ = document.createElement("div");
-  this.popup_.classList.add("ol-profilpopup");
-  this.cursor_.appendChild(this.popup_);
-  // Track information
-  var t = document.createElement("table");
-      t.cellPadding = '0';
-      t.cellSpacing = '0';
-      t.style.clientWidth = this.canvas_.width/ratio + "px";
-    div.appendChild(t);
-  var firstTr = document.createElement("tr");
-      firstTr.classList.add("track-info");
-      t.appendChild(firstTr);
-  var div_zmin = document.createElement("td");
-  div_zmin.innerHTML = (this.info.zmin||"Zmin")+': <span class="zmin">';
-  firstTr.appendChild(div_zmin);
-  var div_zmax = document.createElement("td");
-  div_zmax.innerHTML = (this.info.zmax||"Zmax")+': <span class="zmax">';
-  firstTr.appendChild(div_zmax);
-  var div_distance = document.createElement("td");
-  div_distance.innerHTML = (this.info.distance||"Distance")+': <span class="dist">';
-  firstTr.appendChild(div_distance);
-  var div_time = document.createElement("td");
-  div_time.innerHTML = (this.info.time||"Time")+': <span class="time">';
-  firstTr.appendChild(div_time);
-  var secondTr = document.createElement("tr");
-      secondTr.classList.add("point-info")
-      t.appendChild(secondTr);
-  var div_altitude = document.createElement("td");
-  div_altitude.innerHTML = (this.info.altitude||"Altitude")+': <span class="z">';
-  secondTr.appendChild(div_altitude);
-  var div_distance2 = document.createElement("td");
-  div_distance2.innerHTML = (this.info.distance||"Distance")+': <span class="dist">';
-  secondTr.appendChild(div_distance2);
-  var div_time2 = document.createElement("td");
-  div_time2.innerHTML = (this.info.time||"Time")+': <span class="time">';
-  secondTr.appendChild(div_time2);
-  // Array of data
-  this.tab_ = [];
-  // Show feature
-  if (options.feature) {
-    this.setGeometry (options.feature);
-  }
-  // Zoom on profile
-  if (options.zoomable) {
-    this.set('selectable', true);
-    var start, geom;
-    this.on('change:geometry', function() {
-      geom = null;
-    });
-    this.on('dragstart', function(e) {
-      start = e.index;
+ol.control.Profil = class olcontrolProfil extends ol.control.Control {
+  constructor(options) {
+    options = options || {}
+    var element = document.createElement('div')
+    super({
+      element: element,
+      target: options.target
     })
-    this.on('dragend', function(e) {
-      if (Math.abs(start - e.index) > 10) {
-        if (!geom) {
-          var bt = ol.ext.element.create('BUTTON', {
-            parent: element,
-            className: 'ol-zoom-out',
-            click: function(e) {
-              e.stopPropagation();
-              e.preventDefault();
-              if (geom) {
-                this.dispatchEvent({ type:'zoom' });
-                this.setGeometry(geom, this._geometry[1]);
-              }
-              element.removeChild(bt);
-            }.bind(this)
-          })
-        }
-        var saved = geom || this._geometry[0];
-        var g = new ol.geom.LineString(this.getSelection(start, e.index));
-        this.setGeometry(g, this._geometry[1]);
-        geom = saved;
-        this.dispatchEvent({ type:'zoom', geometry: g, start: start, end: e.index });
+    var self = this
+    this.info = options.info || ol.control.Profil.prototype.info
+    if (options.target) {
+      element.classList.add(options.className || 'ol-profil')
+    } else {
+      element.className = ((options.className || 'ol-profil') + ' ol-unselectable ol-control ol-collapsed').trim()
+      this.button = document.createElement('button')
+      this.button.title = options.title || 'Profile',
+        this.button.setAttribute('type', 'button')
+      var click_touchstart_function = function (e) {
+        self.toggle()
+        e.preventDefault()
       }
-    }.bind(this));
+      this.button.addEventListener("click", click_touchstart_function)
+      this.button.addEventListener("touchstart", click_touchstart_function)
+      element.appendChild(this.button)
+    }
+    // Drawing style
+    if (options.style instanceof ol.style.Style) {
+      this._style = options.style
+    } else {
+      this._style = new ol.style.Style({
+        text: new ol.style.Text(),
+        stroke: new ol.style.Stroke({
+          width: 1.5,
+          color: '#369'
+        })
+      })
+    }
+    if (!this._style.getText()) this._style.setText(new ol.style.Text())
+    // Selection style
+    if (options.selectStyle instanceof ol.style.Style) {
+      this._selectStyle = options.selectStyle
+    } else {
+      this._selectStyle = new ol.style.Style({
+        fill: new ol.style.Fill({ color: '#369' })
+      })
+    }
+    var div_inner = document.createElement("div")
+    div_inner.classList.add("ol-inner")
+    element.appendChild(div_inner)
+    var div = document.createElement("div")
+    div.style.position = "relative"
+    div_inner.appendChild(div)
+    var ratio = this.ratio = 2
+    this.canvas_ = document.createElement('canvas')
+    this.canvas_.width = (options.width || 300) * ratio
+    this.canvas_.height = (options.height || 150) * ratio
+    var styles = {
+      "msTransform": "scale(0.5,0.5)", "msTransformOrigin": "0 0",
+      "webkitTransform": "scale(0.5,0.5)", "webkitTransformOrigin": "0 0",
+      "mozTransform": "scale(0.5,0.5)", "mozTransformOrigin": "0 0",
+      "transform": "scale(0.5,0.5)", "transformOrigin": "0 0"
+    }
+    Object.keys(styles).forEach(function (style) {
+      if (style in self.canvas_.style) {
+        self.canvas_.style[style] = styles[style]
+      }
+    })
+    var div_to_canvas = document.createElement("div")
+    div.appendChild(div_to_canvas)
+    div_to_canvas.style.width = this.canvas_.width / ratio + "px"
+    div_to_canvas.style.height = this.canvas_.height / ratio + "px"
+    div_to_canvas.appendChild(this.canvas_)
+    div_to_canvas.addEventListener('pointerdown', this.onMove.bind(this))
+    document.addEventListener('pointerup', this.onMove.bind(this))
+    div_to_canvas.addEventListener('mousemove', this.onMove.bind(this))
+    div_to_canvas.addEventListener('touchmove', this.onMove.bind(this))
+    this.set('selectable', options.selectable)
+    // Offset in px
+    this.margin_ = { top: 10 * ratio, left: 45 * ratio, bottom: 30 * ratio, right: 10 * ratio }
+    if (!this.info.ytitle)
+      this.margin_.left -= 20 * ratio
+    if (!this.info.xtitle)
+      this.margin_.bottom -= 20 * ratio
+    // Cursor
+    this.bar_ = document.createElement("div")
+    this.bar_.classList.add("ol-profilbar")
+    this.bar_.style.top = (this.margin_.top / ratio) + "px"
+    this.bar_.style.height = (this.canvas_.height - this.margin_.top - this.margin_.bottom) / ratio + "px"
+    div.appendChild(this.bar_)
+    this.cursor_ = document.createElement("div")
+    this.cursor_.classList.add("ol-profilcursor")
+    div.appendChild(this.cursor_)
+    this.popup_ = document.createElement("div")
+    this.popup_.classList.add("ol-profilpopup")
+    this.cursor_.appendChild(this.popup_)
+    // Track information
+    var t = document.createElement("table")
+    t.cellPadding = '0'
+    t.cellSpacing = '0'
+    t.style.clientWidth = this.canvas_.width / ratio + "px"
+    div.appendChild(t)
+    var firstTr = document.createElement("tr")
+    firstTr.classList.add("track-info")
+    t.appendChild(firstTr)
+    var div_zmin = document.createElement("td")
+    div_zmin.innerHTML = (this.info.zmin || "Zmin") + ': <span class="zmin">'
+    firstTr.appendChild(div_zmin)
+    var div_zmax = document.createElement("td")
+    div_zmax.innerHTML = (this.info.zmax || "Zmax") + ': <span class="zmax">'
+    firstTr.appendChild(div_zmax)
+    var div_distance = document.createElement("td")
+    div_distance.innerHTML = (this.info.distance || "Distance") + ': <span class="dist">'
+    firstTr.appendChild(div_distance)
+    var div_time = document.createElement("td")
+    div_time.innerHTML = (this.info.time || "Time") + ': <span class="time">'
+    firstTr.appendChild(div_time)
+    var secondTr = document.createElement("tr")
+    secondTr.classList.add("point-info")
+    t.appendChild(secondTr)
+    var div_altitude = document.createElement("td")
+    div_altitude.innerHTML = (this.info.altitude || "Altitude") + ': <span class="z">'
+    secondTr.appendChild(div_altitude)
+    var div_distance2 = document.createElement("td")
+    div_distance2.innerHTML = (this.info.distance || "Distance") + ': <span class="dist">'
+    secondTr.appendChild(div_distance2)
+    var div_time2 = document.createElement("td")
+    div_time2.innerHTML = (this.info.time || "Time") + ': <span class="time">'
+    secondTr.appendChild(div_time2)
+    // Array of data
+    this.tab_ = []
+    // Show feature
+    if (options.feature) {
+      this.setGeometry(options.feature)
+    }
+    // Zoom on profile
+    if (options.zoomable) {
+      this.set('selectable', true)
+      var start, geom
+      this.on('change:geometry', function () {
+        geom = null
+      })
+      this.on('dragstart', function (e) {
+        start = e.index
+      })
+      this.on('dragend', function (e) {
+        if (Math.abs(start - e.index) > 10) {
+          if (!geom) {
+            var bt = ol.ext.element.create('BUTTON', {
+              parent: element,
+              className: 'ol-zoom-out',
+              click: function (e) {
+                e.stopPropagation()
+                e.preventDefault()
+                if (geom) {
+                  this.dispatchEvent({ type: 'zoom' })
+                  this.setGeometry(geom, this._geometry[1])
+                }
+                element.removeChild(bt)
+              }.bind(this)
+            })
+          }
+          var saved = geom || this._geometry[0]
+          var g = new ol.geom.LineString(this.getSelection(start, e.index))
+          this.setGeometry(g, this._geometry[1])
+          geom = saved
+          this.dispatchEvent({ type: 'zoom', geometry: g, start: start, end: e.index })
+        }
+      }.bind(this))
+    }
   }
-};
-ol.ext.inherits(ol.control.Profil, ol.control.Control);
+  /** Show popup info
+  * @param {string} info to display as a popup
+  * @api stable
+  */
+  popup(info) {
+    this.popup_.innerHTML = info
+  }
+  /** Show point on profil
+   * @param {*} p
+   * @param {number} dx
+   * @private
+   */
+  _drawAt(p, dx) {
+    if (p) {
+      this.cursor_.style.left = dx + "px"
+      this.cursor_.style.top = (this.canvas_.height - this.margin_.bottom + p[1] * this.scale_[1] + this.dy_) / this.ratio + "px"
+      this.cursor_.style.display = "block"
+      this.bar_.parentElement.classList.add("over")
+      this.bar_.style.left = dx + "px"
+      this.bar_.style.display = "block"
+      this.element.querySelector(".point-info .z").textContent = p[1] + this.info.altitudeUnits
+      this.element.querySelector(".point-info .dist").textContent = (p[0] / 1000).toFixed(1) + this.info.distanceUnitsKM
+      this.element.querySelector(".point-info .time").textContent = p[2]
+      if (dx > this.canvas_.width / this.ratio / 2)
+        this.popup_.classList.add('ol-left')
+      else
+        this.popup_.classList.remove('ol-left')
+    } else {
+      this.cursor_.style.display = "none"
+      this.bar_.style.display = 'none'
+      this.cursor_.style.display = 'none'
+      this.bar_.parentElement.classList.remove("over")
+    }
+  }
+  /** Show point at coordinate or a distance on the profil
+   * @param { ol.coordinates|number } where a coordinate or a distance from begining, if none it will hide the point
+   * @return { ol.coordinates } current point
+   */
+  showAt(where) {
+    var i, p, p0, d0 = Infinity
+    if (typeof (where) === 'undefined') {
+      if (this.bar_.parentElement.classList.contains("over")) {
+        // Remove it
+        this._drawAt()
+      }
+    } else if (where.length) {
+      // Look for closest the point
+      for (i = 1; p = this.tab_[i]; i++) {
+        var d = ol.coordinate.dist2d(p[3], where)
+        if (d < d0) {
+          p0 = p
+          d0 = d
+        }
+      }
+    } else {
+      for (i = 0; p = this.tab_[i]; i++) {
+        p0 = p
+        if (p[0] >= where) {
+          break
+        }
+      }
+    }
+    if (p0) {
+      var dx = (p0[0] * this.scale_[0] + this.margin_.left) / this.ratio
+      this._drawAt(p0, dx)
+      return p0[3]
+    }
+    return null
+  }
+  /** Show point at a time on the profil
+   * @param { Date|number } time a Date or a DateTime (in s) to show the profile on, if none it will hide the point
+   * @param { booelan } delta true if time is a delta from the start, default false
+   * @return { ol.coordinates } current point
+   */
+  showAtTime(time, delta) {
+    var i, p, p0
+    if (time instanceof Date) {
+      time = time.getTime() / 1000
+    } else if (delta) {
+      time += this.tab_[0][3][3]
+    }
+    if (typeof (time) === 'undefined') {
+      if (this.bar_.parentElement.classList.contains("over")) {
+        // Remove it
+        this._drawAt()
+      }
+    } else {
+      for (i = 0; p = this.tab_[i]; i++) {
+        p0 = p
+        if (p[3][3] >= time) {
+          break
+        }
+      }
+    }
+    if (p0) {
+      var dx = (p0[0] * this.scale_[0] + this.margin_.left) / this.ratio
+      this._drawAt(p0, dx)
+      return p0[3]
+    }
+    return null
+  }
+  /** Get the point at a given time on the profil
+   * @param { number } time time at which to show the point
+   * @return { ol.coordinates } current point
+   */
+  pointAtTime(time) {
+    var i, p
+    // Look for closest the point
+    for (i = 1; p = this.tab_[i]; i++) {
+      var t = p[3][3]
+      if (t >= time) {
+        // Previous one ?
+        var pt = this.tab_[i - 1][3]
+        if ((pt[3] + t) / 2 < time)
+          return pt
+        else
+          return p
+      }
+    }
+    return this.tab_[this.tab_.length - 1][3]
+  }
+  /** Mouse move over canvas
+   */
+  onMove(e) {
+    if (!this.tab_.length)
+      return
+    var box_canvas = this.canvas_.getBoundingClientRect()
+    var pos = {
+      top: box_canvas.top + window.pageYOffset - document.documentElement.clientTop,
+      left: box_canvas.left + window.pageXOffset - document.documentElement.clientLeft
+    }
+    var pageX = e.pageX
+      || (e.touches && e.touches.length && e.touches[0].pageX)
+      || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX)
+    var pageY = e.pageY
+      || (e.touches && e.touches.length && e.touches[0].pageY)
+      || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY)
+    var dx = pageX - pos.left
+    var dy = pageY - pos.top
+    var ratio = this.ratio
+    if (dx > this.margin_.left / ratio - 20 && dx < (this.canvas_.width - this.margin_.right) / ratio + 8
+      && dy > this.margin_.top / ratio && dy < (this.canvas_.height - this.margin_.bottom) / ratio) {
+      var d = (dx * ratio - this.margin_.left) / this.scale_[0]
+      var p0 = this.tab_[0]
+      var index, p
+      for (index = 1; p = this.tab_[index]; index++) {
+        if (p[0] >= d) {
+          if (d < (p[0] + p0[0]) / 2) {
+            index = 0
+            p = p0
+          }
+          break
+        }
+      }
+      if (!p)
+        p = this.tab_[this.tab_.length - 1]
+      dx = Math.max(this.margin_.left / ratio, Math.min(dx, (this.canvas_.width - this.margin_.right) / ratio))
+      this._drawAt(p, dx)
+      this.dispatchEvent({ type: 'over', click: e.type === 'click', index: index, coord: p[3], time: p[2], distance: p[0] })
+      // Handle drag / click
+      switch (e.type) {
+        case 'pointerdown': {
+          this._dragging = {
+            event: { type: 'dragstart', index: index, coord: p[3], time: p[2], distance: p[0] },
+            pageX: pageX,
+            pageY: pageY
+          }
+          break
+        }
+        case 'pointerup': {
+          if (this._dragging && this._dragging.pageX) {
+            if (Math.abs(this._dragging.pageX - pageX) < 3 && Math.abs(this._dragging.pageY - pageY) < 3) {
+              this.dispatchEvent({ type: 'click', index: index, coord: p[3], time: p[2], distance: p[0] })
+              this.refresh()
+            }
+          } else {
+            this.dispatchEvent({ type: 'dragend', index: index, coord: p[3], time: p[2], distance: p[0] })
+          }
+          this._dragging = false
+          break
+        }
+        default: {
+          if (this._dragging) {
+            if (this._dragging.pageX) {
+              if (Math.abs(this._dragging.pageX - pageX) > 3 || Math.abs(this._dragging.pageY - pageY) > 3) {
+                this._dragging.pageX = this._dragging.pageY = false
+                this.dispatchEvent(this._dragging.event)
+              }
+            } else {
+              this.dispatchEvent({ type: 'dragging', index: index, coord: p[3], time: p[2], distance: p[0] })
+              var min = Math.min(this._dragging.event.index, index)
+              var max = Math.max(this._dragging.event.index, index)
+              this.refresh()
+              if (this.get('selectable'))
+                this._drawGraph(this.tab_.slice(min, max), this._selectStyle)
+            }
+          }
+          break
+        }
+      }
+    } else {
+      if (this.bar_.parentElement.classList.contains('over')) {
+        this._drawAt()
+        this.dispatchEvent({ type: 'out' })
+      }
+      if (e.type === 'pointerup' && this._dragging) {
+        this.dispatchEvent({ type: 'dragcancel' })
+        this._dragging = false
+      }
+    }
+  }
+  /** Show panel
+  * @api stable
+  */
+  show() {
+    this.element.classList.remove("ol-collapsed")
+    this.dispatchEvent({ type: 'show', show: true })
+  }
+  /** Hide panel
+  * @api stable
+  */
+  hide() {
+    this.element.classList.add("ol-collapsed")
+    this.dispatchEvent({ type: 'show', show: false })
+  }
+  /** Toggle panel
+  * @api stable
+  */
+  toggle() {
+    this.element.classList.toggle("ol-collapsed")
+    var b = this.element.classList.contains("ol-collapsed")
+    this.dispatchEvent({ type: 'show', show: !b })
+  }
+  /** Is panel visible
+  */
+  isShown() {
+    return (!this.element.classList.contains("ol-collapsed"))
+  }
+  /** Get selection
+   * @param {number} starting point
+   * @param {number} ending point
+   * @return {Array<ol.coordinate>}
+   */
+  getSelection(start, end) {
+    var sel = []
+    var min = Math.max(Math.min(start, end), 0)
+    var max = Math.min(Math.max(start, end), this.tab_.length - 1)
+    for (var i = min; i <= max; i++) {
+      sel.push(this.tab_[i][3])
+    }
+    return sel
+  }
+  /** Draw the graph
+   * @private
+   */
+  _drawGraph(t, style) {
+    if (!t.length)
+      return
+    var ctx = this.canvas_.getContext('2d')
+    var scx = this.scale_[0]
+    var scy = this.scale_[1]
+    var dy = this.dy_
+    var ratio = this.ratio
+    var i, p
+    // Draw Path
+    ctx.beginPath()
+    for (i = 0; p = t[i]; i++) {
+      if (i == 0)
+        ctx.moveTo(p[0] * scx, p[1] * scy + dy)
+      else
+        ctx.lineTo(p[0] * scx, p[1] * scy + dy)
+    }
+    if (style.getStroke()) {
+      ctx.strokeStyle = style.getStroke().getColor() || '#000'
+      ctx.lineWidth = style.getStroke().getWidth() * ratio
+      ctx.setLineDash([])
+      ctx.stroke()
+    }
+    // Fill path
+    if (style.getFill()) {
+      ctx.fillStyle = style.getFill().getColor() || '#000'
+      ctx.Style = style.getFill().getColor() || '#000'
+      ctx.lineTo(t[t.length - 1][0] * scx, 0)
+      ctx.lineTo(t[0][0] * scx, 0)
+      ctx.fill()
+    }
+  }
+  /**
+   * Set the geometry to draw the profil.
+   * @param {ol.Feature|ol.geom.Geometry} f the feature.
+   * @param {Object=} options
+   *  @param {ol.ProjectionLike} [options.projection] feature projection, default projection of the map
+   *  @param {string} [options.zunit='m'] 'm' or 'km', default m
+   *  @param {string} [options.unit='km'] 'm' or 'km', default km
+   *  @param {Number|undefined} [options.zmin=0] default 0
+   *  @param {Number|undefined} options.zmax default max Z of the feature
+   *  @param {integer|undefined} [options.zDigits=0] number of digits for z graduation, default 0
+   *  @param {integer|undefined} [options.zMaxChars] maximum number of chars to be used for z graduation before switching to scientific notation
+   *  @param {Number|undefined} [options.graduation=100] z graduation default 100
+   *  @param {integer|undefined} [options.amplitude] amplitude of the altitude, default zmax-zmin
+   * @api stable
+   */
+  setGeometry(g, options) {
+    if (!options)
+      options = {}
+    if (g instanceof ol.Feature)
+      g = g.getGeometry()
+    this._geometry = [g, options]
+    // No Z
+    if (!/Z/.test(g.getLayout()))
+      return
+    // No time
+    if (/M/.test(g.getLayout()))
+      this.element.querySelector(".time").parentElement.style.display = 'block'
+    else
+      this.element.querySelector(".time").parentElement.style.display = 'none'
+    // Coords
+    var c = g.getCoordinates()
+    switch (g.getType()) {
+      case "LineString": break
+      case "MultiLineString": c = c[0]; break
+      default: return
+    }
+    // Distance beetween 2 coords
+    var proj = options.projection || this.getMap().getView().getProjection()
+    function dist2d(p1, p2) {
+      return ol.sphere.getDistance(
+        ol.proj.transform(p1, proj, 'EPSG:4326'),
+        ol.proj.transform(p2, proj, 'EPSG:4326')
+      )
+    }
+    function getTime(t0, t1) {
+      if (!t0 || !t1)
+        return "-"
+      var dt = (t1 - t0) / 60 // mn
+      var ti = Math.trunc(dt / 60)
+      var mn = Math.trunc(dt - ti * 60)
+      return ti + "h" + (mn < 10 ? "0" : "") + mn + "mn"
+    }
+    // Calculate [distance, altitude, time, point] for each points
+    var zmin = Infinity, zmax = -Infinity
+    var i, p, d, z, ti, t = this.tab_ = []
+    for (i = 0, p; p = c[i]; i++) {
+      z = p[2]
+      if (z < zmin)
+        zmin = z
+      if (z > zmax)
+        zmax = z
+      if (i == 0)
+        d = 0
+      else
+        d += dist2d(c[i - 1], p)
+      ti = getTime(c[0][3], p[3])
+      t.push([d, z, ti, p])
+    }
+    this._z = [zmin, zmax]
+    this.set('graduation', options.graduation || 100)
+    this.set('zmin', options.zmin)
+    this.set('zmax', options.zmax)
+    this.set('amplitude', options.amplitude)
+    this.set('unit', options.unit)
+    this.set('zunit', options.zunit)
+    this.set('zDigits', options.zDigits)
+    this.set('zMaxChars', options.zMaxChars)
+    this.dispatchEvent({ type: 'change:geometry', geometry: g })
+    this.refresh()
+  }
+  /** Refresh the profil
+   */
+  refresh() {
+    var canvas = this.canvas_
+    var ctx = canvas.getContext('2d')
+    var w = canvas.width
+    var h = canvas.height
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.clearRect(0, 0, w, h)
+    var zmin = this._z[0]
+    var zmax = this._z[1]
+    var t = this.tab_
+    var d = t[t.length - 1][0]
+    var ti = t[t.length - 1][2]
+    var i
+    if (!d) {
+      console.error('[ol/control/Profil] no data...', t)
+      return
+    }
+    // Margin
+    ctx.setTransform(1, 0, 0, 1, this.margin_.left, h - this.margin_.bottom)
+    var ratio = this.ratio
+    w -= this.margin_.right + this.margin_.left
+    h -= this.margin_.top + this.margin_.bottom
+    // Draw axes
+    ctx.strokeStyle = this._style.getText().getFill().getColor() || '#000'
+    ctx.lineWidth = 0.5 * ratio
+    ctx.beginPath()
+    ctx.moveTo(0, 0); ctx.lineTo(0, -h)
+    ctx.moveTo(0, 0); ctx.lineTo(w, 0)
+    ctx.stroke()
+    // Info
+    this.element.querySelector(".track-info .zmin").textContent = zmin.toFixed(2) + this.info.altitudeUnits
+    this.element.querySelector(".track-info .zmax").textContent = zmax.toFixed(2) + this.info.altitudeUnits
+    if (d > 1000) {
+      this.element.querySelector(".track-info .dist").textContent = (d / 1000).toFixed(1) + this.info.distanceUnitsKM
+    } else {
+      this.element.querySelector(".track-info .dist").textContent = (d).toFixed(1) + this.info.distanceUnitsM
+    }
+    this.element.querySelector(".track-info .time").textContent = ti
+    // Set graduation
+    var grad = this.get('graduation')
+    while (true) {
+      zmax = Math.ceil(zmax / grad) * grad
+      zmin = Math.floor(zmin / grad) * grad
+      var nbgrad = (zmax - zmin) / grad
+      if (h / nbgrad < 15 * ratio) {
+        grad *= 2
+      }
+      else
+        break
+    }
+    // Set amplitude
+    if (typeof (this.get('zmin')) == 'number' && zmin > this.get('zmin'))
+      zmin = this.get('zmin')
+    if (typeof (this.get('zmax')) == 'number' && zmax < this.get('zmax'))
+      zmax = this.get('zmax')
+    var amplitude = this.get('amplitude')
+    if (amplitude) {
+      zmax = Math.max(zmin + amplitude, zmax)
+    }
+    // Scales lines
+    var scx = w / d
+    var scy = -h / (zmax - zmin)
+    var dy = this.dy_ = -zmin * scy
+    this.scale_ = [scx, scy]
+    this._drawGraph(t, this._style)
+    // Draw 
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'top'
+    ctx.fillStyle = this._style.getText().getFill().getColor() || '#000'
+    // Scale Z
+    ctx.beginPath()
+    var fix = this.get('zDigits') || 0
+    var exp = null
+    if (typeof (this.get('zMaxChars')) == 'number') {
+      var usedChars
+      if (this.get('zunit') != 'km')
+        usedChars = Math.max(zmin.toFixed(fix).length, zmax.toFixed(fix).length)
+      else
+        usedChars = Math.max((zmin / 1000).toFixed(1).length, (zmax / 1000).toFixed(1).length)
+      if (this.get('zMaxChars') < usedChars) {
+        exp = Math.floor(Math.log10(Math.max(Math.abs(zmin), Math.abs(zmax), Number.MIN_VALUE)))
+        ctx.font = 'bold ' + (9 * ratio) + 'px arial'
+        ctx.fillText(exp.toString(), -8 * ratio, 8 * ratio)
+        var expMetrics = ctx.measureText(exp.toString())
+        var expWidth = expMetrics.width
+        var expHeight = expMetrics.actualBoundingBoxAscent + expMetrics.actualBoundingBoxDescent
+        ctx.font = 'bold ' + (12 * ratio) + 'px arial'
+        ctx.fillText("10", -8 * ratio - expWidth, 8 * ratio + 0.5 * expHeight)
+      }
+    }
+    ctx.font = (10 * ratio) + 'px arial'
+    ctx.textBaseline = 'middle'
+    for (i = zmin; i <= zmax; i += grad) {
+      if (exp !== null) {
+        var baseNumber = i / Math.pow(10, exp)
+        if (this.get('zunit') == 'km')
+          baseNumber /= 1000
+        var nbDigits = this.get('zMaxChars') - Math.floor(Math.log10(Math.max(Math.abs(baseNumber), 1)) + 1) - 1
+        if (baseNumber < 0)
+          nbDigits -= 1
+        if (this.get('zunit') != 'km')
+          ctx.fillText(baseNumber.toFixed(Math.max(nbDigits, 0)), -4 * ratio, i * scy + dy)
+        else
+          ctx.fillText(baseNumber.toFixed(Math.max(nbDigits, 0)), -4 * ratio, i * scy + dy)
+      } else {
+        if (this.get('zunit') != 'km')
+          ctx.fillText(i.toFixed(fix), -4 * ratio, i * scy + dy)
+        else
+          ctx.fillText((i / 1000).toFixed(1), -4 * ratio, i * scy + dy)
+      }
+      ctx.moveTo(-2 * ratio, i * scy + dy)
+      if (i != 0)
+        ctx.lineTo(d * scx, i * scy + dy)
+      else
+        ctx.lineTo(0, i * scy + dy)
+    }
+    // Scale X
+    ctx.textAlign = "center"
+    ctx.textBaseline = "top"
+    ctx.setLineDash([ratio, 3 * ratio])
+    var unit = this.get('unit') || "km"
+    var step
+    if (d > 1000) {
+      step = Math.round(d / 1000) * 100
+      if (step > 1000)
+        step = Math.ceil(step / 1000) * 1000
+    } else {
+      unit = "m"
+      if (d > 100)
+        step = Math.round(d / 100) * 10
+      else if (d > 10)
+        step = Math.round(d / 10)
+      else if (d > 1)
+        step = Math.round(d) / 10
+      else
+        step = d
+    }
+    for (i = 0; i <= d; i += step) {
+      var txt = (unit == "m") ? i : (i / 1000)
+      //if (i+step>d) txt += " "+ (options.zunits || "km");
+      ctx.fillText(Math.round(txt * 10) / 10, i * scx, 4 * ratio)
+      ctx.moveTo(i * scx, 2 * ratio); ctx.lineTo(i * scx, 0)
+    }
+    ctx.font = (12 * ratio) + "px arial"
+    ctx.fillText(this.info.xtitle.replace("(km)", "(" + unit + ")"), w / 2, 18 * ratio)
+    ctx.save()
+    ctx.rotate(-Math.PI / 2)
+    ctx.fillText(this.info.ytitle, h / 2, -this.margin_.left)
+    ctx.restore()
+    ctx.stroke()
+  }
+  /** Get profil image
+  * @param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
+  * @param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
+  * @return {string} requested data uri
+  * @api stable
+  */
+  getImage(type, encoderOptions) {
+    if (type === "canvas")
+      return this.canvas_
+    return this.canvas_.toDataURL(type, encoderOptions)
+  }
+}
 /** Custom infos list
 * @api stable
 */
@@ -12461,499 +13016,6 @@ ol.control.Profil.prototype.info = {
   "altitudeUnits": "m",
   "distanceUnitsM": "m",
   "distanceUnitsKM": "km",
-};
-/** Show popup info
-* @param {string} info to display as a popup
-* @api stable
-*/
-ol.control.Profil.prototype.popup = function(info) {
-  this.popup_.innerHTML = info;
-};
-/** Show point on profil
- * @param {*} p 
- * @param {number} dx 
- * @private
- */
-ol.control.Profil.prototype._drawAt = function(p, dx) {
-  if (p) {
-    this.cursor_.style.left = dx+"px";
-    this.cursor_.style.top = (this.canvas_.height-this.margin_.bottom+p[1]*this.scale_[1]+this.dy_)/this.ratio+"px";
-    this.cursor_.style.display = "block";
-    this.bar_.parentElement.classList.add("over");
-    this.bar_.style.left = dx+"px";
-    this.bar_.style.display = "block";
-    this.element.querySelector(".point-info .z").textContent = p[1]+this.info.altitudeUnits;
-    this.element.querySelector(".point-info .dist").textContent = (p[0]/1000).toFixed(1)+this.info.distanceUnitsKM;
-    this.element.querySelector(".point-info .time").textContent = p[2];
-    if (dx>this.canvas_.width/this.ratio/2) this.popup_.classList.add('ol-left');
-    else this.popup_.classList.remove('ol-left');
-  } else {
-    this.cursor_.style.display = "none";
-    this.bar_.style.display = 'none';
-    this.cursor_.style.display = 'none';  
-    this.bar_.parentElement.classList.remove("over");
-  }
-};
-/** Show point at coordinate or a distance on the profil
- * @param { ol.coordinates|number } where a coordinate or a distance from begining, if none it will hide the point
- * @return { ol.coordinates } current point
- */
-ol.control.Profil.prototype.showAt = function(where) {
-  var i, p, p0, d0 = Infinity;
-  if (typeof(where) === 'undefined') {
-    if (this.bar_.parentElement.classList.contains("over")) {
-      // Remove it
-      this._drawAt();
-    }
-  } else if (where.length) {
-    // Look for closest the point
-    for (i=1; p=this.tab_[i]; i++) {
-      var d = ol.coordinate.dist2d(p[3], where);
-      if (d<d0) {
-        p0 = p;
-        d0 = d;
-      } 
-    }
-  } else {
-    for (i=0; p=this.tab_[i]; i++) {
-      p0 = p;
-      if (p[0] >= where) {
-        break;
-      } 
-    }
-  }
-  if (p0) {
-    var dx = (p0[0] * this.scale_[0] + this.margin_.left) / this.ratio;
-    this._drawAt(p0, dx);
-    return p0[3];
-  }
-  return null;
-};
-/** Show point at a time on the profil
- * @param { Date|number } time a Date or a DateTime (in s) to show the profile on, if none it will hide the point
- * @param { booelan } delta true if time is a delta from the start, default false
- * @return { ol.coordinates } current point
- */
-ol.control.Profil.prototype.showAtTime = function(time, delta) {
-  var i, p, p0;
-  if (time instanceof Date) {
-    time = time.getTime()/1000;
-  } else if (delta) {
-    time += this.tab_[0][3][3];
-  }
-  if (typeof(time) === 'undefined') {
-    if (this.bar_.parentElement.classList.contains("over")) {
-      // Remove it
-      this._drawAt();
-    }
-  } else {
-    for (i=0; p=this.tab_[i]; i++) {
-      p0 = p;
-      if (p[3][3] >= time) {
-        break;
-      } 
-    }
-  }
-  if (p0) {
-    var dx = (p0[0] * this.scale_[0] + this.margin_.left) / this.ratio;
-    this._drawAt(p0, dx);
-    return p0[3];
-  }
-  return null;
-};
-/** Get the point at a given time on the profil
- * @param { number } time time at which to show the point
- * @return { ol.coordinates } current point
- */
-ol.control.Profil.prototype.pointAtTime = function(time) {
-  var i, p;
-  // Look for closest the point
-  for (i=1; p=this.tab_[i]; i++) {
-    var t = p[3][3];
-    if (t >= time) {
-      // Previous one ?
-      var pt = this.tab_[i-1][3];
-      if ((pt[3]+t)/2 < time) return pt;
-      else return p;
-    }
-  }
-  return this.tab_[this.tab_.length-1][3];
-};
-/** Mouse move over canvas
- */
-ol.control.Profil.prototype.onMove = function(e) {
-  if (!this.tab_.length) return;
-  var box_canvas = this.canvas_.getBoundingClientRect();
-  var pos = {
-    top: box_canvas.top + window.pageYOffset - document.documentElement.clientTop,
-    left: box_canvas.left + window.pageXOffset - document.documentElement.clientLeft
-  };
-  var pageX = e.pageX 
-    || (e.touches && e.touches.length && e.touches[0].pageX) 
-    || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
-  var pageY = e.pageY 
-    || (e.touches && e.touches.length && e.touches[0].pageY) 
-    || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
-  var dx = pageX -pos.left;
-  var dy = pageY -pos.top;
-  var ratio = this.ratio;
-  if (dx > this.margin_.left/ratio - 20 && dx < (this.canvas_.width-this.margin_.right) / ratio + 8
-    && dy > this.margin_.top/ratio && dy < (this.canvas_.height-this.margin_.bottom) / ratio) {
-    var d = (dx*ratio-this.margin_.left)/this.scale_[0];
-    var p0 = this.tab_[0];
-    var index, p;
-    for (index=1; p=this.tab_[index]; index++) {
-      if (p[0] >= d) {
-        if (d < (p[0]+p0[0])/2) {
-          index = 0;
-          p = p0;
-        }
-        break;
-      }
-    }
-    if (!p) p = this.tab_[this.tab_.length-1];
-    dx = Math.max(this.margin_.left/ratio, Math.min(dx, (this.canvas_.width-this.margin_.right)/ratio));
-    this._drawAt(p, dx);
-    this.dispatchEvent({ type:'over', click:e.type==='click', index: index, coord: p[3], time: p[2], distance: p[0] });
-    // Handle drag / click
-    switch (e.type) {
-      case 'pointerdown': {
-        this._dragging = {
-          event: { type:'dragstart', index: index, coord: p[3], time: p[2], distance: p[0] },
-          pageX: pageX,
-          pageY: pageY
-        }
-        break;
-      }
-      case 'pointerup': {
-        if (this._dragging && this._dragging.pageX) {
-          if (Math.abs(this._dragging.pageX - pageX)<3 && Math.abs(this._dragging.pageY - pageY) < 3) {
-            this.dispatchEvent({ type:'click', index: index, coord: p[3], time: p[2], distance: p[0] });
-            this.refresh();
-          }
-        } else {
-          this.dispatchEvent({ type:'dragend', index: index, coord: p[3], time: p[2], distance: p[0] });
-        }
-        this._dragging = false;
-        break;
-      }
-      default: {
-        if (this._dragging) {
-          if (this._dragging.pageX) {
-            if (Math.abs(this._dragging.pageX - pageX)>3 || Math.abs(this._dragging.pageY - pageY) > 3) {
-              this._dragging.pageX = this._dragging.pageY = false;
-              this.dispatchEvent(this._dragging.event);
-            }
-          } else {
-            this.dispatchEvent({ type:'dragging', index: index, coord: p[3], time: p[2], distance: p[0] });
-            var min = Math.min(this._dragging.event.index, index);
-            var max = Math.max(this._dragging.event.index, index);
-            this.refresh();
-            if (this.get('selectable')) this._drawGraph(this.tab_.slice(min, max), this._selectStyle);
-          }
-        }
-        break;
-      }
-    }
-  } else {
-    if (this.bar_.parentElement.classList.contains('over')) {
-      this._drawAt();
-      this.dispatchEvent({ type:'out' });
-    }
-    if (e.type === 'pointerup' && this._dragging) {
-      this.dispatchEvent({ type:'dragcancel' });
-      this._dragging = false;
-    }
-  }
-};
-/** Show panel
-* @api stable
-*/
-ol.control.Profil.prototype.show = function() {
-  this.element.classList.remove("ol-collapsed");
-  this.dispatchEvent({ type:'show', show: true });
-};
-/** Hide panel
-* @api stable
-*/
-ol.control.Profil.prototype.hide = function() {
-  this.element.classList.add("ol-collapsed");
-  this.dispatchEvent({ type:'show', show: false });
-};
-/** Toggle panel
-* @api stable
-*/
-ol.control.Profil.prototype.toggle = function() {
-  this.element.classList.toggle("ol-collapsed");
-  var b = this.element.classList.contains("ol-collapsed");
-  this.dispatchEvent({ type:'show', show: !b });
-}
-/** Is panel visible
-*/
-ol.control.Profil.prototype.isShown = function() {
-  return (!this.element.classList.contains("ol-collapsed"));
-};
-/** Get selection
- * @param {number} starting point
- * @param {number} ending point
- * @return {Array<ol.coordinate>}
- */
-ol.control.Profil.prototype.getSelection = function(start, end) {
-  var sel = [];
-  var min = Math.max(Math.min(start, end), 0);
-  var max = Math.min(Math.max(start, end), this.tab_.length-1);
-  for (var i=min; i <= max; i++) {
-    sel.push(this.tab_[i][3])
-  }
-  return sel;
-};
-/** Draw the graph
- * @private
- */
-ol.control.Profil.prototype._drawGraph = function(t, style) {
-  if (!t.length) return;
-  var ctx = this.canvas_.getContext('2d');
-  var scx = this.scale_[0];
-  var scy = this.scale_[1];
-  var dy = this.dy_;
-  var ratio = this.ratio;
-  var i, p;
-  // Draw Path
-  ctx.beginPath();
-  for (i=0; p=t[i]; i++) {
-    if (i==0) ctx.moveTo(p[0]*scx,p[1]*scy+dy);
-    else ctx.lineTo(p[0]*scx,p[1]*scy+dy);
-  }
-  if (style.getStroke()) {
-    ctx.strokeStyle = style.getStroke().getColor() || '#000';
-    ctx.lineWidth = style.getStroke().getWidth() * ratio;
-    ctx.setLineDash([]);
-    ctx.stroke();
-  }
-  // Fill path
-  if (style.getFill()) {
-    ctx.fillStyle = style.getFill().getColor() || '#000';
-    ctx.Style = style.getFill().getColor() || '#000';
-    ctx.lineTo(t[t.length-1][0]*scx, 0);
-    ctx.lineTo(t[0][0]*scx, 0);
-    ctx.fill();
-  }
-};
-/**
- * Set the geometry to draw the profil.
- * @param {ol.Feature|ol.geom.Geometry} f the feature.
- * @param {Object=} options
- *  @param {ol.ProjectionLike} [options.projection] feature projection, default projection of the map
- *  @param {string} [options.zunit='m'] 'm' or 'km', default m
- *  @param {string} [options.unit='km'] 'm' or 'km', default km
- *  @param {Number|undefined} [options.zmin=0] default 0
- *  @param {Number|undefined} options.zmax default max Z of the feature
- *  @param {integer|undefined} [options.zDigits=0] number of digits for z graduation, default 0
- *  @param {integer|undefined} [options.zMaxChars] maximum number of chars to be used for z graduation before switching to scientific notation
- *  @param {Number|undefined} [options.graduation=100] z graduation default 100
- *  @param {integer|undefined} [options.amplitude] amplitude of the altitude, default zmax-zmin
- * @api stable
- */
-ol.control.Profil.prototype.setGeometry = function(g, options) {
-  if (!options) options = {};
-  if (g instanceof ol.Feature) g = g.getGeometry();
-  this._geometry = [g, options];
-  // No Z
-  if (!/Z/.test(g.getLayout())) return;
-  // No time
-  if(/M/.test(g.getLayout())) this.element.querySelector(".time").parentElement.style.display = 'block';
-  else this.element.querySelector(".time").parentElement.style.display = 'none';
-  // Coords
-  var c = g.getCoordinates();
-  switch (g.getType()) {
-    case "LineString": break;
-    case "MultiLineString": c = c[0]; break;
-    default: return;
-  }
-  // Distance beetween 2 coords
-  var proj = options.projection || this.getMap().getView().getProjection();
-  function dist2d(p1,p2) {
-    return ol.sphere.getDistance(
-      ol.proj.transform(p1, proj, 'EPSG:4326'),
-      ol.proj.transform(p2, proj, 'EPSG:4326')
-    );
-  }
-  function getTime(t0, t1) {
-    if (!t0 || !t1) return "-"
-    var dt = (t1-t0) / 60; // mn
-    var ti = Math.trunc(dt/60);
-    var mn = Math.trunc(dt-ti*60);
-    return ti+"h"+(mn<10?"0":"")+mn+"mn";
-  }
-  // Calculate [distance, altitude, time, point] for each points
-  var zmin=Infinity, zmax=-Infinity;
-  var i, p, d, z, ti, t = this.tab_ = [];
-  for (i=0, p; p=c[i]; i++) {
-    z = p[2];
-    if (z<zmin) zmin=z;
-    if (z>zmax) zmax=z;
-    if (i==0) d = 0;
-    else d += dist2d(c[i-1], p);
-    ti = getTime(c[0][3],p[3]);
-    t.push ([d, z, ti, p]);
-  }
-  this._z = [zmin,zmax];
-  this.set('graduation', options.graduation || 100);
-  this.set('zmin', options.zmin);
-  this.set('zmax', options.zmax);
-  this.set('amplitude', options.amplitude);
-  this.set('unit', options.unit);
-  this.set('zunit', options.zunit);
-  this.set('zDigits', options.zDigits);
-  this.set('zMaxChars', options.zMaxChars);
-  this.dispatchEvent({ type: 'change:geometry', geometry: g })
-  this.refresh();
-};
-/** Refresh the profil
- */
-ol.control.Profil.prototype.refresh = function() {
-  var canvas = this.canvas_;
-  var ctx = canvas.getContext('2d');
-  var w = canvas.width;
-  var h = canvas.height;
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0,0, w, h);
-  var zmin = this._z[0];
-  var zmax = this._z[1];
-  var t = this.tab_;
-  var d = t[t.length-1][0];
-  var ti = t[t.length-1][2];
-  var i;
-  if (!d) {
-    console.error('[ol/control/Profil] no data...', t);
-    return;
-  }
-  // Margin
-  ctx.setTransform(1, 0, 0, 1, this.margin_.left, h-this.margin_.bottom);
-  var ratio = this.ratio;
-  w -= this.margin_.right + this.margin_.left;
-  h -= this.margin_.top + this.margin_.bottom;
-  // Draw axes
-  ctx.strokeStyle = this._style.getText().getFill().getColor() || '#000';
-  ctx.lineWidth = 0.5*ratio;
-  ctx.beginPath();
-  ctx.moveTo(0,0); ctx.lineTo(0,-h);
-  ctx.moveTo(0,0); ctx.lineTo(w, 0);
-  ctx.stroke();
-  // Info
-  this.element.querySelector(".track-info .zmin").textContent = zmin.toFixed(2)+this.info.altitudeUnits;
-  this.element.querySelector(".track-info .zmax").textContent = zmax.toFixed(2)+this.info.altitudeUnits;
-  if (d>1000) {
-    this.element.querySelector(".track-info .dist").textContent = (d/1000).toFixed(1)+this.info.distanceUnitsKM;
-  } else {
-    this.element.querySelector(".track-info .dist").textContent= (d).toFixed(1)+this.info.distanceUnitsM;
-  }
-  this.element.querySelector(".track-info .time").textContent = ti;
-  // Set graduation
-  var grad = this.get('graduation');
-  while (true) {
-    zmax = Math.ceil(zmax/grad)*grad;
-    zmin = Math.floor(zmin/grad)*grad;
-    var nbgrad = (zmax-zmin)/grad;
-    if (h/nbgrad < 15*ratio) {
-      grad *= 2;
-    }
-    else break;
-  }
-  // Set amplitude
-  if (typeof(this.get('zmin'))=='number' && zmin > this.get('zmin')) zmin = this.get('zmin');
-  if (typeof(this.get('zmax'))=='number' && zmax < this.get('zmax')) zmax = this.get('zmax');
-  var amplitude = this.get('amplitude');
-  if (amplitude) {
-    zmax = Math.max (zmin + amplitude, zmax);
-  }
-  // Scales lines
-  var scx = w/d;
-  var scy = -h/(zmax-zmin);
-  var dy = this.dy_ = -zmin*scy;
-  this.scale_ = [scx,scy];
-  this._drawGraph(t, this._style);
-  // Draw 
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'top';
-  ctx.fillStyle = this._style.getText().getFill().getColor() || '#000';
-  // Scale Z
-  ctx.beginPath();
-  var fix = this.get('zDigits') || 0;
-  var exp = null;
-  if (typeof(this.get('zMaxChars'))=='number') {
-    var usedChars;
-    if (this.get('zunit') != 'km') usedChars = Math.max(zmin.toFixed(fix).length, zmax.toFixed(fix).length);
-    else usedChars = Math.max((zmin/1000).toFixed(1).length, (zmax/1000).toFixed(1).length);
-    if (this.get('zMaxChars') < usedChars) {
-      exp = Math.floor(Math.log10(Math.max(Math.abs(zmin), Math.abs(zmax),Number.MIN_VALUE)));
-      ctx.font = 'bold '+(9*ratio)+'px arial';
-      ctx.fillText(exp.toString(), -8*ratio, 8*ratio);
-      var expMetrics = ctx.measureText(exp.toString());
-      var expWidth = expMetrics.width;
-      var expHeight = expMetrics.actualBoundingBoxAscent + expMetrics.actualBoundingBoxDescent;
-      ctx.font = 'bold '+(12*ratio)+'px arial';
-      ctx.fillText("10", -8*ratio-expWidth, 8*ratio+0.5*expHeight);
-    }
-  }
-  ctx.font = (10*ratio)+'px arial';
-  ctx.textBaseline = 'middle';
-  for (i=zmin; i<=zmax; i+=grad) {
-    if (exp !== null) {
-        var baseNumber = i / Math.pow(10, exp);
-        if (this.get('zunit') == 'km')
-            baseNumber /= 1000;
-        var nbDigits = this.get('zMaxChars') - Math.floor(Math.log10(Math.max(Math.abs(baseNumber),1))+1) - 1;
-        if (baseNumber < 0) nbDigits -= 1
-        if (this.get('zunit') != 'km') ctx.fillText(baseNumber.toFixed(Math.max(nbDigits, 0)), -4*ratio, i*scy+dy);
-        else ctx.fillText(baseNumber.toFixed(Math.max(nbDigits,0)), -4*ratio, i*scy+dy);
-    } else {
-        if (this.get('zunit') != 'km') ctx.fillText(i.toFixed(fix), -4*ratio, i*scy+dy);
-        else ctx.fillText((i/1000).toFixed(1), -4*ratio, i*scy+dy);
-    }
-    ctx.moveTo (-2*ratio, i*scy+dy);
-    if (i!=0) ctx.lineTo (d*scx, i*scy+dy);
-    else ctx.lineTo (0, i*scy+dy);
-  }
-  // Scale X
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.setLineDash([ratio,3*ratio]);
-  var unit = this.get('unit') ||"km";
-  var step;
-  if (d>1000) {
-    step = Math.round(d/1000)*100;
-    if (step > 1000) step = Math.ceil(step/1000)*1000;
-  } else {
-    unit = "m";
-    if (d>100) step = Math.round(d/100)*10;
-    else if (d>10) step = Math.round(d/10);
-    else if (d>1) step = Math.round(d)/10;
-    else step = d;
-  }
-  for (i=0; i<=d; i+=step) {
-    var txt = (unit=="m") ? i : (i/1000);
-    //if (i+step>d) txt += " "+ (options.zunits || "km");
-    ctx.fillText(Math.round(txt*10)/10, i*scx, 4*ratio);
-    ctx.moveTo (i*scx, 2*ratio); ctx.lineTo (i*scx, 0);
-  }
-  ctx.font = (12*ratio)+"px arial";
-  ctx.fillText(this.info.xtitle.replace("(km)","("+unit+")"), w/2, 18*ratio);
-  ctx.save();
-  ctx.rotate(-Math.PI/2);
-  ctx.fillText(this.info.ytitle, h/2, -this.margin_.left);
-  ctx.restore();
-  ctx.stroke();
-};
-/** Get profil image
-* @param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
-* @param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
-* @return {string} requested data uri
-* @api stable
-*/
-ol.control.Profil.prototype.getImage = function(type, encoderOptions) {
-  if (type==="canvas") return this.canvas_;
-  return this.canvas_.toDataURL(type, encoderOptions);
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
@@ -30002,165 +30064,178 @@ ol.source.GeoRSS.prototype._loaderFn = function(extent, resolution, projection){
  *  @param {string} options.crossOrigin default 'anonymous'
  *  @param {string} options.wrapX default true
  */
-ol.source.Geoportail = function (layer, options) {
-  options = options || {};
-  if (layer.layer) {
-    options = layer;
-    layer = options.layer;
-  }
-  var matrixIds = new Array();
-  var resolutions = new Array();//[156543.03392804103,78271.5169640205,39135.75848201024,19567.879241005125,9783.939620502562,4891.969810251281,2445.9849051256406,1222.9924525628203,611.4962262814101,305.74811314070485,152.87405657035254,76.43702828517625,38.218514142588134,19.109257071294063,9.554628535647034,4.777314267823517,2.3886571339117584,1.1943285669558792,0.5971642834779396,0.29858214173896974,0.14929107086948493,0.07464553543474241];
-  var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
-  for (var z=0; z <= (options.maxZoom ? options.maxZoom : 20) ; z++) {
-    matrixIds[z] = z ; 
-    resolutions[z] = size / Math.pow(2, z);
-  }
-  var tg = new ol.tilegrid.WMTS ({
-    origin: [-20037508, 20037508],
-    resolutions: resolutions,
-    matrixIds: matrixIds
-  });
-  tg.minZoom = (options.minZoom ? options.minZoom : 0);
-  var attr = [ ol.source.Geoportail.prototype.attribution ];
-  if (options.attributions) attr = options.attributions;
-  this._server = options.server || 'https://wxs.ign.fr/geoportail/wmts';
-  this._gppKey = options.gppKey || options.key || 'choisirgeoportail';
-  var wmts_options = {
-    url: this.serviceURL(),
-    layer: layer,
-    matrixSet: 'PM',
-    format: options.format ? options.format : 'image/jpeg',
-    projection: 'EPSG:3857',
-    tileGrid: tg,
-    style: options.style ? options.style : 'normal',
-    attributions: attr,
-    crossOrigin: (typeof options.crossOrigin == 'undefined') ? 'anonymous' : options.crossOrigin,
-    wrapX: !(options.wrapX===false)
-  };
-  ol.source.WMTS.call(this, wmts_options);
-  // Load url using basic authentification
-  if (options.authentication) {
-    this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(options.authentication, this.getFormat()));
-  }
-};
-ol.ext.inherits(ol.source.Geoportail, ol.source.WMTS);
-/** Standard IGN-GEOPORTAIL attribution 
-*/
-ol.source.Geoportail.prototype.attribution = '<a href="http://www.geoportail.gouv.fr/">Géoportail</a> &copy; <a href="http://www.ign.fr/">IGN-France</a>';
-/** Get service URL according to server url or standard url
-*/
-ol.source.Geoportail.prototype.serviceURL = function() {
-  if (this._server) {
-    return this._server.replace (/^(https?:\/\/[^/]*)(.*)$/, "$1/"+this._gppKey+"$2") ;
-  } else {
-    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") +this._gppKey+ "/geoportail/wmts" ;
-  }
-};
-/**
- * Return the associated API key of the Map.
- * @function
- * @return the API key.
- * @api stable
- */
-ol.source.Geoportail.prototype.getGPPKey = function() {
-  return this._gppKey;
-};
-/**
- * Set the associated API key to the Map.
- * @param {String} key the API key.
- * @param {String} authentication as btoa("login:pwd")
- * @api stable
- */
-ol.source.Geoportail.prototype.setGPPKey = function(key, authentication) {
-  this._gppKey = key;
-  var serviceURL = this.serviceURL();
-  this.setTileUrlFunction (function() {
-    var url = ol.source.Geoportail.prototype.getTileUrlFunction().apply(this, arguments);
-    if (url) {
-      var args = url.split("?");
-      return serviceURL+"?"+args[1];
+ol.source.Geoportail = class olsourceGeoportail extends ol.source.WMTS {
+  constructor(layer, options) {
+    options = options || {}
+    if (layer.layer) {
+      options = layer
+      layer = options.layer
     }
-    else return url;
-  });
-  // Load url using basic authentification
-  if (authentication) {
-    this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(authentication, this.getFormat()));
+    var matrixIds = new Array()
+    var resolutions = new Array() //[156543.03392804103,78271.5169640205,39135.75848201024,19567.879241005125,9783.939620502562,4891.969810251281,2445.9849051256406,1222.9924525628203,611.4962262814101,305.74811314070485,152.87405657035254,76.43702828517625,38.218514142588134,19.109257071294063,9.554628535647034,4.777314267823517,2.3886571339117584,1.1943285669558792,0.5971642834779396,0.29858214173896974,0.14929107086948493,0.07464553543474241];
+    var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256
+    for (var z = 0; z <= (options.maxZoom ? options.maxZoom : 20); z++) {
+      matrixIds[z] = z
+      resolutions[z] = size / Math.pow(2, z)
+    }
+    var tg = new ol.tilegrid.WMTS({
+      origin: [-20037508, 20037508],
+      resolutions: resolutions,
+      matrixIds: matrixIds
+    })
+    tg.minZoom = (options.minZoom ? options.minZoom : 0)
+    var attr = [ ol.source.Geoportail.defaultAttribution ]
+    if (options.attributions) attr = options.attributions
+    var server = options.server || 'https://wxs.ign.fr/geoportail/wmts'
+    var gppKey = options.gppKey || options.key || 'choisirgeoportail'
+    var wmts_options = {
+      url: ol.source.Geoportail.getServiceURL(server, gppKey),
+      layer: layer,
+      matrixSet: 'PM',
+      format: options.format ? options.format : 'image/jpeg',
+      projection: 'EPSG:3857',
+      tileGrid: tg,
+      style: options.style ? options.style : 'normal',
+      attributions: attr,
+      crossOrigin: (typeof options.crossOrigin == 'undefined') ? 'anonymous' : options.crossOrigin,
+      wrapX: !(options.wrapX === false)
+    }
+    super(wmts_options)
+    this._server = server
+    this._gppKey = gppKey
+    // Load url using basic authentification
+    if (options.authentication) {
+      this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(options.authentication, this.getFormat()))
+    }
   }
-};
-/** Return the GetFeatureInfo URL for the passed coordinate, resolution, and
- * projection. Return `undefined` if the GetFeatureInfo URL cannot be
- * constructed.
- * @param {ol.Coordinate} coord 
- * @param {Number} resolution 
- * @param {ol.proj.Projection} projection default the source projection
- * @param {Object} options 
- *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
- * @return {String|undefined} GetFeatureInfo URL.
+  /** Get a tile load function to load tiles with basic authentication
+   * @param {string} authentication as btoa("login:pwd")
+   * @param {string} format mime type
+   * @return {function} tile load function to load tiles with basic authentication
+   */
+  static tileLoadFunctionWithAuthentication(authentication, format) {
+    if (!authentication)
+      return undefined
+    return function (tile, src) {
+      var xhr = new XMLHttpRequest()
+      xhr.open("GET", src)
+      xhr.setRequestHeader("Authorization", "Basic " + authentication)
+      xhr.responseType = "arraybuffer"
+      xhr.onload = function () {
+        var arrayBufferView = new Uint8Array(this.response)
+        var blob = new Blob([arrayBufferView], { type: format })
+        var urlCreator = window.URL || window.webkitURL
+        var imageUrl = urlCreator.createObjectURL(blob)
+        tile.getImage().src = imageUrl
+      }
+      xhr.onerror = function () {
+        tile.getImage().src = ""
+      }
+      xhr.send()
+    }
+  }
+  /** Get service URL according to server url or standard url
+   */
+  serviceURL() {
+    return ol.source.Geoportail.getServiceURL(this._server, this._gppKey)
+  }
+  /**
+   * Return the associated API key of the Map.
+   * @function
+   * @return the API key.
+   * @api stable
+   */
+  getGPPKey() {
+    return this._gppKey
+  }
+  /**
+   * Set the associated API key to the Map.
+   * @param {String} key the API key.
+   * @param {String} authentication as btoa("login:pwd")
+   * @api stable
+   */
+  setGPPKey(key, authentication) {
+    this._gppKey = key
+    var serviceURL = this.serviceURL()
+    this.setTileUrlFunction(function () {
+      var url = ol.source.Geoportail.prototype.getTileUrlFunction().apply(this, arguments)
+      if (url) {
+        var args = url.split("?")
+        return serviceURL + "?" + args[1]
+      }
+      else
+        return url
+    })
+    // Load url using basic authentification
+    if (authentication) {
+      this.setTileLoadFunction(ol.source.Geoportail.tileLoadFunctionWithAuthentication(authentication, this.getFormat()))
+    }
+  }
+  /** Return the GetFeatureInfo URL for the passed coordinate, resolution, and
+   * projection. Return `undefined` if the GetFeatureInfo URL cannot be
+   * constructed.
+   * @param {ol.Coordinate} coord
+   * @param {Number} resolution
+   * @param {ol.proj.Projection} projection default the source projection
+   * @param {Object} options
+   *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
+   * @return {String|undefined} GetFeatureInfo URL.
+   */
+  getFeatureInfoUrl(coord, resolution, projection, options) {
+    options = options || {}
+    if (!projection)
+      projection = this.getProjection()
+    var tileCoord = this.tileGrid.getTileCoordForCoordAndResolution(coord, resolution)
+    var ratio = 1
+    var url = this.getTileUrlFunction()(tileCoord, ratio, projection)
+    if (!url)
+      return url
+    var tileResolution = this.tileGrid.getResolution(tileCoord[0])
+    var tileExtent = this.tileGrid.getTileCoordExtent(tileCoord)
+    var i = Math.floor((coord[0] - tileExtent[0]) / (tileResolution / ratio))
+    var j = Math.floor((tileExtent[3] - coord[1]) / (tileResolution / ratio))
+    return url.replace(/Request=GetTile/i, 'Request=getFeatureInfo')
+      + '&INFOFORMAT=' + (options.INFO_FORMAT || 'text/plain')
+      + '&I=' + i
+      + '&J=' + j
+  }
+  /** Get feature info
+   * @param {ol.Coordinate} coord
+   * @param {Number} resolution
+   * @param {ol.proj.Projection} projection default the source projection
+   * @param {Object} options
+   *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
+   *  @param {function} options.callback a function that take the response as parameter
+   *  @param {function} options.error function called when an error occurred
+   */
+  getFeatureInfo(coord, resolution, options) {
+    var url = this.getFeatureInfoUrl(coord, resolution, null, options)
+    ol.ext.Ajax.get({
+      url: url,
+      dataType: options.format || 'text/plain',
+      options: {
+        encode: false
+      },
+      success: function (resp) {
+        if (options.callback)
+          options.callback(resp)
+      },
+      error: options.error || function () { }
+    })
+  }
+}
+/** Standard IGN-GEOPORTAIL attribution 
  */
-ol.source.Geoportail.prototype.getFeatureInfoUrl  = function(coord, resolution, projection, options) {
-  options = options || {};
-  if (!projection) projection = this.getProjection();
-  var tileCoord = this.tileGrid.getTileCoordForCoordAndResolution(coord, resolution);
-  var ratio = 1;
-  var url = this.getTileUrlFunction()(tileCoord, ratio, projection);
-  if (!url) return url;
-  var tileResolution = this.tileGrid.getResolution(tileCoord[0]);
-  var tileExtent = this.tileGrid.getTileCoordExtent(tileCoord);
-  var i = Math.floor((coord[0] - tileExtent[0]) / (tileResolution / ratio));
-  var j = Math.floor((tileExtent[3] - coord[1]) / (tileResolution / ratio));
-  return url.replace(/Request=GetTile/i, 'Request=getFeatureInfo')
-    +'&INFOFORMAT='+(options.INFO_FORMAT||'text/plain')
-    +'&I='+i
-    +'&J='+j;
-};
-/** Get feature info
- * @param {ol.Coordinate} coord 
- * @param {Number} resolution 
- * @param {ol.proj.Projection} projection default the source projection
- * @param {Object} options 
- *  @param {string} options.INFO_FORMAT response format text/plain, text/html, application/json, default text/plain
- *  @param {function} options.callback a function that take the response as parameter
- *  @param {function} options.error function called when an error occurred
+ol.source.Geoportail.defaultAttribution = '<a href="http://www.geoportail.gouv.fr/">Géoportail</a> &copy; <a href="http://www.ign.fr/">IGN-France</a>';
+/** Get service URL according to server url or standard url
  */
-ol.source.Geoportail.prototype.getFeatureInfo = function(coord, resolution, options) {
-  var url = this.getFeatureInfoUrl(coord, resolution, null, options);
-  ol.ext.Ajax.get({
-    url: url,
-    dataType: options.format || 'text/plain',
-    options: { 
-      encode: false 
-    },
-    success: function(resp) {
-      if (options.callback) options.callback(resp);
-    },
-    error: options.error || function(){}
-  })
-};
-/** Get a tile load function to load tiles with basic authentication
- * @param {string} authentication as btoa("login:pwd")
- * @param {string} format mime type
- * @return {function} tile load function to load tiles with basic authentication
- */
-ol.source.Geoportail.tileLoadFunctionWithAuthentication = function(authentication, format) {
-  if (!authentication) return undefined;
-  return function(tile, src) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", src);
-    xhr.setRequestHeader("Authorization", "Basic " + authentication);
-    xhr.responseType = "arraybuffer";
-    xhr.onload = function () {
-      var arrayBufferView = new Uint8Array(this.response);
-      var blob = new Blob([arrayBufferView], { type: format });
-      var urlCreator = window.URL || window.webkitURL;
-      var imageUrl = urlCreator.createObjectURL(blob);
-      tile.getImage().src = imageUrl;
-    };
-    xhr.onerror = function () {
-      tile.getImage().src = "";
-    };
-    xhr.send();
-  };
-};
+ol.source.Geoportail.getServiceURL = function(server, gppKey) {
+  if (server) {
+    return server.replace(/^(https?:\/\/[^/]*)(.*)$/, "$1/" + gppKey + "$2")
+  } else {
+    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") + gppKey + "/geoportail/wmts"
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -31707,130 +31782,316 @@ ol.layer.GeoImage.prototype.getExtent = function() {
  *  @param {ol.projectionLike} [options.projection=EPSG:3857] projection for the extent, default EPSG:3857
  * @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
  */
-ol.layer.Geoportail = function(layer, options, tileoptions) {
-  options = options || {};
-  tileoptions = tileoptions || {};
-  // use function(options, tileoption) when layer is set in options
-  if (typeof(layer)!=='string') {
-    tileoptions = options || {};
-    options = layer;
-    layer = options.layer;
-  }
-  var maxZoom = options.maxZoom;
-  // A source is defined
-  if (options.source) {
-    layer = options.source.getLayer();
-    options.gppKey = options.source.getGPPKey();
-  }
-  var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.gppKey || options.key] || window.geoportailConfig.capabilities["default"] || ol.layer.Geoportail.capabilities : ol.layer.Geoportail.capabilities;
-  capabilities = capabilities[layer];
-  if (!capabilities) capabilities = ol.layer.Geoportail.capabilities[layer];
-  if (!capabilities) {
-    capabilities = { title: layer, originators: [] };
-    console.error("ol.layer.Geoportail: no layer definition for \""+layer+"\"\nTry to use ol/layer/Geoportail~loadCapabilities() to get it.");
-    // throw new Error("ol.layer.Geoportail: no layer definition for \""+layer+"\"");
-  }
-  // tile options & default params
-  for (var i in capabilities) {
-    if (typeof	tileoptions[i]== "undefined") tileoptions[i] = capabilities[i];
-  }
-  this._originators = capabilities.originators;
-  if (!tileoptions.gppKey && !tileoptions.key) tileoptions.gppKey = options.gppKey || options.key;
-  if (!options.source) options.source = new ol.source.Geoportail(layer, tileoptions);
-  if (!options.title) options.title = capabilities.title;
-  if (!options.name) options.name = layer;
-  options.layer = layer;
-  if (!options.queryable) options.queryable = capabilities.queryable;
-  if (!options.desc) options.desc = capabilities.desc;
-  if (!options.extent && capabilities.bbox) {
-    if (capabilities.bbox[0]>-170 && capabilities.bbox[2]<170) {
-      options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', options.projection || 'EPSG:3857');
+ ol.layer.Geoportail = class ollayerGeoportail extends ol.layer.Tile {
+  constructor(layer, options, tileoptions) {
+    options = options || {}
+    tileoptions = tileoptions || {}
+    // use function(options, tileoption) when layer is set in options
+    if (typeof (layer) !== 'string') {
+      tileoptions = options || {}
+      options = layer
+      layer = options.layer
     }
-  }
-  options.maxZoom = maxZoom;
-  // calculate layer max resolution
-  if (!options.maxResolution && tileoptions.minZoom) {
-    options.source.getTileGrid().minZoom -= (tileoptions.minZoom>1 ? 2 : 1);
-    options.maxResolution = options.source.getTileGrid().getResolution(options.source.getTileGrid().minZoom)
-    options.source.getTileGrid().minZoom = tileoptions.minZoom;
-  }
-  ol.layer.Tile.call (this, options);
-  // BUG GPP: Attributions constraints are not set properly :(
-/** /
-  // Set attribution according to the originators
-  var counter = 0;
-  // Get default attribution
-  var getAttrib = function(title, o) {
-    if (this.get('attributionMode')==='logo') {
-      if (!title) return ol.source.Geoportail.prototype.attribution;
-      else return '<a href="'+o.href+'"><img src="'+o.logo+'" title="&copy; '+o.attribution+'" /></a>';
-    } else {
-      if (!title) return ol.source.Geoportail.prototype.attribution;
-      else return '&copy; <a href="'+o.href+'" title="&copy; '+(o.attribution||title)+'" >'+title+'</a>'
+    var maxZoom = options.maxZoom
+    // A source is defined
+    if (options.source) {
+      layer = options.source.getLayer()
+      options.gppKey = options.source.getGPPKey()
     }
-  }.bind(this);
-  var currentZ, currentCenter = [];
-  var setAttribution = function(e) {
-    var a, o, i;
-    counter--;
-    if (!counter) {
-      var z = e.frameState.viewState.zoom;
-      console.log(e)
-      if (z===currentZ 
-        && e.frameState.viewState.center[0]===currentCenter[0]
-        && e.frameState.viewState.center[1]===currentCenter[1]){
-          return;
+    var capabilities = window.geoportailConfig ? window.geoportailConfig.capabilities[options.gppKey || options.key] || window.geoportailConfig.capabilities["default"] || ol.layer.Geoportail.capabilities : ol.layer.Geoportail.capabilities
+    capabilities = capabilities[layer]
+    if (!capabilities)
+      capabilities = ol.layer.Geoportail.capabilities[layer]
+    if (!capabilities) {
+      capabilities = { title: layer, originators: [] }
+      console.error("ol.layer.Geoportail: no layer definition for \"" + layer + "\"\nTry to use ol/layer/Geoportail~loadCapabilities() to get it.")
+      // throw new Error("ol.layer.Geoportail: no layer definition for \""+layer+"\"");
+    }
+    // tile options & default params
+    for (var i in capabilities) {
+      if (typeof tileoptions[i] == "undefined")
+        tileoptions[i] = capabilities[i]
+    }
+    if (!tileoptions.gppKey && !tileoptions.key) tileoptions.gppKey = options.gppKey || options.key
+    if (!options.source) options.source = new ol.source.Geoportail(layer, tileoptions)
+    if (!options.title) options.title = capabilities.title
+    if (!options.name) options.name = layer
+    options.layer = layer
+    if (!options.queryable) options.queryable = capabilities.queryable
+    if (!options.desc) options.desc = capabilities.desc
+    if (!options.extent && capabilities.bbox) {
+      if (capabilities.bbox[0] > -170 && capabilities.bbox[2] < 170) {
+        options.extent = ol.proj.transformExtent(capabilities.bbox, 'EPSG:4326', options.projection || 'EPSG:3857')
       }
-      currentZ = z;
-      currentCenter = e.frameState.viewState.center;
-      var ex = e.frameState.extent;
-      ex = ol.proj.transformExtent (ex, e.frameState.viewState.projection, 'EPSG:4326');
-      if (this._originators) {
-        var attrib = this.getSource().getAttributions();
-        // ol v5
-        if (typeof(attrib)==='function') attrib = attrib();
-        attrib.splice(0, attrib.length);
-        var maxZoom = 0;
-        for (a in this._originators) {
-          o = this._originators[a];
-          for (i=0; i<o.constraint.length; i++) {
-            if (o.constraint[i].maxZoom > maxZoom
-              && ol.extent.intersects(ex, o.constraint[i].bbox)) {
-                maxZoom = o.constraint[i].maxZoom;
-            }
-          }	
+    }
+    options.maxZoom = maxZoom
+    // calculate layer max resolution
+    if (!options.maxResolution && tileoptions.minZoom) {
+      options.source.getTileGrid().minZoom -= (tileoptions.minZoom > 1 ? 2 : 1)
+      options.maxResolution = options.source.getTileGrid().getResolution(options.source.getTileGrid().minZoom)
+      options.source.getTileGrid().minZoom = tileoptions.minZoom
+    }
+    super(options)
+    this._originators = capabilities.originators
+    // BUG GPP: Attributions constraints are not set properly :(
+    /** /
+      // Set attribution according to the originators
+      var counter = 0;
+      // Get default attribution
+      var getAttrib = function(title, o) {
+        if (this.get('attributionMode')==='logo') {
+          if (!title) return ol.source.Geoportail.prototype.attribution;
+          else return '<a href="'+o.href+'"><img src="'+o.logo+'" title="&copy; '+o.attribution+'" /></a>';
+        } else {
+          if (!title) return ol.source.Geoportail.prototype.attribution;
+          else return '&copy; <a href="'+o.href+'" title="&copy; '+(o.attribution||title)+'" >'+title+'</a>'
         }
-        if (maxZoom < z) z = maxZoom;
-        if (this.getSource().getTileGrid() && z < this.getSource().getTileGrid().getMinZoom()) {
-          z = this.getSource().getTileGrid().getMinZoom();
-        }
-        for (a in this._originators) {
-          o = this._originators[a];
-          if (!o.constraint.length) {
-            attrib.push (getAttrib(a, o));
-          } else {
-            for (i=0; i<o.constraint.length; i++) {
-              if ( z <= o.constraint[i].maxZoom 
-                && z >= o.constraint[i].minZoom 
-                && ol.extent.intersects(ex, o.constraint[i].bbox)) {
-                  attrib.push (getAttrib(a, o));
-                  break;
+      }.bind(this);
+      var currentZ, currentCenter = [];
+      var setAttribution = function(e) {
+        var a, o, i;
+        counter--;
+        if (!counter) {
+          var z = e.frameState.viewState.zoom;
+          console.log(e)
+          if (z===currentZ
+            && e.frameState.viewState.center[0]===currentCenter[0]
+            && e.frameState.viewState.center[1]===currentCenter[1]){
+              return;
+          }
+          currentZ = z;
+          currentCenter = e.frameState.viewState.center;
+          var ex = e.frameState.extent;
+          ex = ol.proj.transformExtent (ex, e.frameState.viewState.projection, 'EPSG:4326');
+          if (this._originators) {
+            var attrib = this.getSource().getAttributions();
+            // ol v5
+            if (typeof(attrib)==='function') attrib = attrib();
+            attrib.splice(0, attrib.length);
+            var maxZoom = 0;
+            for (a in this._originators) {
+              o = this._originators[a];
+              for (i=0; i<o.constraint.length; i++) {
+                if (o.constraint[i].maxZoom > maxZoom
+                  && ol.extent.intersects(ex, o.constraint[i].bbox)) {
+                    maxZoom = o.constraint[i].maxZoom;
+                }
               }
             }
+            if (maxZoom < z) z = maxZoom;
+            if (this.getSource().getTileGrid() && z < this.getSource().getTileGrid().getMinZoom()) {
+              z = this.getSource().getTileGrid().getMinZoom();
+            }
+            for (a in this._originators) {
+              o = this._originators[a];
+              if (!o.constraint.length) {
+                attrib.push (getAttrib(a, o));
+              } else {
+                for (i=0; i<o.constraint.length; i++) {
+                  if ( z <= o.constraint[i].maxZoom
+                    && z >= o.constraint[i].minZoom
+                    && ol.extent.intersects(ex, o.constraint[i].bbox)) {
+                      attrib.push (getAttrib(a, o));
+                      break;
+                  }
+                }
+              }
+            }
+            if (!attrib.length) attrib.push ( getAttrib() );
+            this.getSource().setAttributions(attrib);
           }
         }
-        if (!attrib.length) attrib.push ( getAttrib() );
-        this.getSource().setAttributions(attrib);
+      }.bind(this);
+      this.on('precompose', function(e) {
+        counter++;
+        setTimeout(function () { setAttribution(e) }, 500);
+      });
+    /**/
+  }
+  /** Register new layer capability
+   * @param {string} layer layer name
+   * @param {*} capability
+   */
+  static register(layer, capability) {
+    ol.layer.Geoportail.capabilities[layer] = capability
+  }
+  /** Check if a layer registered with a key?
+   * @param {string} layer layer name
+   * @returns {boolean}
+   */
+  static isRegistered(layer) {
+    return ol.layer.Geoportail.capabilities[layer] && ol.layer.Geoportail.capabilities[layer].key
+  }
+  /** Load capabilities from the service
+   * @param {string} gppKey the API key to get capabilities for
+   * @return {*} Promise-like response
+   */
+  static loadCapabilities(gppKey, all) {
+    var onSuccess = function () { }
+    var onError = function () { }
+    var onFinally = function () { }
+    this.getCapabilities(gppKey, all).then(function (c) {
+      ol.layer.Geoportail.capabilities = c
+      onSuccess(c)
+    }).catch(function (e) {
+      onError(e)
+    }).finally(function (c) {
+      onFinally(c)
+    })
+    var response = {
+      then: function (callback) {
+        if (typeof (callback) === 'function')
+          onSuccess = callback
+        return response
+      },
+      catch: function (callback) {
+        if (typeof (callback) === 'function')
+          onError = callback
+        return response
+      },
+      finally: function (callback) {
+        if (typeof (callback) === 'function')
+          onFinally = callback
+        return response
       }
     }
-  }.bind(this);
-  this.on('precompose', function(e) {
-    counter++;
-    setTimeout(function () { setAttribution(e) }, 500);
-  });
-/**/
-};
-ol.ext.inherits (ol.layer.Geoportail, ol.layer.Tile);
+    return response
+  }
+  /** Get Key capabilities
+   * @param {string} gppKey the API key to get capabilities for
+   * @return {*} Promise-like response
+   */
+  static getCapabilities(gppKey) {
+    var capabilities = {}
+    var onSuccess = function () { }
+    var onError = function () { }
+    var onFinally = function () { }
+    var geopresolutions = [156543.03390625, 78271.516953125, 39135.7584765625, 19567.87923828125, 9783.939619140625, 4891.9698095703125, 2445.9849047851562, 1222.9924523925781, 611.4962261962891, 305.74811309814453, 152.87405654907226, 76.43702827453613, 38.218514137268066, 19.109257068634033, 9.554628534317017, 4.777314267158508, 2.388657133579254, 1.194328566789627, 0.5971642833948135, 0.29858214169740677, 0.14929107084870338]
+    // Transform resolution to zoom
+    function getZoom(res) {
+      res = Number(res) * 0.000281
+      for (var r = 0; r < geopresolutions.length; r++)
+        if (res > geopresolutions[r])
+          return r
+    }
+    // Merge constraints 
+    function mergeConstraints(ori) {
+      for (var i = ori.constraint.length - 1; i > 0; i--) {
+        for (var j = 0; j < i; j++) {
+          var bok = true
+          for (var k = 0; k < 4; k++) {
+            if (ori.constraint[i].bbox[k] != ori.constraint[j].bbox[k]) {
+              bok = false
+              break
+            }
+          }
+          if (!bok)
+            continue
+          if (ori.constraint[i].maxZoom == ori.constraint[j].minZoom
+            || ori.constraint[j].maxZoom == ori.constraint[i].minZoom
+            || ori.constraint[i].maxZoom + 1 == ori.constraint[j].minZoom
+            || ori.constraint[j].maxZoom + 1 == ori.constraint[i].minZoom
+            || ori.constraint[i].minZoom - 1 == ori.constraint[j].maxZoom
+            || ori.constraint[j].minZoom - 1 == ori.constraint[i].maxZoom) {
+            ori.constraint[j].maxZoom = Math.max(ori.constraint[i].maxZoom, ori.constraint[j].maxZoom)
+            ori.constraint[j].minZoom = Math.min(ori.constraint[i].minZoom, ori.constraint[j].minZoom)
+            ori.constraint.splice(i, 1)
+            break
+          }
+        }
+      }
+    }
+    // Get capabilities
+    ol.ext.Ajax.get({
+      url: 'https://wxs.ign.fr/' + gppKey + '/autoconf/',
+      dataType: 'TEXT',
+      error: function (e) {
+        onError(e)
+        onFinally({})
+      },
+      success: function (resp) {
+        var parser = new DOMParser()
+        var config = parser.parseFromString(resp, "text/xml")
+        var layers = config.getElementsByTagName('Layer')
+        for (var i = 0, l; l = layers[i]; i++) {
+          // WMTS ?
+          if (!/WMTS/.test(l.getElementsByTagName('Server')[0].attributes['service'].value))
+            continue
+          //        if (!all && !/geoportail\/wmts/.test(l.find("OnlineResource").attr("href"))) continue;
+          var service = {
+            key: gppKey,
+            server: l.getElementsByTagName('gpp:Key')[0].innerHTML.replace(gppKey + "/", ""),
+            layer: l.getElementsByTagName('Name')[0].innerHTML,
+            title: l.getElementsByTagName('Title')[0].innerHTML,
+            format: l.getElementsByTagName('Format')[0] ? l.getElementsByTagName('Format')[0].innerHTML : 'image.jpeg',
+            style: l.getElementsByTagName('Style')[0].getElementsByTagName('Name')[0].innerHTML,
+            queryable: (l.attributes.queryable.value === '1'),
+            tilematrix: 'PM',
+            minZoom: getZoom(l.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML),
+            maxZoom: getZoom(l.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML),
+            bbox: JSON.parse('[' + l.getElementsByTagName('gpp:BoundingBox')[0].innerHTML + ']'),
+            desc: l.getElementsByTagName('Abstract')[0].innerHTML.replace(/^<!\[CDATA\[(.*)\]\]>$/, '$1')
+          }
+          service.originators = {}
+          var origin = l.getElementsByTagName('gpp:Originator')
+          for (var k = 0, o; o = origin[k]; k++) {
+            var ori = service.originators[o.attributes['name'].value] = {
+              href: o.getElementsByTagName('gpp:URL')[0].innerHTML,
+              attribution: o.getElementsByTagName('gpp:Attribution')[0].innerHTML,
+              logo: o.getElementsByTagName('gpp:Logo')[0].innerHTML,
+              minZoom: 20,
+              maxZoom: 0,
+              constraint: []
+            }
+            // Scale contraints
+            var constraint = o.getElementsByTagName('gpp:Constraint')
+            for (var j = 0, c; c = constraint[j]; j++) {
+              var zmax = getZoom(c.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML)
+              var zmin = getZoom(c.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML)
+              if (zmin > ori.maxZoom)
+                ori.maxZoom = zmin
+              if (zmin < ori.minZoom)
+                ori.minZoom = zmin
+              if (zmax > ori.maxZoom)
+                ori.maxZoom = zmax
+              if (zmax < ori.minZoom)
+                ori.minZoom = zmax
+              ori.constraint.push({
+                minZoom: zmin,
+                maxZoom: zmax,
+                bbox: JSON.parse('[' + c.getElementsByTagName('gpp:BoundingBox')[0].innerHTML + ']')
+              })
+            }
+            // Merge constraints
+            mergeConstraints(ori)
+          }
+          capabilities[service.layer] = service
+        }
+        onSuccess(capabilities)
+        onFinally(capabilities)
+      }
+    })
+    // Promise like response
+    var response = {
+      then: function (callback) {
+        if (typeof (callback) === 'function')
+          onSuccess = callback
+        return response
+      },
+      catch: function (callback) {
+        if (typeof (callback) === 'function')
+          onError = callback
+        return response
+      },
+      finally: function (callback) {
+        if (typeof (callback) === 'function')
+          onFinally = callback
+        return response
+      },
+    }
+    return response
+  }
+}
 /** Default capabilities for main layers
  */
 ol.layer.Geoportail.capabilities = {
@@ -31848,176 +32109,6 @@ ol.layer.Geoportail.capabilities = {
   "ELEVATION.SLOPES": {"key":"altimetrie","server":"https://wxs.ign.fr/geoportail/wmts","layer":"ELEVATION.SLOPES","title":"Altitude","format":"image/jpeg","style":"normal","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":14,"bbox":[-178.20589,-22.595179,167.43176,50.93085],"desc":"La couche altitude se compose d'un MNT (Modèle Numérique de Terrain) affiché en teintes hypsométriques et issu de la BD ALTI®.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":14,"constraint":[{"minZoom":6,"maxZoom":14,"bbox":[55.205746,-21.392344,55.846554,-20.86271]}]}}},
   "GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1": { "key":"cartes", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1","title":"Plan IGN j+1","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75],"desc":"Plan IGN j+1","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179,-80,179,80]}]}}},
   "TRANSPORTNETWORKS.ROADS": { "key": "topographie", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"TRANSPORTNETWORKS.ROADS","title":"Routes","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":6,"maxZoom":18,"bbox":[-63.969162,-21.49687,55.964417,71.584076],"desc":"Affichage du réseau routier français et européen.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":18,"constraint":[{"minZoom":15,"maxZoom":18,"bbox":[-63.37252,-21.475586,55.925865,51.31212]},{"minZoom":6,"maxZoom":14,"bbox":[-63.969162,-21.49687,55.964417,71.584076]}]}}},
-};
-/** Register new layer capability
- * @param {string} layer layer name
- * @param {*} capability
- */
-ol.layer.Geoportail.register = function(layer, capability) {
-  ol.layer.Geoportail.capabilities[layer] = capability;
-};
-/** Check if a layer registered with a key?
- * @param {string} layer layer name
- * @returns {boolean} 
- */
-ol.layer.Geoportail.isRegistered = function(layer) {
-  return ol.layer.Geoportail.capabilities[layer] && ol.layer.Geoportail.capabilities[layer].key;
-};
-/** Load capabilities from the service
- * @param {string} gppKey the API key to get capabilities for
- * @return {*} Promise-like response
- */
-ol.layer.Geoportail.loadCapabilities = function(gppKey, all) {
-  var onSuccess = function() {}
-  var onError = function() {}
-  var onFinally = function() {};
-  this.getCapabilities(gppKey,all).then(function(c) {
-    ol.layer.Geoportail.capabilities = c;
-    onSuccess(c);
-  }).catch(function(e) { 
-    onError(e);
-  }).finally(function(c) {
-    onFinally(c);
-  });
-  var response = {
-    then: function (callback) {
-      if (typeof(callback)==='function') onSuccess = callback;
-      return response;
-    },
-    catch: function (callback) {
-      if (typeof(callback)==='function') onError = callback;
-      return response;
-    },
-    finally: function (callback) {
-      if (typeof(callback)==='function') onFinally = callback;
-      return response;
-    }
-  }
-  return response;
-};
-/** Get Key capabilities
- * @param {string} gppKey the API key to get capabilities for
- * @return {*} Promise-like response
- */
-ol.layer.Geoportail.getCapabilities = function(gppKey) {
-  var capabilities = {};
-  var onSuccess = function() {}
-  var onError = function() {}
-  var onFinally = function() {}
-  var geopresolutions = [156543.03390625,78271.516953125,39135.7584765625,19567.87923828125,9783.939619140625,4891.9698095703125,2445.9849047851562,1222.9924523925781,611.4962261962891,305.74811309814453,152.87405654907226,76.43702827453613,38.218514137268066,19.109257068634033,9.554628534317017,4.777314267158508,2.388657133579254,1.194328566789627,0.5971642833948135,0.29858214169740677,0.14929107084870338];
-  // Transform resolution to zoom
-  function getZoom(res) {
-    res = Number(res) * 0.000281;
-    for (var r=0; r<geopresolutions.length; r++) 
-      if (res>geopresolutions[r]) return r;
-  }
-  // Merge constraints 
-  function mergeConstraints(ori) {
-    for (var i=ori.constraint.length-1; i>0; i--) {
-      for (var j=0; j<i; j++) {
-        var bok = true;
-        for (var k=0; k<4; k++) {
-          if (ori.constraint[i].bbox[k] != ori.constraint[j].bbox[k]) {
-            bok = false;
-            break;
-          }
-        }
-        if (!bok) continue;
-        if (ori.constraint[i].maxZoom == ori.constraint[j].minZoom 
-        || ori.constraint[j].maxZoom == ori.constraint[i].minZoom 
-        || ori.constraint[i].maxZoom+1 == ori.constraint[j].minZoom 
-        || ori.constraint[j].maxZoom+1 == ori.constraint[i].minZoom
-        || ori.constraint[i].minZoom-1 == ori.constraint[j].maxZoom
-        || ori.constraint[j].minZoom-1 == ori.constraint[i].maxZoom) {
-          ori.constraint[j].maxZoom = Math.max(ori.constraint[i].maxZoom, ori.constraint[j].maxZoom);
-          ori.constraint[j].minZoom = Math.min(ori.constraint[i].minZoom, ori.constraint[j].minZoom);
-          ori.constraint.splice(i,1);
-          break;
-        }
-      }
-    }
-  }
-  // Get capabilities
-  ol.ext.Ajax.get({
-    url: 'https://wxs.ign.fr/'+gppKey+'/autoconf/',
-    dataType: 'TEXT',
-    error: function (e) {
-      onError(e);
-      onFinally({});
-    },
-    success: function(resp) {
-      var parser = new DOMParser();
-      var config = parser.parseFromString(resp,"text/xml");
-      var layers = config.getElementsByTagName('Layer');
-      for (var i=0, l; l=layers[i]; i++) {
-        // WMTS ?
-        if (!/WMTS/.test(l.getElementsByTagName('Server')[0].attributes['service'].value)) continue;
-//        if (!all && !/geoportail\/wmts/.test(l.find("OnlineResource").attr("href"))) continue;
-        var service = {
-          key: gppKey,
-          server: l.getElementsByTagName('gpp:Key')[0].innerHTML.replace(gppKey+"/",""), 
-          layer: l.getElementsByTagName('Name')[0].innerHTML,
-          title: l.getElementsByTagName('Title')[0].innerHTML,
-          format: l.getElementsByTagName('Format')[0] ? l.getElementsByTagName('Format')[0].innerHTML : 'image.jpeg',
-          style: l.getElementsByTagName('Style')[0].getElementsByTagName('Name')[0].innerHTML,
-          queryable: (l.attributes.queryable.value==='1'),
-          tilematrix: 'PM',
-          minZoom: getZoom(l.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML),
-          maxZoom: getZoom(l.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML),
-          bbox: JSON.parse('['+l.getElementsByTagName('gpp:BoundingBox')[0].innerHTML+']'),
-          desc: l.getElementsByTagName('Abstract')[0].innerHTML.replace(/^<!\[CDATA\[(.*)\]\]>$/, '$1')
-        };
-        service.originators = {};
-        var origin = l.getElementsByTagName('gpp:Originator');
-        for (var k=0, o; o=origin[k]; k++) {
-          var ori = service.originators[o.attributes['name'].value] = {
-            href: o.getElementsByTagName('gpp:URL')[0].innerHTML,
-            attribution: o.getElementsByTagName('gpp:Attribution')[0].innerHTML,
-            logo: o.getElementsByTagName('gpp:Logo')[0].innerHTML,
-            minZoom: 20,
-            maxZoom: 0,
-            constraint: []
-          };
-          // Scale contraints
-          var constraint = o.getElementsByTagName('gpp:Constraint');
-          for (var j=0, c; c=constraint[j]; j++) {
-            var zmax = getZoom(c.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML);
-            var zmin = getZoom(c.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML);
-            if (zmin > ori.maxZoom) ori.maxZoom = zmin;
-            if (zmin < ori.minZoom) ori.minZoom = zmin;
-            if (zmax>ori.maxZoom) ori.maxZoom = zmax;
-            if (zmax<ori.minZoom) ori.minZoom = zmax;
-            ori.constraint.push({
-              minZoom: zmin,
-              maxZoom: zmax,
-              bbox: JSON.parse('['+c.getElementsByTagName('gpp:BoundingBox')[0].innerHTML+']')
-            });
-          }
-          // Merge constraints
-          mergeConstraints(ori)
-        }
-        capabilities[service.layer] = service;
-      }
-      onSuccess(capabilities);
-      onFinally(capabilities);
-    }
-  });
-  // Promise like response
-  var response = {
-    then: function (callback) {
-      if (typeof(callback)==='function') onSuccess = callback;
-      return response;
-    },
-    catch: function (callback) {
-      if (typeof(callback)==='function') onError = callback;
-      return response;
-    },
-    finally: function (callback) {
-      if (typeof(callback)==='function') onFinally = callback;
-      return response;
-    },
-  }
-  return response;
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -39257,124 +39348,126 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
  *  @param {number} options.zIndex 
  *  @param {ol.geom.Geometry} options.geometry 
  */
-ol.style.Profile = function(options) {
-  if (!options) options = {};
-  ol.style.Style.call (this, { 
-    renderer: this._render.bind(this),
-    zIndex: options.zIndex,
-    geometry: options.geometry
-  });
-  this.setStroke(options.stroke);
-  this.setFill(options.fill);
-  this.setScale(options.scale);
-};
-ol.ext.inherits(ol.style.Profile, ol.style.Style);
-/** Set style stroke
- * @param {ol.style.Stroke}
- */
-ol.style.Profile.prototype.setStroke = function(stroke) {
-  this._stroke = stroke || new ol.style.Stroke({ color: '#fff', width: 1 });
-}
-/** Get style stroke
- * @return {ol.style.Stroke}
- */
-ol.style.Profile.prototype.getStroke = function() {
-  return this._stroke;
-}
-/** Set style stroke
- * @param {ol.style.Fill}
- */
-ol.style.Profile.prototype.setFill = function(fill) {
-  this._fill = fill || new ol.style.Fill({ color: 'rgba(255,255,255,.3' });
-}
-/** Get style stroke
- * @return {ol.style.Fill}
- */
-ol.style.Profile.prototype.getFill = function() {
-  return this._fill;
-}
-/** Set z scale
- * @param {number}
- */
-ol.style.Profile.prototype.setScale = function(sc) {
-  this._scale = sc || .2;
-}
-/** Get z scale
- * @return {number}
- */
-ol.style.Profile.prototype.getScale = function() {
-  return this._scale;
-}
-/** Renderer function
- * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
- * @param {ol.render.State} e The olx.render.State of the layer renderer
- */
-ol.style.Profile.prototype._render = function(geom, e) {
-  if (!/Z/.test(e.feature.getGeometry().getLayout())) return;
-  var g = e.geometry.getCoordinates();
-  switch (e.geometry.getType()) {
-    case 'LineString': {
-      this._renderLine(geom, g, e.feature.getGeometry(), e);
-      break;
-    }
-    case 'MultiLineString': {
-      e.feature.getGeometry().getLineStrings().forEach(function(l, i) {
-        this._renderLine(geom[i], g[i], l, e);
-      }.bind(this));
-      break;
-    }
-    case 'Point': {
-      break;
+ol.style.Profile = class olstyleProfile extends ol.style.Style {
+  constructor(options) {
+    options = options || {}
+    super({
+      renderer: this._render.bind(this),
+      zIndex: options.zIndex,
+      geometry: options.geometry
+    })
+    this.setStroke(options.stroke)
+    this.setFill(options.fill)
+    this.setScale(options.scale)
+  }
+  /** Set style stroke
+   * @param {ol.style.Stroke}
+   */
+  setStroke(stroke) {
+    this._stroke = stroke || new ol.style.Stroke({ color: '#fff', width: 1 })
+  }
+  /** Get style stroke
+   * @return {ol.style.Stroke}
+   */
+  getStroke() {
+    return this._stroke
+  }
+  /** Set style stroke
+   * @param {ol.style.Fill}
+   */
+  setFill(fill) {
+    this._fill = fill || new ol.style.Fill({ color: 'rgba(255,255,255,.3' })
+  }
+  /** Get style stroke
+   * @return {ol.style.Fill}
+   */
+  getFill() {
+    return this._fill
+  }
+  /** Set z scale
+   * @param {number}
+   */
+  setScale(sc) {
+    this._scale = sc || .2
+  }
+  /** Get z scale
+   * @return {number}
+   */
+  getScale() {
+    return this._scale
+  }
+  /** Renderer function
+   * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
+   * @param {ol.render.State} e The olx.render.State of the layer renderer
+   */
+  _render(geom, e) {
+    if (!/Z/.test(e.feature.getGeometry().getLayout()))
+      return
+    var g = e.geometry.getCoordinates()
+    switch (e.geometry.getType()) {
+      case 'LineString': {
+        this._renderLine(geom, g, e.feature.getGeometry(), e)
+        break
+      }
+      case 'MultiLineString': {
+        e.feature.getGeometry().getLineStrings().forEach(function (l, i) {
+          this._renderLine(geom[i], g[i], l, e)
+        }.bind(this))
+        break
+      }
+      case 'Point': {
+        break
+      }
     }
   }
-};
-/** @private */
-ol.style.Profile.prototype._renderLine = function(geom, g, l, e) {
-  var i, p, ctx = e.context;
-  var cos = Math.cos(e.rotation)
-  var sin = Math.sin(e.rotation)
-  // var a = e.pixelRatio / e.resolution;
-  var a = ol.coordinate.dist2d(geom[0],geom[1]) / ol.coordinate.dist2d(g[0],g[1])
-  var dx = geom[0][0] - g[0][0] * a *cos - g[0][1] * a *sin ;
-  var dy = geom[0][1] - g[0][0] * a * sin + g[0][1] * a * cos;
-  geom = l.getCoordinates();
-  var dz = Infinity;
-  for (i=0; p=geom[i]; i++) {
-    var x = dx + p[0] * a * cos + p[1] * a * sin;
-    var y = dy + p[0] * a * sin - p[1] * a * cos;
-    dz = Math.min(dz, p[2]);
-    geom[i] = [x, y, p[2]];
+  /** @private */
+  _renderLine(geom, g, l, e) {
+    var i, p, ctx = e.context
+    var cos = Math.cos(e.rotation)
+    var sin = Math.sin(e.rotation)
+    // var a = e.pixelRatio / e.resolution;
+    var a = ol.coordinate.dist2d(geom[0], geom[1]) / ol.coordinate.dist2d(g[0], g[1])
+    var dx = geom[0][0] - g[0][0] * a * cos - g[0][1] * a * sin
+    var dy = geom[0][1] - g[0][0] * a * sin + g[0][1] * a * cos
+    geom = l.getCoordinates()
+    var dz = Infinity
+    for (i = 0; p = geom[i]; i++) {
+      var x = dx + p[0] * a * cos + p[1] * a * sin
+      var y = dy + p[0] * a * sin - p[1] * a * cos
+      dz = Math.min(dz, p[2])
+      geom[i] = [x, y, p[2]]
+    }
+    ctx.save()
+    ctx.fillStyle = ol.color.asString(this.getFill().getColor())
+    ctx.strokeStyle = ol.color.asString(this.getStroke().getColor())
+    ctx.lineWidth = this.getStroke().getWidth()
+    var p0 = geom[0]
+    var ez = this.getScale() * e.pixelRatio
+    for (i = 1; p = geom[i]; i++) {
+      ctx.beginPath()
+      ctx.moveTo(p0[0], p0[1])
+      ctx.lineTo(p[0], p[1])
+      ctx.lineTo(p[0], p[1] - (p[2] - dz) * ez)
+      ctx.lineTo(p0[0], p0[1] - (p0[2] - dz) * ez)
+      ctx.lineTo(p0[0], p0[1])
+      ctx.fill()
+      p0 = p
+    }
+    p0 = geom[0]
+    ctx.beginPath()
+    ctx.moveTo(p0[0], p0[1] - (p0[2] - dz) * ez)
+    for (i = 1; p = geom[i]; i++) {
+      ctx.lineTo(p[0], p[1] - (p[2] - dz) * ez)
+    }
+    ctx.stroke()
+    ctx.restore()
   }
-  ctx.save();
-    ctx.fillStyle = ol.color.asString(this.getFill().getColor());
-    ctx.strokeStyle = ol.color.asString(this.getStroke().getColor());
-    ctx.lineWidth = this.getStroke().getWidth();
-    var p0 = geom[0];
-    var ez = this.getScale() * e.pixelRatio;
-    for (i=1; p=geom[i]; i++) {
-      ctx.beginPath();
-      ctx.moveTo(p0[0],p0[1]);
-      ctx.lineTo(p[0],p[1]);
-      ctx.lineTo(p[0],p[1]-(p[2]-dz)*ez);
-      ctx.lineTo(p0[0],p0[1]-(p0[2]-dz)*ez);
-      ctx.lineTo(p0[0],p0[1]);
-      ctx.fill();
-      p0 = p;
-    }
-    p0 = geom[0];
-    ctx.beginPath();
-    ctx.moveTo(p0[0],p0[1]-(p0[2]-dz)*ez);
-    for (i=1; p=geom[i]; i++) {
-      ctx.lineTo(p[0],p[1]-(p[2]-dz)*ez);
-    }
-    ctx.stroke();
-  ctx.restore();
-};
+}
 
 /** Add a setTextPath style to draw text along linestrings
 @toto letterpadding/spacing, wordpadding/spacing
 */
-(function()
+;(function()
 {
 /** Internal drawing function called on postcompose
 * @param {ol.eventPoscompose} e postcompose event
