@@ -4,14 +4,16 @@
   
 */
 
-import ol_ext_inherits from '../util/ext'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Do nothing 
  * @constructor
  * @extends {ol_featureAnimation}
  */
-var ol_featureAnimation_Null = function() {
-  ol_featureAnimation.call(this, { duration:0 });
+var ol_featureAnimation_Null = class olfeatureAnimationNull extends ol_featureAnimation {
+	constructor() {
+    super({ duration:0 });
+  }
 };
-ol_ext_inherits(ol_featureAnimation_Null, ol_featureAnimation);
+
+export default ol_featureAnimation_Null

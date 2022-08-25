@@ -25,11 +25,11 @@ var ol_style_Profile = class olstyleProfile extends ol_style_Style {
     options = options || {}
 
     super({
-      renderer: this._render.bind(this),
       zIndex: options.zIndex,
       geometry: options.geometry
     })
-
+    this.setRenderer(this._render.bind(this))
+    
     this.setStroke(options.stroke)
     this.setFill(options.fill)
     this.setScale(options.scale)

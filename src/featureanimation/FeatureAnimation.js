@@ -3,7 +3,6 @@
   released under the CeCILL license (http://www.cecill.info/).
 */
 
-import ol_ext_inherits from '../util/ext'
 import ol_Object from 'ol/Object'
 import {linear as ol_easing_linear} from 'ol/easing'
 import ol_Map from 'ol/Map'
@@ -37,23 +36,60 @@ import ol_ext_getVectorContextStyle from '../util/getVectorContextStyle'
 *	@param {ol_easing_Function} options.fade an easing function used to fade in the feature, default none
 *	@param {ol_easing_Function} options.easing an easing function for the animation, default ol_easing_linear
 */
-var ol_featureAnimation = function(options) {
-  options = options || {};
-  
-  this.duration_ = typeof (options.duration)=='number' ? (options.duration>=0 ? options.duration : 0) : 1000;
-  this.fade_ = typeof(options.fade) == 'function' ? options.fade : null;
-  this.repeat_ = Number(options.repeat);
+var ol_featureAnimation = class olfeatureAnimation extends ol_Object {
+  constructor(options) {
+    options = options || {}
+    super();
 
-  var easing = typeof(options.easing) =='function' ? options.easing : ol_easing_linear;
-  if (options.revers) this.easing_ = function(t) { return (1 - easing(t)); };
-  else this.easing_ = easing;
+    this.duration_ = typeof (options.duration) == 'number' ? (options.duration >= 0 ? options.duration : 0) : 1000
+    this.fade_ = typeof (options.fade) == 'function' ? options.fade : null
+    this.repeat_ = Number(options.repeat)
 
-  this.hiddenStyle = options.hiddenStyle;
+    var easing = typeof (options.easing) == 'function' ? options.easing : ol_easing_linear
+    if (options.revers)
+      this.easing_ = function (t) { return (1 - easing(t)) }
+    else
+      this.easing_ = easing
 
-  ol_Object.call(this);
-};
+    this.hiddenStyle = options.hiddenStyle
+  }
+  /** Draw a geometry
+  * @param {olx.animateFeatureEvent} e
+  * @param {ol.geom} geom geometry for shadow
+  * @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
+  * @private
+  */
+  drawGeom_(e, geom, shadow) {
+    if (this.fade_) {
+      e.context.globalAlpha = this.fade_(1 - e.elapsed)
+    }
+    var style = e.style
+    for (var i = 0; i < style.length; i++) {
+      // Prevent crach if the style is not ready (image not loaded)
+      try {
+        var vectorContext = e.vectorContext || ol_render_getVectorContext(e)
+        var s = ol_ext_getVectorContextStyle(e, style[i])
+        vectorContext.setStyle(s)
+        if (s.getZIndex() < 0)
+          vectorContext.drawGeometry(shadow || geom)
+        else
+          vectorContext.drawGeometry(geom)
+      } catch (e) { /* ok */ }
+    }
+  }
+  /** Function to perform manipulations onpostcompose.
+   * This function is called with an ol_featureAnimationEvent argument.
+   * The function will be overridden by the child implementation.
+   * Return true to keep this function for the next frame, false to remove it.
+   * @param {ol_featureAnimationEvent} e
+   * @return {bool} true to continue animation.
+   * @api
+   */
+  animate( /* e */) {
+    return false
+  }
+}
 ol_ext_inherits(ol_featureAnimation, ol_Object);
-
 
 /** Hidden style: a transparent style
  */
@@ -63,41 +99,6 @@ ol_featureAnimation.hiddenStyle = new ol_style_Style({
     color: 'transparent' 
   }) 
 });
-
-/** Draw a geometry 
-* @param {olx.animateFeatureEvent} e
-* @param {ol.geom} geom geometry for shadow
-* @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
-* @private
-*/
-ol_featureAnimation.prototype.drawGeom_ = function (e, geom, shadow) {
-  if (this.fade_) {
-    e.context.globalAlpha = this.fade_(1-e.elapsed);
-  }
-  var style = e.style;
-  for (var i=0; i<style.length; i++) {
-    // Prevent crach if the style is not ready (image not loaded)
-    try {
-      var vectorContext = e.vectorContext || ol_render_getVectorContext(e);
-      var s = ol_ext_getVectorContextStyle(e, style[i]);
-      vectorContext.setStyle(s);
-      if (s.getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
-      else vectorContext.drawGeometry(geom);
-    } catch(e) { /* ok */ }
-  }
-};
-
-/** Function to perform manipulations onpostcompose. 
- * This function is called with an ol_featureAnimationEvent argument.
- * The function will be overridden by the child implementation.    
- * Return true to keep this function for the next frame, false to remove it.
- * @param {ol_featureAnimationEvent} e
- * @return {bool} true to continue animation.
- * @api 
- */
-ol_featureAnimation.prototype.animate = function (/* e */) {
-  return false;
-};
 
 /** An animation controler object an object to control animation with start, stop and isPlaying function.    
  * To be used with {@link olx.Map#animateFeature} or {@link ol.layer.Vector#animateFeature}

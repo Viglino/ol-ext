@@ -18229,17 +18229,56 @@ ol.control.WMTSCapabilities.prototype.getLayerFromOptions = function (options) {
 *	@param {ol.easing.Function} options.fade an easing function used to fade in the feature, default none
 *	@param {ol.easing.Function} options.easing an easing function for the animation, default ol.easing.linear
 */
-ol.featureAnimation = function(options) {
-  options = options || {};
-  this.duration_ = typeof (options.duration)=='number' ? (options.duration>=0 ? options.duration : 0) : 1000;
-  this.fade_ = typeof(options.fade) == 'function' ? options.fade : null;
-  this.repeat_ = Number(options.repeat);
-  var easing = typeof(options.easing) =='function' ? options.easing : ol.easing.linear;
-  if (options.revers) this.easing_ = function(t) { return (1 - easing(t)); };
-  else this.easing_ = easing;
-  this.hiddenStyle = options.hiddenStyle;
-  ol.Object.call(this);
-};
+ol.featureAnimation = class olfeatureAnimation extends ol.Object {
+  constructor(options) {
+    options = options || {}
+    super();
+    this.duration_ = typeof (options.duration) == 'number' ? (options.duration >= 0 ? options.duration : 0) : 1000
+    this.fade_ = typeof (options.fade) == 'function' ? options.fade : null
+    this.repeat_ = Number(options.repeat)
+    var easing = typeof (options.easing) == 'function' ? options.easing : ol.easing.linear
+    if (options.revers)
+      this.easing_ = function (t) { return (1 - easing(t)) }
+    else
+      this.easing_ = easing
+    this.hiddenStyle = options.hiddenStyle
+  }
+  /** Draw a geometry
+  * @param {olx.animateFeatureEvent} e
+  * @param {ol.geom} geom geometry for shadow
+  * @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
+  * @private
+  */
+  drawGeom_(e, geom, shadow) {
+    if (this.fade_) {
+      e.context.globalAlpha = this.fade_(1 - e.elapsed)
+    }
+    var style = e.style
+    for (var i = 0; i < style.length; i++) {
+      // Prevent crach if the style is not ready (image not loaded)
+      try {
+        var vectorContext = e.vectorContext || ol.render.getVectorContext(e)
+        var s = ol.ext.getVectorContextStyle(e, style[i])
+        vectorContext.setStyle(s)
+        if (s.getZIndex() < 0)
+          vectorContext.drawGeometry(shadow || geom)
+        else
+          vectorContext.drawGeometry(geom)
+      } catch (e) { /* ok */ }
+    }
+  }
+  /** Function to perform manipulations onpostcompose.
+   * This function is called with an ol.featureAnimationEvent argument.
+   * The function will be overridden by the child implementation.
+   * Return true to keep this function for the next frame, false to remove it.
+   * @param {ol.featureAnimationEvent} e
+   * @return {bool} true to continue animation.
+   * @api
+   */
+  animate( /* e */) {
+    return false
+  }
+}
 ol.ext.inherits(ol.featureAnimation, ol.Object);
 /** Hidden style: a transparent style
  */
@@ -18249,39 +18288,6 @@ ol.featureAnimation.hiddenStyle = new ol.style.Style({
     color: 'transparent' 
   }) 
 });
-/** Draw a geometry 
-* @param {olx.animateFeatureEvent} e
-* @param {ol.geom} geom geometry for shadow
-* @param {ol.geom} shadow geometry for shadow (ie. style with zIndex = -1)
-* @private
-*/
-ol.featureAnimation.prototype.drawGeom_ = function (e, geom, shadow) {
-  if (this.fade_) {
-    e.context.globalAlpha = this.fade_(1-e.elapsed);
-  }
-  var style = e.style;
-  for (var i=0; i<style.length; i++) {
-    // Prevent crach if the style is not ready (image not loaded)
-    try {
-      var vectorContext = e.vectorContext || ol.render.getVectorContext(e);
-      var s = ol.ext.getVectorContextStyle(e, style[i]);
-      vectorContext.setStyle(s);
-      if (s.getZIndex()<0) vectorContext.drawGeometry(shadow||geom);
-      else vectorContext.drawGeometry(geom);
-    } catch(e) { /* ok */ }
-  }
-};
-/** Function to perform manipulations onpostcompose. 
- * This function is called with an ol.featureAnimationEvent argument.
- * The function will be overridden by the child implementation.    
- * Return true to keep this function for the next frame, false to remove it.
- * @param {ol.featureAnimationEvent} e
- * @return {bool} true to continue animation.
- * @api 
- */
-ol.featureAnimation.prototype.animate = function (/* e */) {
-  return false;
-};
 /** An animation controler object an object to control animation with start, stop and isPlaying function.    
  * To be used with {@link olx.Map#animateFeature} or {@link ol.layer.Vector#animateFeature}
  * @typedef {Object} animationControler
@@ -18471,20 +18477,22 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
  * @param {ol.featureAnimationOptions} options
  *  @param {Number} options.nb number of blink, default 10
  */
-ol.featureAnimation.Blink = function(options) {
-  ol.featureAnimation.call(this, options);
-  this.set('nb', options.nb || 10)
+ol.featureAnimation.Blink = class olfeatureAnimationBlink extends ol.featureAnimation {
+  constructor(options) {
+    super(options);
+    this.set('nb', options.nb || 10);
+  }
+  /** Animate: Show or hide feature depending on the laptimes
+  * @param {ol.featureAnimationEvent} e
+  */
+  animate(e) {
+    if (!(Math.round(this.easing_(e.elapsed) * this.get('nb')) % 2)) {
+      this.drawGeom_(e, e.geom);
+    }
+    return (e.time <= this.duration_);
+  }
 }
 ol.ext.inherits(ol.featureAnimation.Blink, ol.featureAnimation);
-/** Animate: Show or hide feature depending on the laptimes
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Blink.prototype.animate = function (e) {	
-  if (!(Math.round(this.easing_(e.elapsed)*this.get('nb'))%2)) {
-    this.drawGeom_(e, e.geom);
-  }
-  return (e.time <= this.duration_);
-}
 
 /*
 	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -18499,27 +18507,27 @@ ol.featureAnimation.Blink.prototype.animate = function (e) {
  *	@param {ol.easing} options.easing easing used for decaying amplitude, use function(){return 0} for no decay, default ol.easing.linear
  *	@param {Integer} options.duration duration in ms, default 1000
  */
-ol.featureAnimation.Bounce = function(options)
-{	options = options || {};
-	ol.featureAnimation.call(this, options);
-	this.amplitude_ = options.amplitude || 40;
-	this.bounce_ = -Math.PI*(options.bounce || 3);
-}
-ol.ext.inherits(ol.featureAnimation.Bounce, ol.featureAnimation);
-/** Animate
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Bounce.prototype.animate = function (e)
-{	// Animate
-	var flashGeom = e.geom.clone();
-	/*
-	var t = this.easing_(e.elapsed)
-	t = Math.abs(Math.sin(this.bounce_*t)) * this.amplitude_ * (1-t) * e.frameState.viewState.resolution;
+ol.featureAnimation.Bounce = class olfeatureAnimationBounce extends ol.featureAnimation {
+	constructor(options) {
+		options = options || {};
+		super(options);
+		this.amplitude_ = options.amplitude || 40;
+		this.bounce_ = -Math.PI * (options.bounce || 3);
+	}
+	/** Animate
+	* @param {ol.featureAnimationEvent} e
 	*/
-	var t = Math.abs(Math.sin(this.bounce_*e.elapsed)) * this.amplitude_ * (1-this.easing_(e.elapsed)) * e.frameState.viewState.resolution;
-	flashGeom.translate(0, t);
-	this.drawGeom_(e, flashGeom, e.geom);
-	return (e.time <= this.duration_);
+	animate(e) {
+		var flashGeom = e.geom.clone();
+		/*
+		var t = this.easing_(e.elapsed)
+		t = Math.abs(Math.sin(this.bounce_*t)) * this.amplitude_ * (1-t) * e.frameState.viewState.resolution;
+		*/
+		var t = Math.abs(Math.sin(this.bounce_ * e.elapsed)) * this.amplitude_ * (1 - this.easing_(e.elapsed)) * e.frameState.viewState.resolution;
+		flashGeom.translate(0, t);
+		this.drawGeom_(e, flashGeom, e.geom);
+		return (e.time <= this.duration_);
+	}
 }
 
 /*
@@ -18533,36 +18541,36 @@ ol.featureAnimation.Bounce.prototype.animate = function (e)
  *  @param {Number} options.speed speed of the feature if 0 the duration parameter will be used instead, default 0
  *  @param {Number} options.side top or bottom, default top
  */
-ol.featureAnimation.Drop = function(options)
-{	options = options || {};
-	this.speed_ = options.speed || 0;
-	ol.featureAnimation.call(this, options);
-	this.side_ = options.side || 'top';
-}
-ol.ext.inherits(ol.featureAnimation.Drop, ol.featureAnimation);
-/** Animate
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Drop.prototype.animate = function (e)
-{	// First time > calculate duration / speed
-	if (!e.time) 
-	{	var angle = e.frameState.viewState.rotation;
-		var s = e.frameState.size[1] * e.frameState.viewState.resolution;
-		if (this.side_!='top') s *= -1;
-		this.dx = -Math.sin(angle)*s;
-		this.dy = Math.cos(angle)*s;
-		if (this.speed_) 
-		{	this.duration_ = s/this.speed_/e.frameState.viewState.resolution;
-		}
+ol.featureAnimation.Drop = class olfeatureAnimationDrop extends ol.featureAnimation {
+	constructor(options) {
+		options = options || {};
+		super(options);
+		this.speed_ = options.speed || 0;
+		this.side_ = options.side || 'top';
 	}
-	// Animate
-	var flashGeom = e.geom.clone();
-	flashGeom.translate(
-		this.dx*(1-this.easing_(e.elapsed)),  
-		this.dy*(1-this.easing_(e.elapsed))
-	);
-	this.drawGeom_(e, flashGeom, e.geom);
-	return (e.time <= this.duration_);
+	/** Animate
+	* @param {ol.featureAnimationEvent} e
+	*/
+	animate(e) {
+		if (!e.time) {
+			var angle = e.frameState.viewState.rotation;
+			var s = e.frameState.size[1] * e.frameState.viewState.resolution;
+			if (this.side_ != 'top') s *= -1;
+			this.dx = -Math.sin(angle) * s;
+			this.dy = Math.cos(angle) * s;
+			if (this.speed_) {
+				this.duration_ = s / this.speed_ / e.frameState.viewState.resolution;
+			}
+		}
+		// Animate
+		var flashGeom = e.geom.clone();
+		flashGeom.translate(
+			this.dx * (1 - this.easing_(e.elapsed)),
+			this.dy * (1 - this.easing_(e.elapsed))
+		);
+		this.drawGeom_(e, flashGeom, e.geom);
+		return (e.time <= this.duration_);
+	}
 }
 
 /*
@@ -18574,19 +18582,20 @@ ol.featureAnimation.Drop.prototype.animate = function (e)
  * @extends {ol.featureAnimation}
  * @param {ol.featureAnimationOptions} options
  */
-ol.featureAnimation.Fade = function(options)
-{	options = options || {};
-	this.speed_ = options.speed || 0;
-	ol.featureAnimation.call(this, options);
-}
-ol.ext.inherits(ol.featureAnimation.Fade, ol.featureAnimation);
-/** Animate
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Fade.prototype.animate = function (e)
-{	e.context.globalAlpha = this.easing_(e.elapsed);
-	this.drawGeom_(e, e.geom);
-	return (e.time <= this.duration_);
+ol.featureAnimation.Fade = class olfeatureAnimationFade extends ol.featureAnimation {
+	constructor(options) {
+		options = options || {};
+		super(options);
+		this.speed_ = options.speed || 0;
+	}
+	/** Animate
+	* @param {ol.featureAnimationEvent} e
+	*/
+	animate(e) {
+		e.context.globalAlpha = this.easing_(e.elapsed);
+		this.drawGeom_(e, e.geom);
+		return (e.time <= this.duration_);
+	}
 }
 
 /*
@@ -18599,17 +18608,17 @@ ol.featureAnimation.Fade.prototype.animate = function (e)
  * @param {ol.featureAnimationShowOptions} options
  * 
  */
-ol.featureAnimation.None = function(options)
-{	ol.featureAnimation.call(this, options);
-};
-ol.ext.inherits(ol.featureAnimation.None, ol.featureAnimation);
-/** Animate: do nothing during the laps time
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.None.prototype.animate = function (e)
-{	
-	return (e.time <= this.duration_);
-};
+ol.featureAnimation.None = class olfeatureAnimationNone extends ol.featureAnimation {
+	constructor(options) {
+		super(options);
+	}
+	/** Animate: do nothing during the laps time
+	* @param {ol.featureAnimationEvent} e
+	*/
+	animate(e) {
+		return (e.time <= this.duration_);
+	}
+}
 
 /*
   Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -18619,10 +18628,11 @@ ol.featureAnimation.None.prototype.animate = function (e)
  * @constructor
  * @extends {ol.featureAnimation}
  */
-ol.featureAnimation.Null = function() {
-  ol.featureAnimation.call(this, { duration:0 });
+ol.featureAnimation.Null = class olfeatureAnimationNull extends ol.featureAnimation {
+	constructor() {
+    super({ duration:0 });
+  }
 };
-ol.ext.inherits(ol.featureAnimation.Null, ol.featureAnimation);
 
 /*
   Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
@@ -18637,79 +18647,85 @@ ol.ext.inherits(ol.featureAnimation.Null, ol.featureAnimation);
  *  @param {ol.geom.LineString|ol.Feature} options.path the path to follow
  *  @param {Number} options.duration duration of the animation in ms
  */
-ol.featureAnimation.Path = function(options){
-  options = options || {};
-  ol.featureAnimation.call(this, options);
-  this.speed_ = options.speed || 0;
-  this.path_ = options.path;
-  switch (options.rotate) {
-    case true: 
-    case 0:
-      this.rotate_ = 0;
-      break;
-    default:
-      this.rotate_ = options.rotate || false;
-      break;
-  }
-  if (this.path_ && this.path_.getGeometry) this.path_ = this.path_.getGeometry();
-  if (this.path_ && this.path_.getLineString) this.path_ = this.path_.getLineString();
-  if (this.path_.getLength) {
-    this.dist_ = this.path_.getLength()
-    if (this.path_ && this.path_.getCoordinates) this.path_ = this.path_.getCoordinates();
-  } else {
-    this.dist_ = 0;
-  }
-  if (this.speed_>0) this.duration_ = this.dist_/this.speed_;
-}
-ol.ext.inherits(ol.featureAnimation.Path, ol.featureAnimation);
-/** Animate
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Path.prototype.animate = function (e) {
-  // First time 
-  if (!e.time) {
-    if (!this.dist_) return false;
-  }
-  var dmax = this.dist_*this.easing_(e.elapsed);
-  var p0, p, s, dx,dy, dl, d = 0;
-  p = this.path_[0];
-  // Linear interpol
-  for (var i = 1; i<this.path_.length; i++) {
-    p0 = p;
-    p = this.path_[i];
-    dx = p[0]-p0[0];
-    dy = p[1]-p0[1];
-    dl = Math.sqrt(dx*dx+dy*dy);
-    if (dl && d+dl>=dmax) {
-      s = (dmax-d)/dl;
-      p = [ p0[0] + (p[0]-p0[0])*s, p0[1] + (p[1]-p0[1])*s];
-      break;
+ol.featureAnimation.Path = class olfeatureAnimationPath extends ol.featureAnimation {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.speed_ = options.speed || 0;
+    this.path_ = options.path;
+    switch (options.rotate) {
+      case true:
+      case 0:
+        this.rotate_ = 0;
+        break;
+      default:
+        this.rotate_ = options.rotate || false;
+        break;
     }
-    d += dl;
+    if (this.path_ && this.path_.getGeometry)
+      this.path_ = this.path_.getGeometry();
+    if (this.path_ && this.path_.getLineString)
+      this.path_ = this.path_.getLineString();
+    if (this.path_.getLength) {
+      this.dist_ = this.path_.getLength();
+      if (this.path_ && this.path_.getCoordinates)
+        this.path_ = this.path_.getCoordinates();
+    } else {
+      this.dist_ = 0;
+    }
+    if (this.speed_ > 0)
+      this.duration_ = this.dist_ / this.speed_;
   }
-  // Rotate symbols
-  var style = e.style;
-  e.rotation = Math.PI/2 + Math.atan2(p0[1] - p[1], p0[0] - p[0]);
-  if (this.rotate_!==false) {
-    var st = []
-    var angle = this.rotate_ - e.rotation + e.frameState.viewState.rotation;
-    e.rotation = Math.PI/2 + Math.atan2(p0[1] - p[1], p0[0] - p[0]);
-    for (var k=0; s=e.style[k]; k++) {
-      if (s.getImage()) {
-        //s = s.clone();
-        s.getImage().setRotation(angle);
+  /** Animate
+  * @param {ol.featureAnimationEvent} e
+  */
+  animate(e) {
+    // First time 
+    if (!e.time) {
+      if (!this.dist_)
+        return false;
+    }
+    var dmax = this.dist_ * this.easing_(e.elapsed);
+    var p0, p, s, dx, dy, dl, d = 0;
+    p = this.path_[0];
+    // Linear interpol
+    for (var i = 1; i < this.path_.length; i++) {
+      p0 = p;
+      p = this.path_[i];
+      dx = p[0] - p0[0];
+      dy = p[1] - p0[1];
+      dl = Math.sqrt(dx * dx + dy * dy);
+      if (dl && d + dl >= dmax) {
+        s = (dmax - d) / dl;
+        p = [p0[0] + (p[0] - p0[0]) * s, p0[1] + (p[1] - p0[1]) * s];
+        break;
       }
-      st.push(s);
+      d += dl;
     }
-    // Rotated style
-    e.style = st;
+    // Rotate symbols
+    var style = e.style;
+    e.rotation = Math.PI / 2 + Math.atan2(p0[1] - p[1], p0[0] - p[0]);
+    if (this.rotate_ !== false) {
+      var st = [];
+      var angle = this.rotate_ - e.rotation + e.frameState.viewState.rotation;
+      e.rotation = Math.PI / 2 + Math.atan2(p0[1] - p[1], p0[0] - p[0]);
+      for (var k = 0; s = e.style[k]; k++) {
+        if (s.getImage()) {
+          //s = s.clone();
+          s.getImage().setRotation(angle);
+        }
+        st.push(s);
+      }
+      // Rotated style
+      e.style = st;
+    }
+    e.geom.setCoordinates(p);
+    // Animate
+    this.drawGeom_(e, e.geom);
+    // restore style (if modify by rotation)
+    e.style = style;
+    return (e.time <= this.duration_);
   }
-  e.geom.setCoordinates(p);
-  // Animate
-  this.drawGeom_(e, e.geom);
-  // restore style (if modify by rotation)
-  e.style = style;
-  return (e.time <= this.duration_);
 }
 
 /*
@@ -18724,31 +18740,32 @@ ol.featureAnimation.Path.prototype.animate = function (e) {
  *	@param {Integer} options.amplitude amplitude of the animation, default 40
  *	@param {bool} options.horizontal shake horizontally default false (vertical)
  */
-ol.featureAnimation.Shake = function(options)
-{	options = options || {};
-	ol.featureAnimation.call(this, options);
-//	this.easing_ = options.easing_ || function(t){return (0.5+t)*t -0.5*t ;};
-	this.amplitude_ = options.amplitude || 40;
-	this.bounce_ = -Math.PI*(options.bounce || 6);
-	this.horizontal_ = options.horizontal;
-}
-ol.ext.inherits(ol.featureAnimation.Shake, ol.featureAnimation);
-/** Animate
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Shake.prototype.animate = function (e)
-{	// Animate
-	var flashGeom = e.geom.clone();
-	var shadow = e.geom.clone();
-	var t = this.easing_(e.elapsed)
-	t = Math.sin(this.bounce_*t) * this.amplitude_ * (1-t) * e.frameState.viewState.resolution;
-	if (this.horizontal_) 
-	{	flashGeom.translate(t, 0);
-		shadow.translate(t, 0);
+ol.featureAnimation.Shake = class olfeatureAnimationShake extends ol.featureAnimation {
+	constructor(options) {
+		options = options || {};
+		super(options);
+		//	this.easing_ = options.easing_ || function(t){return (0.5+t)*t -0.5*t ;};
+		this.amplitude_ = options.amplitude || 40;
+		this.bounce_ = -Math.PI * (options.bounce || 6);
+		this.horizontal_ = options.horizontal;
 	}
-	else flashGeom.translate(0, t);
-	this.drawGeom_(e, flashGeom, shadow);
-	return (e.time <= this.duration_);
+	/** Animate
+	* @param {ol.featureAnimationEvent} e
+	*/
+	animate(e) {
+		var flashGeom = e.geom.clone();
+		var shadow = e.geom.clone();
+		var t = this.easing_(e.elapsed);
+		t = Math.sin(this.bounce_ * t) * this.amplitude_ * (1 - t) * e.frameState.viewState.resolution;
+		if (this.horizontal_) {
+			flashGeom.translate(t, 0);
+			shadow.translate(t, 0);
+		}
+		else
+			flashGeom.translate(0, t);
+		this.drawGeom_(e, flashGeom, shadow);
+		return (e.time <= this.duration_);
+	}
 }
 
 /*
@@ -18760,16 +18777,17 @@ ol.featureAnimation.Shake.prototype.animate = function (e)
  * @extends {ol.featureAnimation}
  * @param {ol.featureAnimationOptions} options
  */
-ol.featureAnimation.Show = function(options) {
-  ol.featureAnimation.call(this, options);
-}
-ol.ext.inherits(ol.featureAnimation.Show, ol.featureAnimation);
-/** Animate: just show the object during the laps time
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Show.prototype.animate = function (e) {	
-  this.drawGeom_(e, e.geom);
-  return (e.time <= this.duration_);
+ol.featureAnimation.Show = class olfeatureAnimationShow extends ol.featureAnimation {
+  constructor(options) {
+    super(options);
+  }
+  /** Animate: just show the object during the laps time
+  * @param {ol.featureAnimationEvent} e
+  */
+  animate(e) {
+    this.drawGeom_(e, e.geom);
+    return (e.time <= this.duration_);
+  }
 }
 
 /*
@@ -18782,61 +18800,65 @@ ol.featureAnimation.Show.prototype.animate = function (e) {
  * @param {ol.featureAnimationSlideOptions} options
  *  @param {Number} options.speed speed of the animation, if 0 the duration parameter will be used instead, default 0
  */
-ol.featureAnimation.Slide = function(options)
-{	options = options || {};
-	this.speed_ = options.speed || 0;
-	ol.featureAnimation.call(this, options);
-	this.side_ = options.side || 'left';
-}
-ol.ext.inherits(ol.featureAnimation.Slide, ol.featureAnimation);
-/** Animate
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Slide.prototype.animate = function (e)
-{	// First time > calculate duration / speed
-	if (!e.time) 
-	{	if (this.side_=='left') this.dx = (e.extent[0]-e.bbox[2])
-		else this.dx = (e.extent[2]-e.bbox[0])
-		if (this.speed_) this.duration_ = Math.abs(this.dx)/this.speed_/e.frameState.viewState.resolution;
+ol.featureAnimation.Slide = class olfeatureAnimationSlide extends ol.featureAnimation {
+	constructor(options) {
+		options = options || {};
+		super(options);
+		this.speed_ = options.speed || 0;
+		this.side_ = options.side || 'left';
 	}
-	// Animate
-	var flashGeom = e.geom.clone();
-	flashGeom.translate(this.dx*(1-this.easing_(e.elapsed)), 0);
-	this.drawGeom_(e, flashGeom);
-	return (e.time <= this.duration_);
+	/** Animate
+	* @param {ol.featureAnimationEvent} e
+	*/
+	animate(e) {
+		if (!e.time) {
+			if (this.side_ == 'left')
+				this.dx = (e.extent[0] - e.bbox[2]);
+			else
+				this.dx = (e.extent[2] - e.bbox[0]);
+			if (this.speed_)
+				this.duration_ = Math.abs(this.dx) / this.speed_ / e.frameState.viewState.resolution;
+		}
+		// Animate
+		var flashGeom = e.geom.clone();
+		flashGeom.translate(this.dx * (1 - this.easing_(e.elapsed)), 0);
+		this.drawGeom_(e, flashGeom);
+		return (e.time <= this.duration_);
+	}
 }
 
 /*
 	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL license (http://www.cecill.info/).
 */
-/** Teleport a feature at a given place
+/** Teleport a feature at a given place (feat. Star Trek)
  * @constructor
  * @extends {ol.featureAnimation}
  * @param {ol.featureAnimationOptions} options
  */
-ol.featureAnimation.Teleport = function(options)
-{	ol.featureAnimation.call(this, options);
-}
-ol.ext.inherits(ol.featureAnimation.Teleport, ol.featureAnimation);
-/** Animate
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Teleport.prototype.animate = function (e)
-{	var sc = this.easing_(e.elapsed);
-	if (sc)
-	{	e.context.save()
+ol.featureAnimation.Teleport = class olfeatureAnimationTeleport extends ol.featureAnimation {
+	constructor(options) {
+		super(options);
+	}
+	/** Animate
+	* @param {ol.featureAnimationEvent} e
+	*/
+	animate(e) {
+		var sc = this.easing_(e.elapsed);
+		if (sc) {
+			e.context.save();
 			var ratio = e.frameState.pixelRatio;
 			e.context.globalAlpha = sc;
-			e.context.scale(sc,1/sc);
+			e.context.scale(sc, 1 / sc);
 			var m = e.frameState.coordinateToPixelTransform;
-			var dx = (1/sc-1) * ratio * (m[0]*e.coord[0] + m[1]*e.coord[1] +m[4]);
-			var dy = (sc-1) * ratio * (m[2]*e.coord[0] + m[3]*e.coord[1] +m[5]);
-			e.context.translate(dx,dy);
+			var dx = (1 / sc - 1) * ratio * (m[0] * e.coord[0] + m[1] * e.coord[1] + m[4]);
+			var dy = (sc - 1) * ratio * (m[2] * e.coord[0] + m[3] * e.coord[1] + m[5]);
+			e.context.translate(dx, dy);
 			this.drawGeom_(e, e.geom);
-		e.context.restore()
+			e.context.restore();
+		}
+		return (e.time <= this.duration_);
 	}
-	return (e.time <= this.duration_);
 }
 
 /*
@@ -18849,38 +18871,38 @@ ol.featureAnimation.Teleport.prototype.animate = function (e)
  * @param {ol.featureAnimationThrowOptions} options
  *  @param {left|right} options.side side of the animation, default left
  */
-ol.featureAnimation.Throw = function(options)
-{	options = options || {};
-	ol.featureAnimation.call(this, options);
-	this.speed_ = options.speed || 0;
-	this.side_ = options.side || 'left';
-}
-ol.ext.inherits(ol.featureAnimation.Throw, ol.featureAnimation);
-/** Animate
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Throw.prototype.animate = function (e)
-{	// First time > calculate duration / speed
-	if (!e.time && this.speed_) 
-	{	var dx, dy;
-		if (this.side_=='left')
-		{	dx = this.dx = e.extent[0]-e.bbox[2];
-			dy = this.dy = e.extent[3]-e.bbox[1];
-		}
-		else
-		{	dx = this.dx = e.extent[2]-e.bbox[0];
-			dy = this.dy = e.extent[3]-e.bbox[1];
-		}
-		this.duration_ = Math.sqrt(dx*dx+dy*dy)/this.speed_/e.frameState.viewState.resolution;
+ol.featureAnimation.Throw = class olfeatureAnimationThrow extends ol.featureAnimation {
+	constructor(options) {
+		options = options || {};
+		super(options);
+		this.speed_ = options.speed || 0;
+		this.side_ = options.side || 'left';
 	}
-	// Animate
-	var flashGeom = e.geom.clone();
-	var shadow = e.geom.clone();
-	flashGeom.translate(this.dx*(1-this.easing_(e.elapsed)), 
-		this.dy*Math.cos(Math.PI/2*this.easing_(e.elapsed)));
-	shadow.translate(this.dx*(1-this.easing_(e.elapsed)), 0);
-	this.drawGeom_(e, flashGeom, shadow);
-	return (e.time <= this.duration_);
+	/** Animate
+	* @param {ol.featureAnimationEvent} e
+	*/
+	animate(e) {
+		if (!e.time && this.speed_) {
+			var dx, dy;
+			if (this.side_ == 'left') {
+				dx = this.dx = e.extent[0] - e.bbox[2];
+				dy = this.dy = e.extent[3] - e.bbox[1];
+			}
+			else {
+				dx = this.dx = e.extent[2] - e.bbox[0];
+				dy = this.dy = e.extent[3] - e.bbox[1];
+			}
+			this.duration_ = Math.sqrt(dx * dx + dy * dy) / this.speed_ / e.frameState.viewState.resolution;
+		}
+		// Animate
+		var flashGeom = e.geom.clone();
+		var shadow = e.geom.clone();
+		flashGeom.translate(this.dx * (1 - this.easing_(e.elapsed)),
+			this.dy * Math.cos(Math.PI / 2 * this.easing_(e.elapsed)));
+		shadow.translate(this.dx * (1 - this.easing_(e.elapsed)), 0);
+		this.drawGeom_(e, flashGeom, shadow);
+		return (e.time <= this.duration_);
+	}
 }
 
 /*
@@ -18893,64 +18915,69 @@ ol.featureAnimation.Throw.prototype.animate = function (e)
  * @param {ol.featureAnimationZoomOptions} options
  *  @param {bool} options.zoomOut to zoom out
  */
-ol.featureAnimation.Zoom = function(options){
-  options = options || {};
-  ol.featureAnimation.call(this, options);
-  this.set('zoomout', options.zoomOut);
+ol.featureAnimation.Zoom = class olfeatureAnimationZoom extends ol.featureAnimation {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.set('zoomout', options.zoomOut);
+  }
+  /** Animate
+  * @param {ol.featureAnimationEvent} e
+  */
+  animate(e) {
+    var fac = this.easing_(e.elapsed);
+    if (fac) {
+      if (this.get('zoomout')) fac = 1 / fac;
+      var style = e.style;
+      var i, imgs, sc = [];
+      for (i = 0; i < style.length; i++) {
+        imgs = style[i].getImage();
+        if (imgs) {
+          sc[i] = imgs.getScale();
+          // ol >= v6
+          if (e.type === 'postrender')
+            imgs.setScale(sc[i] * fac / e.frameState.pixelRatio);
+          else
+            imgs.setScale(sc[i] * fac);
+        }
+      }
+      this.drawGeom_(e, e.geom);
+      for (i = 0; i < style.length; i++) {
+        imgs = style[i].getImage();
+        if (imgs) imgs.setScale(sc[i]);
+      }
+    }
+    /*
+      var sc = this.easing_(e.elapsed);
+      if (sc)
+      {	e.context.save()
+        console.log(e)
+          var ratio = e.frameState.pixelRatio;
+          var m = e.frameState.coordinateToPixelTransform;
+          var dx = (1/(sc)-1)* ratio * (m[0]*e.coord[0] + m[1]*e.coord[1] +m[4]);
+          var dy = (1/(sc)-1)*ratio * (m[2]*e.coord[0] + m[3]*e.coord[1] +m[5]);
+          e.context.scale(sc,sc);
+          e.context.translate(dx,dy);
+          this.drawGeom_(e, e.geom);
+        e.context.restore()
+      }
+    */
+    return (e.time <= this.duration_);
+  }
 }
-ol.ext.inherits(ol.featureAnimation.Zoom, ol.featureAnimation);
 /** Zoom animation: feature zoom out (for points)
  * @constructor
  * @extends {ol.featureAnimation}
  * @param {ol.featureAnimationZoomOptions} options
  */
-ol.featureAnimation.ZoomOut = function(options) {
-  options = options || {};
-  options.zoomOut = true;
-  ol.featureAnimation.Zoom.call(this, options);
+ol.featureAnimation.ZoomOut = class olfeatureAnimationZoomOut extends ol.featureAnimation.Zoom {
+  constructor(options) {
+    options = options || {};
+    options.zoomOut = true;
+    super(options);
+  }
 }
 ol.ext.inherits(ol.featureAnimation.ZoomOut, ol.featureAnimation.Zoom);
-/** Animate
-* @param {ol.featureAnimationEvent} e
-*/
-ol.featureAnimation.Zoom.prototype.animate = function (e) {
-  var fac = this.easing_(e.elapsed);
-  if (fac) {
-    if (this.get('zoomout')) fac  = 1/fac;
-    var style = e.style;
-    var i, imgs, sc=[]
-    for (i=0; i<style.length; i++) {
-      imgs = style[i].getImage();
-      if (imgs) {
-        sc[i] = imgs.getScale();
-        // ol >= v6
-        if (e.type==='postrender') imgs.setScale(sc[i]*fac/e.frameState.pixelRatio);
-        else imgs.setScale(sc[i]*fac);
-      }
-    }
-    this.drawGeom_(e, e.geom);
-    for (i=0; i<style.length; i++) {
-      imgs = style[i].getImage();
-      if (imgs) imgs.setScale(sc[i]);
-    }
-  }
-/*
-  var sc = this.easing_(e.elapsed);
-  if (sc)
-  {	e.context.save()
-    console.log(e)
-      var ratio = e.frameState.pixelRatio;
-      var m = e.frameState.coordinateToPixelTransform;
-      var dx = (1/(sc)-1)* ratio * (m[0]*e.coord[0] + m[1]*e.coord[1] +m[4]);
-      var dy = (1/(sc)-1)*ratio * (m[2]*e.coord[0] + m[3]*e.coord[1] +m[5]);
-      e.context.scale(sc,sc);
-      e.context.translate(dx,dy);
-      this.drawGeom_(e, e.geom);
-    e.context.restore()
-  }
-*/
-  return (e.time <= this.duration_);
-}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -21975,195 +22002,209 @@ ol.interaction.DragOverlay.prototype.removeOverlay = function (ov) {
  * 	@param {Array<ol.Feature> | ol.Collection<ol.Feature> | function | undefined} options.featureFilter An array or a collection of features the interaction applies on or a function that takes a feature and a layer and returns true if the feature is a candidate
  * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
  */
-ol.interaction.DrawHole = function(options) {
-  if (!options) options = {};
-  var self = this;
-  // Select interaction for the current feature
-  this._select = new ol.interaction.Select({ style: options.style });
-  this._select.setActive(false);
-  // Geometry function that test points inside the current
-  var geometryFn, geomFn = options.geometryFunction;
-  if (geomFn) {
-    geometryFn = function(c,g) {
-      g = self._geometryFn (c, g);
-      return geomFn (c,g);
-    }
-  } else {
-    geometryFn = function(c,g) { return self._geometryFn (c, g); }
-  }
-  // Create draw interaction
-  options.type = "Polygon";
-  options.geometryFunction = geometryFn;
-  ol.interaction.Draw.call(this, options);
-  // Layer filter function
-  if (options.layers) {
-    if (typeof (options.layers) === 'function') {
-      this.layers_ = options.layers;
-    } else if (options.layers.indexOf) {
-      this.layers_ = function(l) {
-        return (options.layers.indexOf(l) >= 0); 
-      };
-    }
-  }
-  // Features to apply on 
-  if (typeof(options.featureFilter) === 'function') {
-    this._features = options.featureFilter;
-  } else if (options.featureFilter) {
-    var features = options.featureFilter;
-    this._features = function(f) {
-      if (features.indexOf) {
-        return !!features[features.indexOf(f)];
+ol.interaction.DrawHole = class olinteractionDrawHole extends ol.interaction.Draw {
+  constructor(options) {
+    options = options || {}
+    // Geometry function that test points inside the current selection
+    var _geometryFn = function(coordinates, geometry) {
+      var coord = coordinates[0].pop()
+      if (!this.getPolygon() || this.getPolygon().intersectsCoordinate(coord)) {
+        this.lastOKCoord = [coord[0], coord[1]]
+      }
+      coordinates[0].push([this.lastOKCoord[0], this.lastOKCoord[1]])
+      if (geometry) {
+        geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])])
       } else {
-        return !!features.item(features.getArray().indexOf(f));
+        geometry = new ol.geom.Polygon(coordinates)
+      }
+      return geometry
+    }
+    var geomFn = options.geometryFunction
+    if (geomFn) {
+      options.geometryFunction = function (c, g) {
+        g = _geometryFn(c, g)
+        return geomFn(c, g)
+      }
+    } else {
+      options.geometryFunction = _geometryFn
+    }
+    // Create draw interaction
+    options.type = 'Polygon';
+    super(options)
+    // Select interaction for the current feature
+    this._select = new ol.interaction.Select({ style: options.style })
+    this._select.setActive(false)
+    // Layer filter function
+    if (options.layers) {
+      if (typeof (options.layers) === 'function') {
+        this.layers_ = options.layers
+      } else if (options.layers.indexOf) {
+        this.layers_ = function (l) {
+          return (options.layers.indexOf(l) >= 0)
+        }
       }
     }
-  } else {
-    this._features = function() { return true }
+    // Features to apply on 
+    if (typeof (options.featureFilter) === 'function') {
+      this._features = options.featureFilter
+    } else if (options.featureFilter) {
+      var features = options.featureFilter
+      this._features = function (f) {
+        if (features.indexOf) {
+          return !!features[features.indexOf(f)]
+        } else {
+          return !!features.item(features.getArray().indexOf(f))
+        }
+      }
+    } else {
+      this._features = function () { return true }
+    }
+    // Start drawing if inside a feature
+    this.on('drawstart', this._startDrawing.bind(this))
+    // End drawing add the hole to the current Polygon
+    this.on('drawend', this._finishDrawing.bind(this))
   }
-  // Start drawing if inside a feature
-  this.on('drawstart', this._startDrawing.bind(this));
-  // End drawing add the hole to the current Polygon
-  this.on('drawend', this._finishDrawing.bind(this));
-};
-ol.ext.inherits(ol.interaction.DrawHole, ol.interaction.Draw);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.DrawHole.prototype.setMap = function(map) {
-  if (this.getMap()) this.getMap().removeInteraction(this._select);
-  if (map) map.addInteraction(this._select);
-  ol.interaction.Draw.prototype.setMap.call (this, map);
-};
-/**
- * Activate/deactivate the interaction
- * @param {boolean}
- * @api stable
- */
-ol.interaction.DrawHole.prototype.setActive = function(b) {
-  this._select.getFeatures().clear();
-  ol.interaction.Draw.prototype.setActive.call (this, b);
-};
-/**
- * Remove last point of the feature currently being drawn 
- * (test if points to remove before).
- */
-ol.interaction.DrawHole.prototype.removeLastPoint = function() {
-  if (this._feature && this._feature.getGeometry().getCoordinates()[0].length>2) {
-    ol.interaction.Draw.prototype.removeLastPoint.call(this);
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    // Remove previous selection
+    if (this.getMap()) this.getMap().removeInteraction(this._select)
+    // Add new one
+    if (map) map.addInteraction(this._select)
+    super.setMap.call(this, map)
   }
-};
-/** 
- * Get the current polygon to hole
- * @return {ol.Feature}
- */
-ol.interaction.DrawHole.prototype.getPolygon = function() {
-  return this._polygon;
-  // return this._select.getFeatures().item(0).getGeometry();
-};
-/**
- * Get current feature to add a hole and start drawing
- * @param {ol.interaction.Draw.Event} e
- * @private
- */
-ol.interaction.DrawHole.prototype._startDrawing = function(e) {
-  var map = this.getMap();
-  this._feature = e.feature;
-  var coord = e.feature.getGeometry().getCoordinates()[0][0];
-  this._current = null;
-  // Check object under the pointer
-  map.forEachFeatureAtPixel(
-    map.getPixelFromCoordinate(coord),
-    function(feature, layer) {
-      // Not yet found?
-      if (!this._current && this._features(feature, layer)) {
-        var poly = feature.getGeometry();
-        if (poly.getType() === "Polygon"
-          && poly.intersectsCoordinate(coord)) {
-          this._polygonIndex = false;
-          this._polygon = poly;
-          this._current = feature;
-        } else if (poly.getType() === "MultiPolygon"
-          && poly.intersectsCoordinate(coord)) {
-          for (var i=0, p; p=poly.getPolygon(i); i++) {
-            if (p.intersectsCoordinate(coord)) {
-              this._polygonIndex = i;
-              this._polygon = p;
-              this._current = feature;
-              break;
+  /**
+   * Activate/deactivate the interaction
+   * @param {boolean}
+   * @api stable
+   */
+  setActive(b) {
+    if (this._select) this._select.getFeatures().clear()
+    super.setActive.call(this, b)
+  }
+  /**
+   * Remove last point of the feature currently being drawn
+   * (test if points to remove before).
+   */
+  removeLastPoint() {
+    if (this._feature && this._feature.getGeometry().getCoordinates()[0].length > 2) {
+      super.removeLastPoint.call(this)
+    }
+  }
+  /**
+   * Get the current polygon to hole
+   * @return {ol.Feature}
+   */
+  getPolygon() {
+    return this._polygon
+    // return this._select.getFeatures().item(0).getGeometry();
+  }
+  /**
+   * Get current feature to add a hole and start drawing
+   * @param {ol.interaction.Draw.Event} e
+   * @private
+   */
+  _startDrawing(e) {
+    var map = this.getMap()
+    this._feature = e.feature
+    var coord = e.feature.getGeometry().getCoordinates()[0][0]
+    this._current = null
+    // Check object under the pointer
+    map.forEachFeatureAtPixel(
+      map.getPixelFromCoordinate(coord),
+      function (feature, layer) {
+        // Not yet found?
+        if (!this._current && this._features(feature, layer)) {
+          var poly = feature.getGeometry()
+          if (poly.getType() === "Polygon"
+            && poly.intersectsCoordinate(coord)) {
+            this._polygonIndex = false
+            this._polygon = poly
+            this._current = feature
+          } else if (poly.getType() === "MultiPolygon"
+            && poly.intersectsCoordinate(coord)) {
+            for (var i = 0, p; p = poly.getPolygon(i); i++) {
+              if (p.intersectsCoordinate(coord)) {
+                this._polygonIndex = i
+                this._polygon = p
+                this._current = feature
+                break
+              }
             }
           }
         }
-      }
-    }.bind(this), {
+      }.bind(this), {
       layerFilter: this.layers_
     }
-  );
-  this._select.getFeatures().clear();
-  if (!this._current) {
-    this.setActive(false);
-    this.setActive(true);
-  } else {
-    this._select.getFeatures().push(this._current);
-  }
-};
-/**
- * Stop drawing and add the sketch feature to the target feature. 
- * @param {ol.interaction.Draw.Event} e
- * @private
- */
-ol.interaction.DrawHole.prototype._finishDrawing = function(e) {
-  // The feature is the hole
-  e.hole = e.feature;
-  // Get the current feature
-  e.feature = this._select.getFeatures().item(0);
-  this.dispatchEvent({ type: 'modifystart', features: [ this._current ] });
-  // Create the hole
-  var c = e.hole.getGeometry().getCoordinates()[0];
-  if (c.length > 3) {
-    if (this._polygonIndex!==false) {
-      var geom = e.feature.getGeometry();
-      var newGeom = new ol.geom.MultiPolygon([]);
-      for (var i=0, pi; pi=geom.getPolygon(i); i++) {
-        if (i===this._polygonIndex) {
-          pi.appendLinearRing(new ol.geom.LinearRing(c));
-          newGeom.appendPolygon(pi);
-        } else {
-          newGeom.appendPolygon(pi);
-        }
-      }
-      e.feature.setGeometry(newGeom);
+    )
+    this._select.getFeatures().clear()
+    if (!this._current) {
+      this.setActive(false)
+      this.setActive(true)
     } else {
-      this.getPolygon().appendLinearRing(new ol.geom.LinearRing(c));
+      this._select.getFeatures().push(this._current)
     }
   }
-  this.dispatchEvent({ type: 'modifyend', features: [ this._current ] });
-  // reset
-  this._feature = null;
-  this._select.getFeatures().clear();
-};
-/**
- * Function that is called when a geometry's coordinates are updated.
- * @param {Array<ol.coordinate>} coordinates
- * @param {ol.geom.Polygon} geometry
- * @return {ol.geom.Polygon}
- * @private
- */
-ol.interaction.DrawHole.prototype._geometryFn = function(coordinates, geometry) {
-  var coord = coordinates[0].pop();
-  if (!this.getPolygon() || this.getPolygon().intersectsCoordinate(coord)) {
-    this.lastOKCoord = [coord[0],coord[1]];
+  /**
+   * Stop drawing and add the sketch feature to the target feature.
+   * @param {ol.interaction.Draw.Event} e
+   * @private
+   */
+  _finishDrawing(e) {
+    // The feature is the hole
+    e.hole = e.feature
+    // Get the current feature
+    e.feature = this._select.getFeatures().item(0)
+    this.dispatchEvent({ type: 'modifystart', features: [this._current] })
+    // Create the hole
+    var c = e.hole.getGeometry().getCoordinates()[0]
+    if (c.length > 3) {
+      if (this._polygonIndex !== false) {
+        var geom = e.feature.getGeometry()
+        var newGeom = new ol.geom.MultiPolygon([])
+        for (var i = 0, pi; pi = geom.getPolygon(i); i++) {
+          if (i === this._polygonIndex) {
+            pi.appendLinearRing(new ol.geom.LinearRing(c))
+            newGeom.appendPolygon(pi)
+          } else {
+            newGeom.appendPolygon(pi)
+          }
+        }
+        e.feature.setGeometry(newGeom)
+      } else {
+        this.getPolygon().appendLinearRing(new ol.geom.LinearRing(c))
+      }
+    }
+    this.dispatchEvent({ type: 'modifyend', features: [this._current] })
+    // reset
+    this._feature = null
+    this._select.getFeatures().clear()
   }
-  coordinates[0].push([this.lastOKCoord[0],this.lastOKCoord[1]]);
-  if (geometry) {
-    geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
-  } else {
-    geometry = new ol.geom.Polygon(coordinates);
+  /**
+   * Function that is called when a geometry's coordinates are updated.
+   * @param {Array<ol.coordinate>} coordinates
+   * @param {ol.geom.Polygon} geometry
+   * @return {ol.geom.Polygon}
+   * @private
+   */
+  _geometryFn(coordinates, geometry) {
+    var coord = coordinates[0].pop()
+    if (!this.getPolygon() || this.getPolygon().intersectsCoordinate(coord)) {
+      this.lastOKCoord = [coord[0], coord[1]]
+    }
+    coordinates[0].push([this.lastOKCoord[0], this.lastOKCoord[1]])
+    if (geometry) {
+      geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])])
+    } else {
+      geometry = new ol.geom.Polygon(coordinates)
+    }
+    return geometry
   }
-  return geometry;
-};
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -36221,10 +36262,10 @@ ol.geom.MultiPolygon.prototype.scribbleFill = function (options) {
   var scribble = scribbles[0];
     var ls;
     for (i = 0; s = scribbles[i]; i++) {
-        ls = s.getLineStrings();
-        for (var k = 0; k < ls.length; k++) {
-            scribble.appendLineString(ls[k]);
-        }
+      ls = s.getLineStrings();
+      for (var k = 0; k < ls.length; k++) {
+        scribble.appendLineString(ls[k]);
+      }
     }
   return scribble;
 };
@@ -39352,10 +39393,10 @@ ol.style.Profile = class olstyleProfile extends ol.style.Style {
   constructor(options) {
     options = options || {}
     super({
-      renderer: this._render.bind(this),
       zIndex: options.zIndex,
       geometry: options.geometry
     })
+    this.setRenderer(this._render.bind(this))
     this.setStroke(options.stroke)
     this.setFill(options.fill)
     this.setScale(options.scale)
@@ -39697,73 +39738,75 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
  * @extends {ol.style.RegularShape}
  * @api
  */
-ol.style.Shadow = function(options) {
-  options = options || {};
-  this._fill = options.fill || new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
-  this._radius = options.radius;
-  this._blur = options.blur===0 ? 0 : options.blur || options.radius/3;
-  this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
-  if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0];
-  ol.style.RegularShape.call (this, { 
-    radius: options.radius, 
-    fill: options.fill,
-    displacement: options.displacement
-  });
-  // ol < 6
-  if (!this.setDisplacement) this.getImage();
-};
-ol.ext.inherits(ol.style.Shadow, ol.style.RegularShape);
-/**
- * Clones the style. 
- * @return {ol.style.Shadow}
- */
-ol.style.Shadow.prototype.clone = function() {
-  var s = new ol.style.Shadow({
-    fill: this._fill,
-    radius: this._radius,
-    blur: this._blur,
-    offsetX: this._offset[0],
-    offsetY: this._offset[1]
-  });
-  s.setScale(this.getScale());
-  s.setOpacity(this.getOpacity());
-  return s;
-};
-/**
- * Get the image icon.
- * @param {number} pixelRatio Pixel ratio.
- * @return {HTMLCanvasElement} Image or Canvas element.
- * @api
- */
-ol.style.Shadow.prototype.getImage = function(pixelratio) {
-  pixelratio = pixelratio || 1;
-  var radius = this._radius;
-  var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
-  // Remove the circle on the canvas
-  var context = (canvas.getContext('2d'));
-  context.save();
+ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
+  constructor(options) {
+    options = options || {};
+    super({
+      radius: options.radius,
+      fill: options.fill,
+      displacement: options.displacement
+    });
+    this._fill = options.fill || new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
+    this._radius = options.radius;
+    this._blur = options.blur === 0 ? 0 : options.blur || options.radius / 3;
+    this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
+    if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0];
+    // ol < 6
+    if (!this.setDisplacement)
+      this.getImage();
+  }
+  /**
+   * Clones the style.
+   * @return {ol.style.Shadow}
+   */
+  clone() {
+    var s = new ol.style.Shadow({
+      fill: this._fill,
+      radius: this._radius,
+      blur: this._blur,
+      offsetX: this._offset[0],
+      offsetY: this._offset[1]
+    });
+    s.setScale(this.getScale());
+    s.setOpacity(this.getOpacity());
+    return s;
+  }
+  /**
+   * Get the image icon.
+   * @param {number} pixelRatio Pixel ratio.
+   * @return {HTMLCanvasElement} Image or Canvas element.
+   * @api
+   */
+  getImage(pixelratio) {
+    pixelratio = pixelratio || 1;
+    var radius = this._radius;
+    var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
+    // Remove the circle on the canvas
+    var context = (canvas.getContext('2d'));
+    context.save();
     context.resetTransform();
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.beginPath();
-      context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
-      context.scale(1,0.5);
-      context.arc(radius, -radius, radius - this._blur, 0, 2 * Math.PI, false);
-      context.fillStyle = '#000';
-      context.shadowColor = this._fill.getColor();
-      context.shadowBlur = 0.7 * this._blur * pixelratio;
-      context.shadowOffsetX = 0;
-      context.shadowOffsetY = 1.5 * radius * pixelratio;
+    context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
+    context.scale(1, 0.5);
+    context.arc(radius, -radius, radius - this._blur, 0, 2 * Math.PI, false);
+    context.fillStyle = '#000';
+    context.shadowColor = this._fill.getColor();
+    context.shadowBlur = 0.7 * this._blur * pixelratio;
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 1.5 * radius * pixelratio;
     context.closePath();
     context.fill();
     context.shadowColor = 'transparent';
-  context.restore();
-  // Set anchor
-  if (!this.getDisplacement) {
-    var a = this.getAnchor();
-    a[0] = canvas.width /2 - this._offset[0];
-    a[1] = canvas.height /2 - this._offset[1];
+    context.restore();
+    // Set anchor
+    if (!this.getDisplacement) {
+      var a = this.getAnchor();
+      a[0] = canvas.width / 2 - this._offset[0];
+      a[1] = canvas.height / 2 - this._offset[1];
+    }
+    return canvas;
   }
-  return canvas;
 }
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 

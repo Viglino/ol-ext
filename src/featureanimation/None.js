@@ -13,17 +13,16 @@ import ol_featureAnimation from './FeatureAnimation'
  * @param {ol_featureAnimationShowOptions} options
  * 
  */
-var ol_featureAnimation_None = function(options)
-{	ol_featureAnimation.call(this, options);
-};
-ol_ext_inherits(ol_featureAnimation_None, ol_featureAnimation);
-
-/** Animate: do nothing during the laps time
-* @param {ol_featureAnimationEvent} e
-*/
-ol_featureAnimation_None.prototype.animate = function (e)
-{	
-	return (e.time <= this.duration_);
-};
+var ol_featureAnimation_None = class olfeatureAnimationNone extends ol_featureAnimation {
+	constructor(options) {
+		super(options);
+	}
+	/** Animate: do nothing during the laps time
+	* @param {ol_featureAnimationEvent} e
+	*/
+	animate(e) {
+		return (e.time <= this.duration_);
+	}
+}
 
 export default ol_featureAnimation_None

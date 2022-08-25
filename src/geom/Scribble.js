@@ -10,7 +10,7 @@ import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 import ol_geom_MultiPolygon from 'ol/geom/multipolygon'
 import '../render/Cspline'
-import {ol_coordinate_splitH} from "./GeomUtils";
+import { ol_coordinate_splitH } from "./GeomUtils";
 
 /**
  * Calculate a MultiPolyline to fill a Polygon with a scribble effect that appears hand-made
@@ -32,10 +32,10 @@ ol_geom_MultiPolygon.prototype.scribbleFill = function (options) {
   var scribble = scribbles[0];
     var ls;
     for (i = 0; s = scribbles[i]; i++) {
-        ls = s.getLineStrings();
-        for (var k = 0; k < ls.length; k++) {
-            scribble.appendLineString(ls[k]);
-        }
+      ls = s.getLineStrings();
+      for (var k = 0; k < ls.length; k++) {
+        scribble.appendLineString(ls[k]);
+      }
     }
   return scribble;
 };
