@@ -199,154 +199,166 @@ ol.ext.Ajax.prototype.send = function (url, data, options){
  *  @param {string} option.id filter id, only to use if you want to adress the filter directly or var the lib create one, if none create a unique id
  *  @param {string} option.color color interpolation filters, linear or sRGB
  */
-ol.ext.SVGFilter = function(options) {
-  options = options || {};
-  ol.Object.call(this);
-  if (!ol.ext.SVGFilter.prototype.svg) {
-    ol.ext.SVGFilter.prototype.svg = document.createElementNS( this.NS, 'svg' );
-    ol.ext.SVGFilter.prototype.svg.setAttribute('version','1.1');
-    ol.ext.SVGFilter.prototype.svg.setAttribute('width',0);
-    ol.ext.SVGFilter.prototype.svg.setAttribute('height',0);
-    ol.ext.SVGFilter.prototype.svg.style.position = 'absolute';
-    /* Firefox doesn't process hidden svg
-    ol.ext.SVGFilter.prototype.svg.style.display = 'none';
-    */
-    document.body.appendChild( ol.ext.SVGFilter.prototype.svg );
+ol.ext.SVGFilter = class olextSVGFilter extends ol.Object {
+  constructor(options) {
+    options = options || {};
+    super();
+    if (!ol.ext.SVGFilter.prototype.svg) {
+      ol.ext.SVGFilter.prototype.svg = document.createElementNS(this.NS, 'svg');
+      ol.ext.SVGFilter.prototype.svg.setAttribute('version', '1.1');
+      ol.ext.SVGFilter.prototype.svg.setAttribute('width', 0);
+      ol.ext.SVGFilter.prototype.svg.setAttribute('height', 0);
+      ol.ext.SVGFilter.prototype.svg.style.position = 'absolute';
+      /* Firefox doesn't process hidden svg
+      ol.ext.SVGFilter.prototype.svg.style.display = 'none';
+      */
+      document.body.appendChild(ol.ext.SVGFilter.prototype.svg);
+    }
+    this.element = document.createElementNS(this.NS, 'filter');
+    this._id = options.id || '_ol_SVGFilter_' + (ol.ext.SVGFilter.prototype._id++);
+    this.element.setAttribute('id', this._id);
+    if (options.color)
+      this.element.setAttribute('color-interpolation-filters', options.color);
+    if (options.operation)
+      this.addOperation(options.operation);
+    ol.ext.SVGFilter.prototype.svg.appendChild(this.element);
   }
-  this.element = document.createElementNS( this.NS, 'filter' );
-  this._id = options.id || '_ol_SVGFilter_' + (ol.ext.SVGFilter.prototype._id++);
-  this.element.setAttribute( 'id', this._id );
-  if (options.color) this.element.setAttribute( 'color-interpolation-filters', options.color );
-  if (options.operation) this.addOperation(options.operation);
-  ol.ext.SVGFilter.prototype.svg.appendChild( this.element );
-};
-ol.ext.inherits(ol.ext.SVGFilter, ol.Object);
-ol.ext.SVGFilter.prototype.NS = "http://www.w3.org/2000/svg";
-ol.ext.SVGFilter.prototype.svg = null;
-ol.ext.SVGFilter.prototype._id = 0;
-/** Get filter ID
- * @return {string}
- */
-ol.ext.SVGFilter.prototype.getId = function() {
-  return this._id;
-};
-/** Remove from DOM
- */
-ol.ext.SVGFilter.prototype.remove = function() {
-  this.element.remove();
-};
-/** Add a new operation
- * @param {ol.ext.SVGOperation} operation
- */
-ol.ext.SVGFilter.prototype.addOperation = function(operation) {
-  if (operation instanceof Array) {
-    operation.forEach(function(o) { this.addOperation(o) }.bind(this));
-  } else {
-    if (!(operation instanceof ol.ext.SVGOperation)) operation = new ol.ext.SVGOperation(operation);
-    this.element.appendChild( operation.geElement() );
+  /** Get filter ID
+   * @return {string}
+   */
+  getId() {
+    return this._id;
   }
-};
-/** Add a grayscale operation
- * @param {number} value
- */
-ol.ext.SVGFilter.prototype.grayscale = function(value) {
-  this.addOperation({
-    feoperation: 'feColorMatrix',
-    type: 'saturate',
-    values: value || 0
-  });
-};
-/** Add a luminanceToAlpha operation
- * @param {*} options
- *  @param {number} options.gamma enhance gamma, default 0
- */
-ol.ext.SVGFilter.prototype.luminanceToAlpha = function(options) {
-  options = options || {};
-  this.addOperation({
-    feoperation: 'feColorMatrix',
-    type: 'luminanceToAlpha'
-  });
-  if (options.gamma) {
+  /** Remove from DOM
+   */
+  remove() {
+    this.element.remove();
+  }
+  /** Add a new operation
+   * @param {ol.ext.SVGOperation} operation
+   */
+  addOperation(operation) {
+    if (operation instanceof Array) {
+      operation.forEach(function (o) { this.addOperation(o); }.bind(this));
+    } else {
+      if (!(operation instanceof ol.ext.SVGOperation))
+        operation = new ol.ext.SVGOperation(operation);
+      this.element.appendChild(operation.geElement());
+    }
+  }
+  /** Add a grayscale operation
+   * @param {number} value
+   */
+  grayscale(value) {
     this.addOperation({
-      feoperation: 'feComponentTransfer',
-      operations: [{
-        feoperation: 'feFuncA',
-        type: 'gamma', 
-        amplitude: options.gamma,
-        exponent: 1,
-        offset: 0
-      }]
+      feoperation: 'feColorMatrix',
+      type: 'saturate',
+      values: value || 0
     });
   }
-};
-ol.ext.SVGFilter.prototype.applyTo = function(img) {
-  var canvas = document.createElement('CANVAS');
-  canvas.width = img.naturalWidth || img.width;
-  canvas.height = img.naturalHeight || img.height;
-  canvas.getContext('2d').filter = 'url(#'+this.getId()+')';
-  canvas.getContext('2d').drawImage(img, 0, 0);
-  return canvas;
-};
+  /** Add a luminanceToAlpha operation
+   * @param {*} options
+   *  @param {number} options.gamma enhance gamma, default 0
+   */
+  luminanceToAlpha(options) {
+    options = options || {};
+    this.addOperation({
+      feoperation: 'feColorMatrix',
+      type: 'luminanceToAlpha'
+    });
+    if (options.gamma) {
+      this.addOperation({
+        feoperation: 'feComponentTransfer',
+        operations: [{
+          feoperation: 'feFuncA',
+          type: 'gamma',
+          amplitude: options.gamma,
+          exponent: 1,
+          offset: 0
+        }]
+      });
+    }
+  }
+  applyTo(img) {
+    var canvas = document.createElement('CANVAS');
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    canvas.getContext('2d').filter = 'url(#' + this.getId() + ')';
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    return canvas;
+  }
+}
+ol.ext.SVGFilter.prototype.NS = 'http://www.w3.org/2000/svg';
+ol.ext.SVGFilter.prototype.svg = null;
+ol.ext.SVGFilter.prototype._id = 0;
 
+/** 
+ * @typedef {Object} svgOperation
+ * @property {string} attributes.feoperation filter primitive tag name
+ * @property {Array<ol.ext.SVGOperation>} attributes.operations a list of operations
+ */
 /** SVG filter 
- * @param {string | *} attributes a list of attributes or fe operation
- *  @param {string} attributes.feoperation filter primitive tag name
+ * @param {string | svgOperation} attributes the fe operation or a list of operations
  */
-ol.ext.SVGOperation = function(attributes) {
-  if (typeof(attributes)==='string') attributes = { feoperation: attributes };
-  if (!attributes || !attributes.feoperation) {
-    console.error('[SVGOperation]: no operation defined.')
-    return;
+ol.ext.SVGOperation = class olextSVGOperation extends ol.Object {
+  constructor(attributes) {
+    if (typeof (attributes) === 'string') attributes = { feoperation: attributes };
+    if (!attributes || !attributes.feoperation) {
+      console.error('[SVGOperation]: no operation defined.');
+      return;
+    }
+    super();
+    this._name = attributes.feoperation;
+    this.element = document.createElementNS(ol.ext.SVGOperation.NS || 'http://www.w3.org/2000/svg', this._name);
+    this.setProperties(attributes);
+    if (attributes.operations instanceof Array) {
+      this.appendChild(attributes.operations);
+    }
   }
-  ol.Object.call(this);
-  this._name = attributes.feoperation;
-  this.element = document.createElementNS( this.NS, this._name );
-  this.setProperties(attributes);
-  if (attributes.operations instanceof Array) this.appendChild(attributes.operations);
-};
-ol.ext.inherits(ol.ext.SVGOperation, ol.Object);
-ol.ext.SVGOperation.prototype.NS = "http://www.w3.org/2000/svg";
-/** Get filter name
- * @return {string}
- */
-ol.ext.SVGOperation.prototype.getName = function() {
-  return this._name;
-};
-/** Set Filter attribute
- * @param {*} attributes
- */
-ol.ext.SVGOperation.prototype.set = function(k, val) {
-  if (!/^feoperation$|^operations$/.test(k)) {
-    ol.Object.prototype.set.call(this, k, val);
-    this.element.setAttribute( k, val );
+  /** Get filter name
+   * @return {string}
+   */
+  getName() {
+    return this._name;
   }
-};
-/** Set Filter attributes
- * @param {*} attributes
- */
-ol.ext.SVGOperation.prototype.setProperties = function(attributes) {
-  attributes = attributes || {};
-  for (var k in attributes) {
-    this.set(k, attributes[k])
+  /** Set Filter attribute
+   * @param {*} attributes
+   */
+  set(k, val) {
+    if (!/^feoperation$|^operations$/.test(k)) {
+      ol.Object.prototype.set.call(this, k, val);
+      this.element.setAttribute(k, val);
+    }
   }
-};
-/** Get SVG  element
- * @return {Element}
- */
-ol.ext.SVGOperation.prototype.geElement = function() {
-  return this.element;
-};
-/** Append a new operation
- * @param {ol.ext.SVGOperation} operation
- */
-ol.ext.SVGOperation.prototype.appendChild = function(operation) {
-  if (operation instanceof Array) {
-    operation.forEach(function(o) { this.appendChild(o) }.bind(this));
-  } else {
-    if (!(operation instanceof ol.ext.SVGOperation)) operation = new ol.ext.SVGOperation(operation);
-    this.element.appendChild( operation.geElement() );
+  /** Set Filter attributes
+   * @param {*} attributes
+   */
+  setProperties(attributes) {
+    attributes = attributes || {};
+    for (var k in attributes) {
+      this.set(k, attributes[k]);
+    }
   }
-};
+  /** Get SVG  element
+   * @return {Element}
+   */
+  geElement() {
+    return this.element;
+  }
+  /** Append a new operation
+   * @param {ol.ext.SVGOperation} operation
+   */
+  appendChild(operation) {
+    if (operation instanceof Array) {
+      operation.forEach(function (o) { this.appendChild(o); }.bind(this));
+    } else {
+      if (!(operation instanceof ol.ext.SVGOperation)) {
+        operation = new ol.ext.SVGOperation(operation);
+      }
+      this.element.appendChild(operation.geElement());
+    }
+  }
+}
 
 /** Text file reader (chunk by chunk, line by line). 
  * Large files are read in chunks and returned line by line 
@@ -1908,44 +1920,45 @@ ol.ext.inherits(ol.ext.SVGFilter.Laplacian, ol.ext.SVGFilter);
  *  @param {number} [options.scale=1]
  *  @param {number} [options.ligth=50] light option. 0: darker, 100: lighter
  */
-ol.ext.SVGFilter.Paper = function(options) {
-  options = options || {};
-  ol.ext.SVGFilter.call(this, { 
-    id: options.id
-  });
-  this.addOperation({
-    feoperation: 'feTurbulence',
-    numOctaves: 4,
-    seed: 0,
-    type: 'fractalNoise',
-    baseFrequency: 0.2 / (options.scale || 1)
-  });
-  this.addOperation({
-    feoperation: 'feDiffuseLighting',
-    'lighting-color': 'rgb(255,255,255)',
-    surfaceScale: 1.5,
-    kernelUnitLength: 0.01,
-    diffuseConstant: 1.1000000000000001,
-    result: 'paper',
-    operations: [{
-      feoperation: 'feDistantLight',
-      elevation: options.light || 50, 
-      azimuth: 75
-    }]
-  });
-  this.addOperation({
-    feoperation: 'feBlend',
-    in: 'SourceGraphic',
-    in2: 'paper',
-    mode: 'multiply'
-  })
-};
-ol.ext.inherits(ol.ext.SVGFilter.Paper, ol.ext.SVGFilter);
-/** Set filter light
- * @param {number} light light option. 0: darker, 100: lighter
- */
-ol.ext.SVGFilter.Paper.prototype.setLight = function(light) {
-  this.element.querySelector('feDistantLight').setAttribute('elevation', light);
+ol.ext.SVGFilter.Paper = class olextSVGFilterPaper extends ol.ext.SVGFilter {
+  constructor(options) {
+    options = options || {};
+    super({
+      id: options.id
+    });
+    this.addOperation({
+      feoperation: 'feTurbulence',
+      numOctaves: 4,
+      seed: 0,
+      type: 'fractalNoise',
+      baseFrequency: 0.2 / (options.scale || 1)
+    });
+    this.addOperation({
+      feoperation: 'feDiffuseLighting',
+      'lighting-color': 'rgb(255,255,255)',
+      surfaceScale: 1.5,
+      kernelUnitLength: 0.01,
+      diffuseConstant: 1.1000000000000001,
+      result: 'paper',
+      operations: [{
+        feoperation: 'feDistantLight',
+        elevation: options.light || 50,
+        azimuth: 75
+      }]
+    });
+    this.addOperation({
+      feoperation: 'feBlend',
+      in: 'SourceGraphic',
+      in2: 'paper',
+      mode: 'multiply'
+    });
+  }
+  /** Set filter light
+   * @param {number} light light option. 0: darker, 100: lighter
+   */
+  setLight(light) {
+    this.element.querySelector('feDistantLight').setAttribute('elevation', light);
+  }
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -5414,8 +5427,8 @@ ol.control.LayerSwitcher = function(options) {
   var self = this;
   this.dcount = 0;
   this.show_progress = options.show_progress;
-  this.oninfo = (typeof (options.oninfo) == "function" ? options.oninfo: null);
-  this.onextent = (typeof (options.onextent) == "function" ? options.onextent: null);
+  this.oninfo = (typeof (options.oninfo) == 'function' ? options.oninfo: null);
+  this.onextent = (typeof (options.onextent) == 'function' ? options.onextent: null);
   this.hasextent = options.extent || options.onextent;
   this.hastrash = options.trash;
   this.reordering = (options.reordering!==false);
@@ -10830,323 +10843,344 @@ ol.control.Overview.prototype.setView = function(e){
  *  @param {boolean} options.visible hide the button on the map, default true
  *  @param {boolean} options.hidden hide the button on the map, default false DEPRECATED: use visible instead
  *  @param {function} options.onclick a function called when control is clicked
-*/
-ol.control.Permalink = function(opt_options) {
-  var options = opt_options || {};
-  var self = this;
-  var button = document.createElement('button');
-  this.replaceState_ = (options.urlReplace!==false);
-  this.fixed_ = options.fixed || 6;
-  this.hash_ = options.anchor ? "#" : "?";
-  this._localStorage = options.localStorage;
-  if (!this._localStorage) {
-    try {
-      localStorage.removeItem('ol@permalink');
-    } catch(e) { console.warn('Failed to access localStorage...'); }
-  }
-  function linkto() {
-    if (typeof(options.onclick) == 'function') options.onclick(self.getLink());
-    else self.setUrlReplace(!self.replaceState_);
-  }
-  button.addEventListener('click', linkto, false);
-  button.addEventListener('touchstart', linkto, false);
-  var element = document.createElement('div');
-  element.className = (options.className || "ol-permalink") + " ol-unselectable ol-control";
-  element.appendChild(button);
-  if (options.hidden || options.visible===false) ol.ext.element.hide(element);
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.set('geohash', options.geohash);
-  this.set('initial', false);
-  this.on ('change', this.viewChange_.bind(this));
-  // Save search params
-  this.search_ = {};
-  var init = {};
-  var hash = document.location.hash || document.location.search || '';
-//  console.log('hash', hash)
-  if (this.replaceState_ && !hash && this._localStorage) {
-    try {
-      hash = localStorage['ol@permalink'];
-    } catch(e) { console.warn('Failed to access localStorage...'); }
-  }
-  if (hash) {
-    hash = hash.replace(/(^#|^\?)/,"").split("&");
-    for (var i=0; i<hash.length;  i++) {
-      var t = hash[i].split("=");
-      switch(t[0]) {
-        case 'lon':
-        case 'lat':
-        case 'z': 
-        case 'r': {
-          init[t[0]] = t[1];
-          break
+ */
+ol.control.Permalink = class olcontrolPermalink extends ol.control.Control {
+  constructor(opt_options) {
+    var options = opt_options || {}
+    var element = document.createElement('div')
+    super({
+      element: element,
+      target: options.target
+    })
+    var self = this
+    var button = document.createElement('button')
+    this.replaceState_ = (options.urlReplace !== false)
+    this.fixed_ = options.fixed || 6
+    this.hash_ = options.anchor ? "#" : "?"
+    this._localStorage = options.localStorage
+    if (!this._localStorage) {
+      try {
+        localStorage.removeItem('ol@permalink')
+      } catch (e) { console.warn('Failed to access localStorage...')} 
+    }
+    function linkto() {
+      if (typeof (options.onclick) == 'function'){
+        options.onclick(self.getLink())
+      } else {
+        self.setUrlReplace(!self.replaceState_)
+      }
+    }
+    button.addEventListener('click', linkto, false)
+    button.addEventListener('touchstart', linkto, false)
+    element.className = (options.className || "ol-permalink") + " ol-unselectable ol-control"
+    element.appendChild(button)
+    if (options.hidden || options.visible === false) ol.ext.element.hide(element)
+    this.set('geohash', options.geohash)
+    this.set('initial', false)
+    this.on('change', this.viewChange_.bind(this))
+    // Save search params
+    this.search_ = {}
+    var init = {}
+    var hash = document.location.hash || document.location.search || ''
+    //  console.log('hash', hash)
+    if (this.replaceState_ && !hash && this._localStorage) {
+      try {
+        hash = localStorage['ol@permalink']
+      } catch (e) { console.warn('Failed to access localStorage...')} 
+    }
+    if (hash) {
+      hash = hash.replace(/(^#|^\?)/, "").split("&")
+      for (var i = 0; i < hash.length; i++) {
+        var t = hash[i].split("=")
+        switch (t[0]) {
+          case 'lon':
+          case 'lat':
+          case 'z':
+          case 'r': {
+            init[t[0]] = t[1]
+            break
+          }
+          case 'gh': {
+            var ghash = t[1].split('-')
+            var lonlat = ol.geohash.toLonLat(ghash[0])
+            init.lon = lonlat[0]
+            init.lat = lonlat[1]
+            init.z = ghash[1]
+            break
+          }
+          case 'l': break
+          default: this.search_[t[0]] = t[1]
         }
-        case 'gh': {
-          var ghash = t[1].split('-');
-          var lonlat = ol.geohash.toLonLat(ghash[0]);
-          init.lon = lonlat[0];
-          init.lat = lonlat[1];
-          init.z = ghash[1];
-          break;
-        }
-        case 'l': break;
-        default: this.search_[t[0]] = t[1];
       }
     }
+    if (init.hasOwnProperty('lon')) {
+      this.set('initial', init)
+    }
+    // Decode permalink
+    if (this.replaceState_) this.setPosition()
   }
-  if (init.hasOwnProperty('lon')) {
-    this.set('initial', init);
+  /**
+   * Get the initial position passed by the url
+   */
+  getInitialPosition() {
+    return this.get('initial')
   }
-  // Decode permalink
-  if (this.replaceState_) this.setPosition();
-};
-ol.ext.inherits(ol.control.Permalink, ol.control.Control);
-/**
- * Get the initial position passed by the url
- */
-ol.control.Permalink.prototype.getInitialPosition = function() {
-  return this.get('initial');
-};
-/**
- * Set the map instance the control associated with.
- * @param {ol.Map} map The map instance.
- */
-ol.control.Permalink.prototype.setMap = function(map) {
-  if (this._listener) {
-    ol.Observable.unByKey(this._listener.change);
-    ol.Observable.unByKey(this._listener.moveend);
-  }
-  this._listener = null;
-  ol.control.Control.prototype.setMap.call(this, map);
-  // Get change 
-  if (map) {
-    this._listener = {
-      change: map.getLayerGroup().on('change', this.layerChange_.bind(this)),
-      moveend: map.on('moveend', this.viewChange_.bind(this))
-    };
-    this.setPosition();
-  }
-};
-/** Get layer given a permalink name (permalink propertie in the layer)
-*	@param {string} the permalink to search for
-*	@param {Array<ol.layer>|undefined} an array of layer to search in
-*	@return {ol.layer|false}
-*/
-ol.control.Permalink.prototype.getLayerByLink =  function (id, layers) {
-  if (!layers && this.getMap()) layers = this.getMap().getLayers().getArray();
-  for (var i=0; i<layers.length; i++) {
-    if (layers[i].get('permalink') == id) return layers[i];
-    // Layer Group
-    if (layers[i].getLayers) {
-      var li = this.getLayerByLink ( id, layers[i].getLayers().getArray() );
-      if (li) return li;
+  /**
+   * Set the map instance the control associated with.
+   * @param {ol.Map} map The map instance.
+   */
+  setMap(map) {
+    if (this._listener) {
+      ol.Observable.unByKey(this._listener.change)
+      ol.Observable.unByKey(this._listener.moveend)
+    }
+    this._listener = null
+    super.setMap.call(this, map)
+    // Get change 
+    if (map) {
+      this._listener = {
+        change: map.getLayerGroup().on('change', this.layerChange_.bind(this)),
+        moveend: map.on('moveend', this.viewChange_.bind(this))
+      }
+      this.setPosition()
     }
   }
-  return false;
-};
-/** Set coordinates as geohash
- * @param {boolean}
- */
-ol.control.Permalink.prototype.setGeohash = function(b) {
-  this.set('geohash', b);
-  this.setUrlParam();
-};
-/** Set map position according to the current link 
- * @param {boolean} [force=false] if true set the position even if urlReplace is disabled
- */
-ol.control.Permalink.prototype.setPosition = function(force) {
-  var map = this.getMap();
-  if (!map) return;
-  var hash = (this.replaceState_ || force) ? document.location.hash || document.location.search : '';
-  if (!hash && this._localStorage) {
-    try {
-      hash = localStorage['ol@permalink'];
-    } catch(e) { console.warn('Failed to access localStorage...'); }
-  }
-  if (!hash) return;
-  var i, t, param = {};
-  hash = hash.replace(/(^#|^\?)/,"").split("&");
-  for (i=0; i<hash.length;  i++) {
-    t = hash[i].split("=");
-    param[t[0]] = t[1];
-  }
-  if (param.gh) {
-    var ghash = param.gh.split('-');
-    var lonlat = ol.geohash.toLonLat(ghash[0] );
-    param.lon = lonlat[0];
-    param.lat = lonlat[1];
-    param.z = ghash[1];
-  }
-  var c = ol.proj.transform([Number(param.lon),Number(param.lat)], 'EPSG:4326', map.getView().getProjection());
-  if (c[0] && c[1]) map.getView().setCenter(c);
-  if (param.z) map.getView().setZoom(Number(param.z));
-  if (param.r) map.getView().setRotation(Number(param.r));
-  // Reset layers visibility
-  function resetLayers(layers) {
-    if (!layers) layers = map.getLayers().getArray();
-    for (var i=0; i<layers.length; i++){
-      if (layers[i].get('permalink')) {
-        layers[i].setVisible(false);
-        // console.log("hide "+layers[i].get('permalink'));
-      }
-      if (layers[i].getLayers) {
-        resetLayers (layers[i].getLayers().getArray());
-      }
-    }
-  }
-  if (param.l) {
-    resetLayers();
-    var l = param.l.split("|");
-    for (i=0; i<l.length; i++) {
-      t = l[i].split(":");
-      var li = this.getLayerByLink(t[0]);
-      var op = Number(t[1]);
-      if (li) {
-        li.setOpacity(op);
-        li.setVisible(true);
-      }
-    }
-  }
-};
-/**
- * Get the parameters added to the url. The object can be changed to add new values.
- * @return {Object} a key value object added to the url as &key=value
- * @api stable
- */
-ol.control.Permalink.prototype.getUrlParams = function() {
-  return this.search_;
-};
-/**
- * Set a parameter to the url.
- * @param {string} key the key parameter
- * @param {string|undefined} value the parameter's value, if undefined or empty string remove the parameter
- * @api stable
- */
-ol.control.Permalink.prototype.setUrlParam = function(key, value) {
-  if (key) {
-    if (value===undefined || value==='') delete (this.search_[encodeURIComponent(key)])
-    else this.search_[encodeURIComponent(key)] = encodeURIComponent(value);
-  }
-  this.viewChange_();
-};
-/**
- * Get a parameter url.
- * @param {string} key the key parameter
- * @return {string} the parameter's value or empty string if not set
- * @api stable
- */
-ol.control.Permalink.prototype.getUrlParam = function(key) {
-  return decodeURIComponent (this.search_[encodeURIComponent(key)] || '');
-};
-/**
- * Has a parameter url.
- * @param {string} key the key parameter
- * @return {boolean} 
- * @api stable
- */
-ol.control.Permalink.prototype.hasUrlParam = function(key) {
-  return this.search_.hasOwnProperty(encodeURIComponent(key));
-};
-/** Get the permalink
- * @param {boolean|string} [search=false] false: return full link | true: return the search string only | 'position': return position string
- * @return {permalink}
- */
-ol.control.Permalink.prototype.getLink = function(search) {
-  var map = this.getMap();
-  var c = ol.proj.transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326');
-  var z = Math.round(map.getView().getZoom()*10)/10;
-  var r = map.getView().getRotation();
-  var l = this.layerStr_;
-  // Change anchor
-  var anchor = (r ? "&r="+(Math.round(r*10000)/10000) : "") + (l ? "&l="+l : "");
-  if (this.get('geohash')) {
-    var ghash = ol.geohash.fromLonLat(c,8);
-    anchor = "gh=" + ghash + '-' + z + anchor;
-  } else {
-    anchor = "lon="+c[0].toFixed(this.fixed_)+"&lat="+c[1].toFixed(this.fixed_)+"&z="+z + anchor;
-  }
-  if (search === 'position') return anchor;
-  // Add other params
-  for (var i in this.search_) {
-    anchor += "&" + i + (typeof(this.search_[i])!=='undefined' ? "="+this.search_[i] : '');
-  }
-  if (search) return anchor;
-  //return document.location.origin+document.location.pathname+this.hash_+anchor;
-  return document.location.protocol+"//"+document.location.host+document.location.pathname+this.hash_+anchor;
-};
-/** Check if urlreplace is on
- * @return {boolean}
- */
-ol.control.Permalink.prototype.getUrlReplace = function() {
-  return this.replaceState_;
-};
-/** Enable / disable url replacement (replaceSate)
- *	@param {bool}
- */
-ol.control.Permalink.prototype.setUrlReplace = function(replace) {
-  try {
-    this.replaceState_ = replace;
-    if (!replace) {
-      var s = "";
-      for (var i in this.search_) {
-        s += (s==""?"?":"&") + i + (typeof(this.search_[i]) !== 'undefined' ? "="+this.search_[i] : '');
-      }
-      window.history.replaceState (null,null, document.location.origin+document.location.pathname+s);
-    }
-    else window.history.replaceState (null,null, this.getLink());
-  } catch(e) {/* ok */}
-  /*
-  if (this._localStorage) {
-    localStorage['ol@permalink'] = this.getLink(true);
-  }
+  /** Get layer given a permalink name (permalink propertie in the layer)
+  *	@param {string} the permalink to search for
+  *	@param {Array<ol.layer>|undefined} an array of layer to search in
+  *	@return {ol.layer|false}
   */
-};
-/**
- * On view change refresh link
- * @param {ol.event} The map instance.
- * @private
- */
-ol.control.Permalink.prototype.viewChange_ = function() {
-  try {
-    if (this.replaceState_) window.history.replaceState (null,null, this.getLink());
-  } catch(e) {/* ok */}
-  if (this._localStorage) {
-    try {
-      localStorage['ol@permalink'] = this.getLink(this._localStorage);
-    } catch(e) { console.warn('Failed to access localStorage...'); }
-  }
-};
-/**
- * Layer change refresh link
- * @private
- */
-ol.control.Permalink.prototype.layerChange_ = function() {
-  // Prevent multiple change at the same time
-  if (this._tout) {
-    clearTimeout(this._tout);
-    this._tout = null;
-  }
-  this._tout = setTimeout(function() {
-    this._tout = null;
-    // Get layers
-    var l = "";
-    function getLayers(layers) {
-      for (var i=0; i<layers.length; i++) {
-        if (layers[i].getVisible() && layers[i].get("permalink")) {
-          if (l) l += "|";
-          l += layers[i].get("permalink")+":"+layers[i].get("opacity");
-        }
-        // Layer Group
-        if (layers[i].getLayers) getLayers(layers[i].getLayers().getArray());
+  getLayerByLink(id, layers) {
+    if (!layers && this.getMap())
+      layers = this.getMap().getLayers().getArray()
+    for (var i = 0; i < layers.length; i++) {
+      if (layers[i].get('permalink') == id)
+        return layers[i]
+      // Layer Group
+      if (layers[i].getLayers) {
+        var li = this.getLayerByLink(id, layers[i].getLayers().getArray())
+        if (li)
+          return li
       }
     }
-    getLayers(this.getMap().getLayers().getArray());
-    this.layerStr_ = l;
-    this.viewChange_();
-  }.bind(this), 200);
-};
+    return false
+  }
+  /** Set coordinates as geohash
+   * @param {boolean}
+   */
+  setGeohash(b) {
+    this.set('geohash', b)
+    this.setUrlParam()
+  }
+  /** Set map position according to the current link
+   * @param {boolean} [force=false] if true set the position even if urlReplace is disabled
+   */
+  setPosition(force) {
+    var map = this.getMap()
+    if (!map)
+      return
+    var hash = (this.replaceState_ || force) ? document.location.hash || document.location.search : ''
+    if (!hash && this._localStorage) {
+      try {
+        hash = localStorage['ol@permalink']
+      } catch (e) { console.warn('Failed to access localStorage...')} 
+    }
+    if (!hash)
+      return
+    var i, t, param = {}
+    hash = hash.replace(/(^#|^\?)/, "").split("&")
+    for (i = 0; i < hash.length; i++) {
+      t = hash[i].split("=")
+      param[t[0]] = t[1]
+    }
+    if (param.gh) {
+      var ghash = param.gh.split('-')
+      var lonlat = ol.geohash.toLonLat(ghash[0])
+      param.lon = lonlat[0]
+      param.lat = lonlat[1]
+      param.z = ghash[1]
+    }
+    var c = ol.proj.transform([Number(param.lon), Number(param.lat)], 'EPSG:4326', map.getView().getProjection())
+    if (c[0] && c[1])
+      map.getView().setCenter(c)
+    if (param.z)
+      map.getView().setZoom(Number(param.z))
+    if (param.r)
+      map.getView().setRotation(Number(param.r))
+    // Reset layers visibility
+    function resetLayers(layers) {
+      if (!layers)
+        layers = map.getLayers().getArray()
+      for (var i = 0; i < layers.length; i++) {
+        if (layers[i].get('permalink')) {
+          layers[i].setVisible(false)
+          // console.log("hide "+layers[i].get('permalink'));
+        }
+        if (layers[i].getLayers) {
+          resetLayers(layers[i].getLayers().getArray())
+        }
+      }
+    }
+    if (param.l) {
+      resetLayers()
+      var l = param.l.split("|")
+      for (i = 0; i < l.length; i++) {
+        t = l[i].split(":")
+        var li = this.getLayerByLink(t[0])
+        var op = Number(t[1])
+        if (li) {
+          li.setOpacity(op)
+          li.setVisible(true)
+        }
+      }
+    }
+  }
+  /**
+   * Get the parameters added to the url. The object can be changed to add new values.
+   * @return {Object} a key value object added to the url as &key=value
+   * @api stable
+   */
+  getUrlParams() {
+    return this.search_
+  }
+  /**
+   * Set a parameter to the url.
+   * @param {string} key the key parameter
+   * @param {string|undefined} value the parameter's value, if undefined or empty string remove the parameter
+   * @api stable
+   */
+  setUrlParam(key, value) {
+    if (key) {
+      if (value === undefined || value === '')
+        delete (this.search_[encodeURIComponent(key)])
+      else
+        this.search_[encodeURIComponent(key)] = encodeURIComponent(value)
+    }
+    this.viewChange_()
+  }
+  /**
+   * Get a parameter url.
+   * @param {string} key the key parameter
+   * @return {string} the parameter's value or empty string if not set
+   * @api stable
+   */
+  getUrlParam(key) {
+    return decodeURIComponent(this.search_[encodeURIComponent(key)] || '')
+  }
+  /**
+   * Has a parameter url.
+   * @param {string} key the key parameter
+   * @return {boolean}
+   * @api stable
+   */
+  hasUrlParam(key) {
+    return this.search_.hasOwnProperty(encodeURIComponent(key))
+  }
+  /** Get the permalink
+   * @param {boolean|string} [search=false] false: return full link | true: return the search string only | 'position': return position string
+   * @return {permalink}
+   */
+  getLink(search) {
+    var map = this.getMap()
+    var c = ol.proj.transform(map.getView().getCenter(), map.getView().getProjection(), 'EPSG:4326')
+    var z = Math.round(map.getView().getZoom() * 10) / 10
+    var r = map.getView().getRotation()
+    var l = this.layerStr_
+    // Change anchor
+    var anchor = (r ? "&r=" + (Math.round(r * 10000) / 10000) : "") + (l ? "&l=" + l : "")
+    if (this.get('geohash')) {
+      var ghash = ol.geohash.fromLonLat(c, 8)
+      anchor = "gh=" + ghash + '-' + z + anchor
+    } else {
+      anchor = "lon=" + c[0].toFixed(this.fixed_) + "&lat=" + c[1].toFixed(this.fixed_) + "&z=" + z + anchor
+    }
+    if (search === 'position')
+      return anchor
+    // Add other params
+    for (var i in this.search_) {
+      anchor += "&" + i + (typeof (this.search_[i]) !== 'undefined' ? "=" + this.search_[i] : '')
+    }
+    if (search)
+      return anchor
+    //return document.location.origin+document.location.pathname+this.hash_+anchor;
+    return document.location.protocol + "//" + document.location.host + document.location.pathname + this.hash_ + anchor
+  }
+  /** Check if urlreplace is on
+   * @return {boolean}
+   */
+  getUrlReplace() {
+    return this.replaceState_
+  }
+  /** Enable / disable url replacement (replaceSate)
+   *	@param {bool}
+   */
+  setUrlReplace(replace) {
+    try {
+      this.replaceState_ = replace
+      if (!replace) {
+        var s = ""
+        for (var i in this.search_) {
+          s += (s == "" ? "?" : "&") + i + (typeof (this.search_[i]) !== 'undefined' ? "=" + this.search_[i] : '')
+        }
+        window.history.replaceState(null, null, document.location.origin + document.location.pathname + s)
+      }
+      else
+        window.history.replaceState(null, null, this.getLink())
+    } catch (e) { /* ok */ }
+    /*
+    if (this._localStorage) {
+      localStorage['ol@permalink'] = this.getLink(true);
+    }
+    */
+  }
+  /**
+   * On view change refresh link
+   * @param {ol.event} The map instance.
+   * @private
+   */
+  viewChange_() {
+    try {
+      if (this.replaceState_)
+        window.history.replaceState(null, null, this.getLink())
+    } catch (e) { /* ok */ }
+    if (this._localStorage) {
+      try {
+        localStorage['ol@permalink'] = this.getLink(this._localStorage)
+      } catch (e) { console.warn('Failed to access localStorage...')} 
+    }
+  }
+  /**
+   * Layer change refresh link
+   * @private
+   */
+  layerChange_() {
+    // Prevent multiple change at the same time
+    if (this._tout) {
+      clearTimeout(this._tout)
+      this._tout = null
+    }
+    this._tout = setTimeout(function () {
+      this._tout = null
+      // Get layers
+      var l = ""
+      function getLayers(layers) {
+        for (var i = 0; i < layers.length; i++) {
+          if (layers[i].getVisible() && layers[i].get("permalink")) {
+            if (l)
+              l += "|"
+            l += layers[i].get("permalink") + ":" + layers[i].get("opacity")
+          }
+          // Layer Group
+          if (layers[i].getLayers)
+            getLayers(layers[i].getLayers().getArray())
+        }
+      }
+      getLayers(this.getMap().getLayers().getArray())
+      this.layerStr_ = l
+      this.viewChange_()
+    }.bind(this), 200)
+  }
+}
 
 /*
   Copyright (c) 2019 Jean-Marc VIGLINO,
@@ -18997,45 +19031,48 @@ ol.filter = {};
  * @param {Object} options 
  *  @param {boolean} [options.active]
  */
-ol.filter.Base = function(options) {
-  ol.Object.call(this, options);
-  // Array of postcompose listener
-  this._listener = [];
-  if (options && options.active===false) this.set('active', false);
-  else this.set('active', true);
-};
-ol.ext.inherits(ol.filter.Base, ol.Object);
-/** Activate / deactivate filter
-*	@param {boolean} b
-*/
-ol.filter.Base.prototype.setActive = function (b) {
-  this.set('active', b===true);
-};
-/** Get filter active
-*	@return {boolean}
-*/
-ol.filter.Base.prototype.getActive = function () {
-  return this.get('active');
-};
-(function(){
+ol.filter.Base = class olfilterBase extends ol.Object {
+  constructor(options) {
+    super(options)
+    // Array of postcompose listener
+    this._listener = []
+    if (options && options.active === false)
+      this.set('active', false)
+    else
+      this.set('active', true)
+  }
+  /** Activate / deactivate filter
+  *	@param {boolean} b
+  */
+  setActive(b) {
+    this.set('active', b === true)
+  }
+  /** Get filter active
+  *	@return {boolean}
+  */
+  getActive() {
+    return this.get('active')
+  }
+}
+;(function(){
 /** Internal function
-* @this {ol.filter} this the filter
-* @private
-*/
+ * @this {ol.filter} this the filter
+ * @private
+ */
 function precompose_(e) {
   if (this.get('active') && e.context) this.precompose(e);
 }
 /** Internal function
-* @this {ol.filter} this the filter
-* @private
-*/
+ * @this {ol.filter} this the filter
+ * @private
+ */
 function postcompose_(e) {
   if (this.get('active') && e.context) this.postcompose(e);
 }
 /** Force filter redraw / Internal function
-* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
-* @private
-*/
+ * @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
+ * @private
+ */
 function filterRedraw_(/* e */) {
   if (this.renderSync) {
     try { this.renderSync(); } catch(e) { /* ok */ }
@@ -19044,9 +19081,9 @@ function filterRedraw_(/* e */) {
   }
 }
 /** Add a filter to an ol object
-* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
-* @private
-*/
+ * @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
+ * @private
+ */
 function addFilter_(filter) {
   if (!this.filters_) this.filters_ = [];
   this.filters_.push(filter);
@@ -19057,9 +19094,9 @@ function addFilter_(filter) {
   filterRedraw_.call (this);
 }
 /** Remove a filter to an ol object
-* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
-* @private
-*/
+ * @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
+ * @private
+ */
 function removeFilter_(filter) {
   var i
   if (!this.filters_) this.filters_ = [];
@@ -19135,116 +19172,119 @@ ol.layer.Base.prototype.getFilters = function () {
  *  @param {boolean} [options.inner=false] mask inner, default false
  *  @param {boolean} [options.wrapX=false] wrap around the world, default false
  */
-ol.filter.Mask = function(options) {
-  options = options || {};
-  ol.filter.Base.call(this, options);
-  if (options.feature) {
-    switch (options.feature.getGeometry().getType()) {
-      case 'Polygon':
-      case 'MultiPolygon':
-        this.feature_ = options.feature;
-        break;
-      default: break;
+ol.filter.Mask = class olfilterMask extends ol.filter.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    if (options.feature) {
+      switch (options.feature.getGeometry().getType()) {
+        case 'Polygon':
+        case 'MultiPolygon':
+          this.feature_ = options.feature;
+          break;
+        default: break;
+      }
     }
+    this.set('inner', options.inner);
+    this.fillColor_ = options.fill ? ol.color.asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
   }
-  this.set('inner', options.inner);
-  this.fillColor_ = options.fill ? ol.color.asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
-}
-ol.ext.inherits(ol.filter.Mask, ol.filter.Base);
-/** Draw the feature into canvas */
-ol.filter.Mask.prototype.drawFeaturePath_ = function(e, out) {
-  var ctx = e.context;
-  var canvas = ctx.canvas;
-  var ratio = e.frameState.pixelRatio;
-  // Transform
-  var tr;
-  if (e.frameState.coordinateToPixelTransform) {
-    var m = e.frameState.coordinateToPixelTransform;
-    // ol > 6
-    if (e.inversePixelTransform) {
-      var ipt = e.inversePixelTransform;
-      tr = function(pt) {
-        pt = [
-          (pt[0]*m[0]+pt[1]*m[1]+m[4]),
-          (pt[0]*m[2]+pt[1]*m[3]+m[5])
-        ];
-        return [
-          (pt[0]*ipt[0] - pt[1]*ipt[1] + ipt[4]),
-          (-pt[0]*ipt[2] + pt[1]*ipt[3] + ipt[5])
-        ]
+  /** Draw the feature into canvas */
+  drawFeaturePath_(e, out) {
+    var ctx = e.context;
+    var canvas = ctx.canvas;
+    var ratio = e.frameState.pixelRatio;
+    // Transform
+    var tr;
+    if (e.frameState.coordinateToPixelTransform) {
+      var m = e.frameState.coordinateToPixelTransform;
+      // ol > 6
+      if (e.inversePixelTransform) {
+        var ipt = e.inversePixelTransform;
+        tr = function (pt) {
+          pt = [
+            (pt[0] * m[0] + pt[1] * m[1] + m[4]),
+            (pt[0] * m[2] + pt[1] * m[3] + m[5])
+          ];
+          return [
+            (pt[0] * ipt[0] - pt[1] * ipt[1] + ipt[4]),
+            (-pt[0] * ipt[2] + pt[1] * ipt[3] + ipt[5])
+          ];
+        };
+      } else {
+        // ol 5
+        tr = function (pt) {
+          return [
+            (pt[0] * m[0] + pt[1] * m[1] + m[4]) * ratio,
+            (pt[0] * m[2] + pt[1] * m[3] + m[5]) * ratio
+          ];
+        };
       }
     } else {
-      // ol 5
-      tr = function(pt) {
+      // Older version
+      m = e.frameState.coordinateToPixelMatrix;
+      tr = function (pt) {
         return [
-          (pt[0]*m[0]+pt[1]*m[1]+m[4])*ratio,
-          (pt[0]*m[2]+pt[1]*m[3]+m[5])*ratio
+          (pt[0] * m[0] + pt[1] * m[1] + m[12]) * ratio,
+          (pt[0] * m[4] + pt[1] * m[5] + m[13]) * ratio
         ];
-      }
+      };
     }
-  } else {
-    // Older version
-    m = e.frameState.coordinateToPixelMatrix;
-    tr = function(pt) {
-      return [
-        (pt[0]*m[0]+pt[1]*m[1]+m[12])*ratio,
-        (pt[0]*m[4]+pt[1]*m[5]+m[13])*ratio
-      ];
-    }
-  }
-  // Geometry
-  var ll = this.feature_.getGeometry().getCoordinates();
-  if (this.feature_.getGeometry().getType()==='Polygon') ll = [ll];
-  // Draw feature at dx world
-  function drawll(dx) {
-    for (var l=0; l<ll.length; l++) {
-      var c = ll[l];
-      for (var i=0; i<c.length; i++) {
-        var pt = tr([c[i][0][0] + dx, c[i][0][1]]);
-        ctx.moveTo (pt[0], pt[1]);
-        for (var j=1; j<c[i].length; j++) {
-          pt = tr([c[i][j][0] + dx, c[i][j][1]]);
-          ctx.lineTo (pt[0], pt[1]);
+    // Geometry
+    var ll = this.feature_.getGeometry().getCoordinates();
+    if (this.feature_.getGeometry().getType() === 'Polygon')
+      ll = [ll];
+    // Draw feature at dx world
+    function drawll(dx) {
+      for (var l = 0; l < ll.length; l++) {
+        var c = ll[l];
+        for (var i = 0; i < c.length; i++) {
+          var pt = tr([c[i][0][0] + dx, c[i][0][1]]);
+          ctx.moveTo(pt[0], pt[1]);
+          for (var j = 1; j < c[i].length; j++) {
+            pt = tr([c[i][j][0] + dx, c[i][j][1]]);
+            ctx.lineTo(pt[0], pt[1]);
+          }
         }
       }
     }
-  }
-  ctx.beginPath();
-  if (out) {
-    ctx.moveTo (0,0);
-    ctx.lineTo (canvas.width, 0);
-    ctx.lineTo (canvas.width, canvas.height);
-    ctx.lineTo (0, canvas.height);
-    ctx.lineTo (0, 0);
-  }
-  // Draw current world
-  if (this.get('wrapX')) {
-    var worldExtent = e.frameState.viewState.projection.getExtent()
-    var worldWidth  = worldExtent[2] - worldExtent[0];
-    var extent = e.frameState.extent;
-    var fExtent = this.feature_.getGeometry().getExtent();
-    var fWidth = fExtent[2] - fExtent[1];
-    var start = Math.floor((extent[0] + fWidth - worldExtent[0]) / worldWidth);
-    var end = Math.floor((extent[2] - fWidth - worldExtent[2]) / worldWidth) +1;
-    if(start > end) {
+    ctx.beginPath();
+    if (out) {
+      ctx.moveTo(0, 0);
+      ctx.lineTo(canvas.width, 0);
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.lineTo(0, 0);
+    }
+    // Draw current world
+    if (this.get('wrapX')) {
+      var worldExtent = e.frameState.viewState.projection.getExtent();
+      var worldWidth = worldExtent[2] - worldExtent[0];
+      var extent = e.frameState.extent;
+      var fExtent = this.feature_.getGeometry().getExtent();
+      var fWidth = fExtent[2] - fExtent[1];
+      var start = Math.floor((extent[0] + fWidth - worldExtent[0]) / worldWidth);
+      var end = Math.floor((extent[2] - fWidth - worldExtent[2]) / worldWidth) + 1;
+      if (start > end) {
         [start, end] = [end, start];
+      }
+      for (var i = start; i <= end; i++) {
+        drawll(i * worldWidth);
+      }
+    } else {
+      drawll(0);
     }
-    for (var i=start; i<=end; i++) {
-      drawll(i*worldWidth);
-    }
-  } else {
-    drawll(0);
   }
-};
-ol.filter.Mask.prototype.postcompose = function(e) {
-  if (!this.feature_) return;
-  var ctx = e.context;
-  ctx.save();
+  postcompose(e) {
+    if (!this.feature_)
+      return;
+    var ctx = e.context;
+    ctx.save();
     this.drawFeaturePath_(e, !this.get("inner"));
     ctx.fillStyle = this.fillColor_;
     ctx.fill("evenodd");
-  ctx.restore();
-};
+    ctx.restore();
+  }
+}
 
 /** Add a mix-blend-mode CSS filter (not working with IE or ol<6).
  * Add a className to the layer to apply the filter to a specific layer.    
@@ -19352,66 +19392,78 @@ ol.filter.CSS.prototype.removeFromLayer = function(layer) {
  * @extends {ol.filter.Base}
  * @param {CanvasFilterOptions} options
  */
-ol.filter.CanvasFilter = function(options) {
-  ol.filter.Base.call(this, options);
-  this._svg = {};
-};
-ol.ext.inherits(ol.filter.CanvasFilter, ol.filter.Base);
-/** Add a new svg filter
- * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
- */
-ol.filter.CanvasFilter.prototype.addSVGFilter = function(url) {
-  if (url.getId) url = '#'+url.getId();
-  this._svg[url] = 1;
-  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
-};
-/** Remove a svg filter
- * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
- */
-ol.filter.CanvasFilter.prototype.removeSVGFilter = function(url) {
-  if (url.getId) url = '#'+url.getId();
-  delete this._svg[url]
-  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
-};
-/**
- * @private
- */
-ol.filter.CanvasFilter.prototype.precompose = function() {
-};
-/**
- * @private
- */
-ol.filter.CanvasFilter.prototype.postcompose = function(e) {
-  var filter = []
-  // Set filters
-  if (this.get('url')!==undefined) filter.push('url('+this.get('url')+')'); 
-  for (var f in this._svg) {
-    filter.push('url('+f+')'); 
+ol.filter.CanvasFilter = class olfilterCanvasFilter extends ol.filter.Base {
+  constructor(options) {
+    super(options);
+    this._svg = {};
   }
-  if (this.get('blur')!==undefined) filter.push('blur('+this.get('blur')+'px)'); 
-  if (this.get('brightness')!==undefined) filter.push('brightness('+this.get('brightness')+'%)'); 
-  if (this.get('contrast')!==undefined) filter.push('contrast('+this.get('contrast')+'%)'); 
-  if (this.get('shadow')!==undefined) {
-    filter.push('drop-shadow('
-      + this.get('shadow')[0]+'px ' 
-      + this.get('shadow')[1]+'px '
-      + (this.get('shadowBlur')||0)+'px ' 
-      + this.get('shadowColor')+')'); 
+  /** Add a new svg filter
+   * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
+   */
+  addSVGFilter(url) {
+    if (url.getId)
+      url = '#' + url.getId();
+    this._svg[url] = 1;
+    this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
   }
-  if (this.get('grayscale')!==undefined) filter.push('grayscale('+this.get('grayscale')+'%)'); 
-  if (this.get('sepia')!==undefined) filter.push('sepia('+this.get('sepia')+'%)');
-  if (this.get('hueRotate')!==undefined) filter.push('hue-rotate('+this.get('hueRotate')+'deg)'); 
-  if (this.get('invert')!==undefined) filter.push('invert('+this.get('invert')+'%)'); 
-  if (this.get('saturate')!==undefined) filter.push('saturate('+this.get('saturate')+'%)'); 
-  filter = filter.join(' ');
-  // Apply filter
-  if (filter) {
-    e.context.save();
-    e.context.filter = filter;
-    e.context.drawImage(e.context.canvas, 0,0);
-    e.context.restore();
+  /** Remove a svg filter
+   * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
+   */
+  removeSVGFilter(url) {
+    if (url.getId)
+      url = '#' + url.getId();
+    delete this._svg[url];
+    this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
   }
-};
+  /**
+   * @private
+   */
+  precompose() {
+  }
+  /**
+   * @private
+   */
+  postcompose(e) {
+    var filter = [];
+    // Set filters
+    if (this.get('url') !== undefined)
+      filter.push('url(' + this.get('url') + ')');
+    for (var f in this._svg) {
+      filter.push('url(' + f + ')');
+    }
+    if (this.get('blur') !== undefined)
+      filter.push('blur(' + this.get('blur') + 'px)');
+    if (this.get('brightness') !== undefined)
+      filter.push('brightness(' + this.get('brightness') + '%)');
+    if (this.get('contrast') !== undefined)
+      filter.push('contrast(' + this.get('contrast') + '%)');
+    if (this.get('shadow') !== undefined) {
+      filter.push('drop-shadow('
+        + this.get('shadow')[0] + 'px '
+        + this.get('shadow')[1] + 'px '
+        + (this.get('shadowBlur') || 0) + 'px '
+        + this.get('shadowColor') + ')');
+    }
+    if (this.get('grayscale') !== undefined)
+      filter.push('grayscale(' + this.get('grayscale') + '%)');
+    if (this.get('sepia') !== undefined)
+      filter.push('sepia(' + this.get('sepia') + '%)');
+    if (this.get('hueRotate') !== undefined)
+      filter.push('hue-rotate(' + this.get('hueRotate') + 'deg)');
+    if (this.get('invert') !== undefined)
+      filter.push('invert(' + this.get('invert') + '%)');
+    if (this.get('saturate') !== undefined)
+      filter.push('saturate(' + this.get('saturate') + '%)');
+    filter = filter.join(' ');
+    // Apply filter
+    if (filter) {
+      e.context.save();
+      e.context.filter = filter;
+      e.context.drawImage(e.context.canvas, 0, 0);
+      e.context.restore();
+    }
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -19428,121 +19480,127 @@ ol.filter.CanvasFilter.prototype.postcompose = function(e) {
 *  @param {boolean} [options.keepAspectRatio] keep aspect ratio
 *  @param {string} [options.color] backgroundcolor
 */
-ol.filter.Clip = function(options) {
-  options = options || {};
-  ol.filter.Base.call(this, options);
-  this.set("coords", options.coords);
-  this.set("units", options.units);
-  this.set("keepAspectRatio", options.keepAspectRatio);
-  this.set("extent", options.extent || [0,0,1,1]);
-  this.set("color", options.color);
-  if (!options.extent && options.units!="%" && options.coords) {
-    var xmin = Infinity;
-    var ymin = Infinity;
-    var xmax = -Infinity;
-    var ymax = -Infinity;
-    for (var i=0, p; p=options.coords[i]; i++) {
-      if (xmin > p[0]) xmin = p[0];
-      if (xmax < p[0]) xmax = p[0];
-      if (ymin > p[1]) ymin = p[1];
-      if (ymax < p[1]) ymax = p[1];
+ol.filter.Clip = class olfilterClip extends ol.filter.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.set("coords", options.coords);
+    this.set("units", options.units);
+    this.set("keepAspectRatio", options.keepAspectRatio);
+    this.set("extent", options.extent || [0, 0, 1, 1]);
+    this.set("color", options.color);
+    if (!options.extent && options.units != "%" && options.coords) {
+      var xmin = Infinity;
+      var ymin = Infinity;
+      var xmax = -Infinity;
+      var ymax = -Infinity;
+      for (var i = 0, p; p = options.coords[i]; i++) {
+        if (xmin > p[0])
+          xmin = p[0];
+        if (xmax < p[0])
+          xmax = p[0];
+        if (ymin > p[1])
+          ymin = p[1];
+        if (ymax < p[1])
+          ymax = p[1];
+      }
+      options.extent = [xmin, ymin, xmax, ymax];
     }
-    options.extent = [xmin,ymin,xmax,ymax];
   }
-}
-ol.ext.inherits(ol.filter.Clip, ol.filter.Base);
-ol.filter.Clip.prototype.clipPath_ = function(e) {
-  var ctx = e.context;
-  var size = e.frameState.size;
-  var coords = this.get("coords");
-  if (!coords) return;
-  var ex = this.get('extent');
-  var scx = 1, scy = 1;
-  if (this.get("units")=="%") {
-    scx = size[0]/(ex[2]-ex[0]);
-    scy = size[1]/(ex[3]-ex[1]);
-  }
-  if (this.get("keepAspectRatio")) {
-    scx = scy = Math.min (scx, scy);
-  }
-  var pos = this.get('position');
-  var dx=0, dy=0;
-  if (/left/.test(pos)) {
-    dx = -ex[0]*scx;
-  } else if (/center/.test(pos)) {
-    dx = size[0]/2 - (ex[2]-ex[0])*scx/2;
-  } else if (/right/.test(pos)) {
-    dx = size[0] - (ex[2]-ex[0])*scx;
-  }
-  var fx = function(x) { return x*scx + dx };
-  if (/top/.test(pos)) {
-    dy = -ex[1]*scy;
-  } else if (/middle/.test(pos)) {
-    dy = size[1]/2 - (ex[3]-ex[1])*scy/2;
-  } else if (/bottom/.test(pos)) {
-    dy = size[1] - (ex[3]-ex[1])*scy;
-  }
-  var fy = function(y) { return y*scy + dy; };
-  var pt = [ fx(coords[0][0]), fy(coords[0][1]) ];
-  var tr = e.inversePixelTransform;
-  if (tr) {
-    pt = [
-      (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
-      (-pt[0]*tr[2] + pt[1]*tr[3] + tr[5])
-    ];
-  }
-  ctx.moveTo ( pt[0], pt[1] );
-  for (var i=1, p; p=coords[i]; i++) {
-    pt = [ fx(p[0]), fy(p[1]) ];
+  clipPath_(e) {
+    var ctx = e.context;
+    var size = e.frameState.size;
+    var coords = this.get("coords");
+    if (!coords)
+      return;
+    var ex = this.get('extent');
+    var scx = 1, scy = 1;
+    if (this.get("units") == "%") {
+      scx = size[0] / (ex[2] - ex[0]);
+      scy = size[1] / (ex[3] - ex[1]);
+    }
+    if (this.get("keepAspectRatio")) {
+      scx = scy = Math.min(scx, scy);
+    }
+    var pos = this.get('position');
+    var dx = 0, dy = 0;
+    if (/left/.test(pos)) {
+      dx = -ex[0] * scx;
+    } else if (/center/.test(pos)) {
+      dx = size[0] / 2 - (ex[2] - ex[0]) * scx / 2;
+    } else if (/right/.test(pos)) {
+      dx = size[0] - (ex[2] - ex[0]) * scx;
+    }
+    var fx = function (x) { return x * scx + dx; };
+    if (/top/.test(pos)) {
+      dy = -ex[1] * scy;
+    } else if (/middle/.test(pos)) {
+      dy = size[1] / 2 - (ex[3] - ex[1]) * scy / 2;
+    } else if (/bottom/.test(pos)) {
+      dy = size[1] - (ex[3] - ex[1]) * scy;
+    }
+    var fy = function (y) { return y * scy + dy; };
+    var pt = [fx(coords[0][0]), fy(coords[0][1])];
+    var tr = e.inversePixelTransform;
     if (tr) {
       pt = [
-        (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
-        (-pt[0]*tr[2] + pt[1]*tr[3] + tr[5])
+        (pt[0] * tr[0] - pt[1] * tr[1] + tr[4]),
+        (-pt[0] * tr[2] + pt[1] * tr[3] + tr[5])
       ];
     }
-    ctx.lineTo ( pt[0], pt[1] );
+    ctx.moveTo(pt[0], pt[1]);
+    for (var i = 1, p; p = coords[i]; i++) {
+      pt = [fx(p[0]), fy(p[1])];
+      if (tr) {
+        pt = [
+          (pt[0] * tr[0] - pt[1] * tr[1] + tr[4]),
+          (-pt[0] * tr[2] + pt[1] * tr[3] + tr[5])
+        ];
+      }
+      ctx.lineTo(pt[0], pt[1]);
+    }
+    pt = [fx(coords[0][0]), fy(coords[0][1])];
+    if (tr) {
+      pt = [
+        (pt[0] * tr[0] - pt[1] * tr[1] + tr[4]),
+        (-pt[0] * tr[2] + pt[1] * tr[3] + tr[5])
+      ];
+    }
+    ctx.moveTo(pt[0], pt[1]);
   }
-  pt = [ fx(coords[0][0]), fy(coords[0][1]) ];
-  if (tr) {
-    pt = [
-      (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
-      (-pt[0]*tr[2] + pt[1]*tr[3] + tr[5])
-    ];
+  /**
+   * @private
+   */
+  precompose(e) {
+    if (!this.get("color")) {
+      e.context.save();
+      e.context.beginPath();
+      this.clipPath_(e);
+      e.context.clip();
+    }
   }
-  ctx.moveTo ( pt[0], pt[1] );
-};
-/**
- * @private
- */
-ol.filter.Clip.prototype.precompose = function(e) {
-  if (!this.get("color")){
-    e.context.save();
-    e.context.beginPath();
-    this.clipPath_(e);
-    e.context.clip();
+  /**
+   * @private
+   */
+  postcompose(e) {
+    if (this.get("color")) {
+      var ctx = e.context;
+      var canvas = e.context.canvas;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, canvas.height);
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.lineTo(canvas.width, 0);
+      ctx.lineTo(0, 0);
+      this.clipPath_(e);
+      ctx.fillStyle = this.get("color");
+      ctx.fill("evenodd");
+    }
+    e.context.restore();
   }
-};
-/**
- * @private
- */
-ol.filter.Clip.prototype.postcompose = function(e) {
-  if (this.get("color")) {
-    var ctx = e.context;
-    var canvas = e.context.canvas;
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.lineTo(0,canvas.height);
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(canvas.width, 0);
-    ctx.lineTo(0, 0);
-    this.clipPath_(e);
-    ctx.fillStyle = this.get("color");
-    ctx.fill("evenodd");
-  }
-  e.context.restore();
-};
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -19563,138 +19621,139 @@ ol.filter.Clip.prototype.postcompose = function(e) {
  * @author Jean-Marc Viglino https://github.com/viglino
  * @param {FilterColorizeOptions} options
  */
-ol.filter.Colorize = function(options) {
-  ol.filter.Base.call(this, options);
-  this.setFilter(options);
-}
-ol.ext.inherits(ol.filter.Colorize, ol.filter.Base);
-/** Set options to the filter
- * @param {FilterColorizeOptions} [options]
- */
-ol.filter.Colorize.prototype.setFilter = function(options) {
-  options = options || {};
-  switch (options) {
-    case "grayscale": options = { operation:'hue', color: [0,0,0], value:1 }; break;
-    case "invert": options = { operation:'difference', color: [255,255,255], value:1 }; break;
-    case "sepia": options = { operation:'color', color: [153,102,51], value:0.6 }; break;
-    default: break;
+ol.filter.Colorize = class olfilterColorize extends ol.filter.Base {
+  constructor(options) {
+    super(options)
+    this.setFilter(options)
   }
-  var color = options.color ? ol.color.asArray(options.color) : [ options.red, options.green, options.blue, options.value];
-  this.set('color', ol.color.asString(color))
-  this.set ('value', options.value||1);
-  this.set ('preserveAlpha', options.preserveAlpha);
-  var v;
-  switch (options.operation){
-    case 'hue':
-    case 'difference':
-    case 'color-dodge':
-    case 'enhance': {
-      this.set ('operation', options.operation);
-      break;
+  /** Set options to the filter
+   * @param {FilterColorizeOptions} [options]
+   */
+  setFilter(options) {
+    options = options || {}
+    switch (options) {
+      case "grayscale": options = { operation: 'hue', color: [0, 0, 0], value: 1 }; break
+      case "invert": options = { operation: 'difference', color: [255, 255, 255], value: 1 }; break
+      case "sepia": options = { operation: 'color', color: [153, 102, 51], value: 0.6 }; break
+      default: break
     }
-    case 'saturation': {
-      v = 255*(options.value || 0);
-      this.set('color', ol.color.asString([0,0,v,v||1]));
-      this.set ('operation', options.operation);
-      break;
-    }
-    case 'luminosity': {
-      v = 255*(options.value || 0);
-      this.set('color', ol.color.asString([v,v,v,255]));
-      //this.set ('operation', 'luminosity')
-      this.set ('operation', 'hard-light');
-      break;
-    }
-    case 'contrast': {
-      v = 255*(options.value || 0);
-      this.set('color', ol.color.asString([v,v,v,255]));
-      this.set('operation', 'soft-light');
-      break;
-    }
-    default: {
-      this.set ('operation', 'color');
-      this.setValue(options.value||1);
-      break;
+    var color = options.color ? ol.color.asArray(options.color) : [options.red, options.green, options.blue, options.value]
+    this.set('color', ol.color.asString(color))
+    this.set('value', options.value || 1)
+    this.set('preserveAlpha', options.preserveAlpha)
+    var v
+    switch (options.operation) {
+      case 'hue':
+      case 'difference':
+      case 'color-dodge':
+      case 'enhance': {
+        this.set('operation', options.operation)
+        break
+      }
+      case 'saturation': {
+        v = 255 * (options.value || 0)
+        this.set('color', ol.color.asString([0, 0, v, v || 1]))
+        this.set('operation', options.operation)
+        break
+      }
+      case 'luminosity': {
+        v = 255 * (options.value || 0)
+        this.set('color', ol.color.asString([v, v, v, 255]))
+        //this.set ('operation', 'luminosity')
+        this.set('operation', 'hard-light')
+        break
+      }
+      case 'contrast': {
+        v = 255 * (options.value || 0)
+        this.set('color', ol.color.asString([v, v, v, 255]))
+        this.set('operation', 'soft-light')
+        break
+      }
+      default: {
+        this.set('operation', 'color')
+        this.setValue(options.value || 1)
+        break
+      }
     }
   }
-}
-/** Set the filter value
- * @param {ol.Color} options.color style to fill with
- */
-ol.filter.Colorize.prototype.setValue = function(v) {
-  this.set ('value', v);
-  var c = ol.color.asArray(this.get("color"));
-  c[3] = v;
-  this.set("color", ol.color.asString(c));
-}
-/** Set the color value
- * @param {number} options.value a [0-1] value to modify the effect value
- */
-ol.filter.Colorize.prototype.setColor = function(c) {
-  c = ol.color.asArray(c);
-  if (c) {
-    c[3] = this.get("value");
-    this.set("color", ol.color.asString(c));
+  /** Set the filter value
+   * @param {ol.Color} options.color style to fill with
+   */
+  setValue(v) {
+    this.set('value', v)
+    var c = ol.color.asArray(this.get("color"))
+    c[3] = v
+    this.set("color", ol.color.asString(c))
   }
-}
-/** @private 
- */
-ol.filter.Colorize.prototype.precompose = function(/* e */) {
-}
-/** @private 
- */
-ol.filter.Colorize.prototype.postcompose = function(e) {
-  // Set back color hue
-  var c2, ctx2;
-  var ctx = e.context;
-  var canvas = ctx.canvas;
-  ctx.save();
-    if (this.get('operation')=='enhance') {
-      var v = this.get('value');
+  /** Set the color value
+   * @param {number} options.value a [0-1] value to modify the effect value
+   */
+  setColor(c) {
+    c = ol.color.asArray(c)
+    if (c) {
+      c[3] = this.get("value")
+      this.set("color", ol.color.asString(c))
+    }
+  }
+  /** @private
+   */
+  precompose( /* e */) {
+  }
+  /** @private
+   */
+  postcompose(e) {
+    // Set back color hue
+    var c2, ctx2
+    var ctx = e.context
+    var canvas = ctx.canvas
+    ctx.save()
+    if (this.get('operation') == 'enhance') {
+      var v = this.get('value')
       if (v) {
-        var w = canvas.width;
-        var h = canvas.height;
+        var w = canvas.width
+        var h = canvas.height
         if (this.get('preserveAlpha')) {
-          c2 = document.createElement('CANVAS');
-          c2.width = canvas.width;
-          c2.height = canvas.height;
-          ctx2 = c2.getContext('2d');
-          ctx2.drawImage (canvas, 0, 0, w, h);
-          ctx2.globalCompositeOperation = 'color-burn';
+          c2 = document.createElement('CANVAS')
+          c2.width = canvas.width
+          c2.height = canvas.height
+          ctx2 = c2.getContext('2d')
+          ctx2.drawImage(canvas, 0, 0, w, h)
+          ctx2.globalCompositeOperation = 'color-burn'
           console.log(v)
-          ctx2.globalAlpha = v;
-          ctx2.drawImage (c2, 0, 0, w, h);
-          ctx2.drawImage (c2, 0, 0, w, h);
-          ctx2.drawImage (c2, 0, 0, w, h);
-          ctx.globalCompositeOperation = 'source-in';
-          ctx.drawImage(c2, 0,0);
-        } else {  
+          ctx2.globalAlpha = v
+          ctx2.drawImage(c2, 0, 0, w, h)
+          ctx2.drawImage(c2, 0, 0, w, h)
+          ctx2.drawImage(c2, 0, 0, w, h)
+          ctx.globalCompositeOperation = 'source-in'
+          ctx.drawImage(c2, 0, 0)
+        } else {
           ctx.globalCompositeOperation = 'color-burn'
-          ctx.globalAlpha = v;
-          ctx.drawImage (canvas, 0, 0, w, h);
-          ctx.drawImage (canvas, 0, 0, w, h);
-          ctx.drawImage (canvas, 0, 0, w, h);
+          ctx.globalAlpha = v
+          ctx.drawImage(canvas, 0, 0, w, h)
+          ctx.drawImage(canvas, 0, 0, w, h)
+          ctx.drawImage(canvas, 0, 0, w, h)
         }
       }
     } else {
       if (this.get('preserveAlpha')) {
-        c2 = document.createElement('CANVAS');
-        c2.width = canvas.width;
-        c2.height = canvas.height;
-        ctx2 = c2.getContext('2d');
-        ctx2.drawImage(canvas, 0,0);
-        ctx2.globalCompositeOperation = this.get('operation');
-        ctx2.fillStyle = this.get('color');
-        ctx2.fillRect(0,0,canvas.width,canvas.height);
-        ctx.globalCompositeOperation = 'source-in';
-        ctx.drawImage(c2, 0,0);
+        c2 = document.createElement('CANVAS')
+        c2.width = canvas.width
+        c2.height = canvas.height
+        ctx2 = c2.getContext('2d')
+        ctx2.drawImage(canvas, 0, 0)
+        ctx2.globalCompositeOperation = this.get('operation')
+        ctx2.fillStyle = this.get('color')
+        ctx2.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.globalCompositeOperation = 'source-in'
+        ctx.drawImage(c2, 0, 0)
       } else {
-        ctx.globalCompositeOperation = this.get('operation');
-        ctx.fillStyle = this.get('color');
-        ctx.fillRect(0,0,canvas.width,canvas.height);  
+        ctx.globalCompositeOperation = this.get('operation')
+        ctx.fillStyle = this.get('color')
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
       }
     }
-  ctx.restore();
+    ctx.restore()
+  }
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -19711,24 +19770,25 @@ ol.filter.Colorize.prototype.postcompose = function(e) {
  * @param {Object} options
  *  @param {string} options.operation composite operation
  */
-ol.filter.Composite = function(options) {
-  ol.filter.Base.call(this, options);
-  this.set("operation", options.operation || "source-over");
-}
-ol.ext.inherits(ol.filter.Composite, ol.filter.Base);
-/** Change the current operation
-*	@param {string} operation composite function
-*/
-ol.filter.Composite.prototype.setOperation = function(operation) {
-  this.set('operation', operation || "source-over");
-}
-ol.filter.Composite.prototype.precompose = function(e) {
-  var ctx = e.context;
-  ctx.save();
-  ctx.globalCompositeOperation = this.get('operation');
-}
-ol.filter.Composite.prototype.postcompose = function(e) {
-  e.context.restore();
+ol.filter.Composite = class olfilterComposite extends ol.filter.Base {
+  constructor(options) {
+    super(options);
+    this.set("operation", options.operation || "source-over");
+  }
+  /** Change the current operation
+  *	@param {string} operation composite function
+  */
+  setOperation(operation) {
+    this.set('operation', operation || "source-over");
+  }
+  precompose(e) {
+    var ctx = e.context;
+    ctx.save();
+    ctx.globalCompositeOperation = this.get('operation');
+  }
+  postcompose(e) {
+    e.context.restore();
+  }
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -19736,29 +19796,31 @@ ol.filter.Composite.prototype.postcompose = function(e) {
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Crop drawing using an ol.Feature
-* @constructor
-* @requires ol.filter
-* @requires ol.filter.Mask
-* @extends {ol.filter.Mask}
-* @param {Object} [options]
-*  @param {ol.Feature} [options.feature] feature to crop with
-*  @param {boolean} [options.inner=false] mask inner, default false
-*/
-ol.filter.Crop = function(options) {
-  options = options || {};
-  ol.filter.Mask.call(this, options);
-}
-ol.ext.inherits(ol.filter.Crop, ol.filter.Mask);
-ol.filter.Crop.prototype.precompose = function(e) {
-  if (this.feature_) {
-    var ctx = e.context;
-    ctx.save();
+ * @constructor
+ * @requires ol.filter
+ * @requires ol.filter.Mask
+ * @extends {ol.filter.Mask}
+ * @param {Object} [options]
+ *  @param {ol.Feature} [options.feature] feature to crop with
+ *  @param {boolean} [options.inner=false] mask inner, default false
+ */
+ol.filter.Crop = class olfilterCrop extends ol.filter.Mask {
+  constructor(options) {
+    options = options || {};
+    super(options);
+  }
+  precompose(e) {
+    if (this.feature_) {
+      var ctx = e.context;
+      ctx.save();
       this.drawFeaturePath_(e, this.get("inner"));
       ctx.clip("evenodd");
+    }
   }
-}
-ol.filter.Crop.prototype.postcompose = function(e) {
-  if (this.feature_) e.context.restore();
+  postcompose(e) {
+    if (this.feature_)
+      e.context.restore();
+  }
 }
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
@@ -20272,65 +20334,67 @@ ol.filter.Pointillism.prototype.postcompose = function(e) {
  * @extends {ol.filter.Base}
  * @param {ol.ext.SVGFilter|Array<ol.ext.SVGFilter>} filters
  */
-ol.filter.SVGFilter = function(filters) {
-  ol.filter.Base.call(this);
-  this._svg = {};
-  if (filters) {
-    if (!(filters instanceof Array)) filters = [filters];
-    filters.forEach(function(f) {
-      this.addSVGFilter(f);
-    }.bind(this));
+ol.filter.SVGFilter = class olfilterSVGFilter extends ol.filter.Base {
+  constructor(filters) {
+    super();
+    this._svg = {};
+    if (filters) {
+      if (!(filters instanceof Array))
+        filters = [filters];
+      filters.forEach(function (f) {
+        this.addSVGFilter(f);
+      }.bind(this));
+    }
   }
-};
-ol.ext.inherits(ol.filter.SVGFilter, ol.filter.Base);
-/** Add a new svg filter
- * @param {ol.ext.SVGFilter} filter
- */
-ol.filter.SVGFilter.prototype.addSVGFilter = function(filter) {
-  var url = '#'+filter.getId();
-  this._svg[url] = 1;
-  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
-};
-/** Remove a svg filter
- * @param {ol.ext.SVGFilter} filter
- */
-ol.filter.SVGFilter.prototype.removeSVGFilter = function(filter) {
-  var url = '#'+filter.getId();
-  delete this._svg[url]
-  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
-};
-/**
- * @private
- */
-ol.filter.SVGFilter.prototype.precompose = function() {
-};
-/**
- * @private
- */
-ol.filter.SVGFilter.prototype.postcompose = function(e) {
-  var filter = []
-  // Set filters
-  for (var f in this._svg) {
-    filter.push('url('+f+')'); 
+  /** Add a new svg filter
+   * @param {ol.ext.SVGFilter} filter
+   */
+  addSVGFilter(filter) {
+    var url = '#' + filter.getId();
+    this._svg[url] = 1;
+    this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
   }
-  filter = filter.join(' ');
-  var canvas = document.createElement('canvas');
-  canvas.width = e.context.canvas.width;
-  canvas.height = e.context.canvas.height;
-  canvas.getContext('2d').drawImage(e.context.canvas,0,0);
-  // Apply filter
-  if (filter) {
-    e.context.save();
-    e.context.clearRect(0,0,canvas.width, canvas.height);
-    e.context.filter = filter;
-    e.context.drawImage(canvas, 0,0);
-    e.context.restore();
+  /** Remove a svg filter
+   * @param {ol.ext.SVGFilter} filter
+   */
+  removeSVGFilter(filter) {
+    var url = '#' + filter.getId();
+    delete this._svg[url];
+    this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
   }
-};
+  /**
+   * @private
+   */
+  precompose() {
+  }
+  /**
+   * @private
+   */
+  postcompose(e) {
+    var filter = [];
+    // Set filters
+    for (var f in this._svg) {
+      filter.push('url(' + f + ')');
+    }
+    filter = filter.join(' ');
+    var canvas = document.createElement('canvas');
+    canvas.width = e.context.canvas.width;
+    canvas.height = e.context.canvas.height;
+    canvas.getContext('2d').drawImage(e.context.canvas, 0, 0);
+    // Apply filter
+    if (filter) {
+      e.context.save();
+      e.context.clearRect(0, 0, canvas.width, canvas.height);
+      e.context.filter = filter;
+      e.context.drawImage(canvas, 0, 0);
+      e.context.restore();
+    }
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** @typedef {Object} FilterTextureOptions
  *  @property {Image | undefined} img Image object for the texture
@@ -20346,142 +20410,137 @@ ol.filter.SVGFilter.prototype.postcompose = function(e) {
  * @extends {ol.filter.Base}
  * @param {FilterTextureOptions} options
  */
-ol.filter.Texture = function(options)
-{	ol.filter.Base.call(this, options);
-	this.setFilter(options);
-}
-ol.ext.inherits(ol.filter.Texture, ol.filter.Base);
-/** Set texture
- * @param {FilterTextureOptions} [options]
- */
-ol.filter.Texture.prototype.setFilter = function(options)
-{	var img;
-	options = options || {};
-	if (options.img) img = options.img;
-	else 
-	{	img = new Image();
-		if (options.src) {
-			// Look for a texture stored in ol.filter.Texture.Image
-			if (ol.filter.Texture.Image && ol.filter.Texture.Image[options.src]) {
-				img.src = ol.filter.Texture.Image[options.src];
-			} 
-			// default source
-			else {
-				if (!img.src) img.src = options.src;
-			}
-		}
-		img.crossOrigin = options.crossOrigin || null;
-	}
-	this.set('rotateWithView', options.rotateWithView !== false);
-	this.set('opacity', typeof(options.opacity)=='number' ? options.opacity : 1);
-	this.set('ready', false);
-	var self = this;
-	function setPattern(img)
-	{	self.pattern = {};
-		self.pattern.scale = options.scale || 1;
-		self.pattern.canvas = document.createElement('canvas');
-		self.pattern.canvas.width = img.width * self.pattern.scale;
-		self.pattern.canvas.height = img.height * self.pattern.scale;
-		self.pattern.canvas.width = img.width;// * self.pattern.scale;
-		self.pattern.canvas.height = img.height;// * self.pattern.scale;
-		self.pattern.ctx = self.pattern.canvas.getContext("2d");
-		self.pattern.ctx.fillStyle = self.pattern.ctx.createPattern(img, 'repeat');
-		// Force refresh
-		self.set('ready', true);
-	}
-	if (img.width) 
-	{	setPattern(img);
-	}
-	else
-	{	img.onload = function()
-		{	setPattern(img);
-		}
-	}
-}
-/** Get translated pattern
- *	@param {number} offsetX x offset
- *	@param {number} offsetY y offset
- */
-ol.filter.Texture.prototype.getPattern = function (offsetX, offsetY)
-{	var c = this.pattern.canvas;
-	var ctx = this.pattern.ctx;
-	ctx.save();
-	/*
-		offsetX /= this.pattern.scale;
-		offsetY /= this.pattern.scale;
-		ctx.scale(this.pattern.scale,this.pattern.scale);
-	*/
-		ctx.translate(-offsetX, offsetY);
-		ctx.beginPath();
-		ctx.rect(offsetX, -offsetY, c.width, c.height);
-		ctx.fill();
-	ctx.restore();
-	return ctx.createPattern(c, 'repeat');
-}
-/** Draw pattern over the map on postcompose */
-ol.filter.Texture.prototype.postcompose = function(e)
-{	// not ready
-	if (!this.pattern) return;
-	// Set back color hue
-	var ctx = e.context;
-	var canvas = ctx.canvas;
-	var m = 1.5 * Math.max(canvas.width, canvas.height);
-	var mt = e.frameState.pixelToCoordinateTransform;
-	// Old version (matrix)
-	if (!mt)
-	{	mt = e.frameState.pixelToCoordinateMatrix,
-		mt[2] = mt[4];
-		mt[3] = mt[5];
-		mt[4] = mt[12];
-		mt[5] = mt[13];
-	}
-	var ratio = e.frameState.pixelRatio;
-	var res = e.frameState.viewState.resolution;
-	var w = canvas.width/2, 
-		h = canvas.height/2;
-	ctx.save();
-		ctx.globalCompositeOperation = "multiply";
-		//ctx.globalCompositeOperation = "overlay";
-		//ctx.globalCompositeOperation = "color";
-		ctx.globalAlpha = this.get('opacity');
-		ctx.scale(ratio*this.pattern.scale,ratio*this.pattern.scale);
-		if (this.get('rotateWithView'))
-		{	// Translate pattern
-			res *= this.pattern.scale
-			ctx.fillStyle = this.getPattern ((w*mt[0] + h*mt[1] + mt[4])/res, (w*mt[2] + h*mt[3] + mt[5])/res);
-			// Rotate on canvas center and fill
-			ctx.translate(w/this.pattern.scale, h/this.pattern.scale);
-			ctx.rotate(e.frameState.viewState.rotation);
-			ctx.beginPath();
-			ctx.rect(-w-m, -h-m, 2*m, 2*m);
-			ctx.fill(); 
-		}
-		else
-		{
-			/**/
-				var dx = -(w*mt[0] + h*mt[1] + mt[4])/res;
-				var dy = (w*mt[2] + h*mt[3] + mt[5])/res;
-				var cos = Math.cos(e.frameState.viewState.rotation);
-				var sin = Math.sin(e.frameState.viewState.rotation);
-				var offsetX = (dx*cos - dy*sin) / this.pattern.scale;
-				var offsetY = (dx*sin + dy*cos) / this.pattern.scale;
-				ctx.translate(offsetX, offsetY);
-				ctx.beginPath();
-				ctx.fillStyle = this.pattern.ctx.fillStyle;
-				ctx.rect(-offsetX -m , -offsetY -m, 2*m, 2*m);
-				ctx.fill(); 
-			/*	//old version without centered rotation
-				var offsetX = -(e.frameState.extent[0]/res) % this.pattern.canvas.width;
-				var offsetY = (e.frameState.extent[1]/res) % this.pattern.canvas.height;
-				ctx.rotate(e.frameState.viewState.rotation);
-				ctx.translate(offsetX, offsetY);
-				ctx.beginPath();
-				ctx.fillStyle = this.pattern.ctx.fillStyle
-				ctx.rect(-offsetX -m , -offsetY -m, 2*m, 2*m);
-				ctx.fill(); 
-			*/
-		}
-	ctx.restore();
+ol.filter.Texture = class olfilterTexture extends ol.filter.Base {
+  constructor(options) {
+    super(options);
+    this.setFilter(options);
+  }
+  /** Set texture
+   * @param {FilterTextureOptions} [options]
+   */
+  setFilter(options) {
+    var img;
+    options = options || {};
+    if (options.img) {
+      img = options.img;
+    } else {
+      img = new Image();
+      if (options.src) {
+        // Look for a texture stored in ol.filter.Texture.Image
+        if (ol.filter.Texture.Image && ol.filter.Texture.Image[options.src]) {
+          img.src = ol.filter.Texture.Image[options.src];
+        } else {
+          // default source
+          if (!img.src) img.src = options.src;
+        }
+      }
+      img.crossOrigin = options.crossOrigin || null;
+    }
+    this.set('rotateWithView', options.rotateWithView !== false);
+    this.set('opacity', typeof (options.opacity) == 'number' ? options.opacity : 1);
+    this.set('ready', false);
+    var self = this;
+    function setPattern(img) {
+      self.pattern = {};
+      self.pattern.scale = options.scale || 1;
+      self.pattern.canvas = document.createElement('canvas');
+      self.pattern.canvas.width = img.width * self.pattern.scale;
+      self.pattern.canvas.height = img.height * self.pattern.scale;
+      self.pattern.canvas.width = img.width; // * self.pattern.scale;
+      self.pattern.canvas.height = img.height; // * self.pattern.scale;
+      self.pattern.ctx = self.pattern.canvas.getContext("2d");
+      self.pattern.ctx.fillStyle = self.pattern.ctx.createPattern(img, 'repeat');
+      // Force refresh
+      self.set('ready', true);
+    }
+    if (img.width) {
+      setPattern(img);
+    } else {
+      img.onload = function () {
+        setPattern(img);
+      };
+    }
+  }
+  /** Get translated pattern
+   *	@param {number} offsetX x offset
+  *	@param {number} offsetY y offset
+  */
+  getPattern(offsetX, offsetY) {
+    var c = this.pattern.canvas;
+    var ctx = this.pattern.ctx;
+    ctx.save();
+    /*
+        offsetX /= this.pattern.scale;
+        offsetY /= this.pattern.scale;
+        ctx.scale(this.pattern.scale,this.pattern.scale);
+    */
+    ctx.translate(-offsetX, offsetY);
+    ctx.beginPath();
+    ctx.rect(offsetX, -offsetY, c.width, c.height);
+    ctx.fill();
+    ctx.restore();
+    return ctx.createPattern(c, 'repeat');
+  }
+  /** Draw pattern over the map on postcompose */
+  postcompose(e) {
+    if (!this.pattern) return;
+    // Set back color hue
+    var ctx = e.context;
+    var canvas = ctx.canvas;
+    var m = 1.5 * Math.max(canvas.width, canvas.height);
+    var mt = e.frameState.pixelToCoordinateTransform;
+    // Old version (matrix)
+    if (!mt) {
+      mt = e.frameState.pixelToCoordinateMatrix,
+      mt[2] = mt[4];
+      mt[3] = mt[5];
+      mt[4] = mt[12];
+      mt[5] = mt[13];
+    }
+    var ratio = e.frameState.pixelRatio;
+    var res = e.frameState.viewState.resolution;
+    var w = canvas.width / 2, h = canvas.height / 2;
+    ctx.save();
+    ctx.globalCompositeOperation = "multiply";
+    //ctx.globalCompositeOperation = "overlay";
+    //ctx.globalCompositeOperation = "color";
+    ctx.globalAlpha = this.get('opacity');
+    ctx.scale(ratio * this.pattern.scale, ratio * this.pattern.scale);
+    if (this.get('rotateWithView')) { // Translate pattern
+      res *= this.pattern.scale;
+      ctx.fillStyle = this.getPattern((w * mt[0] + h * mt[1] + mt[4]) / res, (w * mt[2] + h * mt[3] + mt[5]) / res);
+      // Rotate on canvas center and fill
+      ctx.translate(w / this.pattern.scale, h / this.pattern.scale);
+      ctx.rotate(e.frameState.viewState.rotation);
+      ctx.beginPath();
+      ctx.rect(-w - m, -h - m, 2 * m, 2 * m);
+      ctx.fill();
+    } else {
+      /**/
+      var dx = -(w * mt[0] + h * mt[1] + mt[4]) / res;
+      var dy = (w * mt[2] + h * mt[3] + mt[5]) / res;
+      var cos = Math.cos(e.frameState.viewState.rotation);
+      var sin = Math.sin(e.frameState.viewState.rotation);
+      var offsetX = (dx * cos - dy * sin) / this.pattern.scale;
+      var offsetY = (dx * sin + dy * cos) / this.pattern.scale;
+      ctx.translate(offsetX, offsetY);
+      ctx.beginPath();
+      ctx.fillStyle = this.pattern.ctx.fillStyle;
+      ctx.rect(-offsetX - m, -offsetY - m, 2 * m, 2 * m);
+      ctx.fill();
+      /*	//old version without centered rotation
+          var offsetX = -(e.frameState.extent[0]/res) % this.pattern.canvas.width;
+          var offsetY = (e.frameState.extent[1]/res) % this.pattern.canvas.height;
+          ctx.rotate(e.frameState.viewState.rotation);
+          ctx.translate(offsetX, offsetY);
+          ctx.beginPath();
+          ctx.fillStyle = this.pattern.ctx.fillStyle
+          ctx.rect(-offsetX -m , -offsetY -m, 2*m, 2*m);
+          ctx.fill();
+      */
+    }
+    ctx.restore();
+  }
 }
 
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
@@ -37316,12 +37375,12 @@ ol.ordering.zIndex = function(options)
 *		- easing {ol.easing} easing function, default ol.easing.easeOut
 *		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
 */
-ol.Map.prototype.pulse = function(coords, options)
-{	var listenerKey;
+ol.Map.prototype.pulse = function(coords, options) {
+	var listenerKey;
 	options = options || {};
 	// Change to map's projection
-	if (options.projection)
-	{	coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
+	if (options.projection) {
+		coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
 	}
 	// options
 	var start = new Date().getTime();

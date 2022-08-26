@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_inherits from '../util/ext'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_layer_Base from 'ol/layer/Base'
 import ol_Object from 'ol/Object'
@@ -25,50 +24,52 @@ export {ol_filter};
  * @param {Object} options 
  *  @param {boolean} [options.active]
  */
-var ol_filter_Base = function(options) {
-  ol_Object.call(this, options);
-  // Array of postcompose listener
-  this._listener = [];
-  if (options && options.active===false) this.set('active', false);
-  else this.set('active', true);
-};
-ol_ext_inherits(ol_filter_Base, ol_Object);
+var ol_filter_Base = class olfilterBase extends ol_Object {
+  constructor(options) {
+    super(options)
+    // Array of postcompose listener
+    this._listener = []
+    if (options && options.active === false)
+      this.set('active', false)
+    else
+      this.set('active', true)
+  }
+  /** Activate / deactivate filter
+  *	@param {boolean} b
+  */
+  setActive(b) {
+    this.set('active', b === true)
+  }
+  /** Get filter active
+  *	@return {boolean}
+  */
+  getActive() {
+    return this.get('active')
+  }
+}
 
-/** Activate / deactivate filter
-*	@param {boolean} b
-*/
-ol_filter_Base.prototype.setActive = function (b) {
-  this.set('active', b===true);
-};
-
-/** Get filter active
-*	@return {boolean}
-*/
-ol_filter_Base.prototype.getActive = function () {
-  return this.get('active');
-};
-
-(function(){
+;(function(){
 
 /** Internal function
-* @this {ol.filter} this the filter
-* @private
-*/
+ * @this {ol.filter} this the filter
+ * @private
+ */
 function precompose_(e) {
   if (this.get('active') && e.context) this.precompose(e);
 }
+
 /** Internal function
-* @this {ol.filter} this the filter
-* @private
-*/
+ * @this {ol.filter} this the filter
+ * @private
+ */
 function postcompose_(e) {
   if (this.get('active') && e.context) this.postcompose(e);
 }
 
 /** Force filter redraw / Internal function
-* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
-* @private
-*/
+ * @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
+ * @private
+ */
 function filterRedraw_(/* e */) {
   if (this.renderSync) {
     try { this.renderSync(); } catch(e) { /* ok */ }
@@ -78,9 +79,9 @@ function filterRedraw_(/* e */) {
 }
 
 /** Add a filter to an ol object
-* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
-* @private
-*/
+ * @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
+ * @private
+ */
 function addFilter_(filter) {
   if (!this.filters_) this.filters_ = [];
   this.filters_.push(filter);
@@ -92,9 +93,9 @@ function addFilter_(filter) {
 }
 
 /** Remove a filter to an ol object
-* @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
-* @private
-*/
+ * @this {ol.Map|ol.layer.Layer} this: the map or layer the filter is added to
+ * @private
+ */
 function removeFilter_(filter) {
   var i
   if (!this.filters_) this.filters_ = [];

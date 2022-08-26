@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_inherits from '../util/ext'
 import ol_filter_Base from './Base'
 
 /** @typedef {Object} CanvasFilterOptions
@@ -28,70 +27,78 @@ import ol_filter_Base from './Base'
  * @extends {ol_filter_Base}
  * @param {CanvasFilterOptions} options
  */
-var ol_filter_CanvasFilter = function(options) {
-  ol_filter_Base.call(this, options);
+var ol_filter_CanvasFilter = class olfilterCanvasFilter extends ol_filter_Base {
+  constructor(options) {
+    super(options);
 
-  this._svg = {};
-};
-ol_ext_inherits(ol_filter_CanvasFilter, ol_filter_Base);
-
-/** Add a new svg filter
- * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
- */
-ol_filter_CanvasFilter.prototype.addSVGFilter = function(url) {
-  if (url.getId) url = '#'+url.getId();
-  this._svg[url] = 1;
-  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
-};
-
-/** Remove a svg filter
- * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
- */
-ol_filter_CanvasFilter.prototype.removeSVGFilter = function(url) {
-  if (url.getId) url = '#'+url.getId();
-  delete this._svg[url]
-  this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
-};
-
-/**
- * @private
- */
-ol_filter_CanvasFilter.prototype.precompose = function() {
-};
-
-/**
- * @private
- */
-ol_filter_CanvasFilter.prototype.postcompose = function(e) {
-  var filter = []
-  // Set filters
-  if (this.get('url')!==undefined) filter.push('url('+this.get('url')+')'); 
-  for (var f in this._svg) {
-    filter.push('url('+f+')'); 
+    this._svg = {};
   }
-  if (this.get('blur')!==undefined) filter.push('blur('+this.get('blur')+'px)'); 
-  if (this.get('brightness')!==undefined) filter.push('brightness('+this.get('brightness')+'%)'); 
-  if (this.get('contrast')!==undefined) filter.push('contrast('+this.get('contrast')+'%)'); 
-  if (this.get('shadow')!==undefined) {
-    filter.push('drop-shadow('
-      + this.get('shadow')[0]+'px ' 
-      + this.get('shadow')[1]+'px '
-      + (this.get('shadowBlur')||0)+'px ' 
-      + this.get('shadowColor')+')'); 
+  /** Add a new svg filter
+   * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
+   */
+  addSVGFilter(url) {
+    if (url.getId)
+      url = '#' + url.getId();
+    this._svg[url] = 1;
+    this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
   }
-  if (this.get('grayscale')!==undefined) filter.push('grayscale('+this.get('grayscale')+'%)'); 
-  if (this.get('sepia')!==undefined) filter.push('sepia('+this.get('sepia')+'%)');
-  if (this.get('hueRotate')!==undefined) filter.push('hue-rotate('+this.get('hueRotate')+'deg)'); 
-  if (this.get('invert')!==undefined) filter.push('invert('+this.get('invert')+'%)'); 
-  if (this.get('saturate')!==undefined) filter.push('saturate('+this.get('saturate')+'%)'); 
-  filter = filter.join(' ');
-  // Apply filter
-  if (filter) {
-    e.context.save();
-    e.context.filter = filter;
-    e.context.drawImage(e.context.canvas, 0,0);
-    e.context.restore();
+  /** Remove a svg filter
+   * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
+   */
+  removeSVGFilter(url) {
+    if (url.getId)
+      url = '#' + url.getId();
+    delete this._svg[url];
+    this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
   }
-};
+  /**
+   * @private
+   */
+  precompose() {
+  }
+  /**
+   * @private
+   */
+  postcompose(e) {
+    var filter = [];
+    // Set filters
+    if (this.get('url') !== undefined)
+      filter.push('url(' + this.get('url') + ')');
+    for (var f in this._svg) {
+      filter.push('url(' + f + ')');
+    }
+    if (this.get('blur') !== undefined)
+      filter.push('blur(' + this.get('blur') + 'px)');
+    if (this.get('brightness') !== undefined)
+      filter.push('brightness(' + this.get('brightness') + '%)');
+    if (this.get('contrast') !== undefined)
+      filter.push('contrast(' + this.get('contrast') + '%)');
+    if (this.get('shadow') !== undefined) {
+      filter.push('drop-shadow('
+        + this.get('shadow')[0] + 'px '
+        + this.get('shadow')[1] + 'px '
+        + (this.get('shadowBlur') || 0) + 'px '
+        + this.get('shadowColor') + ')');
+    }
+    if (this.get('grayscale') !== undefined)
+      filter.push('grayscale(' + this.get('grayscale') + '%)');
+    if (this.get('sepia') !== undefined)
+      filter.push('sepia(' + this.get('sepia') + '%)');
+    if (this.get('hueRotate') !== undefined)
+      filter.push('hue-rotate(' + this.get('hueRotate') + 'deg)');
+    if (this.get('invert') !== undefined)
+      filter.push('invert(' + this.get('invert') + '%)');
+    if (this.get('saturate') !== undefined)
+      filter.push('saturate(' + this.get('saturate') + '%)');
+    filter = filter.join(' ');
+    // Apply filter
+    if (filter) {
+      e.context.save();
+      e.context.filter = filter;
+      e.context.drawImage(e.context.canvas, 0, 0);
+      e.context.restore();
+    }
+  }
+}
 
 export default ol_filter_CanvasFilter

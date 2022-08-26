@@ -23,13 +23,13 @@ import ol_geom_Point from 'ol/geom/Point'
 *		- easing {ol.easing} easing function, default ol.easing.easeOut
 *		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
 */
-ol_Map.prototype.pulse = function(coords, options)
-{	var listenerKey;
+ol_Map.prototype.pulse = function(coords, options) {
+	var listenerKey;
 	options = options || {};
 
 	// Change to map's projection
-	if (options.projection)
-	{	coords = ol_proj_transform(coords, options.projection, this.getView().getProjection());
+	if (options.projection) {
+		coords = ol_proj_transform(coords, options.projection, this.getView().getProjection());
 	}
 	
 	// options

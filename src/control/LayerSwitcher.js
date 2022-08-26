@@ -53,8 +53,8 @@ var ol_control_LayerSwitcher = function(options) {
   var self = this;
   this.dcount = 0;
   this.show_progress = options.show_progress;
-  this.oninfo = (typeof (options.oninfo) == "function" ? options.oninfo: null);
-  this.onextent = (typeof (options.onextent) == "function" ? options.onextent: null);
+  this.oninfo = (typeof (options.oninfo) == 'function' ? options.oninfo: null);
+  this.onextent = (typeof (options.onextent) == 'function' ? options.onextent: null);
   this.hasextent = options.extent || options.onextent;
   this.hastrash = options.trash;
   this.reordering = (options.reordering!==false);
