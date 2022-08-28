@@ -2,7 +2,6 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_ext_inherits from '../util/ext'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_control_SearchPhoton from "./SearchPhoton";
 
@@ -30,48 +29,49 @@ import ol_control_SearchPhoton from "./SearchPhoton";
  *  @param {string|undefined} options.type type of result: 'housenumber' | 'street'
  * @see {@link https://adresse.data.gouv.fr/api/}
  */
- var ol_control_SearchBAN = function(options) {
-   options = options || {};
-   options.typing = options.typing || 500;
-   options.url = options.url || 'https://api-adresse.data.gouv.fr/search/';
-   options.className = options.className || 'BAN';
-   options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
-   ol_control_SearchPhoton.call(this, options);
-   this.set("postcode", options.postcode);
-   this.set("citycode", options.citycode);
-   this.set("type", options.type);
- };
-ol_ext_inherits(ol_control_SearchBAN, ol_control_SearchPhoton);
+var ol_control_SearchBAN = class olcontrolSearchBAN extends ol_control_SearchPhoton {
+  constructor(options) {
+    options = options || {};
+    options.typing = options.typing || 500;
+    options.url = options.url || 'https://api-adresse.data.gouv.fr/search/';
+    options.className = options.className || 'BAN';
+    options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
+    
+    super(options);
 
-/** Returns the text to be displayed in the menu
- * @param {ol.Feature} f the feature
- * @return {string} the text to be displayed in the index
- * @api
- */
-ol_control_SearchBAN.prototype.getTitle = function (f) {
-  var p = f.properties;
-  return (p.label);
-};
+    this.set('postcode', options.postcode);
+    this.set('citycode', options.citycode);
+    this.set('type', options.type);
+  }
+  /** Returns the text to be displayed in the menu
+   * @param {ol.Feature} f the feature
+   * @return {string} the text to be displayed in the index
+   * @api
+   */
+  getTitle(f) {
+    var p = f.properties;
+    return (p.label);
+  }
+  /** A ligne has been clicked in the menu > dispatch event
+   * @param {any} f the feature, as passed in the autocomplete
+   * @api
+   */
+  select(f) {
+    var c = f.geometry.coordinates;
+    // Add coordinate to the event
+    try {
+      c = ol_proj_transform(f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
+    } catch (e) { /* ok */ }
+    this.dispatchEvent({ type: "select", search: f, coordinate: c });
+  }
+  requestData(s) {
+    var data = ol_control_SearchPhoton.prototype.requestData.call(this, s);
+    data.postcode = this.get('postcode'),
+      data.citycode = this.get('citycode'),
+      data.type = this.get('type');
 
-/** A ligne has been clicked in the menu > dispatch event
- * @param {any} f the feature, as passed in the autocomplete
- * @api
- */
-ol_control_SearchBAN.prototype.select = function (f){
-  var c = f.geometry.coordinates;
-  // Add coordinate to the event
-  try {
-    c = ol_proj_transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
-  } catch(e) { /* ok */ }
-  this.dispatchEvent({ type:"select", search:f, coordinate: c });
-};
+    return data;
+  }
+}
 
-ol_control_SearchBAN.prototype.requestData = function (s) {
-  var data = ol_control_SearchPhoton.prototype.requestData.call(this, s);
-  data.postcode = this.get('postcode'),
-  data.citycode = this.get('citycode'),
-  data.type = this.get('type')
-
-  return data;
-};
 export default ol_control_SearchBAN

@@ -2,7 +2,6 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_ext_inherits from '../util/ext'
 import ol_control_Search from './Search'
 import ol_ext_Ajax from '../util/Ajax';
 
@@ -27,91 +26,94 @@ import ol_ext_Ajax from '../util/Ajax';
  *  @param {string|undefined} options.url Url of the search api
  *  @param {string | undefined} options.authentication: basic authentication for the search API as btoa("login:pwd")
  */
-var ol_control_SearchJSON = function(options) {
-  options = options || {};
-  options.className = options.className || 'JSON';
-  delete options.autocomplete;
-  options.minLength = options.minLength || 3;
-  options.typing = options.typing || 800;
-  ol_control_Search.call(this, options);
-  // Handle Mix Content Warning
-  // If the current connection is an https connection all other connections must be https either
-  var url = options.url || "";
-  if (window.location.protocol === "https:") {
-    var parser = document.createElement('a');
-    parser.href = url;
-    parser.protocol = window.location.protocol;
-    url = parser.href;
-  }
-  this.set('url', url);
+var ol_control_SearchJSON = class olcontrolSearchJSON extends ol_control_Search {
+  constructor(options) {
+    options = options || {};
+    options.className = options.className || 'JSON';
+    delete options.autocomplete;
+    options.minLength = options.minLength || 3;
+    options.typing = options.typing || 800;
+    super(options);
 
-  this._ajax = new ol_ext_Ajax({ dataType:'JSON', auth: options.authentication });
-  this._ajax.on('success', function (resp) {
-    if (resp.status >= 200 && resp.status < 400) {
-      if (typeof(this._callback) === 'function') this._callback(resp.response);
-    } else {
-      if (typeof(this._callback) === 'function') this._callback(false, 'error');
-      console.log('AJAX ERROR', arguments);
+    // Handle Mix Content Warning
+    // If the current connection is an https connection all other connections must be https either
+    var url = options.url || "";
+    if (window.location.protocol === "https:") {
+      var parser = document.createElement('a');
+      parser.href = url;
+      parser.protocol = window.location.protocol;
+      url = parser.href;
     }
-  }.bind(this));
-  this._ajax.on('error', function() {
-    if (typeof(this._callback) === 'function') this._callback(false, 'error');
-    console.log('AJAX ERROR', arguments);
-  }.bind(this));
-  // Handle searchin
-  this._ajax.on('loadstart', function() {
-    this.element.classList.add('searching');
-  }.bind(this));
-  this._ajax.on('loadend', function() {
-    this.element.classList.remove('searching');
-  }.bind(this));
+    this.set('url', url);
 
-  // Overwrite handleResponse
-  if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
-};
-ol_ext_inherits(ol_control_SearchJSON, ol_control_Search);
+    this._ajax = new ol_ext_Ajax({ dataType: 'JSON', auth: options.authentication });
+    this._ajax.on('success', function (resp) {
+      if (resp.status >= 200 && resp.status < 400) {
+        if (typeof (this._callback) === 'function')
+          this._callback(resp.response);
+      } else {
+        if (typeof (this._callback) === 'function')
+          this._callback(false, 'error');
+        console.log('AJAX ERROR', arguments);
+      }
+    }.bind(this));
+    this._ajax.on('error', function () {
+      if (typeof (this._callback) === 'function')
+        this._callback(false, 'error');
+      console.log('AJAX ERROR', arguments);
+    }.bind(this));
+    // Handle searchin
+    this._ajax.on('loadstart', function () {
+      this.element.classList.add('searching');
+    }.bind(this));
+    this._ajax.on('loadend', function () {
+      this.element.classList.remove('searching');
+    }.bind(this));
 
-/** Send ajax request
- * @param {string} url
- * @param {*} data
- * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
- */
-ol_control_SearchJSON.prototype.ajax = function (url, data, cback, options) {
-  options = options || {};
-  this._callback = cback;
-  this._ajax.set('dataType', options.dataType || 'JSON');
-  this._ajax.send(url, data, options);
-};
-
-/** Autocomplete function (ajax request to the server)
- * @param {string} s search string
- * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
- */
-ol_control_SearchJSON.prototype.autocomplete = function (s, cback) {
-  var data = this.requestData(s);
-  var url = encodeURI(this.get('url'));
-  this.ajax(url, data, function(resp) {
-    if (typeof(cback) === 'function') cback(this.handleResponse(resp));
-  });
-};
-
-/**
- * @param {string} s the search string
- * @return {Object} request data (as key:value)
- * @api
- */
-ol_control_SearchJSON.prototype.requestData = function (s){
-  return { q: s };
-};
-
-/**
- * Handle server response to pass the features array to the display list
- * @param {any} response server response
- * @return {Array<any>} an array of feature
- * @api
- */
-ol_control_SearchJSON.prototype.handleResponse = function (response) {
-  return response;
-};
+    // Overwrite handleResponse
+    if (typeof (options.handleResponse) === 'function')
+      this.handleResponse = options.handleResponse;
+  }
+  /** Send ajax request
+   * @param {string} url
+   * @param {*} data
+   * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
+   */
+  ajax(url, data, cback, options) {
+    options = options || {};
+    this._callback = cback;
+    this._ajax.set('dataType', options.dataType || 'JSON');
+    this._ajax.send(url, data, options);
+  }
+  /** Autocomplete function (ajax request to the server)
+   * @param {string} s search string
+   * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
+   */
+  autocomplete(s, cback) {
+    var data = this.requestData(s);
+    var url = encodeURI(this.get('url'));
+    this.ajax(url, data, function (resp) {
+      if (typeof (cback) === 'function')
+        cback(this.handleResponse(resp));
+    });
+  }
+  /**
+   * @param {string} s the search string
+   * @return {Object} request data (as key:value)
+   * @api
+   */
+  requestData(s) {
+    return { q: s };
+  }
+  /**
+   * Handle server response to pass the features array to the display list
+   * @param {any} response server response
+   * @return {Array<any>} an array of feature
+   * @api
+   */
+  handleResponse(response) {
+    return response;
+  }
+}
 
 export default ol_control_SearchJSON

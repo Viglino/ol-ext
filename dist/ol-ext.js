@@ -48,150 +48,155 @@ if (window.Element && !Element.prototype.remove) {
  *  @param {string} options.auth Authorisation as btoa("username:password");
  *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
  */
-ol.ext.Ajax = function(options) {
-  options = options || {};
-  ol.Object.call(this);
-  this._auth = options.auth;
-  this.set('dataType', options.dataType || 'JSON');
-};
-ol.ext.inherits(ol.ext.Ajax, ol.Object);
-/** Helper for get
- * @param {*} options
- *  @param {string} options.url
- *  @param {string} options.auth Authorisation as btoa("username:password");
- *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
- *  @param {string} options.success
- *  @param {string} options.error
- *  @param {*} options.options get options
- */
-ol.ext.Ajax.get = function(options) {
-  var ajax = new ol.ext.Ajax(options);
-  if (options.success) ajax.on('success', function(e) { options.success(e.response, e); } );
-  if (options.error) ajax.on('error', function(e) { options.error(e); } );
-  ajax.send(options.url, options.data, options.options);
-};
-/** Helper to get cors header
- * @param {string} url
- * @param {string} callback
- */
-ol.ext.Ajax.getCORS = function(url, callback) {
-  var request = new XMLHttpRequest();
-  request.open('GET', url, true);
-  request.send();
-  request.onreadystatechange = function() {
-    if (this.readyState == this.HEADERS_RECEIVED) {
-      callback(request.getResponseHeader('Access-Control-Allow-Origin'));
+ol.ext.Ajax = class olextAjax extends ol.Object {
+  constructor(options) {
+    options = options || {};
+    super();
+    this._auth = options.auth;
+    this.set('dataType', options.dataType || 'JSON');
+  }
+  /** Helper for get
+   * @param {*} options
+   *  @param {string} options.url
+   *  @param {string} options.auth Authorisation as btoa("username:password");
+   *  @param {string} options.dataType The type of data that you're expecting back from the server, default JSON
+   *  @param {string} options.success
+   *  @param {string} options.error
+   *  @param {*} options.options get options
+   */
+  static get(options) {
+    var ajax = new ol.ext.Ajax(options);
+    if (options.success)
+      ajax.on('success', function (e) { options.success(e.response, e); });
+    if (options.error)
+      ajax.on('error', function (e) { options.error(e); });
+    ajax.send(options.url, options.data, options.options);
+  }
+  /** Helper to get cors header
+   * @param {string} url
+   * @param {string} callback
+   */
+  static getCORS(url, callback) {
+    var request = new XMLHttpRequest();
+    request.open('GET', url, true);
+    request.send();
+    request.onreadystatechange = function () {
+      if (this.readyState == this.HEADERS_RECEIVED) {
+        callback(request.getResponseHeader('Access-Control-Allow-Origin'));
+      }
+    };
+  }
+  /** Send an ajax request (GET)
+   * @fires success
+   * @fires error
+   * @param {string} url
+   * @param {*} data Data to send to the server as key / value
+   * @param {*} options a set of options that are returned in the
+   *  @param {boolean} options.abort false to prevent aborting the current request, default true
+   */
+  send(url, data, options) {
+    options = options || {};
+    var self = this;
+    // Url
+    var encode = (options.encode !== false);
+    if (encode)
+      url = encodeURI(url);
+    // Parameters
+    var parameters = '';
+    for (var index in data) {
+      if (data.hasOwnProperty(index) && data[index] !== undefined) {
+        parameters += (parameters ? '&' : '?') + index + '=' + (encode ? encodeURIComponent(data[index]) : data[index]);
+      }
     }
-  }
-};
-/** Send an ajax request (GET)
- * @fires success
- * @fires error
- * @param {string} url
- * @param {*} data Data to send to the server as key / value
- * @param {*} options a set of options that are returned in the 
- *  @param {boolean} options.abort false to prevent aborting the current request, default true
- */
-ol.ext.Ajax.prototype.send = function (url, data, options){
-  options = options || {};
-  var self = this;
-  // Url
-  var encode = (options.encode !== false) 
-  if (encode) url = encodeURI(url);
-  // Parameters
-  var parameters = '';
-  for (var index in data) {
-    if (data.hasOwnProperty(index) && data[index]!==undefined) {
-      parameters += (parameters ? '&' : '?') + index + '=' + (encode ? encodeURIComponent(data[index]) : data[index]);
+    // Abort previous request
+    if (this._request && options.abort !== false) {
+      this._request.abort();
     }
-  }
-  // Abort previous request
-  if (this._request && options.abort!==false) {
-    this._request.abort();
-  }
-  // New request
-  var ajax = this._request = new XMLHttpRequest();
-  ajax.open('GET', url + parameters, true);
-  if (options.timeout) ajax.timeout = options.timeout;
-  if (this._auth) {
-    ajax.setRequestHeader("Authorization", "Basic " + this._auth);
-  }
-  // Load complete
-  this.dispatchEvent ({ type: 'loadstart' });
-  ajax.onload = function() {
-    self._request = null;
-    self.dispatchEvent ({ type: 'loadend' });
-    if (this.status >= 200 && this.status < 400) {
-      var response;
-      // Decode response
-      try {
-        switch (self.get('dataType')) {
-          case 'JSON': {
-            response = JSON.parse(this.response);
-            break;
+    // New request
+    var ajax = this._request = new XMLHttpRequest();
+    ajax.open('GET', url + parameters, true);
+    if (options.timeout)
+      ajax.timeout = options.timeout;
+    if (this._auth) {
+      ajax.setRequestHeader("Authorization", "Basic " + this._auth);
+    }
+    // Load complete
+    this.dispatchEvent({ type: 'loadstart' });
+    ajax.onload = function () {
+      self._request = null;
+      self.dispatchEvent({ type: 'loadend' });
+      if (this.status >= 200 && this.status < 400) {
+        var response;
+        // Decode response
+        try {
+          switch (self.get('dataType')) {
+            case 'JSON': {
+              response = JSON.parse(this.response);
+              break;
+            }
+            default: {
+              response = this.response;
+            }
           }
-          default: {
-            response = this.response;
-          }
+        } catch (e) {
+          // Error
+          self.dispatchEvent({
+            type: 'error',
+            status: 0,
+            statusText: 'parsererror',
+            error: e,
+            options: options,
+            jqXHR: this
+          });
+          return;
         }
-      } catch(e) {
-        // Error
-        self.dispatchEvent ({ 
-          type: 'error',
-          status: 0,
-          statusText: 'parsererror',
-          error: e,
+        // Success
+        //console.log('response',response)
+        self.dispatchEvent({
+          type: 'success',
+          response: response,
+          status: this.status,
+          statusText: this.statusText,
           options: options,
           jqXHR: this
         });
-        return;
+      } else {
+        self.dispatchEvent({
+          type: 'error',
+          status: this.status,
+          statusText: this.statusText,
+          options: options,
+          jqXHR: this
+        });
       }
-      // Success
-      //console.log('response',response)
-      self.dispatchEvent ({ 
-        type: 'success',
-        response: response,
+    };
+    // Oops
+    ajax.ontimeout = function () {
+      self._request = null;
+      self.dispatchEvent({ type: 'loadend' });
+      self.dispatchEvent({
+        type: 'error',
         status: this.status,
-        statusText: this.statusText,
+        statusText: 'Timeout',
         options: options,
         jqXHR: this
       });
-    } else {
-      self.dispatchEvent ({ 
+    };
+    ajax.onerror = function () {
+      self._request = null;
+      self.dispatchEvent({ type: 'loadend' });
+      self.dispatchEvent({
         type: 'error',
         status: this.status,
         statusText: this.statusText,
         options: options,
         jqXHR: this
       });
-    }
-  };
-  // Oops
-  ajax.ontimeout = function() {
-    self._request = null;
-    self.dispatchEvent ({ type: 'loadend' });
-    self.dispatchEvent ({ 
-      type: 'error',
-      status: this.status,
-      statusText: 'Timeout',
-      options: options,
-      jqXHR: this
-    });
-  };
-  ajax.onerror = function() {
-    self._request = null;
-    self.dispatchEvent ({ type: 'loadend' });
-    self.dispatchEvent ({ 
-      type: 'error',
-      status: this.status,
-      statusText: this.statusText,
-      options: options,
-      jqXHR: this
-    });
-  };
-  // GO!
-  ajax.send();
-};
+    };
+    // GO!
+    ajax.send();
+  }
+}
 
 /** SVG filter 
  * @param {*} options
@@ -1879,33 +1884,34 @@ if (window.ol && !ol.sphere) {
  *  @param {boolean} options.grayscale get grayscale image, default false,
  *  @param {boolean} options.alpha get alpha channel, default false
  */
-ol.ext.SVGFilter.Laplacian = function(options) {
-  options = options || {};
-  ol.ext.SVGFilter.call(this, { id: options.id });
-  var operation = {
-    feoperation: 'feConvolveMatrix',
-    in: 'SourceGraphic',
-    preserveAlpha: true,
-    result: 'C1'
-  };
-  if (options.neighbours===4) {
-    operation.kernelMatrix = [
-       0, -1,  0, 
-      -1,  4, -1, 
-       0, -1,  0
-    ];
-  } else {
-    operation.kernelMatrix = [
-      -1, -1, -1, 
-      -1,  8, -1, 
-      -1, -1, -1
-    ];
+ol.ext.SVGFilter.Laplacian = class olextSVGFilterLaplacian extends ol.ext.SVGFilter {
+  constructor(options) {
+    options = options || {};
+    super({ id: options.id });
+    var operation = {
+      feoperation: 'feConvolveMatrix',
+      in: 'SourceGraphic',
+      preserveAlpha: true,
+      result: 'C1'
+    };
+    if (options.neighbours===4) {
+      operation.kernelMatrix = [
+        0, -1,  0, 
+        -1,  4, -1, 
+        0, -1,  0
+      ];
+    } else {
+      operation.kernelMatrix = [
+        -1, -1, -1, 
+        -1,  8, -1, 
+        -1, -1, -1
+      ];
+    }
+    this.addOperation(operation);
+    if (options.grayscale) this.grayscale();
+    else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
   }
-  this.addOperation(operation);
-  if (options.grayscale) this.grayscale();
-  else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
 };
-ol.ext.inherits(ol.ext.SVGFilter.Laplacian, ol.ext.SVGFilter);
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -1973,76 +1979,77 @@ ol.ext.SVGFilter.Paper = class olextSVGFilterPaper extends ol.ext.SVGFilter {
  *  @param {boolean} options.grayscale get grayscale image, default false,
  *  @param {boolean} options.alpha get alpha channel, default false
  */
-ol.ext.SVGFilter.Prewitt = function(options) {
-  options = options || {};
-  ol.ext.SVGFilter.call(this, { id: options.id, color: 'sRGB' });
-  var operation = {
-    feoperation: 'feConvolveMatrix',
-    in: 'SourceGraphic',
-    preserveAlpha: true,
-    order: 3
-  };
-  // Vertical
-  operation.kernelMatrix = [
-    -1, -1, -1, 
-     0,  0,  0,
-     1,  1,  1
-  ];
-  operation.result = 'V1';
-  this.addOperation(operation);
-  operation.kernelMatrix = [
-     1,  1,  1, 
-     0,  0,  0,
-    -1, -1, -1
-  ];
-  operation.result = 'V2';
-  this.addOperation(operation);
-  // Horizontal
-  operation.kernelMatrix = [
-    -1,  0,  1, 
-    -1,  0,  1,
-    -1,  0,  1
-  ];
-  operation.result = 'H1';
-  this.addOperation(operation);
-  operation.kernelMatrix = [
-     1, -0, -1, 
-     1,  0, -1,
-     1,  0, -1
-  ];
-  operation.result = 'H2';
-  this.addOperation(operation);
-  // Compose V
-  this.addOperation({
-    feoperation: 'feComposite',
-    operator: 'arithmetic',
-    in: 'V1',
-    in2: 'V2',
-    k2: 1,
-    k3: 1,
-    result: 'V'
-  });
-  // Compose H
-  this.addOperation({
-    feoperation: 'feComposite',
-    operator: 'arithmetic',
-    in: 'H1',
-    in2: 'H2',
-    k2: 1,
-    k3: 1,
-    result: 'H'
-  });
-  // Merge
-  this.addOperation({
-    feoperation: 'feBlend',
-    mode: 'lighten',
-    in: 'H',
-    in2: 'V'
-  });
-  if (options.grayscale) this.grayscale();
-  else if (options.alpha) this.luminanceToAlpha();
+ol.ext.SVGFilter.Prewitt = class olextSVGFilterPrewitt extends ol.ext.SVGFilter {
+  constructor(options) {
+    options = options || {};
+    super({ id: options.id, color: 'sRGB' });
+    var operation = {
+      feoperation: 'feConvolveMatrix',
+      in: 'SourceGraphic',
+      preserveAlpha: true,
+      order: 3
+    };
+    // Vertical
+    operation.kernelMatrix = [
+      -1, -1, -1, 
+      0,  0,  0,
+      1,  1,  1
+    ];
+    operation.result = 'V1';
+    this.addOperation(operation);
+    operation.kernelMatrix = [
+      1,  1,  1, 
+      0,  0,  0,
+      -1, -1, -1
+    ];
+    operation.result = 'V2';
+    this.addOperation(operation);
+    // Horizontal
+    operation.kernelMatrix = [
+      -1,  0,  1, 
+      -1,  0,  1,
+      -1,  0,  1
+    ];
+    operation.result = 'H1';
+    this.addOperation(operation);
+    operation.kernelMatrix = [
+      1, -0, -1, 
+      1,  0, -1,
+      1,  0, -1
+    ];
+    operation.result = 'H2';
+    this.addOperation(operation);
+    // Compose V
+    this.addOperation({
+      feoperation: 'feComposite',
+      operator: 'arithmetic',
+      in: 'V1',
+      in2: 'V2',
+      k2: 1,
+      k3: 1,
+      result: 'V'
+    });
+    // Compose H
+    this.addOperation({
+      feoperation: 'feComposite',
+      operator: 'arithmetic',
+      in: 'H1',
+      in2: 'H2',
+      k2: 1,
+      k3: 1,
+      result: 'H'
+    });
+    // Merge
+    this.addOperation({
+      feoperation: 'feBlend',
+      mode: 'lighten',
+      in: 'H',
+      in2: 'V'
+    });
+    if (options.grayscale) this.grayscale();
+    else if (options.alpha) this.luminanceToAlpha();
+  }
 };
-ol.ext.inherits(ol.ext.SVGFilter.Prewitt, ol.ext.SVGFilter);
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -2056,76 +2063,77 @@ ol.ext.inherits(ol.ext.SVGFilter.Prewitt, ol.ext.SVGFilter);
  *  @param {boolean} options.grayscale get grayscale image, default false,
  *  @param {boolean} options.alpha get alpha channel, default false
  */
-ol.ext.SVGFilter.Roberts = function(options) {
-  options = options || {};
-  ol.ext.SVGFilter.call(this, { id: options.id, color: 'sRGB' });
-  var operation = {
-    feoperation: 'feConvolveMatrix',
-    in: 'SourceGraphic',
-    preserveAlpha: true,
-    order: 3
-  };
-  // Vertical
-  operation.kernelMatrix = [
-    -1,  0,  0, 
-     0,  0,  0,
-    0,   0,  1
-  ];
-  operation.result = 'V1';
-  this.addOperation(operation);
-  operation.kernelMatrix = [
-     1,  0,  0, 
-     0,  0,  0,
-     0,  0, -1
-  ];
-  operation.result = 'V2';
-  this.addOperation(operation);
-  // Horizontal
-  operation.kernelMatrix = [
-     0,  0,  1, 
-     0,  0,  0,
-    -1,  0,  0
-  ];
-  operation.result = 'H1';
-  this.addOperation(operation);
-  operation.kernelMatrix = [
-     0, -0, -1, 
-     0,  0,  0,
-     1,  0,  0
-  ];
-  operation.result = 'H2';
-  this.addOperation(operation);
-  // Compose V
-  this.addOperation({
-    feoperation: 'feComposite',
-    operator: 'arithmetic',
-    in: 'V1',
-    in2: 'V2',
-    k2: 1,
-    k3: 1,
-    result: 'V'
-  });
-  // Compose H
-  this.addOperation({
-    feoperation: 'feComposite',
-    operator: 'arithmetic',
-    in: 'H1',
-    in2: 'H2',
-    k2: 1,
-    k3: 1,
-    result: 'H'
-  });
-  // Merge
-  this.addOperation({
-    feoperation: 'feBlend',
-    mode: 'lighten',
-    in: 'H',
-    in2: 'V'
-  });
-  if (options.grayscale) this.grayscale();
-  else if (options.alpha) this.luminanceToAlpha();
+ol.ext.SVGFilter.Roberts = class olextSVGFilterRoberts extends ol.ext.SVGFilter {
+  constructor(options) {
+    options = options || {};
+    super({ id: options.id, color: 'sRGB' });
+    var operation = {
+      feoperation: 'feConvolveMatrix',
+      in: 'SourceGraphic',
+      preserveAlpha: true,
+      order: 3
+    };
+    // Vertical
+    operation.kernelMatrix = [
+      -1,  0,  0, 
+      0,  0,  0,
+      0,   0,  1
+    ];
+    operation.result = 'V1';
+    this.addOperation(operation);
+    operation.kernelMatrix = [
+      1,  0,  0, 
+      0,  0,  0,
+      0,  0, -1
+    ];
+    operation.result = 'V2';
+    this.addOperation(operation);
+    // Horizontal
+    operation.kernelMatrix = [
+      0,  0,  1, 
+      0,  0,  0,
+      -1,  0,  0
+    ];
+    operation.result = 'H1';
+    this.addOperation(operation);
+    operation.kernelMatrix = [
+      0, -0, -1, 
+      0,  0,  0,
+      1,  0,  0
+    ];
+    operation.result = 'H2';
+    this.addOperation(operation);
+    // Compose V
+    this.addOperation({
+      feoperation: 'feComposite',
+      operator: 'arithmetic',
+      in: 'V1',
+      in2: 'V2',
+      k2: 1,
+      k3: 1,
+      result: 'V'
+    });
+    // Compose H
+    this.addOperation({
+      feoperation: 'feComposite',
+      operator: 'arithmetic',
+      in: 'H1',
+      in2: 'H2',
+      k2: 1,
+      k3: 1,
+      result: 'H'
+    });
+    // Merge
+    this.addOperation({
+      feoperation: 'feBlend',
+      mode: 'lighten',
+      in: 'H',
+      in2: 'V'
+    });
+    if (options.grayscale) this.grayscale();
+    else if (options.alpha) this.luminanceToAlpha();
+  }
 };
-ol.ext.inherits(ol.ext.SVGFilter.Roberts, ol.ext.SVGFilter);
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -2139,76 +2147,77 @@ ol.ext.inherits(ol.ext.SVGFilter.Roberts, ol.ext.SVGFilter);
  *  @param {boolean} options.grayscale get grayscale image, default false,
  *  @param {boolean} options.alpha get alpha channel, default false
  */
-ol.ext.SVGFilter.Sobel = function(options) {
-  options = options || {};
-  ol.ext.SVGFilter.call(this, { id: options.id, color: 'sRGB' });
-  var operation = {
-    feoperation: 'feConvolveMatrix',
-    in: 'SourceGraphic',
-    preserveAlpha: true,
-    order: 3
-  };
-  // Vertical
-  operation.kernelMatrix = [
-    -1, -2, -1, 
-     0,  0,  0,
-     1,  2,  1
-  ];
-  operation.result = 'V1';
-  this.addOperation(operation);
-  operation.kernelMatrix = [
-     1,  2,  1, 
-     0,  0,  0,
-    -1, -2, -1
-  ];
-  operation.result = 'V2';
-  this.addOperation(operation);
-  // Horizontal
-  operation.kernelMatrix = [
-    -1,  0,  1, 
-    -2,  0,  2,
-    -1,  0,  1
-  ];
-  operation.result = 'H1';
-  this.addOperation(operation);
-  operation.kernelMatrix = [
-     1, -0, -1, 
-     2,  0, -2,
-     1,  0, -1
-  ];
-  operation.result = 'H2';
-  this.addOperation(operation);
-  // Compose V
-  this.addOperation({
-    feoperation: 'feComposite',
-    operator: 'arithmetic',
-    in: 'V1',
-    in2: 'V2',
-    k2: 1,
-    k3: 1,
-    result: 'V'
-  });
-  // Compose H
-  this.addOperation({
-    feoperation: 'feComposite',
-    operator: 'arithmetic',
-    in: 'H1',
-    in2: 'H2',
-    k2: 1,
-    k3: 1,
-    result: 'H'
-  });
-  // Merge
-  this.addOperation({
-    feoperation: 'feBlend',
-    mode: 'lighten',
-    in: 'H',
-    in2: 'V'
-  });
-  if (options.grayscale) this.grayscale();
-  else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
+ol.ext.SVGFilter.Sobel = class olextSVGFilterSobel extends ol.ext.SVGFilter {
+  constructor(options) {
+    options = options || {};
+    super({ id: options.id, color: 'sRGB' });
+    var operation = {
+      feoperation: 'feConvolveMatrix',
+      in: 'SourceGraphic',
+      preserveAlpha: true,
+      order: 3
+    };
+    // Vertical
+    operation.kernelMatrix = [
+      -1, -2, -1, 
+      0,  0,  0,
+      1,  2,  1
+    ];
+    operation.result = 'V1';
+    this.addOperation(operation);
+    operation.kernelMatrix = [
+      1,  2,  1, 
+      0,  0,  0,
+      -1, -2, -1
+    ];
+    operation.result = 'V2';
+    this.addOperation(operation);
+    // Horizontal
+    operation.kernelMatrix = [
+      -1,  0,  1, 
+      -2,  0,  2,
+      -1,  0,  1
+    ];
+    operation.result = 'H1';
+    this.addOperation(operation);
+    operation.kernelMatrix = [
+      1, -0, -1, 
+      2,  0, -2,
+      1,  0, -1
+    ];
+    operation.result = 'H2';
+    this.addOperation(operation);
+    // Compose V
+    this.addOperation({
+      feoperation: 'feComposite',
+      operator: 'arithmetic',
+      in: 'V1',
+      in2: 'V2',
+      k2: 1,
+      k3: 1,
+      result: 'V'
+    });
+    // Compose H
+    this.addOperation({
+      feoperation: 'feComposite',
+      operator: 'arithmetic',
+      in: 'H1',
+      in2: 'H2',
+      k2: 1,
+      k3: 1,
+      result: 'H'
+    });
+    // Merge
+    this.addOperation({
+      feoperation: 'feBlend',
+      mode: 'lighten',
+      in: 'H',
+      in2: 'V'
+    });
+    if (options.grayscale) this.grayscale();
+    else if (options.alpha) this.luminanceToAlpha({ gamma: options.gamma });
+  }
 };
-ol.ext.inherits(ol.ext.SVGFilter.Sobel, ol.ext.SVGFilter);
 
 /** Vanilla JS geographic inputs
  * color, size, width, font, symboles, dash, arrow, pattern
@@ -4492,436 +4501,458 @@ ol.control.Toggle.prototype.getInteraction = function() {
  *  @param {boolean} options.centerOnSelect center map on search, default false
  *  @param {number|boolean} options.zoomOnSelect center map on search and zoom to value if zoom < value, default false
  */
-ol.control.Search = function(options) {
-  var self = this;
-  if (!options) options = {};
-  if (options.typing == undefined) options.typing = 300;
-  // Class name for history
-  this._classname = options.className || 'search';
-  var classNames = (options.className||'')+ ' ol-search'
-    + (options.target ? '' : ' ol-unselectable ol-control');
-  var element = ol.ext.element.create('DIV',{
-    className: classNames 
-  })
-  if (options.collapsed!==false) element.classList.add('ol-collapsed');
-  if (!options.target) {
-    this.button = document.createElement('BUTTON');
-    this.button.setAttribute('type', 'button');
-    this.button.setAttribute('title', options.title || options.label || 'Search');
-    this.button.addEventListener('click', function() {
-      element.classList.toggle('ol-collapsed');
-      if (!element.classList.contains('ol-collapsed')) {
-        element.querySelector('input.search').focus();
-        var listElements = element.querySelectorAll('li');
-        for (var i = 0; i < listElements.length; i++) {
-          listElements[i].classList.remove('select');
+ol.control.Search = class olcontrolSearch extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    var classNames = (options.className || '') + ' ol-search'
+      + (options.target ? '' : ' ol-unselectable ol-control');
+    var element = ol.ext.element.create('DIV', {
+      className: classNames
+    });
+    super({
+      element: element,
+      target: options.target
+    });
+    var self = this;
+    if (options.typing == undefined) {
+      options.typing = 300;
+    }
+    // Class name for history
+    this._classname = options.className || 'search';
+    if (options.collapsed !== false) element.classList.add('ol-collapsed');
+    if (!options.target) {
+      this.button = document.createElement('BUTTON');
+      this.button.setAttribute('type', 'button');
+      this.button.setAttribute('title', options.title || options.label || 'Search');
+      this.button.addEventListener('click', function () {
+        element.classList.toggle('ol-collapsed');
+        if (!element.classList.contains('ol-collapsed')) {
+          element.querySelector('input.search').focus();
+          var listElements = element.querySelectorAll('li');
+          for (var i = 0; i < listElements.length; i++) {
+            listElements[i].classList.remove('select');
+          }
+          // Display history
+          if (!input.value) {
+            self.drawList_();
+          }
         }
-        // Display history
-        if (!input.value) {
+      });
+      element.appendChild(this.button);
+    }
+    // Input label
+    if (options.inputLabel) {
+      var label = document.createElement("LABEL");
+      label.innerText = options.inputLabel;
+      element.appendChild(label);
+    }
+    // Search input
+    var tout, cur = "";
+    var input = this._input = document.createElement("INPUT");
+    input.setAttribute("type", "search");
+    input.setAttribute("class", "search");
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("placeholder", options.placeholder || "Search...");
+    input.addEventListener("change", function (e) {
+      self.dispatchEvent({ type: "change:input", input: e, value: input.value });
+    });
+    var doSearch = function (e) {
+      // console.log(e.type+" "+e.key)'
+      var li = element.querySelector("ul.autocomplete li.select");
+      var val = input.value;
+      // move up/down
+      if (e.key == 'ArrowDown' || e.key == 'ArrowUp' || e.key == 'Down' || e.key == 'Up') {
+        if (li) {
+          li.classList.remove("select");
+          li = (/Down/.test(e.key)) ? li.nextElementSibling : li.previousElementSibling;
+          if (li)
+            li.classList.add("select");
+        } else {
+          element.querySelector("ul.autocomplete li").classList.add("select");
+        }
+      }
+      // Clear input
+      else if (e.type == 'input' && !val) {
+        setTimeout(function () {
+          self.drawList_();
+        }, 200);
+      }
+      // Select in the list
+      else if (li && (e.type == "search" || e.key == "Enter")) {
+        if (element.classList.contains("ol-control"))
+          input.blur();
+        li.classList.remove("select");
+        cur = val;
+        self._handleSelect(self._list[li.getAttribute("data-search")]);
+      }
+      // Search / autocomplete
+      else if ((e.type == "search" || e.key == 'Enter')
+        || (cur != val && options.typing >= 0)) {
+        // current search
+        cur = val;
+        if (cur) {
+          // prevent searching on each typing
+          if (tout)
+            clearTimeout(tout);
+          var minLength = self.get("minLength");
+          tout = setTimeout(function () {
+            if (cur.length >= minLength) {
+              var s = self.autocomplete(cur, function (auto) { self.drawList_(auto); });
+              if (s)
+                self.drawList_(s);
+            }
+            else
+              self.drawList_();
+          }, options.typing);
+        } else {
           self.drawList_();
         }
       }
-    });
-    element.appendChild(this.button);
-  }
-  // Input label
-  if (options.inputLabel) {
-    var label = document.createElement("LABEL");
-    label.innerText = options.inputLabel;
-    element.appendChild(label);
-  }
-  // Search input
-  var tout, cur="";
-  var input = this._input = document.createElement("INPUT");
-  input.setAttribute("type", "search");
-  input.setAttribute("class", "search");
-  input.setAttribute("autocomplete", "off");
-  input.setAttribute("placeholder", options.placeholder||"Search...");
-  input.addEventListener("change", function(e) {
-    self.dispatchEvent({ type:"change:input", input:e, value:input.value });
-  });
-  var doSearch = function(e) {
-    // console.log(e.type+" "+e.key)'
-    var li  = element.querySelector("ul.autocomplete li.select");
-    var	val = input.value;
-    // move up/down
-    if (e.key=='ArrowDown' || e.key=='ArrowUp' || e.key=='Down' || e.key=='Up') {
-      if (li) {
-        li.classList.remove("select");
-        li = (/Down/.test(e.key)) ? li.nextElementSibling : li.previousElementSibling;
-        if (li) li.classList.add("select");
+      // Clear list selection
+      else {
+        li = element.querySelector("ul.autocomplete li");
+        if (li) li.classList.remove('select');
       }
-      else element.querySelector("ul.autocomplete li").classList.add("select");
-    }
-    // Clear input
-    else if (e.type=='input' && !val) {
-      setTimeout(function(){
-        self.drawList_();
-      }, 200);
-    }
-    // Select in the list
-    else if (li && (e.type=="search" || e.key =="Enter")) {
-      if (element.classList.contains("ol-control")) input.blur();
-      li.classList.remove("select");
-      cur = val;
-      self._handleSelect(self._list[li.getAttribute("data-search")]);
-    }
-    // Search / autocomplete
-    else if ( (e.type=="search" || e.key =='Enter')
-      || (cur!=val && options.typing>=0)) {
-      // current search
-      cur = val;
-      if (cur) {
-        // prevent searching on each typing
-        if (tout) clearTimeout(tout);
-        var minLength = self.get("minLength");
-        tout = setTimeout(function() {
-          if (cur.length >= minLength) {
-            var s = self.autocomplete (cur, function(auto) { self.drawList_(auto); });
-            if (s) self.drawList_(s);
+    };
+    input.addEventListener("keyup", doSearch);
+    input.addEventListener("search", doSearch);
+    input.addEventListener("cut", doSearch);
+    input.addEventListener("paste", doSearch);
+    input.addEventListener("input", doSearch);
+    if (!options.noCollapse) {
+      input.addEventListener('blur', function () {
+        setTimeout(function () {
+          if (input !== document.activeElement) {
+            element.classList.add('ol-collapsed');
+            this.set('reverse', false);
+            element.classList.remove('ol-revers');
           }
-          else self.drawList_();
-        }, options.typing);
-      }
-      else self.drawList_();
-    }
-    // Clear list selection
-    else {
-      li = element.querySelector("ul.autocomplete li");
-      if (li) li.classList.remove('select');
-    }
-  };
-  input.addEventListener("keyup", doSearch);
-  input.addEventListener("search", doSearch);
-  input.addEventListener("cut", doSearch);
-  input.addEventListener("paste", doSearch);
-  input.addEventListener("input", doSearch);
-  if (!options.noCollapse) {
-    input.addEventListener('blur', function() {
-      setTimeout(function(){ 
-        if (input !== document.activeElement) {
-          element.classList.add('ol-collapsed');
-          this.set('reverse', false);
+        }.bind(this), 200);
+      }.bind(this));
+      input.addEventListener('focus', function () {
+        if (!this.get('reverse')) {
+          element.classList.remove('ol-collapsed');
           element.classList.remove('ol-revers');
         }
-      }.bind(this), 200);
-    }.bind(this));
-    input.addEventListener('focus', function() {
-      if (!this.get('reverse')) {
-        element.classList.remove('ol-collapsed');
-        element.classList.remove('ol-revers');
-      }
-    }.bind(this));
-  }
-  element.appendChild(input);
-  // Reverse geocode
-  if (options.reverse) {
-    var reverse = ol.ext.element.create('BUTTON', {
-      type: 'button',
-      class: 'ol-revers',
-      title: options.reverseTitle || 'click on the map',
-      click: function() {
-        if (!this.get('reverse')) {
-          this.set('reverse', !this.get('reverse'));
-          input.focus();
-          element.classList.add('ol-revers');
-        } else {
-          this.set('reverse', false);
+      }.bind(this));
+    }
+    element.appendChild(input);
+    // Reverse geocode
+    if (options.reverse) {
+      var reverse = ol.ext.element.create('BUTTON', {
+        type: 'button',
+        class: 'ol-revers',
+        title: options.reverseTitle || 'click on the map',
+        click: function () {
+          if (!this.get('reverse')) {
+            this.set('reverse', !this.get('reverse'));
+            input.focus();
+            element.classList.add('ol-revers');
+          } else {
+            this.set('reverse', false);
+          }
+        }.bind(this)
+      });
+      element.appendChild(reverse);
+    }
+    // Autocomplete list
+    var ul = document.createElement('UL');
+    ul.classList.add('autocomplete');
+    element.appendChild(ul);
+    if (typeof (options.getTitle) == 'function') this.getTitle = options.getTitle;
+    if (typeof (options.autocomplete) == 'function') this.autocomplete = options.autocomplete;
+    // Options
+    this.set('copy', options.copy);
+    this.set('minLength', options.minLength || 1);
+    this.set('maxItems', options.maxItems || 10);
+    this.set('maxHistory', options.maxHistory || options.maxItems || 10);
+    // Select
+    if (options.onselect)
+      this.on('select', options.onselect);
+    // Center on select
+    if (options.centerOnSelect) {
+      this.on('select', function (e) {
+        var map = this.getMap();
+        if (map) {
+          map.getView().setCenter(e.coordinate);
         }
-      }.bind(this)
-    });
-    element.appendChild(reverse);
-  }
-  // Autocomplete list
-  var ul = document.createElement('UL');
-  ul.classList.add('autocomplete');
-  element.appendChild(ul);
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  if (typeof (options.getTitle)=='function') this.getTitle = options.getTitle;
-  if (typeof (options.autocomplete)=='function') this.autocomplete = options.autocomplete;
-  // Options
-  this.set('copy', options.copy);
-  this.set('minLength', options.minLength || 1);
-  this.set('maxItems', options.maxItems || 10);
-  this.set('maxHistory', options.maxHistory || options.maxItems || 10);
-  // Select
-  if (options.onselect) this.on('select', options.onselect);
-  // Center on select
-  if (options.centerOnSelect) this.on('select', function(e) {
-    var map = this.getMap();
-    if (map) {
-      map.getView().setCenter(e.coordinate);
+      }.bind(this));
     }
-  }.bind(this));
-  // Zoom on select
-  if (options.zoomOnSelect) this.on('select', function(e) {
-    var map = this.getMap();
-    if (map) {
-      map.getView().setCenter(e.coordinate);
-      if (map.getView().getZoom() < options.zoomOnSelect) map.getView().setZoom(options.zoomOnSelect);
+    // Zoom on select
+    if (options.zoomOnSelect) {
+      this.on('select', function (e) {
+        var map = this.getMap();
+        if (map) {
+          map.getView().setCenter(e.coordinate);
+          if (map.getView().getZoom() < options.zoomOnSelect)
+            map.getView().setZoom(options.zoomOnSelect);
+        }
+      }.bind(this));
     }
-  }.bind(this));
-  // History
-  this.restoreHistory();
-  this.drawList_();
-};
-ol.ext.inherits(ol.control.Search, ol.control.Control);
-/**
- * Remove the control from its current map and attach it to the new map.
- * Subclasses may set up event handlers to get notified about changes to
- * the map here.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.control.Search.prototype.setMap = function (map) {
-  if (this._listener) ol.Observable.unByKey(this._listener);
-	this._listener = null;
-  ol.control.Control.prototype.setMap.call(this, map);
-  if (map) {
-		this._listener = map.on('click', this._handleClick.bind(this));
-	}
-};
-/** Collapse the search
- * @param {boolean} [b=true]
- * @api
- */
-ol.control.Search.prototype.collapse = function (b) {
-  if (b===false) this.element.classList.remove('ol-collapsed')
-  else this.element.classList.add('ol-collapsed')
-};
-/** Get the input field
-*	@return {Element} 
-*	@api
-*/
-ol.control.Search.prototype.getInputField = function () {
-  return this._input;
-};
-/** Returns the text to be displayed in the menu
- *	@param {any} f feature to be displayed
- *	@return {string} the text to be displayed in the index, default f.name
- *	@api
- */
-ol.control.Search.prototype.getTitle = function (f) {
-  return f.name || "No title";
-};
-/** Returns title as text
- *	@param {any} f feature to be displayed
- *	@return {string} 
- *	@api
- */
-ol.control.Search.prototype._getTitleTxt = function (f) {
-  return ol.ext.element.create('DIV', {
-    html: this.getTitle(f)
-  }).innerText;
-};
-/** Force search to refresh
- */
-ol.control.Search.prototype.search = function () {
-  var search = this.element.querySelector("input.search");
-  this._triggerCustomEvent('search', search);
-};
-/** Reverse geocode
- * @param {Object} event
- *  @param {ol.coordinate} event.coordinate
- * @private
- */
-ol.control.Search.prototype._handleClick = function (e) {
-  if (this.get('reverse')) {
-    document.activeElement.blur();
-    this.reverseGeocode(e.coordinate);
-  }
-};
-/** Reverse geocode
- * @param {ol.coordinate} coord
- * @param {function | undefined} cback a callback function, default trigger a select event
- * @api
- */
-ol.control.Search.prototype.reverseGeocode = function (/*coord, cback*/) {
-  // this._handleSelect(f);
-};
-/** Trigger custom event on elemebt
- * @param {*} eventName 
- * @param {*} element 
- * @private
- */
-ol.control.Search.prototype._triggerCustomEvent = function (eventName, element) {
-  ol.ext.element.dispatchEvent(eventName, element);
-};
-/** Set the input value in the form (for initialisation purpose)
-*	@param {string} value
-*	@param {boolean} search to start a search
-*	@api
-*/
-ol.control.Search.prototype.setInput = function (value, search) {
-  var input = this.element.querySelector("input.search");
-  input.value = value;
-  if (search) this._triggerCustomEvent("keyup", input);
-};
-/** A line has been clicked in the menu > dispatch event
- * @param {any} f the feature, as passed in the autocomplete
- * @param {boolean} reverse true if reverse geocode
- * @param {ol.coordinate} coord
- * @param {*} options options passed to the event
- *	@api
- */
-ol.control.Search.prototype.select = function (f, reverse, coord, options) {
-  var event = { type:"select", search:f, reverse: !!reverse, coordinate: coord };
-  if (options) {
-    for (var i in options) {
-      event[i] = options[i];
-    }
-  }
-  this.dispatchEvent(event);
-};
-/**
- * Save history and select
- * @param {*} f 
- * @param {boolean} reverse true if reverse geocode
- * @param {*} options options send in the event 
- * @private
- */
-ol.control.Search.prototype._handleSelect = function (f, reverse, options) {
-  if (!f) return;
-  // Save input in history
-  var hist = this.get('history');
-  // Prevent error on stringify
-  var i;
-  try {
-    var fstr = JSON.stringify(f);
-    for (i=hist.length-1; i>=0; i--) {
-      if (!hist[i] || JSON.stringify(hist[i]) === fstr) {
-        hist.splice(i,1);
-      }
-    }
-  } catch (e) {
-    for (i=hist.length-1; i>=0; i--) {
-      if (hist[i] === f) {
-        hist.splice(i,1);
-      }
-    }
-  }
-  hist.unshift(f);
-  var size = Math.max(0, this.get('maxHistory')||10) || 0;
-  while (hist.length > size) {
-    hist.pop();
-  } 
-  this.saveHistory();
-  // Select feature
-  this.select(f, reverse, null, options);
-  if (reverse) {
-    this.setInput(this._getTitleTxt(f));
+    // History
+    this.restoreHistory();
     this.drawList_();
-    setTimeout(function() { this.collapse(false); }.bind(this), 300);
   }
-};
+  /**
+   * Remove the control from its current map and attach it to the new map.
+   * Subclasses may set up event handlers to get notified about changes to
+   * the map here.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this._listener) ol.Observable.unByKey(this._listener);
+    this._listener = null;
+    super.setMap(map);
+    if (map) {
+      this._listener = map.on('click', this._handleClick.bind(this));
+    }
+  }
+  /** Collapse the search
+   * @param {boolean} [b=true]
+   * @api
+   */
+  collapse(b) {
+    if (b === false)
+      this.element.classList.remove('ol-collapsed');
+    else
+      this.element.classList.add('ol-collapsed');
+  }
+  /** Get the input field
+  *	@return {Element}
+  *	@api
+  */
+  getInputField() {
+    return this._input;
+  }
+  /** Returns the text to be displayed in the menu
+   *	@param {any} f feature to be displayed
+   *	@return {string} the text to be displayed in the index, default f.name
+   *	@api
+   */
+  getTitle(f) {
+    return f.name || "No title";
+  }
+  /** Returns title as text
+   *	@param {any} f feature to be displayed
+   *	@return {string}
+   *	@api
+   */
+  _getTitleTxt(f) {
+    return ol.ext.element.create('DIV', {
+      html: this.getTitle(f)
+    }).innerText;
+  }
+  /** Force search to refresh
+   */
+  search() {
+    var search = this.element.querySelector("input.search");
+    this._triggerCustomEvent('search', search);
+  }
+  /** Reverse geocode
+   * @param {Object} event
+   *  @param {ol.coordinate} event.coordinate
+   * @private
+   */
+  _handleClick(e) {
+    if (this.get('reverse')) {
+      document.activeElement.blur();
+      this.reverseGeocode(e.coordinate);
+    }
+  }
+  /** Reverse geocode
+   * @param {ol.coordinate} coord
+   * @param {function | undefined} cback a callback function, default trigger a select event
+   * @api
+   */
+  reverseGeocode( /*coord, cback*/) {
+    // this._handleSelect(f);
+  }
+  /** Trigger custom event on elemebt
+   * @param {*} eventName
+   * @param {*} element
+   * @private
+   */
+  _triggerCustomEvent(eventName, element) {
+    ol.ext.element.dispatchEvent(eventName, element);
+  }
+  /** Set the input value in the form (for initialisation purpose)
+  *	@param {string} value
+  *	@param {boolean} search to start a search
+  *	@api
+  */
+  setInput(value, search) {
+    var input = this.element.querySelector("input.search");
+    input.value = value;
+    if (search)
+      this._triggerCustomEvent("keyup", input);
+  }
+  /** A line has been clicked in the menu > dispatch event
+   * @param {any} f the feature, as passed in the autocomplete
+   * @param {boolean} reverse true if reverse geocode
+   * @param {ol.coordinate} coord
+   * @param {*} options options passed to the event
+   *	@api
+   */
+  select(f, reverse, coord, options) {
+    var event = { type: "select", search: f, reverse: !!reverse, coordinate: coord };
+    if (options) {
+      for (var i in options) {
+        event[i] = options[i];
+      }
+    }
+    this.dispatchEvent(event);
+  }
+  /**
+   * Save history and select
+   * @param {*} f
+   * @param {boolean} reverse true if reverse geocode
+   * @param {*} options options send in the event
+   * @private
+   */
+  _handleSelect(f, reverse, options) {
+    if (!f)
+      return;
+    // Save input in history
+    var hist = this.get('history');
+    // Prevent error on stringify
+    var i;
+    try {
+      var fstr = JSON.stringify(f);
+      for (i = hist.length - 1; i >= 0; i--) {
+        if (!hist[i] || JSON.stringify(hist[i]) === fstr) {
+          hist.splice(i, 1);
+        }
+      }
+    } catch (e) {
+      for (i = hist.length - 1; i >= 0; i--) {
+        if (hist[i] === f) {
+          hist.splice(i, 1);
+        }
+      }
+    }
+    hist.unshift(f);
+    var size = Math.max(0, this.get('maxHistory') || 10) || 0;
+    while (hist.length > size) {
+      hist.pop();
+    }
+    this.saveHistory();
+    // Select feature
+    this.select(f, reverse, null, options);
+    if (reverse) {
+      this.setInput(this._getTitleTxt(f));
+      this.drawList_();
+      setTimeout(function () { this.collapse(false); }.bind(this), 300);
+    }
+  }
+  /** Save history (in the localstorage)
+   */
+  saveHistory() {
+    try {
+      if (this.get('maxHistory') >= 0) {
+        localStorage["ol@search-" + this._classname] = JSON.stringify(this.get('history'));
+      } else {
+        localStorage.removeItem("ol@search-" + this._classname);
+      }
+    } catch (e) { console.warn('Failed to access localStorage...'); }
+  }
+  /** Restore history (from the localstorage)
+   */
+  restoreHistory() {
+    if (this._history[this._classname]) {
+      this.set('history', this._history[this._classname]);
+    } else {
+      try {
+        this._history[this._classname] = JSON.parse(localStorage["ol@search-" + this._classname]);
+        this.set('history', this._history[this._classname]);
+      } catch (e) {
+        this.set('history', []);
+      }
+    }
+  }
+  /**
+   * Remove previous history
+   */
+  clearHistory() {
+    this.set('history', []);
+    this.saveHistory();
+    this.drawList_();
+  }
+  /**
+   * Get history table
+   */
+  getHistory() {
+    return this.get('history');
+  }
+  /** Autocomplete function
+  * @param {string} s search string
+  * @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
+  * @return {Array|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
+  * @api
+  */
+  autocomplete(s, cback) {
+    cback([]);
+    return false;
+    // or just return [];
+  }
+  /** Draw the list
+  * @param {Array} auto an array of search result
+  * @private
+  */
+  drawList_(auto) {
+    var self = this;
+    var ul = this.element.querySelector("ul.autocomplete");
+    ul.innerHTML = '';
+    this._list = [];
+    if (!auto) {
+      var input = this.element.querySelector("input.search");
+      var value = input.value;
+      if (!value) {
+        auto = this.get('history');
+      } else {
+        return;
+      }
+      ul.setAttribute('class', 'autocomplete history');
+    } else {
+      ul.setAttribute('class', 'autocomplete');
+    }
+    var li, max = Math.min(self.get("maxItems"), auto.length);
+    for (var i = 0; i < max; i++) {
+      if (auto[i]) {
+        if (!i || !self.equalFeatures(auto[i], auto[i - 1])) {
+          li = document.createElement("LI");
+          li.setAttribute("data-search", this._list.length);
+          this._list.push(auto[i]);
+          li.addEventListener("click", function (e) {
+            self._handleSelect(self._list[e.currentTarget.getAttribute("data-search")]);
+          });
+          var title = self.getTitle(auto[i]);
+          if (title instanceof Element)
+            li.appendChild(title);
+          else
+            li.innerHTML = title;
+          ul.appendChild(li);
+        }
+      }
+    }
+    if (max && this.get("copy")) {
+      li = document.createElement("LI");
+      li.classList.add("copy");
+      li.innerHTML = this.get("copy");
+      ul.appendChild(li);
+    }
+  }
+  /** Test if 2 features are equal
+   * @param {any} f1
+   * @param {any} f2
+   * @return {boolean}
+   */
+  equalFeatures( /* f1, f2 */) {
+    return false;
+  }
+}
 /** Current history */
 ol.control.Search.prototype._history = {};
-/** Save history (in the localstorage)
- */
-ol.control.Search.prototype.saveHistory = function () {
-  try {
-    if (this.get('maxHistory')>=0) {
-      localStorage["ol@search-"+this._classname] = JSON.stringify(this.get('history'));
-    } else {
-      localStorage.removeItem("ol@search-"+this._classname);
-    }
-  } catch(e) { console.warn('Failed to access localStorage...'); }
-};
-/** Restore history (from the localstorage) 
- */
-ol.control.Search.prototype.restoreHistory = function () {
-  if (this._history[this._classname]) {
-    this.set('history', this._history[this._classname]);
-  } else {
-    try {
-      this._history[this._classname] = JSON.parse(localStorage["ol@search-"+this._classname]);
-      this.set('history', this._history[this._classname]);
-    } catch(e) {
-      this.set('history', []);
-    }
-  }
-};
-/**
- * Remove previous history
- */
-ol.control.Search.prototype.clearHistory = function () {
-  this.set('history', []);
-  this.saveHistory();
-  this.drawList_();
-};
-/**
- * Get history table
- */
-ol.control.Search.prototype.getHistory = function () {
-  return this.get('history');
-};
-/** Autocomplete function
-* @param {string} s search string
-* @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
-* @return {Array|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
-* @api
-*/
-ol.control.Search.prototype.autocomplete = function (s, cback) {
-  cback ([]);
-  return false;
-  // or just return [];
-};
-/** Draw the list
-* @param {Array} auto an array of search result
-* @private
-*/
-ol.control.Search.prototype.drawList_ = function (auto) {
-  var self = this;
-  var ul = this.element.querySelector("ul.autocomplete");
-  ul.innerHTML = '';
-  this._list = [];
-  if (!auto) {
-    var input = this.element.querySelector("input.search");
-    var value = input.value;
-    if (!value) {
-      auto = this.get('history');
-    } else {
-      return;
-    }
-    ul.setAttribute('class', 'autocomplete history');
-  } else {
-    ul.setAttribute('class', 'autocomplete');
-  }
-  var li, max = Math.min (self.get("maxItems"),auto.length);
-  for (var i=0; i<max; i++) {	
-    if (auto[i]) {
-      if (!i || !self.equalFeatures(auto[i], auto[i-1])) {
-        li = document.createElement("LI");
-        li.setAttribute("data-search", this._list.length);
-        this._list.push(auto[i]);
-        li.addEventListener("click", function(e) {
-          self._handleSelect(self._list[e.currentTarget.getAttribute("data-search")]);
-        });
-        var title = self.getTitle(auto[i]);
-        if (title instanceof Element) li.appendChild(title);
-        else li.innerHTML = title;
-        ul.appendChild(li);
-      }
-    }
-  }
-  if (max && this.get("copy")) {
-    li = document.createElement("LI");
-    li.classList.add("copy");
-    li.innerHTML = this.get("copy");
-    ul.appendChild(li);
-  }
-};
-/** Test if 2 features are equal
- * @param {any} f1
- * @param {any} f2
- * @return {boolean}
- */
-ol.control.Search.prototype.equalFeatures = function (/* f1, f2 */) {
-  return false;
-};
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -4948,86 +4979,92 @@ ol.control.Search.prototype.equalFeatures = function (/* f1, f2 */) {
  *  @param {string|undefined} options.url Url of the search api
  *  @param {string | undefined} options.authentication: basic authentication for the search API as btoa("login:pwd")
  */
-ol.control.SearchJSON = function(options) {
-  options = options || {};
-  options.className = options.className || 'JSON';
-  delete options.autocomplete;
-  options.minLength = options.minLength || 3;
-  options.typing = options.typing || 800;
-  ol.control.Search.call(this, options);
-  // Handle Mix Content Warning
-  // If the current connection is an https connection all other connections must be https either
-  var url = options.url || "";
-  if (window.location.protocol === "https:") {
-    var parser = document.createElement('a');
-    parser.href = url;
-    parser.protocol = window.location.protocol;
-    url = parser.href;
-  }
-  this.set('url', url);
-  this._ajax = new ol.ext.Ajax({ dataType:'JSON', auth: options.authentication });
-  this._ajax.on('success', function (resp) {
-    if (resp.status >= 200 && resp.status < 400) {
-      if (typeof(this._callback) === 'function') this._callback(resp.response);
-    } else {
-      if (typeof(this._callback) === 'function') this._callback(false, 'error');
-      console.log('AJAX ERROR', arguments);
+ol.control.SearchJSON = class olcontrolSearchJSON extends ol.control.Search {
+  constructor(options) {
+    options = options || {};
+    options.className = options.className || 'JSON';
+    delete options.autocomplete;
+    options.minLength = options.minLength || 3;
+    options.typing = options.typing || 800;
+    super(options);
+    // Handle Mix Content Warning
+    // If the current connection is an https connection all other connections must be https either
+    var url = options.url || "";
+    if (window.location.protocol === "https:") {
+      var parser = document.createElement('a');
+      parser.href = url;
+      parser.protocol = window.location.protocol;
+      url = parser.href;
     }
-  }.bind(this));
-  this._ajax.on('error', function() {
-    if (typeof(this._callback) === 'function') this._callback(false, 'error');
-    console.log('AJAX ERROR', arguments);
-  }.bind(this));
-  // Handle searchin
-  this._ajax.on('loadstart', function() {
-    this.element.classList.add('searching');
-  }.bind(this));
-  this._ajax.on('loadend', function() {
-    this.element.classList.remove('searching');
-  }.bind(this));
-  // Overwrite handleResponse
-  if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
-};
-ol.ext.inherits(ol.control.SearchJSON, ol.control.Search);
-/** Send ajax request
- * @param {string} url
- * @param {*} data
- * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
- */
-ol.control.SearchJSON.prototype.ajax = function (url, data, cback, options) {
-  options = options || {};
-  this._callback = cback;
-  this._ajax.set('dataType', options.dataType || 'JSON');
-  this._ajax.send(url, data, options);
-};
-/** Autocomplete function (ajax request to the server)
- * @param {string} s search string
- * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
- */
-ol.control.SearchJSON.prototype.autocomplete = function (s, cback) {
-  var data = this.requestData(s);
-  var url = encodeURI(this.get('url'));
-  this.ajax(url, data, function(resp) {
-    if (typeof(cback) === 'function') cback(this.handleResponse(resp));
-  });
-};
-/**
- * @param {string} s the search string
- * @return {Object} request data (as key:value)
- * @api
- */
-ol.control.SearchJSON.prototype.requestData = function (s){
-  return { q: s };
-};
-/**
- * Handle server response to pass the features array to the display list
- * @param {any} response server response
- * @return {Array<any>} an array of feature
- * @api
- */
-ol.control.SearchJSON.prototype.handleResponse = function (response) {
-  return response;
-};
+    this.set('url', url);
+    this._ajax = new ol.ext.Ajax({ dataType: 'JSON', auth: options.authentication });
+    this._ajax.on('success', function (resp) {
+      if (resp.status >= 200 && resp.status < 400) {
+        if (typeof (this._callback) === 'function')
+          this._callback(resp.response);
+      } else {
+        if (typeof (this._callback) === 'function')
+          this._callback(false, 'error');
+        console.log('AJAX ERROR', arguments);
+      }
+    }.bind(this));
+    this._ajax.on('error', function () {
+      if (typeof (this._callback) === 'function')
+        this._callback(false, 'error');
+      console.log('AJAX ERROR', arguments);
+    }.bind(this));
+    // Handle searchin
+    this._ajax.on('loadstart', function () {
+      this.element.classList.add('searching');
+    }.bind(this));
+    this._ajax.on('loadend', function () {
+      this.element.classList.remove('searching');
+    }.bind(this));
+    // Overwrite handleResponse
+    if (typeof (options.handleResponse) === 'function')
+      this.handleResponse = options.handleResponse;
+  }
+  /** Send ajax request
+   * @param {string} url
+   * @param {*} data
+   * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
+   */
+  ajax(url, data, cback, options) {
+    options = options || {};
+    this._callback = cback;
+    this._ajax.set('dataType', options.dataType || 'JSON');
+    this._ajax.send(url, data, options);
+  }
+  /** Autocomplete function (ajax request to the server)
+   * @param {string} s search string
+   * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
+   */
+  autocomplete(s, cback) {
+    var data = this.requestData(s);
+    var url = encodeURI(this.get('url'));
+    this.ajax(url, data, function (resp) {
+      if (typeof (cback) === 'function')
+        cback(this.handleResponse(resp));
+    });
+  }
+  /**
+   * @param {string} s the search string
+   * @return {Object} request data (as key:value)
+   * @api
+   */
+  requestData(s) {
+    return { q: s };
+  }
+  /**
+   * Handle server response to pass the features array to the display list
+   * @param {any} response server response
+   * @return {Array<any>} an array of feature
+   * @api
+   */
+  handleResponse(response) {
+    return response;
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -5055,110 +5092,113 @@ ol.control.SearchJSON.prototype.handleResponse = function (response) {
  *  @param {boolean} options.position Search, with priority to geo position, default false
  *  @param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return street + name + contry
  */
-ol.control.SearchPhoton = function(options) {
-  options = options || {};
-  options.className = options.className || 'photon';
-  options.url = options.url || 'https://photon.komoot.io/api/';
-  options.copy = options.copy || '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
-  ol.control.SearchJSON.call(this, options);
-  this.set('lang', options.lang);
-  this.set('position', options.position);
-};
-ol.ext.inherits(ol.control.SearchPhoton, ol.control.SearchJSON);
-/** Returns the text to be displayed in the menu
-*	@param {ol.Feature} f the feature
-*	@return {string} the text to be displayed in the index
-*	@api
-*/
-ol.control.SearchPhoton.prototype.getTitle = function (f) {
-  var p = f.properties;
-  return (p.housenumber||"")
-    + " "+(p.street || p.name || "")
-    + "<i>"
-    + " "+(p.postcode||"")
-    + " "+(p.city||"")
-    + " ("+p.country
-    + ")</i>";
-};
-/** 
- * @param {string} s the search string
- * @return {Object} request data (as key:value)
- * @api
- */
-ol.control.SearchPhoton.prototype.requestData = function (s) {
-  var data = {
-    q: s,
-    lang: this.get('lang'),
-    limit: this.get('maxItems')
+ol.control.SearchPhoton = class olcontrolSearchPhoton extends ol.control.SearchJSON {
+  constructor(options) {
+    options = options || {};
+    options.className = options.className || 'photon';
+    options.url = options.url || 'https://photon.komoot.io/api/';
+    options.copy = options.copy || '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
+    super(options);
+    this.set('lang', options.lang);
+    this.set('position', options.position);
   }
-  // Handle position proirity
-  if (this.get('position')) {
-    var view = this.getMap().getView();
-    var pt = new ol.geom.Point(view.getCenter());
-    pt = (pt.transform (view.getProjection(), "EPSG:4326")).getCoordinates();
-    data.lon = pt[0];
-    data.lat = pt[1];
+  /** Returns the text to be displayed in the menu
+  *	@param {ol.Feature} f the feature
+  *	@return {string} the text to be displayed in the index
+  *	@api
+  */
+  getTitle(f) {
+    var p = f.properties;
+    return (p.housenumber || "")
+      + " " + (p.street || p.name || "")
+      + "<i>"
+      + " " + (p.postcode || "")
+      + " " + (p.city || "")
+      + " (" + p.country
+      + ")</i>";
   }
-  return data;
-};
-/**
- * Handle server response to pass the features array to the list
- * @param {any} response server response
- * @return {Array<any>} an array of feature
- */
-ol.control.SearchPhoton.prototype.handleResponse = function (response) {
-  return response.features;
-};
-/** Prevent same feature to be drawn twice: test equality
- * @param {} f1 First feature to compare
- * @param {} f2 Second feature to compare
- * @return {boolean}
- * @api
- */
-ol.control.SearchPhoton.prototype.equalFeatures = function (f1, f2) {
-  return (this.getTitle(f1) === this.getTitle(f2)
-    && f1.geometry.coordinates[0] === f2.geometry.coordinates[0]
-    && f1.geometry.coordinates[1] === f2.geometry.coordinates[1]);
-};
-/** A ligne has been clicked in the menu > dispatch event
-*	@param {any} f the feature, as passed in the autocomplete
-*	@api
-*/
-ol.control.SearchPhoton.prototype.select = function (f) {
-  var c = f.geometry.coordinates;
-  // Add coordinate to the event
-  try {
-    c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
-  } catch(e) { /* ok */ }
-  this.dispatchEvent({ type:"select", search:f, coordinate: c });
-};
-/** Get data for reverse geocode 
- * @param {ol.coordinate} coord
- */
-ol.control.SearchPhoton.prototype.reverseData = function (coord) {
-  var lonlat = ol.proj.transform (coord, this.getMap().getView().getProjection(), 'EPSG:4326');
-  return { lon: lonlat[0], lat: lonlat[1] };
-};
-/** Reverse geocode
- * @param {ol.coordinate} coord
- * @api
- */
-ol.control.SearchPhoton.prototype.reverseGeocode = function (coord, cback) {
-  this.ajax(
-    this.get('url').replace('/api/', '/reverse/').replace('/search/', '/reverse/'),
-    this.reverseData(coord),
-    function(resp) {
-      if (resp.features) resp = resp.features;
-      if (!(resp instanceof Array)) resp = [resp];
-      if (cback) {
-        cback.call(this, resp);
-      } else {
-        this._handleSelect(resp[0], true);
-        // this.setInput('', true);
-      }
-    }.bind(this)
-  );
-};
+  /**
+   * @param {string} s the search string
+   * @return {Object} request data (as key:value)
+   * @api
+   */
+  requestData(s) {
+    var data = {
+      q: s,
+      lang: this.get('lang'),
+      limit: this.get('maxItems')
+    };
+    // Handle position proirity
+    if (this.get('position')) {
+      var view = this.getMap().getView();
+      var pt = new ol.geom.Point(view.getCenter());
+      pt = (pt.transform(view.getProjection(), "EPSG:4326")).getCoordinates();
+      data.lon = pt[0];
+      data.lat = pt[1];
+    }
+    return data;
+  }
+  /**
+   * Handle server response to pass the features array to the list
+   * @param {any} response server response
+   * @return {Array<any>} an array of feature
+   */
+  handleResponse(response) {
+    return response.features;
+  }
+  /** Prevent same feature to be drawn twice: test equality
+   * @param {} f1 First feature to compare
+   * @param {} f2 Second feature to compare
+   * @return {boolean}
+   * @api
+   */
+  equalFeatures(f1, f2) {
+    return (this.getTitle(f1) === this.getTitle(f2)
+      && f1.geometry.coordinates[0] === f2.geometry.coordinates[0]
+      && f1.geometry.coordinates[1] === f2.geometry.coordinates[1]);
+  }
+  /** A ligne has been clicked in the menu > dispatch event
+  *	@param {any} f the feature, as passed in the autocomplete
+  *	@api
+  */
+  select(f) {
+    var c = f.geometry.coordinates;
+    // Add coordinate to the event
+    try {
+      c = ol.proj.transform(f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
+    } catch (e) { /* ok */ }
+    this.dispatchEvent({ type: "select", search: f, coordinate: c });
+  }
+  /** Get data for reverse geocode
+   * @param {ol.coordinate} coord
+   */
+  reverseData(coord) {
+    var lonlat = ol.proj.transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+    return { lon: lonlat[0], lat: lonlat[1] };
+  }
+  /** Reverse geocode
+   * @param {ol.coordinate} coord
+   * @api
+   */
+  reverseGeocode(coord, cback) {
+    this.ajax(
+      this.get('url').replace('/api/', '/reverse/').replace('/search/', '/reverse/'),
+      this.reverseData(coord),
+      function (resp) {
+        if (resp.features)
+          resp = resp.features;
+        if (!(resp instanceof Array))
+          resp = [resp];
+        if (cback) {
+          cback.call(this, resp);
+        } else {
+          this._handleSelect(resp[0], true);
+          // this.setInput('', true);
+        }
+      }.bind(this)
+    );
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
@@ -5422,122 +5462,919 @@ ol.control.SearchGeoportail.prototype.searchCommune = function (f, cback) {
  *	- displayInLayerSwitcher {boolean} display the layer in switcher, default true
  *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
  */
-ol.control.LayerSwitcher = function(options) {
-  options = options || {};
-  var self = this;
-  this.dcount = 0;
-  this.show_progress = options.show_progress;
-  this.oninfo = (typeof (options.oninfo) == 'function' ? options.oninfo: null);
-  this.onextent = (typeof (options.onextent) == 'function' ? options.onextent: null);
-  this.hasextent = options.extent || options.onextent;
-  this.hastrash = options.trash;
-  this.reordering = (options.reordering!==false);
-  this._layers = [];
-  this._layerGroup = (options.layerGroup && options.layerGroup.getLayers) ? options.layerGroup : null;
-  this.onchangeCheck = (typeof (options.onchangeCheck) == "function" ? options.onchangeCheck : null);
-  // displayInLayerSwitcher
-  if (typeof(options.displayInLayerSwitcher) === 'function') {
-    this.displayInLayerSwitcher = options.displayInLayerSwitcher;
-  }
-  var element;
-  if (options.target) {
-    element = ol.ext.element.create('DIV', {
-      className: options.switcherClass || "ol-layerswitcher"
-    });
-  } else {
-    element = ol.ext.element.create('DIV', {
-      className: (options.switcherClass || "ol-layerswitcher") +' ol-unselectable ol-control'
-    });
-    if (options.collapsed !== false) element.classList.add('ol-collapsed'); 
-    else element.classList.add('ol-forceopen'); 
-    this.button = ol.ext.element.create('BUTTON', {
-      type: 'button',
-      parent: element
-    });
-    this.button.addEventListener('touchstart', function(e){
-      element.classList.toggle('ol-forceopen');
-      element.classList.add('ol-collapsed');
-      self.dispatchEvent({ type: 'toggle', collapsed: element.classList.contains('ol-collapsed') });
-      e.preventDefault(); 
-      self.overflow();
-    });
-    this.button.addEventListener('click', function() {
-      element.classList.toggle('ol-forceopen');
-      element.classList.add('ol-collapsed'); 
-      self.dispatchEvent({ type: 'toggle', collapsed: !element.classList.contains('ol-forceopen') });
-      self.overflow();
-    });
-    if (options.mouseover) {
-      element.addEventListener ('mouseleave', function(){ 
-        element.classList.add("ol-collapsed"); 
-        self.dispatchEvent({ type: 'toggle', collapsed: true });
-      });
-      element.addEventListener ('mouseover', function(){ 
-        element.classList.remove("ol-collapsed"); 
-        self.dispatchEvent({ type: 'toggle', collapsed: false });
-      });
+ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Control {
+  constructor(options) {
+    options = options || {}
+    var element = ol.ext.element.create('DIV', {
+      className: options.switcherClass || 'ol-layerswitcher'
+    })
+    super({
+      element: element,
+      target: options.target
+    })
+    var self = this
+    this.dcount = 0
+    this.show_progress = options.show_progress
+    this.oninfo = (typeof (options.oninfo) == 'function' ? options.oninfo : null)
+    this.onextent = (typeof (options.onextent) == 'function' ? options.onextent : null)
+    this.hasextent = options.extent || options.onextent
+    this.hastrash = options.trash
+    this.reordering = (options.reordering !== false)
+    this._layers = []
+    this._layerGroup = (options.layerGroup && options.layerGroup.getLayers) ? options.layerGroup : null
+    this.onchangeCheck = (typeof (options.onchangeCheck) == "function" ? options.onchangeCheck : null)
+    // displayInLayerSwitcher
+    if (typeof (options.displayInLayerSwitcher) === 'function') {
+      this.displayInLayerSwitcher = options.displayInLayerSwitcher
     }
-    if (options.minibar) options.noScroll = true;
-    if (!options.noScroll) {
-      this.topv = ol.ext.element.create('DIV', {
-        className: 'ol-switchertopdiv',
-        parent: element,
-        click: function() {
-          self.overflow("+50%");
-        }
-      });
-      this.botv = ol.ext.element.create('DIV', {
-        className: 'ol-switcherbottomdiv',
-        parent: element,
-        click: function() {
-          self.overflow("-50%");
-        }
-      });
-    }
-    this._noScroll = options.noScroll;
-  }
-  this.panel_ = ol.ext.element.create ('UL', {
-    className: 'panel',
-  });
-  this.panelContainer_ = ol.ext.element.create ('DIV', {
-    className: 'panel-container',
-    html: this.panel_,
-    parent: element
-  });
-  // Handle mousewheel
-  if (!options.target && !options.noScroll) {
-    ol.ext.element.addListener (this.panel_, 'mousewheel DOMMouseScroll onmousewheel', function(e) {
-      if (self.overflow(Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail))))) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
-    });
-  }
-  this.header_ = ol.ext.element.create('LI', {
-    className: 'ol-header',
-    parent: this.panel_
-  });
-  ol.control.Control.call (this, {
-    element: element,
-    target: options.target
-  });
-  this.set('drawDelay',options.drawDelay||0);
-  this.set('selection', options.selection);
-  if (options.minibar) {
-    // Wait init complete (for child classes)
-    setTimeout(function() {
-      var mbar = ol.ext.element.scrollDiv(this.panelContainer_, {
-        mousewheel: true, 
-        vertical: true, 
-        minibar: true
-      });
-      this.on(['drawlist', 'toggle'], function() {
-        mbar.refresh();
+    // Insert in the map
+    if (!options.target) {
+      element.classList.add('ol-unselectable')
+      element.classList.add('ol-control')
+      element.classList.add(options.collapsed !== false ? 'ol-collapsed' : 'ol-forceopen')
+      this.button = ol.ext.element.create('BUTTON', {
+        type: 'button',
+        parent: element
       })
-    }.bind(this));
+      this.button.addEventListener('touchstart', function (e) {
+        element.classList.toggle('ol-forceopen')
+        element.classList.add('ol-collapsed')
+        self.dispatchEvent({ type: 'toggle', collapsed: element.classList.contains('ol-collapsed') })
+        e.preventDefault()
+        self.overflow()
+      })
+      this.button.addEventListener('click', function () {
+        element.classList.toggle('ol-forceopen')
+        element.classList.add('ol-collapsed')
+        self.dispatchEvent({ type: 'toggle', collapsed: !element.classList.contains('ol-forceopen') })
+        self.overflow()
+      })
+      if (options.mouseover) {
+        element.addEventListener('mouseleave', function () {
+          element.classList.add("ol-collapsed")
+          self.dispatchEvent({ type: 'toggle', collapsed: true })
+        })
+        element.addEventListener('mouseover', function () {
+          element.classList.remove("ol-collapsed")
+          self.dispatchEvent({ type: 'toggle', collapsed: false })
+        })
+      }
+      if (options.minibar)
+        options.noScroll = true
+      if (!options.noScroll) {
+        this.topv = ol.ext.element.create('DIV', {
+          className: 'ol-switchertopdiv',
+          parent: element,
+          click: function () {
+            self.overflow("+50%")
+          }
+        })
+        this.botv = ol.ext.element.create('DIV', {
+          className: 'ol-switcherbottomdiv',
+          parent: element,
+          click: function () {
+            self.overflow("-50%")
+          }
+        })
+      }
+      this._noScroll = options.noScroll
+    }
+    this.panel_ = ol.ext.element.create('UL', {
+      className: 'panel',
+    })
+    this.panelContainer_ = ol.ext.element.create('DIV', {
+      className: 'panel-container',
+      html: this.panel_,
+      parent: element
+    })
+    // Handle mousewheel
+    if (!options.target && !options.noScroll) {
+      ol.ext.element.addListener(this.panel_, 'mousewheel DOMMouseScroll onmousewheel', function (e) {
+        if (self.overflow(Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail))))) {
+          e.stopPropagation()
+          e.preventDefault()
+        }
+      })
+    }
+    this.header_ = ol.ext.element.create('LI', {
+      className: 'ol-header',
+      parent: this.panel_
+    })
+    this.set('drawDelay', options.drawDelay || 0)
+    this.set('selection', options.selection)
+    if (options.minibar) {
+      // Wait init complete (for child classes)
+      setTimeout(function () {
+        var mbar = ol.ext.element.scrollDiv(this.panelContainer_, {
+          mousewheel: true,
+          vertical: true,
+          minibar: true
+        })
+        this.on(['drawlist', 'toggle'], function () {
+          mbar.refresh()
+        })
+      }.bind(this))
+    }
   }
-};
-ol.ext.inherits(ol.control.LayerSwitcher, ol.control.Control);
+  /** Test if a layer should be displayed in the switcher
+   * @param {ol.layer} layer
+   * @return {boolean} true if the layer is displayed
+   */
+  displayInLayerSwitcher(layer) {
+    return (layer.get('displayInLayerSwitcher') !== false)
+  }
+  /**
+   * Set the map instance the control is associated with.
+   * @param {_ol_Map_} map The map instance.
+   */
+  setMap(map) {
+    super.setMap(map)
+    this.drawPanel()
+    if (this._listener) {
+      for (var i in this._listener){
+        ol.Observable.unByKey(this._listener[i])
+      }
+    }
+    this._listener = null
+    // Get change (new layer added or removed)
+    if (map) {
+      this._listener = {
+        moveend: map.on('moveend', this.viewChange.bind(this)),
+        size: map.on('change:size', this.overflow.bind(this))
+      }
+      // Listen to a layer group
+      if (this._layerGroup) {
+        this._listener.change = this._layerGroup.getLayers().on('change:length', this.drawPanel.bind(this))
+      } else {
+        //Listen to all layers
+        this._listener.change = map.getLayerGroup().getLayers().on('change:length', this.drawPanel.bind(this))
+      }
+    }
+  }
+  /** Show control
+   */
+  show() {
+    this.element.classList.add('ol-forceopen')
+    this.overflow()
+    this.dispatchEvent({ type: 'toggle', collapsed: false })
+  }
+  /** Hide control
+   */
+  hide() {
+    this.element.classList.remove('ol-forceopen')
+    this.overflow()
+    this.dispatchEvent({ type: 'toggle', collapsed: true })
+  }
+  /** Toggle control
+   */
+  toggle() {
+    this.element.classList.toggle("ol-forceopen")
+    this.overflow()
+    this.dispatchEvent({ type: 'toggle', collapsed: !this.isOpen() })
+  }
+  /** Is control open
+   * @return {boolean}
+   */
+  isOpen() {
+    return this.element.classList.contains("ol-forceopen")
+  }
+  /** Add a custom header
+   * @param {Element|string} html content html
+   */
+  setHeader(html) {
+    ol.ext.element.setHTML(this.header_, html)
+  }
+  /** Calculate overflow and add scrolls
+   * @param {Number} dir scroll direction -1|0|1|'+50%'|'-50%'
+   * @private
+   */
+  overflow(dir) {
+    if (this.button && !this._noScroll) {
+      // Nothing to show
+      if (ol.ext.element.hidden(this.panel_)) {
+        ol.ext.element.setStyle(this.element, { height: 'auto' })
+        return
+      }
+      // Calculate offset
+      var h = ol.ext.element.outerHeight(this.element)
+      var hp = ol.ext.element.outerHeight(this.panel_)
+      var dh = this.button.offsetTop + ol.ext.element.outerHeight(this.button)
+      //var dh = this.button.position().top + this.button.outerHeight(true);
+      var top = this.panel_.offsetTop - dh
+      if (hp > h - dh) {
+        // Bug IE: need to have an height defined
+        ol.ext.element.setStyle(this.element, { height: '100%' })
+        var li = this.panel_.querySelectorAll('li.visible .li-content')[0]
+        var lh = li ? 2 * ol.ext.element.getStyle(li, 'height') : 0
+        switch (dir) {
+          case 1: top += lh; break
+          case -1: top -= lh; break
+          case "+50%": top += Math.round(h / 2); break
+          case "-50%": top -= Math.round(h / 2); break
+          default: break
+        }
+        // Scroll div
+        if (top + hp <= h - 3 * dh / 2) {
+          top = h - 3 * dh / 2 - hp
+          ol.ext.element.hide(this.botv)
+        } else {
+          ol.ext.element.show(this.botv)
+        }
+        if (top >= 0) {
+          top = 0
+          ol.ext.element.hide(this.topv)
+        } else {
+          ol.ext.element.show(this.topv)
+        }
+        // Scroll ?
+        ol.ext.element.setStyle(this.panel_, { top: top + "px" })
+        return true
+      } else {
+        ol.ext.element.setStyle(this.element, { height: "auto" })
+        ol.ext.element.setStyle(this.panel_, { top: 0 })
+        ol.ext.element.hide(this.botv)
+        ol.ext.element.hide(this.topv)
+        return false
+      }
+    }
+    else
+      return false
+  }
+  /** Set the layer associated with a li
+   * @param {Element} li
+   * @param {ol.layer} layer
+   * @private
+   */
+  _setLayerForLI(li, layer) {
+    var listeners = []
+    if (layer.getLayers) {
+      listeners.push(layer.getLayers().on('change:length', this.drawPanel.bind(this)))
+    }
+    if (li) {
+      // Handle opacity change
+      listeners.push(layer.on('change:opacity', (function () {
+        this.setLayerOpacity(layer, li)
+      }).bind(this)))
+      // Handle visibility chage
+      listeners.push(layer.on('change:visible', (function () {
+        this.setLayerVisibility(layer, li)
+      }).bind(this)))
+    }
+    // Other properties
+    listeners.push(layer.on('propertychange', (function (e) {
+      if (e.key === 'displayInLayerSwitcher'
+        || e.key === 'openInLayerSwitcher'
+        || e.key === 'title'
+        || e.key === 'name') {
+        this.drawPanel(e)
+      }
+    }).bind(this)))
+    this._layers.push({ li: li, layer: layer, listeners: listeners })
+  }
+  /** Set opacity for a layer
+   * @param {ol.layer.Layer} layer
+   * @param {Element} li the list element
+   * @private
+   */
+  setLayerOpacity(layer, li) {
+    var i = li.querySelector('.layerswitcher-opacity-cursor')
+    if (i)
+      i.style.left = (layer.getOpacity() * 100) + "%"
+    this.dispatchEvent({ type: 'layer:opacity', layer: layer })
+  }
+  /** Set visibility for a layer
+   * @param {ol.layer.Layer} layer
+   * @param {Element} li the list element
+   * @api
+   */
+  setLayerVisibility(layer, li) {
+    var i = li.querySelector('.ol-visibility')
+    if (i)
+      i.checked = layer.getVisible()
+    if (layer.getVisible())
+      li.classList.add('ol-visible')
+    else
+      li.classList.remove('ol-visible')
+    this.dispatchEvent({ type: 'layer:visible', layer: layer })
+  }
+  /** Clear layers associated with li
+   * @private
+   */
+  _clearLayerForLI() {
+    this._layers.forEach(function (li) {
+      li.listeners.forEach(function (l) {
+        ol.Observable.unByKey(l)
+      })
+    })
+    this._layers = []
+  }
+  /** Get the layer associated with a li
+   * @param {Element} li
+   * @return {ol.layer}
+   * @private
+   */
+  _getLayerForLI(li) {
+    for (var i = 0, l; l = this._layers[i]; i++) {
+      if (l.li === li)
+        return l.layer
+    }
+    return null
+  }
+  /**
+   * On view change hide layer depending on resolution / extent
+   * @private
+   */
+  viewChange() {
+    this.panel_.querySelectorAll('li').forEach(function (li) {
+      var l = this._getLayerForLI(li)
+      if (l) {
+        if (this.testLayerVisibility(l))
+          li.classList.remove('ol-layer-hidden')
+        else
+          li.classList.add('ol-layer-hidden')
+      }
+    }.bind(this))
+  }
+  /** Get control panel
+   * @api
+   */
+  getPanel() {
+    return this.panelContainer_
+  }
+  /** Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
+   * @api
+   */
+  drawPanel() {
+    if (!this.getMap())
+      return
+    var self = this
+    // Multiple event simultaneously / draw once => put drawing in the event queue
+    this.dcount++
+    setTimeout(function () { self.drawPanel_() }, this.get('drawDelay') || 0)
+  }
+  /** Delayed draw panel control
+   * @private
+   */
+  drawPanel_() {
+    if (--this.dcount || this.dragging_)
+      return
+    var scrollTop = this.panelContainer_.scrollTop
+    // Remove existing layers
+    this._clearLayerForLI()
+    this.panel_.querySelectorAll('li').forEach(function (li) {
+      if (!li.classList.contains('ol-header'))
+        li.remove()
+    }.bind(this))
+    // Draw list
+    if (this._layerGroup)
+      this.drawList(this.panel_, this._layerGroup.getLayers())
+    else if (this.getMap())
+      this.drawList(this.panel_, this.getMap().getLayers())
+    // Reset scrolltop
+    this.panelContainer_.scrollTop = scrollTop
+  }
+  /** Change layer visibility according to the baselayer option
+   * @param {ol.layer}
+   * @param {Array<ol.layer>} related layers
+   * @private
+   */
+  switchLayerVisibility(l, layers) {
+    if (!l.get('baseLayer')) {
+      l.setVisible(!l.getVisible())
+    } else {
+      if (!l.getVisible())
+        l.setVisible(true)
+      layers.forEach(function (li) {
+        if (l !== li && li.get('baseLayer') && li.getVisible())
+          li.setVisible(false)
+      })
+    }
+  }
+  /** Check if layer is on the map (depending on resolution / zoom and extent)
+   * @param {ol.layer}
+   * @return {boolean}
+   * @private
+   */
+  testLayerVisibility(layer) {
+    if (!this.getMap())
+      return true
+    var res = this.getMap().getView().getResolution()
+    var zoom = this.getMap().getView().getZoom()
+    // Calculate visibility on resolution or zoom
+    if (layer.getMaxResolution() <= res || layer.getMinResolution() >= res) {
+      return false
+    } else if (layer.getMinZoom && (layer.getMinZoom() >= zoom || layer.getMaxZoom() < zoom)) {
+      return false
+    } else {
+      // Check extent
+      var ex0 = layer.getExtent()
+      if (ex0) {
+        var ex = this.getMap().getView().calculateExtent(this.getMap().getSize())
+        return ol.extent.intersects(ex, ex0)
+      }
+      return true
+    }
+  }
+  /** Start ordering the list
+  *	@param {event} e drag event
+  *	@private
+  */
+  dragOrdering_(e) {
+    e.stopPropagation()
+    e.preventDefault()
+    // Get params
+    var self = this
+    var elt = e.currentTarget.parentNode.parentNode
+    var start = true
+    var panel = this.panel_
+    var pageY
+    var pageY0 = e.pageY
+      || (e.touches && e.touches.length && e.touches[0].pageY)
+      || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY)
+    var target, dragElt
+    var layer, group
+    elt.parentNode.classList.add('drag')
+    // Stop ordering
+    function stop() {
+      if (target) {
+        // Get drag on parent
+        var drop = layer
+        var isSelected = self.getSelection() === drop
+        if (drop && target) {
+          var collection
+          if (group)
+            collection = group.getLayers()
+          else
+            collection = self._layerGroup ? self._layerGroup.getLayers() : self.getMap().getLayers()
+          var layers = collection.getArray()
+          // Switch layers
+          for (var i = 0; i < layers.length; i++) {
+            if (layers[i] == drop) {
+              collection.removeAt(i)
+              break
+            }
+          }
+          for (var j = 0; j < layers.length; j++) {
+            if (layers[j] === target) {
+              if (i > j)
+                collection.insertAt(j, drop)
+              else
+                collection.insertAt(j + 1, drop)
+              break
+            }
+          }
+        }
+        if (isSelected)
+          self.selectLayer(drop)
+        self.dispatchEvent({ type: "reorder-end", layer: drop, group: group })
+      }
+      elt.parentNode.querySelectorAll('li').forEach(function (li) {
+        li.classList.remove('dropover')
+        li.classList.remove('dropover-after')
+        li.classList.remove('dropover-before')
+      })
+      elt.classList.remove("drag")
+      elt.parentNode.classList.remove("drag")
+      self.element.classList.remove('drag')
+      if (dragElt)
+        dragElt.remove()
+      ol.ext.element.removeListener(document, 'mousemove touchmove', move)
+      ol.ext.element.removeListener(document, 'mouseup touchend touchcancel', stop)
+    }
+    // Ordering
+    function move(e) {
+      // First drag (more than 2 px) => show drag element (ghost)
+      pageY = e.pageY
+        || (e.touches && e.touches.length && e.touches[0].pageY)
+        || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY)
+      if (start && Math.abs(pageY0 - pageY) > 2) {
+        start = false
+        elt.classList.add("drag")
+        layer = self._getLayerForLI(elt)
+        target = false
+        group = self._getLayerForLI(elt.parentNode.parentNode)
+        // Ghost div
+        dragElt = ol.ext.element.create('LI', {
+          className: 'ol-dragover',
+          html: elt.innerHTML,
+          style: {
+            position: "absolute",
+            "z-index": 10000,
+            left: elt.offsetLeft,
+            opacity: 0.5,
+            width: ol.ext.element.outerWidth(elt),
+            height: ol.ext.element.getStyle(elt, 'height'),
+          },
+          parent: panel
+        })
+        self.element.classList.add('drag')
+        self.dispatchEvent({ type: "reorder-start", layer: layer, group: group })
+      }
+      // Start a new drag sequence
+      if (!start) {
+        e.preventDefault()
+        e.stopPropagation()
+        // Ghost div
+        ol.ext.element.setStyle(dragElt, { top: pageY - ol.ext.element.offsetRect(panel).top + panel.scrollTop + 5 })
+        var li
+        if (!e.touches) {
+          li = e.target
+        } else {
+          li = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY)
+        }
+        if (li.classList.contains("ol-switcherbottomdiv")) {
+          self.overflow(-1)
+        } else if (li.classList.contains("ol-switchertopdiv")) {
+          self.overflow(1)
+        }
+        // Get associated li
+        while (li && li.tagName !== 'LI') {
+          li = li.parentNode
+        }
+        if (!li || !li.classList.contains('dropover')) {
+          elt.parentNode.querySelectorAll('li').forEach(function (li) {
+            li.classList.remove('dropover')
+            li.classList.remove('dropover-after')
+            li.classList.remove('dropover-before')
+          })
+        }
+        if (li && li.parentNode.classList.contains('drag') && li !== elt) {
+          target = self._getLayerForLI(li)
+          // Don't mix layer level
+          if (target && !target.get('allwaysOnTop') == !layer.get('allwaysOnTop')) {
+            li.classList.add("dropover")
+            li.classList.add((elt.offsetTop < li.offsetTop) ? 'dropover-after' : 'dropover-before')
+          } else {
+            target = false
+          }
+          ol.ext.element.show(dragElt)
+        } else {
+          target = false
+          if (li === elt)
+            ol.ext.element.hide(dragElt)
+          else
+            ol.ext.element.show(dragElt)
+        }
+        if (!target)
+          dragElt.classList.add("forbidden")
+        else
+          dragElt.classList.remove("forbidden")
+      }
+    }
+    // Start ordering
+    ol.ext.element.addListener(document, 'mousemove touchmove', move)
+    ol.ext.element.addListener(document, 'mouseup touchend touchcancel', stop)
+  }
+  /** Change opacity on drag
+  *	@param {event} e drag event
+  *	@private
+  */
+  dragOpacity_(e) {
+    e.stopPropagation()
+    e.preventDefault()
+    var self = this
+    // Register start params
+    var elt = e.target
+    var layer = this._getLayerForLI(elt.parentNode.parentNode.parentNode)
+    if (!layer)
+      return
+    var x = e.pageX
+      || (e.touches && e.touches.length && e.touches[0].pageX)
+      || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX)
+    var start = ol.ext.element.getStyle(elt, 'left') - x
+    self.dragging_ = true
+    // stop dragging
+    function stop() {
+      ol.ext.element.removeListener(document, "mouseup touchend touchcancel", stop)
+      ol.ext.element.removeListener(document, "mousemove touchmove", move)
+      self.dragging_ = false
+    }
+    // On draggin
+    function move(e) {
+      var x = e.pageX
+        || (e.touches && e.touches.length && e.touches[0].pageX)
+        || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX)
+      var delta = (start + x) / ol.ext.element.getStyle(elt.parentNode, 'width')
+      var opacity = Math.max(0, Math.min(1, delta))
+      ol.ext.element.setStyle(elt, { left: (opacity * 100) + "%" })
+      elt.parentNode.nextElementSibling.innerHTML = Math.round(opacity * 100)
+      layer.setOpacity(opacity)
+    }
+    // Register move
+    ol.ext.element.addListener(document, "mouseup touchend touchcancel", stop)
+    ol.ext.element.addListener(document, "mousemove touchmove", move)
+  }
+  /** Render a list of layer
+   * @param {Elemen} element to render
+   * @layers {Array{ol.layer}} list of layer to show
+   * @api stable
+   * @private
+   */
+  drawList(ul, collection) {
+    var self = this
+    var layers = collection.getArray()
+    // Change layer visibility
+    var setVisibility = function (e) {
+      e.stopPropagation()
+      e.preventDefault()
+      var l = self._getLayerForLI(this.parentNode.parentNode)
+      self.switchLayerVisibility(l, collection)
+      if (self.get('selection') && l.getVisible()) {
+        self.selectLayer(l)
+      }
+      if (self.onchangeCheck) {
+        self.onchangeCheck(l)
+      }
+    }
+    // Info button click
+    function onInfo(e) {
+      e.stopPropagation()
+      e.preventDefault()
+      var l = self._getLayerForLI(this.parentNode.parentNode)
+      self.oninfo(l)
+      self.dispatchEvent({ type: "info", layer: l })
+    }
+    // Zoom to extent button
+    function zoomExtent(e) {
+      e.stopPropagation()
+      e.preventDefault()
+      var l = self._getLayerForLI(this.parentNode.parentNode)
+      if (self.onextent)
+        self.onextent(l)
+      else
+        self.getMap().getView().fit(l.getExtent(), self.getMap().getSize())
+      self.dispatchEvent({ type: "extent", layer: l })
+    }
+    // Remove a layer on trash click
+    function removeLayer(e) {
+      e.stopPropagation()
+      e.preventDefault()
+      var li = this.parentNode.parentNode.parentNode.parentNode
+      var layer, group = self._getLayerForLI(li)
+      // Remove the layer from a group or from a map
+      if (group) {
+        layer = self._getLayerForLI(this.parentNode.parentNode)
+        group.getLayers().remove(layer)
+        if (group.getLayers().getLength() == 0 && !group.get('noSwitcherDelete')) {
+          removeLayer.call(li.querySelectorAll('.layerTrash')[0], e)
+        }
+      } else {
+        li = this.parentNode.parentNode
+        self.getMap().removeLayer(self._getLayerForLI(li))
+      }
+    }
+    // Create a list for a layer
+    function createLi(layer) {
+      if (!this.displayInLayerSwitcher(layer)) {
+        this._setLayerForLI(null, layer)
+        return
+      }
+      var li = ol.ext.element.create('LI', {
+        className: (layer.getVisible() ? "visible " : " ") + (layer.get('baseLayer') ? "baselayer" : ""),
+        parent: ul
+      })
+      this._setLayerForLI(li, layer)
+      if (this._selectedLayer === layer) {
+        li.classList.add('ol-layer-select')
+      }
+      var layer_buttons = ol.ext.element.create('DIV', {
+        className: 'ol-layerswitcher-buttons',
+        parent: li
+      })
+      // Content div
+      var d = ol.ext.element.create('DIV', {
+        className: 'li-content',
+        parent: li
+      })
+      // Visibility
+      ol.ext.element.create('INPUT', {
+        type: layer.get('baseLayer') ? 'radio' : 'checkbox',
+        className: 'ol-visibility',
+        checked: layer.getVisible(),
+        click: setVisibility,
+        parent: d
+      })
+      // Label
+      var label = ol.ext.element.create('LABEL', {
+        title: layer.get('title') || layer.get('name'),
+        click: setVisibility,
+        unselectable: 'on',
+        style: {
+          userSelect: 'none'
+        },
+        parent: d
+      })
+      label.addEventListener('selectstart', function () { return false })
+      ol.ext.element.create('SPAN', {
+        html: layer.get('title') || layer.get('name'),
+        click: function (e) {
+          if (this.get('selection')) {
+            e.stopPropagation()
+            this.selectLayer(layer)
+          }
+        }.bind(this),
+        parent: label
+      })
+      //  up/down
+      if (this.reordering) {
+        if ((i < layers.length - 1 && (layer.get("allwaysOnTop") || !layers[i + 1].get("allwaysOnTop")))
+          || (i > 0 && (!layer.get("allwaysOnTop") || layers[i - 1].get("allwaysOnTop")))) {
+          ol.ext.element.create('DIV', {
+            className: 'layerup ol-noscroll',
+            title: this.tip.up,
+            on: { 'mousedown touchstart': function (e) { self.dragOrdering_(e) } },
+            parent: layer_buttons
+          })
+        }
+      }
+      // Show/hide sub layers
+      if (layer.getLayers) {
+        var nb = 0
+        layer.getLayers().forEach(function (l) {
+          if (self.displayInLayerSwitcher(l))
+            nb++
+        })
+        if (nb) {
+          ol.ext.element.create('DIV', {
+            className: layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers",
+            title: this.tip.plus,
+            click: function () {
+              var l = self._getLayerForLI(this.parentNode.parentNode)
+              l.set("openInLayerSwitcher", !l.get("openInLayerSwitcher"))
+            },
+            parent: layer_buttons
+          })
+        }
+      }
+      // Info button
+      if (this.oninfo) {
+        ol.ext.element.create('DIV', {
+          className: 'layerInfo',
+          title: this.tip.info,
+          click: onInfo,
+          parent: layer_buttons
+        })
+      }
+      // Layer remove
+      if (this.hastrash && !layer.get("noSwitcherDelete")) {
+        ol.ext.element.create('DIV', {
+          className: 'layerTrash',
+          title: this.tip.trash,
+          click: removeLayer,
+          parent: layer_buttons
+        })
+      }
+      // Layer extent
+      if (this.hasextent && layers[i].getExtent()) {
+        var ex = layers[i].getExtent()
+        if (ex.length == 4 && ex[0] < ex[2] && ex[1] < ex[3]) {
+          ol.ext.element.create('DIV', {
+            className: 'layerExtent',
+            title: this.tip.extent,
+            click: zoomExtent,
+            parent: layer_buttons
+          })
+        }
+      }
+      // Progress
+      if (this.show_progress && layer instanceof ol.layer.Tile) {
+        var p = ol.ext.element.create('DIV', {
+          className: 'layerswitcher-progress',
+          parent: d
+        })
+        this.setprogress_(layer)
+        layer.layerswitcher_progress = ol.ext.element.create('DIV', { parent: p })
+      }
+      // Opacity
+      var opacity = ol.ext.element.create('DIV', {
+        className: 'layerswitcher-opacity',
+        // Click on the opacity line
+        click: function (e) {
+          if (e.target !== this)
+            return
+          e.stopPropagation()
+          e.preventDefault()
+          var op = Math.max(0, Math.min(1, e.offsetX / ol.ext.element.getStyle(this, 'width')))
+          self._getLayerForLI(this.parentNode.parentNode).setOpacity(op)
+          this.parentNode.querySelectorAll('.layerswitcher-opacity-label')[0].innerHTML = Math.round(op * 100)
+        },
+        parent: d
+      })
+      // Start dragging
+      ol.ext.element.create('DIV', {
+        className: 'layerswitcher-opacity-cursor ol-noscroll',
+        style: { left: (layer.getOpacity() * 100) + "%" },
+        on: {
+          'mousedown touchstart': function (e) { self.dragOpacity_(e) }
+        },
+        parent: opacity
+      })
+      // Percent
+      ol.ext.element.create('DIV', {
+        className: 'layerswitcher-opacity-label',
+        html: Math.round(layer.getOpacity() * 100),
+        parent: d
+      })
+      // Layer group
+      if (layer.getLayers) {
+        li.classList.add('ol-layer-group')
+        if (layer.get("openInLayerSwitcher") === true) {
+          var ul2 = ol.ext.element.create('UL', {
+            parent: li
+          })
+          this.drawList(ul2, layer.getLayers())
+        }
+      }
+      li.classList.add(this.getLayerClass(layer))
+      // Dispatch a dralist event to allow customisation
+      this.dispatchEvent({ type: 'drawlist', layer: layer, li: li })
+    }
+    // Add the layer list
+    for (var i = layers.length - 1; i >= 0; i--) {
+      createLi.call(this, layers[i])
+    }
+    this.viewChange()
+    if (ul === this.panel_)
+      this.overflow()
+  }
+  /** Select a layer
+   * @param {ol.layer.Layer} layer
+   * @returns {string} the layer classname
+   * @api
+   */
+  getLayerClass(layer) {
+    if (!layer)
+      return 'none'
+    if (layer.getLayers)
+      return 'ol-layer-group'
+    if (layer instanceof ol.layer.Vector)
+      return 'ol-layer-vector'
+    if (layer instanceof ol.layer.VectorTile)
+      return 'ol-layer-vectortile'
+    if (layer instanceof ol.layer.Tile)
+      return 'ol-layer-tile'
+    if (layer instanceof ol.layer.Image)
+      return 'ol-layer-image'
+    if (layer instanceof ol.layer.Heatmap)
+      return 'ol-layer-heatmap'
+    /* ol < 6 compatibility VectorImage is not defined */
+    // if (layer instanceof ol.layer.VectorImage) return 'ol-layer-vectorimage';
+    if (layer.getFeatures)
+      return 'ol-layer-vectorimage'
+    /* */
+    return 'unknown'
+  }
+  /** Select a layer
+   * @param {ol.layer.Layer} layer
+   * @api
+   */
+  selectLayer(layer, silent) {
+    if (!layer) {
+      if (!this.getMap())
+        return
+      layer = this.getMap().getLayers().item(this.getMap().getLayers().getLength() - 1)
+    }
+    this._selectedLayer = layer
+    this.drawPanel()
+    if (!silent)
+      this.dispatchEvent({ type: 'select', layer: layer })
+  }
+  /** Get selected layer
+   * @returns {ol.layer.Layer}
+   */
+  getSelection() {
+    return this._selectedLayer
+  }
+  /** Handle progress bar for a layer
+  *	@private
+  */
+  setprogress_(layer) {
+    if (!layer.layerswitcher_progress) {
+      var loaded = 0
+      var loading = 0
+      var draw = function () {
+        if (loading === loaded) {
+          loading = loaded = 0
+          ol.ext.element.setStyle(layer.layerswitcher_progress, { width: 0 }) // layer.layerswitcher_progress.width(0);
+        } else {
+          ol.ext.element.setStyle(layer.layerswitcher_progress, { width: (loaded / loading * 100).toFixed(1) + '%' }) // layer.layerswitcher_progress.css('width', (loaded / loading * 100).toFixed(1) + '%');
+        }
+      }
+      layer.getSource().on('tileloadstart', function () {
+        loading++
+        draw()
+      })
+      layer.getSource().on('tileloadend', function () {
+        loaded++
+        draw()
+      })
+      layer.getSource().on('tileloaderror', function () {
+        loaded++
+        draw()
+      })
+    }
+  }
+}
 /** List of tips for internationalization purposes
 */
 ol.control.LayerSwitcher.prototype.tip = {
@@ -5547,760 +6384,6 @@ ol.control.LayerSwitcher.prototype.tip = {
   extent: "zoom to extent",
   trash: "remove layer",
   plus: "expand/shrink"
-};
-/** Test if a layer should be displayed in the switcher
- * @param {ol.layer} layer
- * @return {boolean} true if the layer is displayed
- */
-ol.control.LayerSwitcher.prototype.displayInLayerSwitcher = function(layer) {
-  return (layer.get('displayInLayerSwitcher')!==false);
-};
-/**
- * Set the map instance the control is associated with.
- * @param {_ol_Map_} map The map instance.
- */
-ol.control.LayerSwitcher.prototype.setMap = function(map) {
-  ol.control.Control.prototype.setMap.call(this, map);
-  this.drawPanel();
-  if (this._listener) {
-    for (var i in this._listener) ol.Observable.unByKey(this._listener[i]);
-  }
-  this._listener = null;
-  // Get change (new layer added or removed)
-  if (map) {
-    this._listener = {
-      moveend: map.on('moveend', this.viewChange.bind(this)),
-      size: map.on('change:size', this.overflow.bind(this))
-    }
-    // Listen to a layer group
-    if (this._layerGroup) {
-      this._listener.change = this._layerGroup.getLayers().on('change:length', this.drawPanel.bind(this));
-    } else  {
-      //Listen to all layers
-      this._listener.change = map.getLayerGroup().getLayers().on('change:length', this.drawPanel.bind(this));
-    }
-  }
-};
-/** Show control
- */
-ol.control.LayerSwitcher.prototype.show = function() {
-  this.element.classList.add('ol-forceopen');
-  this.overflow();
-  this.dispatchEvent({ type: 'toggle', collapsed: false });
-};
-/** Hide control
- */
-ol.control.LayerSwitcher.prototype.hide = function() {
-  this.element.classList.remove('ol-forceopen');
-  this.overflow();
-  this.dispatchEvent({ type: 'toggle', collapsed: true });
-};
-/** Toggle control
- */
-ol.control.LayerSwitcher.prototype.toggle = function() {
-  this.element.classList.toggle("ol-forceopen");
-  this.overflow();
-  this.dispatchEvent({ type: 'toggle', collapsed: !this.isOpen() });
-};
-/** Is control open
- * @return {boolean}
- */
-ol.control.LayerSwitcher.prototype.isOpen = function() {
-  return this.element.classList.contains("ol-forceopen");
-};
-/** Add a custom header
- * @param {Element|string} html content html
- */
-ol.control.LayerSwitcher.prototype.setHeader = function(html) {
-  ol.ext.element.setHTML(this.header_, html);
-};
-/** Calculate overflow and add scrolls
- * @param {Number} dir scroll direction -1|0|1|'+50%'|'-50%'
- * @private
- */
-ol.control.LayerSwitcher.prototype.overflow = function(dir) {	
-  if (this.button && !this._noScroll) {
-    // Nothing to show
-    if (ol.ext.element.hidden(this.panel_)) {
-      ol.ext.element.setStyle(this.element, { height: 'auto' });
-      return;
-    }
-    // Calculate offset
-    var h = ol.ext.element.outerHeight(this.element);
-    var hp = ol.ext.element.outerHeight(this.panel_);
-    var dh = this.button.offsetTop + ol.ext.element.outerHeight(this.button);
-    //var dh = this.button.position().top + this.button.outerHeight(true);
-    var top = this.panel_.offsetTop - dh;
-    if (hp > h-dh) {
-      // Bug IE: need to have an height defined
-      ol.ext.element.setStyle(this.element, { height: '100%' });
-      var li = this.panel_.querySelectorAll('li.visible .li-content')[0];
-      var lh = li ? 2 * ol.ext.element.getStyle(li, 'height') : 0;
-      switch (dir) {
-        case 1: top += lh; break;
-        case -1: top -= lh; break;
-        case "+50%": top += Math.round(h/2); break;
-        case "-50%": top -= Math.round(h/2); break;
-        default: break;
-      }
-      // Scroll div
-      if (top+hp <= h-3*dh/2) {
-        top = h-3*dh/2-hp;
-        ol.ext.element.hide(this.botv);
-      } else {
-        ol.ext.element.show(this.botv);
-      }
-      if (top >= 0) {
-        top = 0;
-        ol.ext.element.hide(this.topv);
-      } else {
-        ol.ext.element.show(this.topv);
-      }
-      // Scroll ?
-      ol.ext.element.setStyle(this.panel_, { top: top+"px" });
-      return true;
-    } else {
-      ol.ext.element.setStyle(this.element, { height: "auto" });
-      ol.ext.element.setStyle(this.panel_, { top: 0 });
-      ol.ext.element.hide(this.botv);
-      ol.ext.element.hide(this.topv);
-      return false;
-    }
-  }
-  else return false;
-};
-/** Set the layer associated with a li
- * @param {Element} li
- * @param {ol.layer} layer
- * @private
- */
-ol.control.LayerSwitcher.prototype._setLayerForLI = function(li, layer) {
-  var listeners = [];
-  if (layer.getLayers) {
-    listeners.push(layer.getLayers().on('change:length', this.drawPanel.bind(this)));
-  }
-  if (li) {
-    // Handle opacity change
-    listeners.push(layer.on('change:opacity', (function() {
-      this.setLayerOpacity(layer, li);
-    }).bind(this)));
-    // Handle visibility chage
-    listeners.push(layer.on('change:visible', (function() {
-      this.setLayerVisibility(layer, li);
-    }).bind(this)));
-  }
-  // Other properties
-  listeners.push(layer.on('propertychange', (function(e) {
-    if (e.key === 'displayInLayerSwitcher'
-      || e.key === 'openInLayerSwitcher'
-      || e.key === 'title'
-      || e.key === 'name') {
-      this.drawPanel(e);
-    }
-  }).bind(this)));
-  this._layers.push({ li:li, layer:layer, listeners: listeners });
-};
-/** Set opacity for a layer
- * @param {ol.layer.Layer} layer
- * @param {Element} li the list element
- * @private
- */
-ol.control.LayerSwitcher.prototype.setLayerOpacity = function(layer, li) {
-  var i = li.querySelector('.layerswitcher-opacity-cursor')
-  if (i) i.style.left = (layer.getOpacity()*100)+"%"
-  this.dispatchEvent({ type: 'layer:opacity', layer: layer });
-};
-/** Set visibility for a layer
- * @param {ol.layer.Layer} layer
- * @param {Element} li the list element
- * @api
- */
-ol.control.LayerSwitcher.prototype.setLayerVisibility = function(layer, li) {
-  var i = li.querySelector('.ol-visibility');
-  if (i) i.checked = layer.getVisible();
-  if (layer.getVisible()) li.classList.add('ol-visible');
-  else li.classList.remove('ol-visible');
-  this.dispatchEvent({ type: 'layer:visible', layer: layer });
-};
-/** Clear layers associated with li
- * @private
- */
-ol.control.LayerSwitcher.prototype._clearLayerForLI = function() {
-  this._layers.forEach(function (li) {
-    li.listeners.forEach(function(l) {
-      ol.Observable.unByKey(l);
-    });
-  })
-  this._layers = [];
-};
-/** Get the layer associated with a li
- * @param {Element} li
- * @return {ol.layer}
- * @private
- */
-ol.control.LayerSwitcher.prototype._getLayerForLI = function(li) {
-  for (var i=0, l; l=this._layers[i]; i++) {
-    if (l.li===li) return l.layer;
-  }
-  return null;
-};
-/**
- * On view change hide layer depending on resolution / extent
- * @private
- */
-ol.control.LayerSwitcher.prototype.viewChange = function() {
-  this.panel_.querySelectorAll('li').forEach( function(li) {
-    var l = this._getLayerForLI(li);
-    if (l) {
-      if (this.testLayerVisibility(l)) li.classList.remove('ol-layer-hidden');
-      else li.classList.add('ol-layer-hidden');
-    }
-  }.bind(this));
-};
-/** Get control panel
- * @api
- */
-ol.control.LayerSwitcher.prototype.getPanel = function() {
-  return this.panelContainer_;
-};
-/** Draw the panel control (prevent multiple draw due to layers manipulation on the map with a delay function)
- * @api
- */
-ol.control.LayerSwitcher.prototype.drawPanel = function() {
-  if (!this.getMap()) return;
-  var self = this;
-  // Multiple event simultaneously / draw once => put drawing in the event queue
-  this.dcount++;
-  setTimeout (function(){ self.drawPanel_(); }, this.get('drawDelay') || 0);
-};
-/** Delayed draw panel control 
- * @private
- */
-ol.control.LayerSwitcher.prototype.drawPanel_ = function() {
-  if (--this.dcount || this.dragging_) return;
-  var scrollTop = this.panelContainer_.scrollTop;
-  // Remove existing layers
-  this._clearLayerForLI();
-  this.panel_.querySelectorAll('li').forEach (function(li) {
-    if (!li.classList.contains('ol-header')) li.remove();
-  }.bind(this));
-  // Draw list
-  if (this._layerGroup) this.drawList (this.panel_, this._layerGroup.getLayers());
-  else if (this.getMap()) this.drawList (this.panel_, this.getMap().getLayers());
-  // Reset scrolltop
-  this.panelContainer_.scrollTop = scrollTop;
-};
-/** Change layer visibility according to the baselayer option
- * @param {ol.layer}
- * @param {Array<ol.layer>} related layers
- * @private
- */
-ol.control.LayerSwitcher.prototype.switchLayerVisibility = function(l, layers) {
-  if (!l.get('baseLayer')) {
-    l.setVisible(!l.getVisible());
-  } else {
-    if (!l.getVisible()) l.setVisible(true);
-    layers.forEach(function(li) {
-      if (l!==li && li.get('baseLayer') && li.getVisible()) li.setVisible(false);
-    });
-  }
-};
-/** Check if layer is on the map (depending on resolution / zoom and extent)
- * @param {ol.layer}
- * @return {boolean}
- * @private
- */
-ol.control.LayerSwitcher.prototype.testLayerVisibility = function(layer) {
-  if (!this.getMap()) return true;
-  var res = this.getMap().getView().getResolution();
-  var zoom = this.getMap().getView().getZoom();
-  // Calculate visibility on resolution or zoom
-  if (layer.getMaxResolution()<=res || layer.getMinResolution()>=res) {
-    return false;
-  } else if (layer.getMinZoom && (layer.getMinZoom()>=zoom || layer.getMaxZoom()<zoom)) {
-    return false;
-  } else {
-    // Check extent
-    var ex0 = layer.getExtent();
-    if (ex0) {
-      var ex = this.getMap().getView().calculateExtent(this.getMap().getSize());
-      return ol.extent.intersects(ex, ex0);
-    }
-    return true;
-  }
-};
-/** Start ordering the list
-*	@param {event} e drag event
-*	@private
-*/
-ol.control.LayerSwitcher.prototype.dragOrdering_ = function(e) {
-  e.stopPropagation();
-  e.preventDefault();
-  // Get params
-  var self = this;
-  var elt = e.currentTarget.parentNode.parentNode;
-  var start = true;
-  var panel = this.panel_; 
-  var pageY;
-  var pageY0 = e.pageY 
-    || (e.touches && e.touches.length && e.touches[0].pageY) 
-    || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
-  var target, dragElt;
-  var layer, group;
-  elt.parentNode.classList.add('drag');
-  // Stop ordering
-  function stop() {
-    if (target) {
-      // Get drag on parent
-      var drop = layer;
-      var isSelected = self.getSelection() === drop;
-      if (drop && target) {
-        var collection ;
-        if (group) collection = group.getLayers();
-        else collection = self._layerGroup ?  self._layerGroup.getLayers() : self.getMap().getLayers();
-        var layers = collection.getArray();
-        // Switch layers
-        for (var i=0; i<layers.length; i++) {
-          if (layers[i]==drop) {
-            collection.removeAt (i);
-            break;
-          }
-        }
-        for (var j=0; j<layers.length; j++) {
-          if (layers[j] === target) {
-            if (i>j) collection.insertAt (j,drop);
-            else collection.insertAt (j+1,drop);
-            break;
-          }
-        }
-      }
-      if (isSelected) self.selectLayer(drop);
-      self.dispatchEvent({ type: "reorder-end", layer: drop, group: group });
-    }
-    elt.parentNode.querySelectorAll('li').forEach(function(li){
-      li.classList.remove('dropover');
-      li.classList.remove('dropover-after');
-      li.classList.remove('dropover-before');
-    });
-    elt.classList.remove("drag");
-    elt.parentNode.classList.remove("drag");
-    self.element.classList.remove('drag');
-    if (dragElt) dragElt.remove();
-    ol.ext.element.removeListener(document, 'mousemove touchmove', move);
-    ol.ext.element.removeListener(document, 'mouseup touchend touchcancel', stop);
-  }
-  // Ordering
-  function move(e) {
-    // First drag (more than 2 px) => show drag element (ghost)
-    pageY = e.pageY 
-        || (e.touches && e.touches.length && e.touches[0].pageY) 
-        || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
-    if (start && Math.abs(pageY0 - pageY) > 2) {
-      start = false;
-      elt.classList.add("drag");
-      layer = self._getLayerForLI(elt);
-      target = false;
-      group = self._getLayerForLI(elt.parentNode.parentNode);
-      // Ghost div
-      dragElt = ol.ext.element.create('LI', { 
-        className: 'ol-dragover',
-        html: elt.innerHTML,
-        style: { 
-          position: "absolute", 
-          "z-index": 10000, 
-          left: elt.offsetLeft, 
-          opacity: 0.5,
-          width: ol.ext.element.outerWidth(elt),
-          height: ol.ext.element.getStyle(elt,'height'),
-        },
-        parent: panel 
-      });
-      self.element.classList.add('drag');
-      self.dispatchEvent({ type: "reorder-start", layer: layer, group: group });
-    }
-    // Start a new drag sequence
-    if (!start) {
-      e.preventDefault();
-      e.stopPropagation();
-      // Ghost div
-      ol.ext.element.setStyle(dragElt, { top: pageY - ol.ext.element.offsetRect(panel).top + panel.scrollTop +5 });
-      var li;
-      if (!e.touches) {
-        li = e.target;
-      } else {
-        li = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-      }
-      if (li.classList.contains("ol-switcherbottomdiv")) {
-        self.overflow(-1);
-      } else if (li.classList.contains("ol-switchertopdiv")) {
-        self.overflow(1);
-      }
-      // Get associated li
-      while (li && li.tagName!=='LI') {
-        li = li.parentNode;
-      }
-      if (!li || !li.classList.contains('dropover')) {
-        elt.parentNode.querySelectorAll('li').forEach(function(li) {
-          li.classList.remove('dropover');
-          li.classList.remove('dropover-after');
-          li.classList.remove('dropover-before');
-        });
-      }
-      if (li && li.parentNode.classList.contains('drag') && li !== elt) {
-        target = self._getLayerForLI(li);
-        // Don't mix layer level
-        if (target && !target.get('allwaysOnTop') == !layer.get('allwaysOnTop')) {
-          li.classList.add("dropover");
-          li.classList.add((elt.offsetTop < li.offsetTop) ? 'dropover-after' : 'dropover-before');
-        } else {
-          target = false;
-        }
-        ol.ext.element.show(dragElt);
-      } else {
-        target = false;
-        if (li===elt) ol.ext.element.hide(dragElt);
-        else ol.ext.element.show(dragElt);
-      }
-      if (!target) dragElt.classList.add("forbidden");
-      else dragElt.classList.remove("forbidden");
-    }
-  }
-  // Start ordering
-  ol.ext.element.addListener(document, 'mousemove touchmove', move);
-  ol.ext.element.addListener(document, 'mouseup touchend touchcancel', stop);
-};
-/** Change opacity on drag 
-*	@param {event} e drag event
-*	@private
-*/
-ol.control.LayerSwitcher.prototype.dragOpacity_ = function(e) {
-  e.stopPropagation();
-  e.preventDefault();
-  var self = this
-  // Register start params
-  var elt = e.target;
-  var layer = this._getLayerForLI(elt.parentNode.parentNode.parentNode);
-  if (!layer) return;
-  var x = e.pageX 
-    || (e.touches && e.touches.length && e.touches[0].pageX) 
-    || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
-  var start = ol.ext.element.getStyle (elt, 'left') - x;
-  self.dragging_ = true;
-  // stop dragging
-  function stop() {
-    ol.ext.element.removeListener(document, "mouseup touchend touchcancel", stop);
-    ol.ext.element.removeListener(document, "mousemove touchmove", move);
-    self.dragging_ = false;
-  }
-  // On draggin
-  function move(e) {
-    var x = e.pageX 
-      || (e.touches && e.touches.length && e.touches[0].pageX) 
-      || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
-    var delta = (start + x) / ol.ext.element.getStyle(elt.parentNode, 'width');
-    var opacity = Math.max (0, Math.min(1, delta));
-    ol.ext.element.setStyle (elt, { left: (opacity*100) + "%" });
-    elt.parentNode.nextElementSibling.innerHTML = Math.round(opacity*100);
-    layer.setOpacity(opacity);
-  }
-  // Register move
-  ol.ext.element.addListener(document, "mouseup touchend touchcancel", stop);
-  ol.ext.element.addListener(document, "mousemove touchmove", move);
-};
-/** Render a list of layer
- * @param {Elemen} element to render
- * @layers {Array{ol.layer}} list of layer to show
- * @api stable
- * @private
- */
-ol.control.LayerSwitcher.prototype.drawList = function(ul, collection) {
-  var self = this;
-  var layers = collection.getArray();
-  // Change layer visibility
-  var setVisibility = function(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    var l = self._getLayerForLI(this.parentNode.parentNode);
-    self.switchLayerVisibility(l, collection);
-    if (self.get('selection') && l.getVisible()) {
-      self.selectLayer(l);
-    }
-    if (self.onchangeCheck) {
-      self.onchangeCheck(l);
-    }
-  };
-  // Info button click
-  function onInfo(e) {
-    e.stopPropagation();
-    e.preventDefault(); 
-    var l = self._getLayerForLI(this.parentNode.parentNode);
-    self.oninfo(l); 
-    self.dispatchEvent({ type: "info", layer: l });
-  }
-  // Zoom to extent button
-  function zoomExtent(e) {
-    e.stopPropagation();
-    e.preventDefault(); 
-    var l = self._getLayerForLI(this.parentNode.parentNode);
-    if (self.onextent) self.onextent(l); 
-    else self.getMap().getView().fit (l.getExtent(), self.getMap().getSize()); 
-    self.dispatchEvent({ type: "extent", layer: l });
-  }
-  // Remove a layer on trash click
-  function removeLayer(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    var li = this.parentNode.parentNode.parentNode.parentNode;
-    var layer, group = self._getLayerForLI(li);
-    // Remove the layer from a group or from a map
-    if (group) {
-      layer = self._getLayerForLI(this.parentNode.parentNode);
-      group.getLayers().remove(layer);
-      if (group.getLayers().getLength()==0 && !group.get('noSwitcherDelete')) {
-        removeLayer.call(li.querySelectorAll('.layerTrash')[0], e);
-      }
-    } else {
-      li = this.parentNode.parentNode;
-      self.getMap().removeLayer(self._getLayerForLI(li));
-    }
-  }
-  // Create a list for a layer
-  function createLi(layer) {
-    if (!this.displayInLayerSwitcher(layer)) {
-      this._setLayerForLI(null, layer);
-      return;
-    } 
-    var li = ol.ext.element.create('LI', {
-      className: (layer.getVisible()?"visible ":" ")+(layer.get('baseLayer')?"baselayer":""),
-      parent: ul
-    });
-    this._setLayerForLI(li, layer);
-    if (this._selectedLayer === layer) {
-      li.classList.add('ol-layer-select');
-    }
-    var layer_buttons = ol.ext.element.create('DIV', {
-      className: 'ol-layerswitcher-buttons',
-      parent: li
-    });
-    // Content div
-    var d = ol.ext.element.create('DIV', {
-      className: 'li-content',// + (this.testLayerVisibility(layer) ? '' : ' ol-layer-hidden'),
-      parent: li
-    });
-    // Visibility
-    ol.ext.element.create('INPUT', {
-      type: layer.get('baseLayer') ? 'radio' : 'checkbox',
-      className: 'ol-visibility',
-      checked: layer.getVisible(),
-      click: setVisibility,
-      parent: d
-    });
-    // Label
-    var label = ol.ext.element.create('LABEL', {
-      title: layer.get('title') || layer.get('name'),
-      click: setVisibility,
-      unselectable: 'on',
-      style: {
-        userSelect: 'none'
-      },
-      parent: d
-    });
-    label.addEventListener('selectstart', function(){ return false; });
-    ol.ext.element.create('SPAN', {
-      html: layer.get('title') || layer.get('name'),
-      click: function(e) {
-        if (this.get('selection')) {
-          e.stopPropagation();
-          this.selectLayer(layer);
-        }
-      }.bind(this),
-      parent: label
-    });
-    //  up/down
-    if (this.reordering) {
-      if ( (i<layers.length-1 && (layer.get("allwaysOnTop") || !layers[i+1].get("allwaysOnTop")) )
-      || (i>0 && (!layer.get("allwaysOnTop") || layers[i-1].get("allwaysOnTop")) ) ) {
-        ol.ext.element.create('DIV', {
-          className: 'layerup ol-noscroll',
-          title: this.tip.up,
-          on: { 'mousedown touchstart': function(e) { self.dragOrdering_(e) } },
-          parent: layer_buttons
-        });
-      }
-    }
-    // Show/hide sub layers
-    if (layer.getLayers) {
-      var nb = 0;
-      layer.getLayers().forEach(function(l) {
-        if (self.displayInLayerSwitcher(l)) nb++;
-      });
-      if (nb) {
-        ol.ext.element.create('DIV', {
-          className: layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers",
-          title: this.tip.plus,
-          click: function() {
-            var l = self._getLayerForLI(this.parentNode.parentNode);
-            l.set("openInLayerSwitcher", !l.get("openInLayerSwitcher") )
-          },
-          parent: layer_buttons
-        });
-      }
-    }
-    // Info button
-    if (this.oninfo) {
-      ol.ext.element.create('DIV', {
-        className: 'layerInfo',
-        title: this.tip.info,
-        click: onInfo,
-        parent: layer_buttons
-      });
-    }
-    // Layer remove
-    if (this.hastrash && !layer.get("noSwitcherDelete")) {
-      ol.ext.element.create('DIV', {
-        className: 'layerTrash',
-        title: this.tip.trash,
-        click: removeLayer,
-        parent: layer_buttons
-      });
-    }
-    // Layer extent
-    if (this.hasextent && layers[i].getExtent()) {
-      var ex = layers[i].getExtent();
-      if (ex.length==4 && ex[0]<ex[2] && ex[1]<ex[3]) {
-        ol.ext.element.create('DIV', {
-          className: 'layerExtent',
-          title: this.tip.extent,
-          click: zoomExtent,
-          parent: layer_buttons  
-        });
-      }
-    }
-    // Progress
-    if (this.show_progress && layer instanceof ol.layer.Tile) {
-      var p = ol.ext.element.create('DIV', {
-        className: 'layerswitcher-progress',
-        parent: d
-      });
-      this.setprogress_(layer);
-      layer.layerswitcher_progress = ol.ext.element.create('DIV', { parent: p });
-    }
-    // Opacity
-    var opacity = ol.ext.element.create('DIV', {
-      className: 'layerswitcher-opacity',
-      // Click on the opacity line
-      click: function(e){
-        if (e.target !== this) return;
-        e.stopPropagation();
-        e.preventDefault();
-        var op = Math.max ( 0, Math.min( 1, e.offsetX / ol.ext.element.getStyle(this, 'width')));
-        self._getLayerForLI(this.parentNode.parentNode).setOpacity(op);
-        this.parentNode.querySelectorAll('.layerswitcher-opacity-label')[0].innerHTML = Math.round(op * 100);
-      },
-      parent: d
-    });
-    // Start dragging
-    ol.ext.element.create('DIV', {
-      className: 'layerswitcher-opacity-cursor ol-noscroll',
-      style: { left: (layer.getOpacity()*100)+"%" },
-      on: {
-        'mousedown touchstart': function(e) { self.dragOpacity_ (e); }
-      },
-      parent: opacity
-    });
-    // Percent
-    ol.ext.element.create('DIV', {
-      className: 'layerswitcher-opacity-label',
-      html: Math.round(layer.getOpacity()*100),
-      parent: d
-    });
-    // Layer group
-    if (layer.getLayers) {
-      li.classList.add('ol-layer-group');
-      if (layer.get("openInLayerSwitcher") === true) {
-        var ul2 = ol.ext.element.create('UL', {
-          parent: li
-        });
-        this.drawList (ul2, layer.getLayers());
-      }
-    }
-    li.classList.add(this.getLayerClass(layer));
-    // Dispatch a dralist event to allow customisation
-    this.dispatchEvent({ type:'drawlist', layer:layer, li:li });
-  }
-  // Add the layer list
-  for (var i=layers.length-1; i>=0; i--) { 
-    createLi.call(this, layers[i]); 
-  }
-  this.viewChange();
-  if (ul === this.panel_) this.overflow();
-};
-/** Select a layer
- * @param {ol.layer.Layer} layer
- * @returns {string} the layer classname
- * @api
- */
-ol.control.LayerSwitcher.prototype.getLayerClass = function(layer) {
-  if (!layer) return 'none';
-  if (layer.getLayers) return 'ol-layer-group';
-  if (layer instanceof ol.layer.Vector) return 'ol-layer-vector';
-  if (layer instanceof ol.layer.VectorTile) return 'ol-layer-vectortile';
-  if (layer instanceof ol.layer.Tile) return 'ol-layer-tile';
-  if (layer instanceof ol.layer.Image) return 'ol-layer-image';
-  if (layer instanceof ol.layer.Heatmap) return 'ol-layer-heatmap';
-  /* ol < 6 compatibility VectorImage is not defined */
-  // if (layer instanceof ol.layer.VectorImage) return 'ol-layer-vectorimage';
-  if (layer.getFeatures) return 'ol-layer-vectorimage';
-  /* */
-  return 'unknown';
-};
-/** Select a layer
- * @param {ol.layer.Layer} layer
- * @api
- */
-ol.control.LayerSwitcher.prototype.selectLayer = function(layer, silent) {
-  if (!layer) {
-    if (!this.getMap()) return;
-    layer = this.getMap().getLayers().item(this.getMap().getLayers().getLength()-1)
-  }
-  this._selectedLayer = layer;
-  this.drawPanel();
-  if (!silent) this.dispatchEvent({ type: 'select', layer: layer });
-};
-/** Get selected layer
- * @returns {ol.layer.Layer}
- */
-ol.control.LayerSwitcher.prototype.getSelection = function() {
-  return this._selectedLayer;
-};
-/** Handle progress bar for a layer
-*	@private
-*/
-ol.control.LayerSwitcher.prototype.setprogress_ = function(layer) {
-  if (!layer.layerswitcher_progress) {
-    var loaded = 0;
-    var loading = 0;
-    var draw = function() {
-      if (loading === loaded) {
-        loading = loaded = 0;
-        ol.ext.element.setStyle(layer.layerswitcher_progress, { width: 0 });// layer.layerswitcher_progress.width(0);
-      } else {
-        ol.ext.element.setStyle(layer.layerswitcher_progress, { width: (loaded / loading * 100).toFixed(1) + '%' });// layer.layerswitcher_progress.css('width', (loaded / loading * 100).toFixed(1) + '%');
-      }
-    }
-    layer.getSource().on('tileloadstart', function() {
-      loading++;
-      draw();
-    });
-    layer.getSource().on('tileloadend', function() {
-      loaded++;
-      draw();
-    });
-    layer.getSource().on('tileloaderror', function() {
-      loaded++;
-      draw();
-    });
-  }
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
@@ -9904,53 +9987,56 @@ ol.control.LayerShop.prototype.addControl = function(control, position) {
  * @extends {ol.control.LayerSwitcher}
  * @param {Object=} options Control options.
  */
-ol.control.LayerSwitcherImage = function(options) {
-  options = options || {};
-	options.switcherClass = "ol-layerswitcher-image";
-	if (options.mouseover!==false) options.mouseover=true;
-	ol.control.LayerSwitcher.call(this, options);
-};
-ol.ext.inherits(ol.control.LayerSwitcherImage, ol.control.LayerSwitcher);
-/** Render a list of layer
- * @param {elt} element to render
- * @layers {Array{ol.layer}} list of layer to show
- * @api stable
- */
-ol.control.LayerSwitcherImage.prototype.drawList = function(ul, layers) {
-  var self = this;
-	var setVisibility = function(e) {
-    e.preventDefault(); 
-		var l = self._getLayerForLI(this);
-		self.switchLayerVisibility(l,layers);
-		if (e.type=="touchstart") self.element.classList.add("ol-collapsed");
-	};
-	ol.ext.element.setStyle(ul, { height: 'auto' });
-	layers.forEach(function(layer) {
-    if (self.displayInLayerSwitcher(layer)) {
-      var preview = layer.getPreview ? layer.getPreview() : ["none"];
-      var d = ol.ext.element.create('LI', {
-        className: 'ol-imgcontainer' + (layer.getVisible() ? ' ol-visible':''),
-        on: { 'touchstart click': setVisibility },
-        parent: ul
-      });
-      self._setLayerForLI(d, layer);
-      preview.forEach(function(img){
-        ol.ext.element.create('IMG', {
-          src: img,
+ol.control.LayerSwitcherImage = class olcontrolLayerSwitcherImage extends ol.control.LayerSwitcher {
+  constructor(options) {
+    options = options || {};
+    options.switcherClass = ((options.switcherClass || '') +  ' ol-layerswitcher-image').trim();
+    options.mouseover = (options.mouseover !== false);
+    super(options);
+  }
+  /** Render a list of layer
+   * @param {elt} element to render
+   * @layers {Array{ol.layer}} list of layer to show
+   * @api stable
+   */
+  drawList(ul, layers) {
+    var self = this;
+    var setVisibility = function (e) {
+      e.preventDefault();
+      var l = self._getLayerForLI(this);
+      self.switchLayerVisibility(l, layers);
+      if (e.type == "touchstart")
+        self.element.classList.add("ol-collapsed");
+    };
+    ol.ext.element.setStyle(ul, { height: 'auto' });
+    layers.forEach(function (layer) {
+      if (self.displayInLayerSwitcher(layer)) {
+        var preview = layer.getPreview ? layer.getPreview() : ["none"];
+        var d = ol.ext.element.create('LI', {
+          className: 'ol-imgcontainer' + (layer.getVisible() ? ' ol-visible' : ''),
+          on: { 'touchstart click': setVisibility },
+          parent: ul
+        });
+        self._setLayerForLI(d, layer);
+        preview.forEach(function (img) {
+          ol.ext.element.create('IMG', {
+            src: img,
+            parent: d
+          });
+        });
+        ol.ext.element.create('p', {
+          html: layer.get("title") || layer.get("name"),
           parent: d
-        })
-      });
-			ol.ext.element.create('p', {
-        html: layer.get("title") || layer.get("name"),
-        parent: d
-      });
-			if (self.testLayerVisibility(layer)) d.classList.add('ol-layer-hidden');
-		}
-	});
-};
-/** Disable overflow
-*/
-ol.control.LayerSwitcherImage.prototype.overflow = function(){};
+        });
+        if (self.testLayerVisibility(layer))
+          d.classList.add('ol-layer-hidden');
+      }
+    });
+  }
+  /** Disable overflow
+  */
+  overflow() { }
+}
 
 // eslint-disable-next-line no-unused-vars
 /** Create a legend for styles
@@ -13743,46 +13829,47 @@ ol.control.Scale.prototype.setScale = function (value) {
  *  @param {string|undefined} options.type type of result: 'housenumber' | 'street'
  * @see {@link https://adresse.data.gouv.fr/api/}
  */
- ol.control.SearchBAN = function(options) {
-   options = options || {};
-   options.typing = options.typing || 500;
-   options.url = options.url || 'https://api-adresse.data.gouv.fr/search/';
-   options.className = options.className || 'BAN';
-   options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
-   ol.control.SearchPhoton.call(this, options);
-   this.set("postcode", options.postcode);
-   this.set("citycode", options.citycode);
-   this.set("type", options.type);
- };
-ol.ext.inherits(ol.control.SearchBAN, ol.control.SearchPhoton);
-/** Returns the text to be displayed in the menu
- * @param {ol.Feature} f the feature
- * @return {string} the text to be displayed in the index
- * @api
- */
-ol.control.SearchBAN.prototype.getTitle = function (f) {
-  var p = f.properties;
-  return (p.label);
-};
-/** A ligne has been clicked in the menu > dispatch event
- * @param {any} f the feature, as passed in the autocomplete
- * @api
- */
-ol.control.SearchBAN.prototype.select = function (f){
-  var c = f.geometry.coordinates;
-  // Add coordinate to the event
-  try {
-    c = ol.proj.transform (f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
-  } catch(e) { /* ok */ }
-  this.dispatchEvent({ type:"select", search:f, coordinate: c });
-};
-ol.control.SearchBAN.prototype.requestData = function (s) {
-  var data = ol.control.SearchPhoton.prototype.requestData.call(this, s);
-  data.postcode = this.get('postcode'),
-  data.citycode = this.get('citycode'),
-  data.type = this.get('type')
-  return data;
-};
+ol.control.SearchBAN = class olcontrolSearchBAN extends ol.control.SearchPhoton {
+  constructor(options) {
+    options = options || {};
+    options.typing = options.typing || 500;
+    options.url = options.url || 'https://api-adresse.data.gouv.fr/search/';
+    options.className = options.className || 'BAN';
+    options.copy = '<a href="https://adresse.data.gouv.fr/" target="new">&copy; BAN-data.gouv.fr</a>';
+    super(options);
+    this.set('postcode', options.postcode);
+    this.set('citycode', options.citycode);
+    this.set('type', options.type);
+  }
+  /** Returns the text to be displayed in the menu
+   * @param {ol.Feature} f the feature
+   * @return {string} the text to be displayed in the index
+   * @api
+   */
+  getTitle(f) {
+    var p = f.properties;
+    return (p.label);
+  }
+  /** A ligne has been clicked in the menu > dispatch event
+   * @param {any} f the feature, as passed in the autocomplete
+   * @api
+   */
+  select(f) {
+    var c = f.geometry.coordinates;
+    // Add coordinate to the event
+    try {
+      c = ol.proj.transform(f.geometry.coordinates, 'EPSG:4326', this.getMap().getView().getProjection());
+    } catch (e) { /* ok */ }
+    this.dispatchEvent({ type: "select", search: f, coordinate: c });
+  }
+  requestData(s) {
+    var data = ol.control.SearchPhoton.prototype.requestData.call(this, s);
+    data.postcode = this.get('postcode'),
+      data.citycode = this.get('citycode'),
+      data.type = this.get('type');
+    return data;
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -19297,75 +19384,76 @@ ol.filter.Mask = class olfilterMask extends ol.filter.Base {
  *  @param {string} options.filter filter to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/filter CSS property})
  *  @param {boolan} options.display show/hide layer from CSS (but keep it in layer list)
  */
-ol.filter.CSS = function(options) {
-  ol.filter.Base.call(this, options);
-  this._layers = [];
-};
-ol.ext.inherits(ol.filter.CSS, ol.filter.Base);
-/** Modify blend mode
- * @param {string} blend mix-blend-mode to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode CSS property})
- */
-ol.filter.CSS.prototype.setBlend = function(blend) {
-  this.set('blend', blend);
-  this._layers.forEach(function(layer) {
-    layer.once('postrender', function(e) {
-      e.context.canvas.parentNode.style['mix-blend-mode'] = blend || '';
-    }.bind(this));
-    layer.changed();
-  });
-};
-/** Modify filter mode
- * @param {string} filter filter to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/filter CSS property})
- */
-ol.filter.CSS.prototype.setFilter = function(filter) {
-  this.set('filter', filter);
-  this._layers.forEach(function(layer) {
-    layer.once('postrender', function(e) {
-      e.context.canvas.parentNode.style['filter'] = filter || '';
-    }.bind(this));
-    layer.changed();
-  });
-};
-/** Modify layer visibility (but keep it in the layer list)
- * @param {bolean} display
- */
- ol.filter.CSS.prototype.setDisplay = function(display) {
-  this.set('display', display);
-  this._layers.forEach(function(layer) {
-    layer.once('postrender', function(e) {
-      e.context.canvas.parentNode.style['display'] = display ? '' : 'none';
-    }.bind(this));
-    layer.changed();
-  });
-};
-/** Add CSS filter to the layer
- * @param {ol.layer.Base} layer 
- */
-ol.filter.CSS.prototype.addToLayer = function(layer) {
-  layer.once('postrender', function(e) {
-    e.context.canvas.parentNode.style['mix-blend-mode'] = this.get('blend') || '';
-    e.context.canvas.parentNode.style['filter'] = this.get('filter') || '';
-    e.context.canvas.parentNode.style['display'] = this.get('display')!==false ?  '' : 'none';
-  }.bind(this));
-  layer.changed();
-  this._layers.push(layer);
-  // layer.getRenderer().getImage().parentNode.style['mix-blend-mode'] = 'multiply';
-};
-/** Remove CSS filter from the layer
- * @param {ol.layer.Base} layer 
- */
-ol.filter.CSS.prototype.removeFromLayer = function(layer) {
-  var pos = this._layers.indexOf(layer);
-  if (pos>=0) {
-    layer.once('postrender', function(e) {
-      e.context.canvas.parentNode.style['mix-blend-mode'] = '';
-      e.context.canvas.parentNode.style['filter'] = '';
-      e.context.canvas.parentNode.style['display'] = '';
-    }.bind(this));
-    layer.changed();
-    this._layers.splice(pos, 1);
+ol.filter.CSS = class olfilterCSS extends ol.filter.Base {
+  constructor(options) {
+    super(options);
+    this._layers = [];
   }
-};
+  /** Modify blend mode
+   * @param {string} blend mix-blend-mode to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode CSS property})
+   */
+  setBlend(blend) {
+    this.set('blend', blend);
+    this._layers.forEach(function (layer) {
+      layer.once('postrender', function (e) {
+        e.context.canvas.parentNode.style['mix-blend-mode'] = blend || '';
+      }.bind(this));
+      layer.changed();
+    });
+  }
+  /** Modify filter mode
+   * @param {string} filter filter to apply (as {@link https://developer.mozilla.org/en-US/docs/Web/CSS/filter CSS property})
+   */
+  setFilter(filter) {
+    this.set('filter', filter);
+    this._layers.forEach(function (layer) {
+      layer.once('postrender', function (e) {
+        e.context.canvas.parentNode.style['filter'] = filter || '';
+      }.bind(this));
+      layer.changed();
+    });
+  }
+  /** Modify layer visibility (but keep it in the layer list)
+   * @param {bolean} display
+   */
+  setDisplay(display) {
+    this.set('display', display);
+    this._layers.forEach(function (layer) {
+      layer.once('postrender', function (e) {
+        e.context.canvas.parentNode.style['display'] = display ? '' : 'none';
+      }.bind(this));
+      layer.changed();
+    });
+  }
+  /** Add CSS filter to the layer
+   * @param {ol.layer.Base} layer
+   */
+  addToLayer(layer) {
+    layer.once('postrender', function (e) {
+      e.context.canvas.parentNode.style['mix-blend-mode'] = this.get('blend') || '';
+      e.context.canvas.parentNode.style['filter'] = this.get('filter') || '';
+      e.context.canvas.parentNode.style['display'] = this.get('display') !== false ? '' : 'none';
+    }.bind(this));
+    layer.changed();
+    this._layers.push(layer);
+    // layer.getRenderer().getImage().parentNode.style['mix-blend-mode'] = 'multiply';
+  }
+  /** Remove CSS filter from the layer
+   * @param {ol.layer.Base} layer
+   */
+  removeFromLayer(layer) {
+    var pos = this._layers.indexOf(layer);
+    if (pos >= 0) {
+      layer.once('postrender', function (e) {
+        e.context.canvas.parentNode.style['mix-blend-mode'] = '';
+        e.context.canvas.parentNode.style['filter'] = '';
+        e.context.canvas.parentNode.style['display'] = '';
+      }.bind(this));
+      layer.changed();
+      this._layers.splice(pos, 1);
+    }
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -19840,91 +19928,95 @@ ol.filter.Crop = class olfilterCrop extends ol.filter.Mask {
  *  @param {boolean} [options.shadow=true] true to display shadow
  *  @param {boolean} [options.opacity=.2] effect opacity
  */
-ol.filter.Fold = function(options) {
-  options = options || {};
-  ol.filter.Base.call(this, options);
-  this.set('fold', options.fold || [8,4]);
-  this.set('margin', options.margin || 8);
-  this.set('padding', options.padding || 8);
-  if (typeof options.fsize == 'number') options.fsize = [options.fsize,options.fsize];
-  this.set('fsize', options.fsize || [8,10]);
-  this.set('fill', options.fill);
-  this.set('shadow', options.shadow!==false);
-  this.set('opacity', (options.hasOwnProperty('opacity') ? options.opacity : .2));
-};
-ol.ext.inherits(ol.filter.Fold, ol.filter.Base);
-ol.filter.Fold.prototype.drawLine_ = function(ctx, d, m) {
-  var canvas = ctx.canvas;
-  var fold = this.get("fold");
-  var w = canvas.width;
-  var h = canvas.height;
-  var x, y, i;
-  ctx.beginPath();
-  ctx.moveTo ( m, m );
-  for (i=1; i<=fold[0]; i++) {
-    x = i*w/fold[0] - (i==fold[0] ? m : 0);
-    y =  d[1]*(i%2) +m;
-    ctx.lineTo ( x, y );
+ol.filter.Fold = class olfilterFold extends ol.filter.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.set('fold', options.fold || [8, 4]);
+    this.set('margin', options.margin || 8);
+    this.set('padding', options.padding || 8);
+    if (typeof options.fsize == 'number')
+      options.fsize = [options.fsize, options.fsize];
+    this.set('fsize', options.fsize || [8, 10]);
+    this.set('fill', options.fill);
+    this.set('shadow', options.shadow !== false);
+    this.set('opacity', (options.hasOwnProperty('opacity') ? options.opacity : .2));
   }
-  for (i=1; i<=fold[1]; i++) {
-    x = w - d[0]*(i%2) - m;
-    y = i*h/fold[1] - (i==fold[1] ? d[0]*(fold[0]%2) + m : 0);
-    ctx.lineTo ( x, y );
+  drawLine_(ctx, d, m) {
+    var canvas = ctx.canvas;
+    var fold = this.get("fold");
+    var w = canvas.width;
+    var h = canvas.height;
+    var x, y, i;
+    ctx.beginPath();
+    ctx.moveTo(m, m);
+    for (i = 1; i <= fold[0]; i++) {
+      x = i * w / fold[0] - (i == fold[0] ? m : 0);
+      y = d[1] * (i % 2) + m;
+      ctx.lineTo(x, y);
+    }
+    for (i = 1; i <= fold[1]; i++) {
+      x = w - d[0] * (i % 2) - m;
+      y = i * h / fold[1] - (i == fold[1] ? d[0] * (fold[0] % 2) + m : 0);
+      ctx.lineTo(x, y);
+    }
+    for (i = fold[0]; i > 0; i--) {
+      x = i * w / fold[0] - (i == fold[0] ? d[0] * (fold[1] % 2) + m : 0);
+      y = h - d[1] * (i % 2) - m;
+      ctx.lineTo(x, y);
+    }
+    for (i = fold[1]; i > 0; i--) {
+      x = d[0] * (i % 2) + m;
+      y = i * h / fold[1] - (i == fold[1] ? m : 0);
+      ctx.lineTo(x, y);
+    }
+    ctx.closePath();
   }
-  for (i=fold[0]; i>0; i--) {
-    x = i*w/fold[0] - (i==fold[0] ? d[0]*(fold[1]%2) + m : 0);
-    y = h - d[1]*(i%2) -m;
-    ctx.lineTo ( x, y );
-  }
-  for (i=fold[1]; i>0; i--) {
-    x = d[0]*(i%2) + m;
-    y = i*h/fold[1] - (i==fold[1] ? m : 0);
-    ctx.lineTo ( x, y );
-  }
-  ctx.closePath();
-};
-ol.filter.Fold.prototype.precompose = function(e) {
-  var ctx = e.context;
-  ctx.save();
+  precompose(e) {
+    var ctx = e.context;
+    ctx.save();
     ctx.shadowColor = "rgba(0,0,0,0.3)";
     ctx.shadowBlur = 8;
     ctx.shadowOffsetX = 2;
     ctx.shadowOffsetY = 3;
     this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
-    ctx.fillStyle="#fff";
-    if (this.get('fill')) ctx.fill();
+    ctx.fillStyle = "#fff";
+    if (this.get('fill'))
+      ctx.fill();
     ctx.strokeStyle = "rgba(0,0,0,0.1)";
     ctx.stroke();
-  ctx.restore();
-  ctx.save();
+    ctx.restore();
+    ctx.save();
     this.drawLine_(ctx, this.get("fsize"), this.get("margin") + this.get("padding"));
     ctx.clip();
-};
-ol.filter.Fold.prototype.postcompose = function(e) {
-  var ctx = e.context;
-  var canvas = ctx.canvas;
-  ctx.restore();
-  ctx.save();
+  }
+  postcompose(e) {
+    var ctx = e.context;
+    var canvas = ctx.canvas;
+    ctx.restore();
+    ctx.save();
     this.drawLine_(ctx, this.get("fsize"), this.get("margin"));
     ctx.clip();
     if (this.get('shadow')) {
       var fold = this.get("fold");
-      var w = canvas.width/fold[0];
-      var h = canvas.height/fold[1];
-      var grd = ctx.createRadialGradient(5*w/8,5*w/8,w/4,w/2,w/2,w);
-      grd.addColorStop(0,"transparent");
-      grd.addColorStop(1,"rgba(0,0,0," + this.get('opacity') + ")");
+      var w = canvas.width / fold[0];
+      var h = canvas.height / fold[1];
+      var grd = ctx.createRadialGradient(5 * w / 8, 5 * w / 8, w / 4, w / 2, w / 2, w);
+      grd.addColorStop(0, "transparent");
+      grd.addColorStop(1, "rgba(0,0,0," + this.get('opacity') + ")");
       ctx.fillStyle = grd;
-      ctx.scale (1,h/w);
-      for (var i=0; i<fold[0]; i++) for (var j=0; j<fold[1]; j++) {
-        ctx.save()
-        ctx.translate(i*w, j*w);
-        ctx.fillRect(0,0,w,w);
-        ctx.restore()
-      }
+      ctx.scale(1, h / w);
+      for (var i = 0; i < fold[0]; i++)
+        for (var j = 0; j < fold[1]; j++) {
+          ctx.save();
+          ctx.translate(i * w, j * w);
+          ctx.fillRect(0, 0, w, w);
+          ctx.restore();
+        }
     }
-  ctx.restore();
-};
+    ctx.restore();
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -19940,73 +20032,75 @@ ol.filter.Fold.prototype.postcompose = function(e) {
  *  @param {number} [options.size] point size, default 30
  *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
  */
-ol.filter.Halftone = function(options) {
-  if (!options) options = {};
-  ol.filter.Base.call(this, options);
-  this.internal_ = document.createElement('canvas');
-  this.setSize(options.size);
-  this.set('channel', options.channel);
-}
-ol.ext.inherits(ol.filter.Halftone, ol.filter.Base);
-/** Set the current size
-*	@param {number} width the pattern width, default 30
-*/
-ol.filter.Halftone.prototype.setSize = function (size) {
-  size = Number(size) || 30;
-  this.set("size", size);
-};
-/** Postcompose operation
-*/
-ol.filter.Halftone.prototype.postcompose = function(e) {
-  var ctx = e.context;
-  var canvas = ctx.canvas;
-  var ratio = e.frameState.pixelRatio;
-  // ol v6+
-  if (e.type === 'postrender') {
-    ratio = 1;
+ol.filter.Halftone = class olfilterHalftone extends ol.filter.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.internal_ = document.createElement('canvas');
+    this.setSize(options.size);
+    this.set('channel', options.channel);
   }
-  ctx.save();
+  /** Set the current size
+  *	@param {number} width the pattern width, default 30
+  */
+  setSize(size) {
+    size = Number(size) || 30;
+    this.set("size", size);
+  }
+  /** Postcompose operation
+  */
+  postcompose(e) {
+    var ctx = e.context;
+    var canvas = ctx.canvas;
+    var ratio = e.frameState.pixelRatio;
+    // ol v6+
+    if (e.type === 'postrender') {
+      ratio = 1;
+    }
+    ctx.save();
     // resize 
-    var step = this.get('size')*ratio;
+    var step = this.get('size') * ratio;
     var p = e.frameState.extent;
-    var res = e.frameState.viewState.resolution/ratio;
-    var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
+    var res = e.frameState.viewState.resolution / ratio;
+    var offset = [-Math.round((p[0] / res) % step), Math.round((p[1] / res) % step)];
     var ctx2 = this.internal_.getContext("2d");
     var w = this.internal_.width = canvas.width;
     var h = this.internal_.height = canvas.height;
     // No smoothing please
     ctx2.webkitImageSmoothingEnabled =
-    ctx2.mozImageSmoothingEnabled =
-    ctx2.msImageSmoothingEnabled =
-    ctx2.imageSmoothingEnabled = false;
-    var w2 = Math.floor((w-offset[0])/step);
-    var h2 = Math.floor((h-offset[1])/step);
-    ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
-    var data = ctx2.getImageData(0, 0, w2,h2).data;
+      ctx2.mozImageSmoothingEnabled =
+      ctx2.msImageSmoothingEnabled =
+      ctx2.imageSmoothingEnabled = false;
+    var w2 = Math.floor((w - offset[0]) / step);
+    var h2 = Math.floor((h - offset[1]) / step);
+    ctx2.drawImage(canvas, offset[0], offset[1], w2 * step, h2 * step, 0, 0, w2, h2);
+    var data = ctx2.getImageData(0, 0, w2, h2).data;
     // Draw tone
-    ctx.clearRect (0, 0, w,h);
+    ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = ol.color.asString(this.get('color') || '#000');
-    for (var x=0; x<w2; x++) for (var y=0; y<h2; y++) {
-      var pix;
-      switch (this.get('channel')) {
-        case 'r': pix = data[x*4+y*w2*4] / 2.55; break;
-        case 'g': pix = data[x*4+1+y*w2*4] / 2.55; break;
-        case 'b': pix = data[x*4+2+y*w2*4] / 2.55; break;
-        default:
-          pix = ol.color.toHSL([data[x*4+y*w2*4], data[x*4+1+y*w2*4], data[x*4+2+y*w2*4]]);
-          pix = pix[2];
-          break;
+    for (var x = 0; x < w2; x++)
+      for (var y = 0; y < h2; y++) {
+        var pix;
+        switch (this.get('channel')) {
+          case 'r': pix = data[x * 4 + y * w2 * 4] / 2.55; break;
+          case 'g': pix = data[x * 4 + 1 + y * w2 * 4] / 2.55; break;
+          case 'b': pix = data[x * 4 + 2 + y * w2 * 4] / 2.55; break;
+          default:
+            pix = ol.color.toHSL([data[x * 4 + y * w2 * 4], data[x * 4 + 1 + y * w2 * 4], data[x * 4 + 2 + y * w2 * 4]]);
+            pix = pix[2];
+            break;
+        }
+        var l = (100 - pix) / 140;
+        if (l) {
+          ctx.beginPath();
+          ctx.arc(offset[0] + step / 2 + x * step, offset[1] + step / 2 + y * step, step * l, 0, 2 * Math.PI);
+          ctx.closePath();
+          ctx.fill();
+        }
       }
-      var l = (100-pix)/140;
-      if (l) {
-        ctx.beginPath();
-        ctx.arc(offset[0]+step/2+x*step, offset[1]+step/2+y*step, step*l, 0, 2 * Math.PI);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-  ctx.restore();
-};
+    ctx.restore();
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -20212,46 +20306,47 @@ ol.filter.Paper.prototype.setLight = function(light) {
  * @extends {ol.filter.Base}
  * @param {FilterPencilSketchOptions} options
  */
-ol.filter.PencilSketch = function(options) {
-  options = options || {};
-  ol.filter.Base.call(this, options);
-  this.set('blur', options.blur || 8);
-  this.set('intensity', options.intensity || .8);
-};
-ol.ext.inherits(ol.filter.PencilSketch, ol.filter.Base);
-/** @private 
- */
-ol.filter.PencilSketch.prototype.precompose = function(/* e */) {
-};
-/** @private 
- */
-ol.filter.PencilSketch.prototype.postcompose = function(e) {
-  // Set back color hue
-  var ctx = e.context;
-  var canvas = ctx.canvas;
-  var w = canvas.width;
-  var h = canvas.height;
-  // Grayscale image
-  var bwimg = document.createElement('canvas');
-  bwimg.width = w;
-  bwimg.height = h;
-  var bwctx = bwimg.getContext('2d');
-  bwctx.filter = 'grayscale(1) invert(1) blur('+this.get('blur')+'px)';
-  bwctx.drawImage(canvas, 0,0);
-  ctx.save();
+ol.filter.PencilSketch = class olfilterPencilSketch extends ol.filter.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.set('blur', options.blur || 8);
+    this.set('intensity', options.intensity || .8);
+  }
+  /** @private
+   */
+  precompose( /* e */) {
+  }
+  /** @private
+   */
+  postcompose(e) {
+    // Set back color hue
+    var ctx = e.context;
+    var canvas = ctx.canvas;
+    var w = canvas.width;
+    var h = canvas.height;
+    // Grayscale image
+    var bwimg = document.createElement('canvas');
+    bwimg.width = w;
+    bwimg.height = h;
+    var bwctx = bwimg.getContext('2d');
+    bwctx.filter = 'grayscale(1) invert(1) blur(' + this.get('blur') + 'px)';
+    bwctx.drawImage(canvas, 0, 0);
+    ctx.save();
     if (!this.get('color')) {
       ctx.filter = 'grayscale(1)';
-      ctx.drawImage(canvas, 0,0);
+      ctx.drawImage(canvas, 0, 0);
     } else {
       ctx.globalCompositeOperation = 'darken';
       ctx.globalAlpha = .3;
-      ctx.drawImage(canvas, 0,0);
+      ctx.drawImage(canvas, 0, 0);
     }
     ctx.globalCompositeOperation = 'color-dodge';
     ctx.globalAlpha = this.get('intensity');
-    ctx.drawImage(bwimg, 0,0);
-  ctx.restore();
-};
+    ctx.drawImage(bwimg, 0, 0);
+    ctx.restore();
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -25706,58 +25801,59 @@ ol.interaction.SnapGuides.prototype.setModifyInteraction = function (modifyi) {
  * @param {olx.interaction.InteractionOptions} options Options
  *  @param {ol.layer.Layer} options.layer layer to snap on
  */
-ol.interaction.SnapLayerPixel = function(options) {
-  options = options || {};
-  // Get layer canevas context
-  this._layer = options.layer;
-  this._layer.on(['postcompose', 'postrender'], function(e) {
-    this._ctx = e.context;
-  }.bind(this));
-  var radius = options.radius || 8;
-  var size = 2*radius;
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      if (this._layer.getVisible() && this._layer.getOpacity() 
-      && ol.events.condition.altKeyOnly(e) && this.getMap()) {
-        var x0 = e.pixel[0] - radius;
-        var y0 = e.pixel[1] - radius;
-        var imgd = this._ctx.getImageData(x0, y0, size, size);
-        var pix = imgd.data;
-        // Loop over each pixel and invert the color.
-        var x, y, xm, ym, max=-1; 
-        var t = [];
-        for (x=0; x < size; x++) {
-          t.push([])
-          for (y=0; y < size; y++) {
-            var l = pix[3+ 4 * (x + y*size)];
-            t[x].push(l>10 ? l : 0)
+ol.interaction.SnapLayerPixel = class olinteractionSnapLayerPixel extends ol.interaction.Interaction {
+  constructor(options) {
+    options = options || {};
+    var radius = options.radius || 8;
+    var size = 2 * radius;
+    super({
+      handleEvent: function (e) {
+        if (this._layer.getVisible() && this._layer.getOpacity()
+          && ol.events.condition.altKeyOnly(e) && this.getMap()) {
+          var x0 = e.pixel[0] - radius;
+          var y0 = e.pixel[1] - radius;
+          var imgd = this._ctx.getImageData(x0, y0, size, size);
+          var pix = imgd.data;
+          // Loop over each pixel and invert the color.
+          var x, y, xm, ym, max = -1;
+          var t = [];
+          for (x = 0; x < size; x++) {
+            t.push([]);
+            for (y = 0; y < size; y++) {
+              var l = pix[3 + 4 * (x + y * size)];
+              t[x].push(l > 10 ? l : 0);
+            }
           }
-        }
-        for (x=1; x < size-1; x++) {
-          for (y=1; y < size-1; y++) {
-            var m = t[x][y+1] + t[x][y] + t[x][y+1] 
-              + t[x-1][y-1] + t[x-1][y] + t[x-1][y+1] 
-              + t[x+1][y-1] + t[x+1][y] + t[x+1][y+1];
-            if (m > max) {
-              max = m;
-              xm = x;
-              ym = y;
-            } 
+          for (x = 1; x < size - 1; x++) {
+            for (y = 1; y < size - 1; y++) {
+              var m = t[x][y + 1] + t[x][y] + t[x][y + 1]
+                + t[x - 1][y - 1] + t[x - 1][y] + t[x - 1][y + 1]
+                + t[x + 1][y - 1] + t[x + 1][y] + t[x + 1][y + 1];
+              if (m > max) {
+                max = m;
+                xm = x;
+                ym = y;
+              }
+            }
           }
+          e.pixel = [x0 + xm, y0 + ym];
+          e.coordinate = this.getMap().getCoordinateFromPixel(e.pixel);
+          /*
+          e.coordinate = this.getMap().getView().getCenter();
+          e.pixel = this.getMap().getSize();
+          e.pixel = [ e.pixel[0]/2, e.pixel[1]/2 ];
+          */
         }
-        e.pixel = [x0+xm, y0+ym];
-        e.coordinate = this.getMap().getCoordinateFromPixel(e.pixel);
-        /*
-        e.coordinate = this.getMap().getView().getCenter();
-        e.pixel = this.getMap().getSize();
-        e.pixel = [ e.pixel[0]/2, e.pixel[1]/2 ];
-        */
+        return true;
       }
-      return true; 
-    }
-  });
-};
-ol.ext.inherits(ol.interaction.SnapLayerPixel, ol.interaction.Interaction);
+    });
+    // Get layer canevas context
+    this._layer = options.layer;
+    this._layer.on(['postcompose', 'postrender'], function (e) {
+      this._ctx = e.context;
+    }.bind(this));
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)

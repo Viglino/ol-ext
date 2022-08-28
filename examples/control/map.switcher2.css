@@ -22,6 +22,10 @@
   margin: .6em 0;
 }
 
+.ol-control.ol-layerswitcher .panel-container {
+  padding-right: 0;
+}
+
 .ol-layerswitcher .panel li .layerswitcher-opacity {
   width: 40%;
   display: inline-block;
@@ -80,7 +84,7 @@
   width: 2em;
   background: none;
   position: absolute;
-  right: 0;
+  right: .5em;
 }
 .ol-layerswitcher .layerup:after {
   content:none;
@@ -179,7 +183,7 @@
   overflow: visible;
 }
 .ol-layerswitcher .layerInfo {
-  right: -.5em;
+  right: 0;
   background: #017eff;
 }
 
