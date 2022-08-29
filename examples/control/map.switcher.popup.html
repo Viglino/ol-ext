@@ -1,114 +1,111 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: Layerswitcher</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Layerswitcher</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="A simple layerswitcher popup for OL3." />
-	<meta name="keywords" content="ol3, layer, layerswitcher, control, popup, jQuery" />
+  <meta name="description" content="A simple layerswitcher popup for OL3." />
+  <meta name="keywords" content="ol3, layer, layerswitcher, control, popup, jQuery" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: LayerSwitcher control</h1>
-	</a>
-	<div class="info">
-		Add a simple popup layer switcher to the map. Only first level is enable in the popup. 
-		<ul>
-		<li>
-		The <i>title</i> or <i>name</i> layer's property is used to named the ol.layer in the switcher.
-		</li>
-		<li>
-		It shows use of the <i>displayInLayerSwitcher</i> layer's property to cause it to not display in the LayerSwitcher
-		</li>
-		<li>
-		The <i>baseLayer</i> layer's property manage exclusive visibility on layers (only one base layer is shown at a time).
-		</li>
-		</ul>
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: LayerSwitcher control</h1>
+  </a>
+  <div class="info">
+    Add a simple popup layer switcher to the map. Only first level is enable in the popup. 
+    <ul>
+    <li>
+    The <i>title</i> or <i>name</i> layer's property is used to named the ol.layer in the switcher.
+    </li>
+    <li>
+    It shows use of the <i>displayInLayerSwitcher</i> layer's property to cause it to not display in the LayerSwitcher
+    </li>
+    <li>
+    The <i>baseLayer</i> layer's property manage exclusive visibility on layers (only one base layer is shown at a time).
+    </li>
+    </ul>
+  </div>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
-	
-	<script type="text/javascript">
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  
+  <script type="text/javascript">
 
-	// Two base layers
-	var stamen = new ol.layer.Tile(
-				{	title: "Watercolor",
-					baseLayer: true,
-					source: new ol.source.Stamen({
-						layer: 'watercolor'
-					})
-				});
-	var stamen2 = new ol.layer.Tile(
-				{	title: "Toner",
-					baseLayer: true,
-					visible: false,
-					source: new ol.source.Stamen({
-						layer: 'toner'
-					})
-				});
-	var osm = new ol.layer.Tile(
-				{	title: "OSM",
-					baseLayer: true,
-					source: new ol.source.OSM(),
-					visible: false
-				});
+  // Two base layers
+  var stamen = new ol.layer.Tile({
+    title: "Watercolor",
+    baseLayer: true,
+    source: new ol.source.Stamen({
+      layer: 'watercolor'
+    })
+  });
+  var stamen2 = new ol.layer.Tile({
+    title: "Toner",
+    baseLayer: true,
+    visible: false,
+    source: new ol.source.Stamen({
+      layer: 'toner'
+    })
+  });
+  var osm = new ol.layer.Tile({
+    title: "OSM",
+    baseLayer: true,
+    source: new ol.source.OSM(),
+    visible: false
+  });
 
-	// GeoJSON layer with a preview attribute
-	var vectorSource = new ol.source.Vector(
-	{	url: '../data/fond_guerre.geojson',
-		projection: 'EPSG:3857',
-		format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
-	});
+  // GeoJSON layer with a preview attribute
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
 
-	var vector = new ol.layer.Vector(
-	{	name: '1914-18',
-		preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
-		source: vectorSource
-	});
+  var vector = new ol.layer.Vector({
+    name: '1914-18',
+    preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
+    source: vectorSource
+  });
 
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 6,
-				center: [173664, 6166327]
-			}),
-			controls: ol.control.defaults().extend
-			([	new ol.control.LayerPopup(),
-			]),
-			layers: [stamen, stamen2, osm, vector]
-		});
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 6,
+      center: [173664, 6166327]
+    }),
+    layers: [stamen, stamen2, osm, vector]
+  });
 
-	</script>
-	
+  map.addControl(new ol.control.LayerPopup())
+
+  </script>
+  
 </body>
 </html>

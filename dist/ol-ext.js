@@ -2243,86 +2243,100 @@ if (window.ol) {
  *  @param {boolean} [options.disabled] disable input
  *  @param {Element} [options.parent] parent element, if no input
  */
-ol.ext.input.Base = function(options) {
-  options = options || {};
-  ol.Object.call(this);
-  var input = this.input = options.input;
-  if (!input) {
-    input = this.input = document.createElement('INPUT');
-    if (options.type) input.setAttribute('type', options.type);
-    if (options.min !== undefined) input.setAttribute('min', options.min);
-    if (options.max !== undefined) input.setAttribute('max', options.max);
-    if (options.step !== undefined) input.setAttribute('step', options.step);
-    if (options.parent) options.parent.appendChild(input);
-  } 
-  if (options.disabled) input.disabled = true;
-  if (options.checked !== undefined) input.checked = !!options.checked;
-  if (options.val !== undefined) input.value = options.val;
-  if (options.hidden) input.style.display = 'none';
-  input.addEventListener('focus', function() {
-    if (this.element) this.element.classList.add('ol-focus');
-  }.bind(this))
-  var tout;
-  input.addEventListener('focusout', function() {
-    if (this.element) {
-      if (tout) clearTimeout(tout);
-      tout = setTimeout(function() {
-        this.element.classList.remove('ol-focus');
-      }.bind(this), 0);
+ol.ext.input.Base = class olextinputBase extends ol.Object {
+  constructor(options) {
+    options = options || {};
+    super();
+    var input = this.input = options.input;
+    if (!input) {
+      input = this.input = document.createElement('INPUT');
+      if (options.type)
+        input.setAttribute('type', options.type);
+      if (options.min !== undefined)
+        input.setAttribute('min', options.min);
+      if (options.max !== undefined)
+        input.setAttribute('max', options.max);
+      if (options.step !== undefined)
+        input.setAttribute('step', options.step);
+      if (options.parent)
+        options.parent.appendChild(input);
     }
-  }.bind(this))
-};
-ol.ext.inherits(ol.ext.input.Base, ol.Object);
-/** Listen to drag event
- * @param {Element} elt 
- * @param {function} cback when draggin on the element
- * @private
- */
-ol.ext.input.Base.prototype._listenDrag = function(elt, cback) {
-  var handle = function(e) {
-    this.moving = true;
-    this.element.classList.add('ol-moving');
-    var listen = function(e) {
-      if (e.type==='pointerup') {
-        document.removeEventListener('pointermove', listen);
-        document.removeEventListener('pointerup', listen);
-        document.removeEventListener('pointercancel', listen);
-        setTimeout(function() {
-          this.moving = false;
-          this.element.classList.remove('ol-moving');
-        }.bind(this));
+    if (options.disabled)
+      input.disabled = true;
+    if (options.checked !== undefined)
+      input.checked = !!options.checked;
+    if (options.val !== undefined)
+      input.value = options.val;
+    if (options.hidden)
+      input.style.display = 'none';
+    input.addEventListener('focus', function () {
+      if (this.element)
+        this.element.classList.add('ol-focus');
+    }.bind(this));
+    var tout;
+    input.addEventListener('focusout', function () {
+      if (this.element) {
+        if (tout)
+          clearTimeout(tout);
+        tout = setTimeout(function () {
+          this.element.classList.remove('ol-focus');
+        }.bind(this), 0);
       }
-      if (e.target === elt) cback(e);
+    }.bind(this));
+  }
+  /** Listen to drag event
+   * @param {Element} elt
+   * @param {function} cback when draggin on the element
+   * @private
+   */
+  _listenDrag(elt, cback) {
+    var handle = function (e) {
+      this.moving = true;
+      this.element.classList.add('ol-moving');
+      var listen = function (e) {
+        if (e.type === 'pointerup') {
+          document.removeEventListener('pointermove', listen);
+          document.removeEventListener('pointerup', listen);
+          document.removeEventListener('pointercancel', listen);
+          setTimeout(function () {
+            this.moving = false;
+            this.element.classList.remove('ol-moving');
+          }.bind(this));
+        }
+        if (e.target === elt)
+          cback(e);
+        e.stopPropagation();
+        e.preventDefault();
+      }.bind(this);
+      document.addEventListener('pointermove', listen, false);
+      document.addEventListener('pointerup', listen, false);
+      document.addEventListener('pointercancel', listen, false);
       e.stopPropagation();
       e.preventDefault();
     }.bind(this);
-    document.addEventListener('pointermove', listen, false);
-    document.addEventListener('pointerup', listen, false);
-    document.addEventListener('pointercancel', listen, false);
-    e.stopPropagation();
-    e.preventDefault();
-  }.bind(this)
-  elt.addEventListener('mousedown', handle, false);
-  elt.addEventListener('touchstart', handle, false);
-};
-/** Set the current value
- */
-ol.ext.input.Base.prototype.setValue = function(v) {
-  if (v !== undefined) this.input.value = v;
-  this.input.dispatchEvent(new Event('change'));
-};
-/** Get the current getValue
- * @returns {string}
- */
-ol.ext.input.Base.prototype.getValue = function() {
-  return this.input.value;
-};
-/** Get the input element
- * @returns {Element}
- */
-ol.ext.input.Base.prototype.getInputElement = function() {
-  return this.input;
-};
+    elt.addEventListener('mousedown', handle, false);
+    elt.addEventListener('touchstart', handle, false);
+  }
+  /** Set the current value
+   */
+  setValue(v) {
+    if (v !== undefined)
+      this.input.value = v;
+    this.input.dispatchEvent(new Event('change'));
+  }
+  /** Get the current getValue
+   * @returns {string}
+   */
+  getValue() {
+    return this.input.value;
+  }
+  /** Get the input element
+   * @returns {Element}
+   */
+  getInputElement() {
+    return this.input;
+  }
+}
 
 /** Checkbox input
  * @constructor
@@ -2342,79 +2356,85 @@ ol.ext.input.Base.prototype.getInputElement = function() {
  *  @param {string|Element} [options.after] an element to add after the slider
  *  @param {boolean} [options.fixed=false] no pupop
  */
-ol.ext.input.Slider = function(options) {
-  options = options || {};
-  ol.ext.input.Base.call(this, options);
-  this.set('overflow', !!options.overflow);
-  this.element = ol.ext.element.create('DIV', {
-    className: 'ol-input-slider' 
-      + (options.hover !== false ? ' ol-hover' : '')
-      + (options.type ? ' ol-' + options.type : '')
-      + (options.className ? ' ' + options.className : '')
-  });
-  if (options.fixed) this.element.classList.add('ol-fixed');
-  var input = this.input;
-  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
-  this.element.appendChild(input);
-  if (options.align==='right') this.element.classList.add('ol-right');
-  var popup = ol.ext.element.create('DIV', {
-    className: 'ol-popup',
-    parent: this.element
-  })
-  // Before  element
-  if (options.before) {
-    ol.ext.element.create('DIV', {
-      className: 'ol-before',
-      html: options.before,
+ol.ext.input.Slider = class olextinputSlider extends ol.ext.input.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.set('overflow', !!options.overflow);
+    this.element = ol.ext.element.create('DIV', {
+      className: 'ol-input-slider'
+        + (options.hover !== false ? ' ol-hover' : '')
+        + (options.type ? ' ol-' + options.type : '')
+        + (options.className ? ' ' + options.className : '')
+    });
+    if (options.fixed)
+      this.element.classList.add('ol-fixed');
+    var input = this.input;
+    if (input.parentNode)
+      input.parentNode.insertBefore(this.element, input);
+    this.element.appendChild(input);
+    if (options.align === 'right')
+      this.element.classList.add('ol-right');
+    var popup = ol.ext.element.create('DIV', {
+      className: 'ol-popup',
+      parent: this.element
+    });
+    // Before  element
+    if (options.before) {
+      ol.ext.element.create('DIV', {
+        className: 'ol-before',
+        html: options.before,
+        parent: popup
+      });
+    }
+    // Slider
+    var slider = this.slider = ol.ext.element.create('DIV', {
+      className: 'ol-slider',
       parent: popup
     });
-  }
-  // Slider
-  var slider = this.slider = ol.ext.element.create('DIV', {
-    className: 'ol-slider',
-    parent: popup
-  });
-  ol.ext.element.create('DIV', {
-    className: 'ol-back',
-    parent: this.slider
-  })
-  // Cursor
-  var cursor = ol.ext.element.create('DIV', {
-    className: 'ol-cursor',
-    parent: slider
-  })
-  // After element
-  if (options.after) {
     ol.ext.element.create('DIV', {
-      className: 'ol-after',
-      html: options.after,
-      parent: popup
+      className: 'ol-back',
+      parent: this.slider
     });
+    // Cursor
+    var cursor = ol.ext.element.create('DIV', {
+      className: 'ol-cursor',
+      parent: slider
+    });
+    // After element
+    if (options.after) {
+      ol.ext.element.create('DIV', {
+        className: 'ol-after',
+        html: options.after,
+        parent: popup
+      });
+    }
+    var min = (options.min !== undefined) ? options.min : parseFloat(input.min) || 0;
+    var max = (options.max !== undefined) ? options.max : parseFloat(input.max) || 1;
+    var step = (options.step !== undefined) ? options.step : parseFloat(input.step) || 1;
+    var dstep = 1 / step;
+    // Handle popup drag
+    this._listenDrag(slider, function (e) {
+      var tx = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
+      cursor.style.left = Math.max(0, Math.min(100, Math.round(tx * 100))) + '%';
+      var v = input.value = Math.round((tx * (max - min) + min) * dstep) / dstep;
+      this.dispatchEvent({ type: 'change:value', value: v });
+    }.bind(this));
+    // Set value
+    var setValue = function () {
+      var v = parseFloat(input.value) || 0;
+      if (!this.get('overflow'))
+        v = Math.max(min, Math.min(max, v));
+      if (v != input.value)
+        input.value = v;
+      var tx = (v - min) / (max - min);
+      cursor.style.left = Math.max(0, Math.min(100, Math.round(tx * 100))) + '%';
+      this.dispatchEvent({ type: 'change:value', value: v });
+    }.bind(this);
+    input.addEventListener('change', setValue);
+    setValue();
   }
-  var min = (options.min !== undefined) ? options.min : parseFloat(input.min) || 0;
-  var max = (options.max !== undefined) ? options.max : parseFloat(input.max) || 1;
-  var step = (options.step !== undefined) ? options.step : parseFloat(input.step) || 1;
-  var dstep = 1/step;
-  // Handle popup drag
-  this._listenDrag(slider, function(e) {
-    var tx = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
-    cursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
-    var v = input.value = Math.round((tx * (max - min) + min) * dstep) / dstep;
-    this.dispatchEvent({ type: 'change:value', value: v });
-  }.bind(this));
-  // Set value
-  var setValue = function() {
-    var v = parseFloat(input.value) || 0;
-    if (!this.get('overflow')) v = Math.max(min, Math.min(max, v));
-    if (v != input.value) input.value = v;
-    var tx = (v - min) / (max - min);
-    cursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
-    this.dispatchEvent({ type: 'change:value', value: v });
-  }.bind(this);
-  input.addEventListener('change', setValue);
-  setValue();
-};
-ol.ext.inherits(ol.ext.input.Slider, ol.ext.input.Base);
+}
 
 /** Base class for input popup
  * @constructor
@@ -4262,72 +4282,81 @@ ol.control.SelectBase.prototype.doSelect = function (options) {
  *  @param {String} options.html html to insert in the control
  *  @param {function} options.handleClick callback when control is clicked (or use change:active event)
  */
-ol.control.Button = function(options){
-  options = options || {};
-  var element = document.createElement("div");
-  element.className = (options.className || '') + " ol-button ol-unselectable ol-control";
-  var self = this;
-  var bt = this.button_ = document.createElement(/ol-text-button/.test(options.className) ? "div": "button");
-  bt.type = "button";
-  if (options.title) bt.title = options.title;
-  if (options.name) bt.name = options.name;
-  if (options.html instanceof Element) bt.appendChild(options.html)
-  else bt.innerHTML = options.html || "";
-  var evtFunction = function(e) {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-      e.stopPropagation();
+ol.control.Button = class olcontrolButton extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    var element = document.createElement('div');
+    element.className = (options.className || '') + " ol-button ol-unselectable ol-control";
+    super({
+      element: element,
+      target: options.target
+    });
+    var self = this;
+    var bt = this.button_ = document.createElement(/ol-text-button/.test(options.className) ? "div" : "button");
+    bt.type = "button";
+    if (options.title)
+      bt.title = options.title;
+    if (options.name)
+      bt.name = options.name;
+    if (options.html instanceof Element)
+      bt.appendChild(options.html);
+    else
+      bt.innerHTML = options.html || "";
+    var evtFunction = function (e) {
+      if (e && e.preventDefault) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (options.handleClick) {
+        options.handleClick.call(self, e);
+      }
+    };
+    bt.addEventListener("click", evtFunction);
+    // bt.addEventListener("touchstart", evtFunction);
+    element.appendChild(bt);
+    // Try to get a title in the button content
+    if (!options.title && bt.firstElementChild) {
+      bt.title = bt.firstElementChild.title;
     }
-    if (options.handleClick) {
-      options.handleClick.call(self, e);
+    if (options.title) {
+      this.set("title", options.title);
     }
-  };
-  bt.addEventListener("click", evtFunction);
-  // bt.addEventListener("touchstart", evtFunction);
-  element.appendChild(bt);
-  // Try to get a title in the button content
-  if (!options.title && bt.firstElementChild) {
-    bt.title = bt.firstElementChild.title;
+    if (options.title)
+      this.set("title", options.title);
+    if (options.name)
+      this.set("name", options.name);
   }
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  if (options.title) {
-    this.set("title", options.title);
+  /** Set the control visibility
+  * @param {boolean} b
+  */
+  setVisible(val) {
+    if (val)
+      ol.ext.element.show(this.element);
+    else
+      ol.ext.element.hide(this.element);
   }
-  if (options.title) this.set("title", options.title);
-  if (options.name) this.set("name", options.name);
-};
-ol.ext.inherits(ol.control.Button, ol.control.Control);
-/** Set the control visibility
-* @param {boolean} b 
-*/
-ol.control.Button.prototype.setVisible = function (val) {
-  if (val) ol.ext.element.show(this.element);
-  else ol.ext.element.hide(this.element);
-};
-/**
- * Set the button title
- * @param {string} title
- */
-ol.control.Button.prototype.setTitle = function(title) {
-  this.button_.setAttribute('title', title);
-};
-/**
- * Set the button html
- * @param {string} html
- */
-ol.control.Button.prototype.setHtml = function(html) {
-  ol.ext.element.setHTML (this.button_, html);
-};
-/**
- * Get the button element
- * @returns {Element}
- */
-ol.control.Button.prototype.getButtonElement = function() {
-  return this.button_;
-};
+  /**
+   * Set the button title
+   * @param {string} title
+   */
+  setTitle(title) {
+    this.button_.setAttribute('title', title);
+  }
+  /**
+   * Set the button html
+   * @param {string} html
+   */
+  setHtml(html) {
+    ol.ext.element.setHTML(this.button_, html);
+  }
+  /**
+   * Get the button element
+   * @returns {Element}
+   */
+  getButtonElement() {
+    return this.button_;
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -7318,283 +7347,293 @@ ol.control.Compass.prototype._draw = function(e) {
  *  @param {boolean} options.hideOnBack close dialog when click the background
  *  @param {boolean} options.closeOnSubmit Prevent closing the dialog on submit
  */
-ol.control.Dialog = function(options) {
-  options = options || {};
-  if (options.fullscreen) options.target = document.body;
-  // Constructor
-  var element = ol.ext.element.create('DIV', {
-    className: ((options.className || '') + (options.zoom ? ' ol-zoom':'') + ' ol-ext-dialog').trim(),
-    click: function(e) {
-      if (this.get('hideOnBack') && e.target===element) this.close();
+ol.control.Dialog = class olcontrolDialog extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    if (options.fullscreen) options.target = document.body;
+    var element = ol.ext.element.create('DIV', {
+      className: ((options.className || '') + (options.zoom ? ' ol-zoom' : '') + ' ol-ext-dialog').trim()
+    })
+    super({
+      element: element,
+      target: options.target
+    });
+    // Constructor
+    element.addEventListener('click', function (e) {
+      if (this.get('hideOnBack') && e.target === element) this.close();
       if (this.get('hideOnClick')) this.close();
-    }.bind(this)
-  });
-  // form
-  var form = ol.ext.element.create('FORM', {
-    on: {
-      submit: this._onButton('submit')
-    },
-    parent: element
-  });
-  // Title
-  ol.ext.element.create('H2', {
-    parent: form
-  });
-  // Close box
-  ol.ext.element.create('DIV', {
-    className: 'ol-closebox',
-    click: this._onButton('cancel'),
-    parent: form
-  });
-  // Content
-  ol.ext.element.create('DIV', {
-    className: 'ol-content',
-    parent: form
-  });
-  // Progress
-  this._progress = ol.ext.element.create('DIV', { 
-    style: { display: 'none' },
-    parent: form
-  });
-  var bar = ol.ext.element.create('DIV', {
-    className: 'ol-progress-bar',
-    parent: this._progress
-  });
-  this._progressbar = ol.ext.element.create('DIV', {
-    parent: bar
-  });
-  this._progressMessage = ol.ext.element.create('DIV', {
-    className: 'ol-progress-message',
-    parent: this._progress
-  });
-  // Buttons
-  ol.ext.element.create('DIV', {
-    className: 'ol-buttons',
-    parent: form
-  });
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.set('closeBox', options.closeBox !== false);
-  this.set('zoom', !!options.zoom);
-  this.set('hideOnClick', !!options.hideOnClick);
-  this.set('hideOnBack', !!options.hideOnBack);
-  this.set('className', element.className);
-  this.set('closeOnSubmit', options.closeOnSubmit);
-  this.set('buttons', options.buttons);
-  this.setContent(options)
-};
-ol.ext.inherits(ol.control.Dialog, ol.control.Control);
-/** Show a new dialog 
- * @param { * | Element | string } options options or a content to show
- *  @param {Element | String} options.content dialog content
- *  @param {string} options.title title of the dialog
- *  @param {string} options.className dialog class name
- *  @param {number} options.autoclose a delay in ms before auto close
- *  @param {boolean} options.hideOnBack close dialog when click the background
- *  @param {number} options.max if not null add a progress bar to the dialog
- *  @param {number} options.progress set the progress bar value
- *  @param {Object} options.buttons a key/value list of button to show 
- *  @param {function} [options.onButton] a function that takes the button id and a list of input by className
- */
-ol.control.Dialog.prototype.show = function(options) {
-  if (options) {
-    if (options instanceof Element || typeof(options) === 'string') {
-      options = { content: options };
-    }
+    }.bind(this));
+    // form
+    var form = ol.ext.element.create('FORM', {
+      on: {
+        submit: this._onButton('submit')
+      },
+      parent: element
+    });
+    // Title
+    ol.ext.element.create('H2', {
+      parent: form
+    });
+    // Close box
+    ol.ext.element.create('DIV', {
+      className: 'ol-closebox',
+      click: this._onButton('cancel'),
+      parent: form
+    });
+    // Content
+    ol.ext.element.create('DIV', {
+      className: 'ol-content',
+      parent: form
+    });
+    // Progress
+    this._progress = ol.ext.element.create('DIV', {
+      style: { display: 'none' },
+      parent: form
+    });
+    var bar = ol.ext.element.create('DIV', {
+      className: 'ol-progress-bar',
+      parent: this._progress
+    });
+    this._progressbar = ol.ext.element.create('DIV', {
+      parent: bar
+    });
+    this._progressMessage = ol.ext.element.create('DIV', {
+      className: 'ol-progress-message',
+      parent: this._progress
+    });
+    // Buttons
+    ol.ext.element.create('DIV', {
+      className: 'ol-buttons',
+      parent: form
+    });
+    this.set('closeBox', options.closeBox !== false);
+    this.set('zoom', !!options.zoom);
+    this.set('hideOnClick', !!options.hideOnClick);
+    this.set('hideOnBack', !!options.hideOnBack);
+    this.set('className', element.className);
+    this.set('closeOnSubmit', options.closeOnSubmit);
+    this.set('buttons', options.buttons);
     this.setContent(options);
   }
-  this.element.classList.add('ol-visible');
-  var input = this.element.querySelector('input[type="text"],input[type="search"],input[type="number"]');
-  if (input) input.focus();
-  this.dispatchEvent ({ type: 'show' });
-  if (options) {
-    // Auto close
-    if (options.autoclose) {
-      var listener = setTimeout(function() { this.hide() }.bind(this), options.autoclose);
-      this.once('hide', function(){ 
-        clearTimeout(listener); 
-      });
+  /** Show a new dialog
+   * @param { * | Element | string } options options or a content to show
+   *  @param {Element | String} options.content dialog content
+   *  @param {string} options.title title of the dialog
+   *  @param {string} options.className dialog class name
+   *  @param {number} options.autoclose a delay in ms before auto close
+   *  @param {boolean} options.hideOnBack close dialog when click the background
+   *  @param {number} options.max if not null add a progress bar to the dialog
+   *  @param {number} options.progress set the progress bar value
+   *  @param {Object} options.buttons a key/value list of button to show
+   *  @param {function} [options.onButton] a function that takes the button id and a list of input by className
+   */
+  show(options) {
+    if (options) {
+      if (options instanceof Element || typeof (options) === 'string') {
+        options = { content: options };
+      }
+      this.setContent(options);
     }
-    // hideOnBack
-    if (options.hideOnBack) {
-      // save value
-      var value = this.get('hideOnBack');
-      this.set('hideOnBack', true);
-      this.once('hide', function() {
-        this.set('hideOnBack', value);
+    this.element.classList.add('ol-visible');
+    var input = this.element.querySelector('input[type="text"],input[type="search"],input[type="number"]');
+    if (input)
+      input.focus();
+    this.dispatchEvent({ type: 'show' });
+    if (options) {
+      // Auto close
+      if (options.autoclose) {
+        var listener = setTimeout(function () { this.hide(); }.bind(this), options.autoclose);
+        this.once('hide', function () {
+          clearTimeout(listener);
+        });
+      }
+      // hideOnBack
+      if (options.hideOnBack) {
+        // save value
+        var value = this.get('hideOnBack');
+        this.set('hideOnBack', true);
+        this.once('hide', function () {
+          this.set('hideOnBack', value);
+        }.bind(this));
+      }
+    }
+  }
+  /** Open the dialog
+   */
+  open() {
+    this.show();
+  }
+  /** Set the dialog content
+   * @param {Element | String} content dialog content
+   */
+  setContentMessage(content) {
+    if (content !== undefined) {
+      var elt = this.getContentElement();
+      if (content instanceof Element)
+        ol.ext.element.setHTML(elt, '');
+      ol.ext.element.setHTML(elt, content || '');
+    }
+  }
+  /** Set the dialog title
+   * @param {Element | String} content dialog content
+   */
+  setTitle(title) {
+    var form = this.element.querySelector('form');
+    form.querySelector('h2').innerText = title || '';
+    if (title) {
+      form.classList.add('ol-title');
+    } else {
+      form.classList.remove('ol-title');
+    }
+  }
+  /** Set the dialog content
+   * @param {*} options
+   *  @param {Element | String} options.content dialog content
+   *  @param {string} options.title title of the dialog
+   *  @param {string} options.className dialog class name
+   *  @param {number} options.max if not null add a progress bar to the dialog
+   *  @param {number} options.progress set the progress bar value
+   *  @param {Object} options.buttons a key/value list of button to show
+   *  @param {function} [options.onButton] a function that takes the button id and a list of input by className
+   */
+  setContent(options) {
+    if (!options)
+      return;
+    this.element.className = this.get('className');
+    if (typeof (options) === 'string')
+      options = { content: options };
+    options = options || {};
+    this.setProgress(false);
+    if (options.max)
+      this.setProgress(0, options.max);
+    if (options.progress !== undefined)
+      this.setProgress(options.progress);
+    //this.element.className = 'ol-ext-dialog' + (this.get('zoom') ? ' ol-zoom' : '');
+    if (this.get('zoom'))
+      this.element.classList.add('ol-zoom');
+    else
+      this.element.classList.remove('ol-zoom');
+    if (options.className) {
+      options.className.split(' ').forEach(function (c) {
+        this.element.classList.add(c);
       }.bind(this));
     }
-  }
-};
-/** Open the dialog
- */
-ol.control.Dialog.prototype.open = function() {
-  this.show();
-};
-/** Set the dialog content
- * @param {Element | String} content dialog content
- */
- ol.control.Dialog.prototype.setContentMessage = function(content) {
-  if (content !== undefined) {
-    var elt = this.getContentElement();
-    if (content instanceof Element) ol.ext.element.setHTML(elt, '');
-    ol.ext.element.setHTML(elt, content || '');
-  }
-};
-/** Set the dialog title
- * @param {Element | String} content dialog content
- */
-ol.control.Dialog.prototype.setTitle = function(title) {
-  var form = this.element.querySelector('form');
-  form.querySelector('h2').innerText = title || '';
-  if (title) {
-    form.classList.add('ol-title');
-  } else {
-    form.classList.remove('ol-title');
-  }
-};
-/** Set the dialog content
- * @param {*} options
- *  @param {Element | String} options.content dialog content
- *  @param {string} options.title title of the dialog
- *  @param {string} options.className dialog class name
- *  @param {number} options.max if not null add a progress bar to the dialog
- *  @param {number} options.progress set the progress bar value
- *  @param {Object} options.buttons a key/value list of button to show 
- *  @param {function} [options.onButton] a function that takes the button id and a list of input by className
- */
-ol.control.Dialog.prototype.setContent = function(options) {
-  if (!options) return;
-  this.element.className = this.get('className');
-  if (typeof(options) === 'string') options = { content: options };
-  options = options || {};
-  this.setProgress(false);
-  if (options.max) this.setProgress(0, options.max);
-  if (options.progress !== undefined) this.setProgress(options.progress);
-  //this.element.className = 'ol-ext-dialog' + (this.get('zoom') ? ' ol-zoom' : '');
-  if (this.get('zoom')) this.element.classList.add('ol-zoom');
-  else this.element.classList.remove('ol-zoom');
-  if (options.className) {
-    options.className.split(' ').forEach(function(c) {
-      this.element.classList.add(c);
-    }.bind(this));
-  }
-  var form = this.element.querySelector('form');
-  // Content
-  if (options.content !== undefined) {
-    if (options.content instanceof Element) ol.ext.element.setHTML(form.querySelector('.ol-content'), '');
-    ol.ext.element.setHTML(form.querySelector('.ol-content'), options.content || '');
-  }
-  // Title
-  this.setTitle(options.title);
-  // Closebox
-  if (options.closeBox || (this.get('closeBox') && options.closeBox !== false)) {
-    form.classList.add('ol-closebox');
-  } else {
-    form.classList.remove('ol-closebox');
-  }
-  // Buttons
-  var buttons = this.element.querySelector('.ol-buttons');
-  buttons.innerHTML = '';
-  var btn = options.buttons || this.get('buttons');
-  if (btn) {
-    form.classList.add('ol-button');
-    for (var i in btn) {
-      ol.ext.element.create ('INPUT', {
-        type: (i==='submit' ? 'submit':'button'),
-        value: btn[i],
-        click: this._onButton(i, options.onButton),
-        parent: buttons
-      });
+    var form = this.element.querySelector('form');
+    // Content
+    if (options.content !== undefined) {
+      if (options.content instanceof Element)
+        ol.ext.element.setHTML(form.querySelector('.ol-content'), '');
+      ol.ext.element.setHTML(form.querySelector('.ol-content'), options.content || '');
     }
-  } else {
-    form.classList.remove('ol-button');
-  }
-};
-/** Get dialog content element 
- * @returns {Element}
- */
-ol.control.Dialog.prototype.getContentElement = function() {
-  return this.element.querySelector('form .ol-content')
-};
-/** Set progress
- * @param {number|boolean} val the progress value or false to hide the progressBar
- * @param {number} max
- * @param {string|element} message
- */
-ol.control.Dialog.prototype.setProgress = function(val, max, message) {
-  if (val===false) {
-    ol.ext.element.setStyle(this._progress, { display: 'none' })
-    return;
-  }
-  if (max > 0) {
-    this.set('max', Number(max));
-  } else {
-    max = this.get('max');
-  }
-  if (!max) {
-    ol.ext.element.setStyle(this._progress, { display: 'none' })
-  } else {
-    var p = Math.round(val / max * 100);
-    ol.ext.element.setStyle(this._progress, { display: '' })
-    this._progressbar.className = p ? '' : 'notransition';
-    ol.ext.element.setStyle(this._progressbar, { width: p+'%' })
-  }
-  this._progressMessage.innerHTML = '';
-  ol.ext.element.setHTML(this._progressMessage, message || '');
-};
-/** Returns a function to do something on button click
- * @param {strnig} button button id
- * @param {function} callback
- * @returns {function}
- * @private
- */
- ol.control.Dialog.prototype._onButton = function(button, callback) {
-  // Dispatch a button event
-  var fn = function(e) {
-    e.preventDefault();
-    if (button!=='submit' || this.get('closeOnSubmit')!==false) this.hide();
-    var inputs = this.getInputs();
-    this.dispatchEvent ({ type: 'button', button: button, inputs: inputs });
-    if (typeof(callback) === 'function') callback(button, inputs);
-  }.bind(this);
-  return fn;
-};
-/** Get inputs, textarea an select of the dialog by classname 
- * @return {Object} a {key:value} list of Elements by classname
- */
-ol.control.Dialog.prototype.getInputs = function() {
-  var inputs = {};
-  ['input', 'textarea', 'select'].forEach(function(type) {
-    this.element.querySelectorAll('form '+type).forEach (function(input) {
-      if (input.className) {
-        input.className.split(' ').forEach(function(n) {
-          inputs[n] = input;
-        })
+    // Title
+    this.setTitle(options.title);
+    // Closebox
+    if (options.closeBox || (this.get('closeBox') && options.closeBox !== false)) {
+      form.classList.add('ol-closebox');
+    } else {
+      form.classList.remove('ol-closebox');
+    }
+    // Buttons
+    var buttons = this.element.querySelector('.ol-buttons');
+    buttons.innerHTML = '';
+    var btn = options.buttons || this.get('buttons');
+    if (btn) {
+      form.classList.add('ol-button');
+      for (var i in btn) {
+        ol.ext.element.create('INPUT', {
+          type: (i === 'submit' ? 'submit' : 'button'),
+          value: btn[i],
+          click: this._onButton(i, options.onButton),
+          parent: buttons
+        });
       }
-    });
-  }.bind(this));
-  return inputs;
-};
-/** Close the dialog 
- */
-ol.control.Dialog.prototype.hide = function() {
-  this.element.classList.remove('ol-visible');
-  this.dispatchEvent ({ type: 'hide' });
-};
-/** Close the dialog 
- * @method Dialog.close
- * @return {bool} true if a dialog is closed
- */
-ol.control.Dialog.prototype.close = ol.control.Dialog.prototype.hide;
-/** The dialog is shown
- * @return {bool} true if a dialog is open
- */
-ol.control.Dialog.prototype.isOpen = function() {
-  return (this.element.classList.contains('ol-visible'));
-};
+    } else {
+      form.classList.remove('ol-button');
+    }
+  }
+  /** Get dialog content element
+   * @returns {Element}
+   */
+  getContentElement() {
+    return this.element.querySelector('form .ol-content');
+  }
+  /** Set progress
+   * @param {number|boolean} val the progress value or false to hide the progressBar
+   * @param {number} max
+   * @param {string|element} message
+   */
+  setProgress(val, max, message) {
+    if (val === false) {
+      ol.ext.element.setStyle(this._progress, { display: 'none' });
+      return;
+    }
+    if (max > 0) {
+      this.set('max', Number(max));
+    } else {
+      max = this.get('max');
+    }
+    if (!max) {
+      ol.ext.element.setStyle(this._progress, { display: 'none' });
+    } else {
+      var p = Math.round(val / max * 100);
+      ol.ext.element.setStyle(this._progress, { display: '' });
+      this._progressbar.className = p ? '' : 'notransition';
+      ol.ext.element.setStyle(this._progressbar, { width: p + '%' });
+    }
+    this._progressMessage.innerHTML = '';
+    ol.ext.element.setHTML(this._progressMessage, message || '');
+  }
+  /** Returns a function to do something on button click
+   * @param {strnig} button button id
+   * @param {function} callback
+   * @returns {function}
+   * @private
+   */
+  _onButton(button, callback) {
+    // Dispatch a button event
+    var fn = function (e) {
+      e.preventDefault();
+      if (button !== 'submit' || this.get('closeOnSubmit') !== false) this.hide();
+      var inputs = this.getInputs();
+      this.dispatchEvent({ type: 'button', button: button, inputs: inputs });
+      if (typeof (callback) === 'function') callback(button, inputs);
+    }.bind(this);
+    return fn;
+  }
+  /** Get inputs, textarea an select of the dialog by classname
+   * @return {Object} a {key:value} list of Elements by classname
+   */
+  getInputs() {
+    var inputs = {};
+    ['input', 'textarea', 'select'].forEach(function (type) {
+      this.element.querySelectorAll('form ' + type).forEach(function (input) {
+        if (input.className) {
+          input.className.split(' ').forEach(function (n) {
+            inputs[n] = input;
+          });
+        }
+      });
+    }.bind(this));
+    return inputs;
+  }
+  /** Close the dialog
+   */
+  hide() {
+    this.element.classList.remove('ol-visible');
+    this.dispatchEvent({ type: 'hide' });
+  }
+  /** Close the dialog 
+   */
+  close() {
+    this.hide();
+  }
+  /** The dialog is shown
+   * @return {bool} true if a dialog is open
+   */
+  isOpen() {
+    return (this.element.classList.contains('ol-visible'));
+  }
+}
 
 /** A simple control to disable all actions on the map.
  * The control will create an invisible div over the map.
@@ -9834,42 +9873,46 @@ ol.control.IsochroneGeoportail.prototype._error = function() {
  * @extends {ol.control.LayerSwitcher}
  * @param {Object=} options Control options.
  */
-ol.control.LayerPopup = function(options) {
-  options = options || {};
-	options.switcherClass = 'ol-layerswitcher-popup' + (options.switcherClass ? ' ' + options.switcherClass : '');
-	if (options.mouseover!==false) options.mouseover = true;
-	ol.control.LayerSwitcher.call(this, options);
-};
-ol.ext.inherits(ol.control.LayerPopup, ol.control.LayerSwitcher);
-/** Disable overflow
-*/
-ol.control.LayerPopup.prototype.overflow = function(){};
-/** Render a list of layer
- * @param {elt} element to render
- * @layers {Array{ol.layer}} list of layer to show
- * @api stable
- */
-ol.control.LayerPopup.prototype.drawList = function(ul, layers) {	
-  var self=this;
-	var setVisibility = function(e) {
-    e.preventDefault(); 
-		var l = self._getLayerForLI(this);
-		self.switchLayerVisibility(l,layers);
-		if (e.type === 'touchstart') self.element.classList.add('ol-collapsed');
-	};
-	layers.forEach(function(layer) {
-    if (self.displayInLayerSwitcher(layer)) {
-      var d = ol.ext.element.create('LI', {
-        html: layer.get('title') || layer.get('name'),
-        on: { 'click touchstart': setVisibility },
-        parent: ul
-      });
-      self._setLayerForLI(d, layer);
-			if (self.testLayerVisibility(layer)) d.classList.add('ol-layer-hidden');
-			if (layer.getVisible()) d.classList.add('ol-visible');
-		}
-	});
-};
+ol.control.LayerPopup = class olcontrolLayerPopup extends ol.control.LayerSwitcher {
+	constructor(options) {
+		options = options || {};
+		options.switcherClass = 'ol-layerswitcher-popup' + (options.switcherClass ? ' ' + options.switcherClass : '');
+		if (options.mouseover !== false) options.mouseover = true;
+		super(options);
+	}
+	/** Disable overflow
+	*/
+	overflow() { }
+	/** Render a list of layer
+	 * @param {elt} element to render
+	 * @layers {Array{ol.layer}} list of layer to show
+	 * @api stable
+	 */
+	drawList(ul, layers) {
+		var self = this;
+		var setVisibility = function (e) {
+			e.preventDefault();
+			var l = self._getLayerForLI(this);
+			self.switchLayerVisibility(l, layers);
+			if (e.type === 'touchstart')
+				self.element.classList.add('ol-collapsed');
+		};
+		layers.forEach(function (layer) {
+			if (self.displayInLayerSwitcher(layer)) {
+				var d = ol.ext.element.create('LI', {
+					html: layer.get('title') || layer.get('name'),
+					on: { 'click touchstart': setVisibility },
+					parent: ul
+				});
+				self._setLayerForLI(d, layer);
+				if (self.testLayerVisibility(layer))
+					d.classList.add('ol-layer-hidden');
+				if (layer.getVisible())
+					d.classList.add('ol-visible');
+			}
+		});
+	}
+}
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -9906,74 +9949,75 @@ ol.control.LayerPopup.prototype.drawList = function(ul, layers) {
  *	- displayInLayerSwitcher {boolean} display the layer in switcher, default true
  *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
  */
-ol.control.LayerShop = function(options) {
-  options = options || {};
-  options.selection = true;
-  options.noScroll = true;
-  ol.control.LayerSwitcher.call (this, options);
-  this.element.classList.add('ol-layer-shop');
-  // Control title (selected layer)
-  var title = this.element.insertBefore(ol.ext.element.create('DIV', { className: 'ol-title-bar' }), this.getPanel());
-  this.on('select', function(e) {
-    title.innerText = e.layer ? e.layer.get('title') : '';
-    this.element.setAttribute('data-layerClass', this.getLayerClass(e.layer));
-  }.bind(this));
-  // Top/bottom bar
-  this._topbar = this.element.insertBefore(ol.ext.element.create('DIV', { 
-    className: 'ol-bar ol-top-bar'
-  }), this.getPanel());
-  this._bottombar = ol.ext.element.create('DIV', { 
-    className: 'ol-bar ol-bottom-bar',
-    parent: this.element
-  });
-  this._controls = [];
-};
-ol.ext.inherits(ol.control.LayerShop, ol.control.LayerSwitcher);
-/** Set the map instance the control is associated with.
- * @param {_ol_Map_} map The map instance.
- */
-ol.control.LayerShop.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    // Remove map controls
-    this._controls.forEach(function(c) {
-      this.getMap().removeControl(c)
+ol.control.LayerShop = class olcontrolLayerShop extends ol.control.LayerSwitcher {
+  constructor(options) {
+    options = options || {};
+    options.selection = true;
+    options.noScroll = true;
+    super(options);
+    this.element.classList.add('ol-layer-shop');
+    // Control title (selected layer)
+    var title = this.element.insertBefore(ol.ext.element.create('DIV', { className: 'ol-title-bar' }), this.getPanel());
+    this.on('select', function (e) {
+      title.innerText = e.layer ? e.layer.get('title') : '';
+      this.element.setAttribute('data-layerClass', this.getLayerClass(e.layer));
     }.bind(this));
+    // Top/bottom bar
+    this._topbar = this.element.insertBefore(ol.ext.element.create('DIV', {
+      className: 'ol-bar ol-top-bar'
+    }), this.getPanel());
+    this._bottombar = ol.ext.element.create('DIV', {
+      className: 'ol-bar ol-bottom-bar',
+      parent: this.element
+    });
+    this._controls = [];
   }
-  ol.control.LayerSwitcher.prototype.setMap.call(this, map);
-  if (map) {
-    // Select first layer
-    this.selectLayer();
-    // Remove a layer
-    this._listener.removeLayer = map.getLayers().on('remove', function(e) {
+  /** Set the map instance the control is associated with.
+   * @param {_ol_Map_} map The map instance.
+   */
+  setMap(map) {
+    if (this.getMap()) {
+      // Remove map controls
+      this._controls.forEach(function (c) {
+        this.getMap().removeControl(c);
+      }.bind(this));
+    }
+    super.setMap(map);
+    if (map) {
       // Select first layer
-      if (e.element === this.getSelection()) {
-        this.selectLayer();
-      }
-    }.bind(this));
-    // Add controls
-    this._controls.forEach(function(c) {
-      this.getMap().addControl(c)
-    }.bind(this));
+      this.selectLayer();
+      // Remove a layer
+      this._listener.removeLayer = map.getLayers().on('remove', function (e) {
+        // Select first layer
+        if (e.element === this.getSelection()) {
+          this.selectLayer();
+        }
+      }.bind(this));
+      // Add controls
+      this._controls.forEach(function (c) {
+        this.getMap().addControl(c);
+      }.bind(this));
+    }
   }
-};
-/** Get the bar element (to add new element in it)
- * @param {string} [position='top'] bar position bottom or top, default top
- * @returns {Element}
- */
-ol.control.LayerShop.prototype.getBarElement = function(position) {
-  return position==='bottom' ? this._bottombar : this._topbar;
-};
-/** Add a control to the panel
- * @param {ol.control.Control} control
- * @param {string} [position='top'] bar position bottom or top, default top
- */
-ol.control.LayerShop.prototype.addControl = function(control, position) {
-  this._controls.push(control);
-  control.setTarget(position==='bottom' ? this._bottombar : this._topbar);
-  if (this.getMap()) {
-    this.getMap().addControl(control);
+  /** Get the bar element (to add new element in it)
+   * @param {string} [position='top'] bar position bottom or top, default top
+   * @returns {Element}
+   */
+  getBarElement(position) {
+    return position === 'bottom' ? this._bottombar : this._topbar;
   }
-};
+  /** Add a control to the panel
+   * @param {ol.control.Control} control
+   * @param {string} [position='top'] bar position bottom or top, default top
+   */
+  addControl(control, position) {
+    this._controls.push(control);
+    control.setTarget(position === 'bottom' ? this._bottombar : this._topbar);
+    if (this.getMap()) {
+      this.getMap().addControl(control);
+    }
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -14528,90 +14572,96 @@ ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
  *  @param {string|undefined} options.url URL to Nominatim API, default "https://nominatim.openstreetmap.org/search"
  * @see {@link https://wiki.openstreetmap.org/wiki/Nominatim}
  */
-ol.control.SearchNominatim = function(options) {
-  options = options || {};
-  options.className = options.className || 'nominatim';
-  options.typing = options.typing || -1;
-  options.url = options.url || 'https://nominatim.openstreetmap.org/search';
-  options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
-  ol.control.SearchJSON.call(this, options);
-  this.set('polygon', options.polygon);
-  this.set('viewbox', options.viewbox);
-  this.set('bounded', options.bounded);
-};
-ol.ext.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
-/** Returns the text to be displayed in the menu
- *	@param {ol.Feature} f the feature
-*	@return {string} the text to be displayed in the index
-*	@api
-*/
-ol.control.SearchNominatim.prototype.getTitle = function (f) {
-  var info = [];
-  if (f.class) info.push(f.class);
-  if (f.type) info.push(f.type);
-  var title = f.display_name+(info.length ? "<i>"+info.join(' - ')+"</i>" : '');
-  if (f.icon) title = "<img src='"+f.icon+"' />" + title;
-  return (title);
-};
-/** 
- * @param {string} s the search string
- * @return {Object} request data (as key:value)
- * @api
- */
-ol.control.SearchNominatim.prototype.requestData = function (s) {
-  var data = { 
-    format: "json", 
-    addressdetails: 1, 
-    q: s, 
-    polygon_geojson: this.get('polygon') ? 1:0,
-    bounded: this.get('bounded') ? 1:0,
-    limit: this.get('maxItems')
-  };
-  if (this.get('viewbox')) data.viewbox = this.get('viewbox');
-  return data;
-};
-/** A ligne has been clicked in the menu > dispatch event
- *	@param {any} f the feature, as passed in the autocomplete
-*	@api
-*/
-ol.control.SearchNominatim.prototype.select = function (f){
-  var c = [Number(f.lon), Number(f.lat)];
-  // Add coordinate to the event
-  try {
-    c = ol.proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
-  } catch(e) { /* ok */}
-  this.dispatchEvent({ type:"select", search:f, coordinate: c });
-};
-/**
- * Handle server response to pass the features array to the display list
- * @param {any} response server response
- * @return {Array<any>} an array of feature
- * @api
- */
-ol.control.SearchJSON.prototype.handleResponse = function (response) {
-  return response.results || response;
-};
-/** Reverse geocode
- * @param {ol.coordinate} coord
- * @api
- */
-ol.control.SearchNominatim.prototype.reverseGeocode = function (coord, cback) {
-  var lonlat = ol.proj.transform (coord, this.getMap().getView().getProjection(), 'EPSG:4326');
-  this.ajax(
-    this.get('url').replace('search', 'reverse'),
-    { lon: lonlat[0], lat: lonlat[1], format: 'json' },
-    function(resp) {
-      if (cback) {
-        cback.call(this, [resp]);
-      } else {
-        if (resp && !resp.error) {
-          this._handleSelect(resp, true);
+ol.control.SearchNominatim = class olcontrolSearchNominatim extends ol.control.SearchJSON {
+  constructor(options) {
+    options = options || {};
+    options.className = options.className || 'nominatim';
+    options.typing = options.typing || -1;
+    options.url = options.url || 'https://nominatim.openstreetmap.org/search';
+    options.copy = '<a href="http://www.openstreetmap.org/copyright" target="new">&copy; OpenStreetMap contributors</a>';
+    super(options);
+    this.set('polygon', options.polygon);
+    this.set('viewbox', options.viewbox);
+    this.set('bounded', options.bounded);
+  }
+  /** Returns the text to be displayed in the menu
+   *	@param {ol.Feature} f the feature
+  *	@return {string} the text to be displayed in the index
+  *	@api
+  */
+  getTitle(f) {
+    var info = [];
+    if (f.class)
+      info.push(f.class);
+    if (f.type)
+      info.push(f.type);
+    var title = f.display_name + (info.length ? "<i>" + info.join(' - ') + "</i>" : '');
+    if (f.icon)
+      title = "<img src='" + f.icon + "' />" + title;
+    return (title);
+  }
+  /**
+   * @param {string} s the search string
+   * @return {Object} request data (as key:value)
+   * @api
+   */
+  requestData(s) {
+    var data = {
+      format: "json",
+      addressdetails: 1,
+      q: s,
+      polygon_geojson: this.get('polygon') ? 1 : 0,
+      bounded: this.get('bounded') ? 1 : 0,
+      limit: this.get('maxItems')
+    };
+    if (this.get('viewbox'))
+      data.viewbox = this.get('viewbox');
+    return data;
+  }
+  /** A ligne has been clicked in the menu > dispatch event
+   *	@param {any} f the feature, as passed in the autocomplete
+  *	@api
+  */
+  select(f) {
+    var c = [Number(f.lon), Number(f.lat)];
+    // Add coordinate to the event
+    try {
+      c = ol.proj.transform(c, 'EPSG:4326', this.getMap().getView().getProjection());
+    } catch (e) { /* ok */ }
+    this.dispatchEvent({ type: "select", search: f, coordinate: c });
+  }
+  /** Reverse geocode
+   * @param {ol.coordinate} coord
+   * @api
+   */
+  reverseGeocode(coord, cback) {
+    var lonlat = ol.proj.transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+    this.ajax(
+      this.get('url').replace('search', 'reverse'),
+      { lon: lonlat[0], lat: lonlat[1], format: 'json' },
+      function (resp) {
+        if (cback) {
+          cback.call(this, [resp]);
+        } else {
+          if (resp && !resp.error) {
+            this._handleSelect(resp, true);
+          }
+          //this.setInput('', true);
         }
-        //this.setInput('', true);
-      }
-    }.bind(this)
-  );
-};
+      }.bind(this)
+    );
+  }
+  /**
+   * Handle server response to pass the features array to the display list
+   * @param {any} response server response
+   * @return {Array<any>} an array of feature
+   * @api
+   */
+  handleResponse(response) {
+    return response.results || response;
+  }
+  /**/
+}  
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -17233,77 +17283,827 @@ ol.control.VideoRecorder.prototype.resume = function () {
  *  @param {boolean} [options.trace=false] Log layer info, default false
  *  @param {*} [options.services] a key/url object of services for quick access in a menu
  */
-ol.control.WMSCapabilities = function (options) {
-  options = options || {};
-  var buttonOptions = Object.assign({}, options || {});
-  this._proxy = options.proxy;
-  if (buttonOptions.target===document.body) delete buttonOptions.target;
-  if (buttonOptions.target) {
-    buttonOptions.className = ((buttonOptions.className||'') + ' ol-wmscapabilities ol-hidden').trim();
-    delete buttonOptions.target;
-  } else {
-    buttonOptions.className = ((buttonOptions.className||'') + ' ol-wmscapabilities').trim();
-    buttonOptions.handleClick = function () {
-      this.showDialog();
-    }.bind(this)
-  }
-  ol.control.Button.call(this, buttonOptions);
-  // WMS options
-  this.set('srs', options.srs || []);
-  this.set('cors', options.cors);
-  this.set('trace', options.trace);
-  this.set('title', options.title);
-  this.set('loadLabel', options.loadLabel);
-  this.set('optional', options.optional);
-  // Dialog
-  this.createDialog(options);
-  // Default version
-  this._elements.formVersion.value = '1.0.0';
-  // Ajax request
-  var parser = this._getParser();
-  this._ajax = new ol.ext.Ajax({ dataType:'text', auth: options.authentication });
-  this._ajax.on('success', function (evt) {
-    var caps;
-    try {
-      caps = parser.read(evt.response);
-    } catch (e) {
-      this.showError({ type: 'load', error: e });
-    }
-    if (caps) {
-      if (!caps.Capability.Layer.Layer) {
-        this.showError({ type: 'noLayer' });
-      } else {
-        this.showCapabilities(caps);
+ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.Button {
+  constructor(options) {
+    options = options || {}
+    var buttonOptions = Object.assign({}, options || {})
+    if (buttonOptions.target === document.body) delete buttonOptions.target
+    if (buttonOptions.target) {
+      buttonOptions.className = ((buttonOptions.className || '') + ' ol-wmscapabilities ol-hidden').trim()
+      delete buttonOptions.target
+    } else {
+      buttonOptions.className = ((buttonOptions.className || '') + ' ol-wmscapabilities').trim()
+      buttonOptions.handleClick = function () {
+        self.showDialog()
       }
-    } 
-    this.dispatchEvent({ type: 'capabilities', capabilities: caps });
-    if (typeof(evt.options.callback) === 'function') evt.options.callback(caps);
-  }.bind(this));
-  this._ajax.on('error', function(evt) {
-    this.showError({ type: 'load', error: evt });
-    this.dispatchEvent({ type: 'capabilities' });
-    if (typeof(evt.options.callback) === 'function') false;
-  }.bind(this));
-  // Handle waiting
-  this._ajax.on('loadstart', function() {
-    this._elements.element.classList.add('ol-searching');
-  }.bind(this));
-  this._ajax.on('loadend', function() {
-    this._elements.element.classList.remove('ol-searching');
-  }.bind(this));
-  // Load a layer
-  if (options.onselect) {
-    this.on('load', function(e) { 
-      options.onselect(e.layer, e.options); 
-    });
+    }
+    super(buttonOptions);
+    var self = this;
+    this._proxy = options.proxy
+    // WMS options
+    this.set('srs', options.srs || [])
+    this.set('cors', options.cors)
+    this.set('trace', options.trace)
+    this.set('title', options.title)
+    this.set('loadLabel', options.loadLabel)
+    this.set('optional', options.optional)
+    // Dialog
+    this.createDialog(options)
+    // Default version
+    this._elements.formVersion.value = '1.0.0'
+    // Ajax request
+    var parser = this._getParser()
+    this._ajax = new ol.ext.Ajax({ dataType: 'text', auth: options.authentication })
+    this._ajax.on('success', function (evt) {
+      var caps
+      try {
+        caps = parser.read(evt.response)
+      } catch (e) {
+        this.showError({ type: 'load', error: e })
+      }
+      if (caps) {
+        if (!caps.Capability.Layer.Layer) {
+          this.showError({ type: 'noLayer' })
+        } else {
+          this.showCapabilities(caps)
+        }
+      }
+      this.dispatchEvent({ type: 'capabilities', capabilities: caps })
+      if (typeof (evt.options.callback) === 'function')
+        evt.options.callback(caps)
+    }.bind(this))
+    this._ajax.on('error', function (evt) {
+      this.showError({ type: 'load', error: evt })
+      this.dispatchEvent({ type: 'capabilities' })
+      if (typeof (evt.options.callback) === 'function')
+        false
+    }.bind(this))
+    // Handle waiting
+    this._ajax.on('loadstart', function () {
+      this._elements.element.classList.add('ol-searching')
+    }.bind(this))
+    this._ajax.on('loadend', function () {
+      this._elements.element.classList.remove('ol-searching')
+    }.bind(this))
+    // Load a layer
+    if (options.onselect) {
+      this.on('load', function (e) {
+        options.onselect(e.layer, e.options)
+      })
+    }
   }
-};
-ol.ext.inherits(ol.control.WMSCapabilities, ol.control.Button);
-/** Get service parser
- */
-ol.control.WMSCapabilities.prototype._getParser = function() {
-  return  new ol.format.WMSCapabilities();
-};
+  /** Get service parser
+   */
+  _getParser() {
+    return new ol.format.WMSCapabilities()
+  }
+  /** Create dialog
+   * @private
+   */
+  createDialog(options) {
+    var target = options.target
+    if (!target || target === document.body) {
+      this._dialog = new ol.control.Dialog({
+        className: 'ol-wmscapabilities',
+        closeBox: true,
+        closeOnSubmit: false,
+        target: options.target
+      })
+      this._dialog.on('button', function (e) {
+        if (e.button === 'submit') {
+          this.getCapabilities(e.inputs.url.value)
+        }
+      }.bind(this))
+      target = null
+    }
+    var element = ol.ext.element.create('DIV', {
+      className: ('ol-wmscapabilities ' + (options.className || '')).trim(),
+      parent: target
+    })
+    this._elements = {
+      element: target || element
+    }
+    var inputdiv = ol.ext.element.create('DIV', {
+      className: 'ol-url',
+      parent: element
+    })
+    var input = this._elements.input = ol.ext.element.create('INPUT', {
+      className: 'url',
+      type: 'text',
+      tabIndex: 1,
+      placeholder: options.placeholder || 'service url...',
+      autocorrect: 'off',
+      autocapitalize: 'off',
+      parent: inputdiv
+    })
+    input.addEventListener('keyup', function (e) {
+      if (e.keyCode === 13) {
+        this.getCapabilities(input.value, options)
+      }
+    }.bind(this))
+    if (options.services) {
+      var qaccess = ol.ext.element.create('SELECT', {
+        className: 'url',
+        on: {
+          change: function (e) {
+            var url = e.target.options[e.target.selectedIndex].value
+            this.getCapabilities(url, options)
+            e.target.selectedIndex = 0
+          }.bind(this)
+        },
+        parent: inputdiv
+      })
+      ol.ext.element.create('OPTION', {
+        html: ' ',
+        parent: qaccess
+      })
+      for (var k in options.services) {
+        ol.ext.element.create('OPTION', {
+          html: k,
+          value: options.services[k],
+          parent: qaccess
+        })
+      }
+    }
+    ol.ext.element.create('BUTTON', {
+      click: function () {
+        this.getCapabilities(input.value, options)
+      }.bind(this),
+      html: options.searchLabel || 'search',
+      parent: inputdiv
+    })
+    // Errors
+    this._elements.error = ol.ext.element.create('DIV', {
+      className: 'ol-error',
+      parent: inputdiv
+    })
+    // Result div
+    var rdiv = this._elements.result = ol.ext.element.create('DIV', {
+      className: 'ol-result',
+      parent: element
+    })
+    // Preview
+    var preview = ol.ext.element.create('DIV', {
+      className: 'ol-preview',
+      html: options.previewLabel || 'preview',
+      parent: rdiv
+    })
+    this._elements.preview = ol.ext.element.create('IMG', {
+      parent: preview
+    })
+    // Check tainted canvas
+    this._img = new Image
+    this._img.crossOrigin = 'Anonymous'
+    this._img.addEventListener('error', function () {
+      preview.className = 'ol-preview tainted'
+      this._elements.formCrossOrigin.checked = false
+    }.bind(this))
+    this._img.addEventListener('load', function () {
+      preview.className = 'ol-preview ok'
+      this._elements.formCrossOrigin.checked = true
+    }.bind(this))
+    // Select list
+    this._elements.select = ol.ext.element.create('DIV', {
+      className: 'ol-select-list',
+      tabIndex: 2,
+      parent: rdiv
+    })
+    // Info data
+    this._elements.data = ol.ext.element.create('DIV', {
+      className: 'ol-data',
+      parent: rdiv
+    })
+    this._elements.buttons = ol.ext.element.create('DIV', {
+      className: 'ol-buttons',
+      parent: rdiv
+    })
+    this._elements.legend = ol.ext.element.create('IMG', {
+      className: 'ol-legend',
+      parent: rdiv
+    })
+    // WMS form
+    var form = this._elements.form = ol.ext.element.create('UL', {
+      className: 'ol-wmsform',
+      parent: element
+    })
+    var addLine = function (label, val, pholder) {
+      var li = ol.ext.element.create('LI', {
+        parent: form
+      })
+      ol.ext.element.create('LABEL', {
+        html: this.labels[label],
+        parent: li
+      })
+      if (typeof (val) === 'boolean') {
+        this._elements[label] = ol.ext.element.create('INPUT', {
+          type: 'checkbox',
+          checked: val,
+          parent: li
+        })
+      } else if (val instanceof Array) {
+        var sel = this._elements[label] = ol.ext.element.create('SELECT', {
+          parent: li
+        })
+        val.forEach(function (v) {
+          ol.ext.element.create('OPTION', {
+            html: v,
+            value: v,
+            parent: sel
+          })
+        }.bind(this))
+      } else {
+        this._elements[label] = ol.ext.element.create('INPUT', {
+          value: (val === undefined ? '' : val),
+          placeholder: pholder || '',
+          type: typeof (val) === 'number' ? 'number' : 'text',
+          parent: li
+        })
+      }
+      return li
+    }.bind(this)
+    addLine('formTitle')
+    addLine('formLayer', '', 'layer1,layer2,...')
+    var li = addLine('formMap')
+    li.setAttribute('data-param', 'map')
+    li = addLine('formStyle')
+    li.setAttribute('data-param', 'style')
+    addLine('formFormat', ['image/png', 'image/jpeg'])
+    addLine('formMinZoom', 0)
+    addLine('formMaxZoom', 20)
+    li = addLine('formExtent', '', 'xmin,ymin,xmax,ymax')
+    li.setAttribute('data-param', 'extent')
+    var extent = li.querySelector('input')
+    ol.ext.element.create('BUTTON', {
+      title: this.labels.mapExtent,
+      click: function () {
+        extent.value = this.getMap().getView().calculateExtent(this.getMap().getSize()).join(',')
+      }.bind(this),
+      parent: li
+    })
+    li = addLine('formProjection', '')
+    li.setAttribute('data-param', 'proj')
+    addLine('formCrossOrigin', false)
+    li = addLine('formVersion', '1.3.0')
+    li.setAttribute('data-param', 'version')
+    addLine('formAttribution', '')
+    ol.ext.element.create('BUTTON', {
+      html: this.get('loadLabel') || 'Load',
+      click: function () {
+        var opt = this._getFormOptions()
+        var layer = this.getLayerFromOptions(opt)
+        this.dispatchEvent({ type: 'load', layer: layer, options: opt })
+        this._dialog.hide()
+      }.bind(this),
+      parent: form
+    })
+    return element
+  }
+  /** Create a new layer using options received by getOptionsFromCap method
+   * @param {*} options
+   */
+  getLayerFromOptions(options) {
+    options.layer.source = new ol.source.TileWMS(options.source)
+    var layer = new ol.layer.Tile(options.layer)
+    delete options.layer.source
+    return layer
+  }
+  /**
+   * Set the map instance the control is associated with
+   * and add its controls associated to this map.
+   * @param {_ol_Map_} map The map instance.
+   */
+  setMap(map) {
+    super.setMap(map)
+    if (this._dialog) this._dialog.setMap(map)
+  }
+  /** Get the dialog
+   * @returns {ol.control.Dialog}
+   */
+  getDialog() {
+    return this._dialog
+  }
+  /** Show dialog for url
+   * @param {string} [url] service url, default ask for an url
+   * @param {*} options capabilities options
+   *  @param {string} options.map WMS map or get map in url?map=xxx
+   *  @param {string} options.version WMS version (yet only 1.3.0 is implemented), default 1.3.0
+   *  @param {number} options.timeout timout to get the capabilities, default 10000
+   */
+  showDialog(url, options) {
+    this.showError()
+    if (!this._elements.formProjection.value) {
+      this._elements.formProjection.value = this.getMap().getView().getProjection().getCode()
+    }
+    if (this._dialog) {
+      this._dialog.show({
+        title: this.get('title') === undefined ? 'WMS' : this.get('title'),
+        content: this._elements.element
+      })
+    }
+    this.getCapabilities(url, options)
+    // Center on selection
+    var sel = this._elements.select.querySelector('.selected')
+    if (sel) {
+      this._elements.select.scrollTop = sel.offsetTop - 20
+    }
+  }
+  /** Test url and return true if it is a valid url string
+   * @param {string} url
+   * @return {bolean}
+   * @api
+   */
+  testUrl(url) {
+    // var pattern = /(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/
+    var pattern = new RegExp(
+      // protocol
+      '^(https?:\\/\\/)' +
+      // domain name
+      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' +
+      // OR ip (v4) address
+      '((\\d{1,3}\\.){3}\\d{1,3}))' +
+      // port and path
+      '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' +
+      // query string
+      '(\\?[;&a-z\\d%_.~+=\\/-]*)?' +
+      // fragment locator
+      '(\\#[-a-z\\d_]*)?$', 'i')
+    return !!pattern.test(url)
+  }
+  /** Get Capabilities request parameters
+   * @param {*} options
+   */
+  getRequestParam(options) {
+    return {
+      SERVICE: 'WMS',
+      REQUEST: 'GetCapabilities',
+      VERSION: options.version || '1.3.0'
+    }
+  }
+  /** Get WMS capabilities for a server
+   * @fire load
+   * @param {string} url service url
+   * @param {*} options
+   *  @param {string} options.map WMS map or get map in url?map=xxx
+   *  @param {string} [options.version=1.3.0] WMS version (yet only 1.3.0 is implemented), default 1.3.0
+   *  @param {number} [options.timeout=10000] timout to get the capabilities, default 10000
+   *  @param {function} [options.onload] callback function
+   */
+  getCapabilities(url, options) {
+    if (!url)
+      return
+    if (!this.testUrl(url)) {
+      this.showError({
+        type: 'badUrl'
+      })
+      return
+    }
+    options = options || {}
+    // Extract map attributes
+    url = url.split('?')
+    var search = url[1]
+    url = url[0]
+    // reset
+    this._elements.formMap.value = ''
+    this._elements.formLayer.value = ''
+    this._elements.formStyle.value = ''
+    this._elements.formTitle.value = ''
+    this._elements.formProjection.value = this.getMap().getView().getProjection().getCode()
+    this._elements.formFormat.selectedIndex = 0
+    var map = options.map || ''
+    var optional = {}
+    if (search) {
+      search = search.replace(/^\?/, '').split('&')
+      search.forEach(function (s) {
+        s = s.split('=')
+        s[1] = decodeURIComponent(s[1] || '')
+        if (/^map$/i.test(s[0])) {
+          map = s[1]
+          this._elements.formMap.value = map
+        }
+        if (/^layers$/i.test(s[0])) {
+          this._elements.formLayer.value = s[1]
+          this._elements.formTitle.value = s[1].split(',')[0]
+        }
+        if (/^style$/i.test(s[0])) {
+          this._elements.formStyle.value = s[1]
+        }
+        if (/^crs$/i.test(s[0])) {
+          this._elements.formProjection.value = s[1]
+        }
+        if (/^format$/i.test(s[0])) {
+          for (var o, i = 0; o = this._elements.formFormat.options[i]; i++) {
+            if (o.value === s[1]) {
+              this._elements.formFormat.selectedIndex = i
+              break
+            }
+          }
+        }
+        // Check optionals
+        if (this.get('optional')) {
+          this.get('optional').split(',').forEach(function (o) {
+            if (o === s[0]) {
+              optional[o] = s[1]
+            }
+          }.bind(this))
+        }
+      }.bind(this))
+    }
+    // Get request params
+    var request = this.getRequestParam(options)
+    var opt = []
+    if (map) {
+      request.MAP = map
+      opt.push('map=' + map)
+    }
+    for (var o in optional) {
+      request[o] = optional[o]
+      opt.push(o + '=' + optional[o])
+    }
+    // Fill form
+    this._elements.input.value = (url || '') + (opt ? '?' + opt.join('&') : '')
+    this.clearForm()
+    // Sen drequest
+    if (this._proxy) {
+      var q = ''
+      for (var r in request)
+        q += (q ? '&' : '') + r + '=' + request[r]
+      this._ajax.send(this._proxy, {
+        url: q
+      }, {
+        timeout: options.timeout || 10000,
+        callback: options.onload,
+        abort: false
+      })
+    } else {
+      this._ajax.send(url, request, {
+        timeout: options.timeout || 10000,
+        callback: options.onload,
+        abort: false
+      })
+    }
+  }
+  /** Display error
+   * @param {*} error event
+   */
+  showError(e) {
+    if (!e)
+      this._elements.error.innerHTML = ''
+    else
+      this._elements.error.innerHTML = this.error[e.type] || ('ERROR (' + e.type + ')')
+    if (e && e.type === 'load') {
+      this._elements.form.classList.add('visible')
+    } else {
+      this._elements.form.classList.remove('visible')
+    }
+  }
+  /** Clear form
+   */
+  clearForm() {
+    this._elements.result.classList.remove('ol-visible')
+    this.showError()
+    this._elements.select.innerHTML = ''
+    this._elements.data.innerHTML = ''
+    this._elements.preview.src = ''
+    this._elements.legend.src = ''
+    this._elements.legend.classList.remove('visible')
+  }
+  /** Display capabilities in the dialog
+   * @param {*} caps JSON capabilities
+   */
+  showCapabilities(caps) {
+    this._elements.result.classList.add('ol-visible')
+    //  console.log(caps)
+    var list = []
+    var addLayers = function (parent, level) {
+      level = level || 0
+      parent.Layer.forEach(function (l) {
+        if (!l.Attribution)
+          l.Attribution = parent.Attribution
+        if (!l.EX_GeographicBoundingBox)
+          l.EX_GeographicBoundingBox = parent.EX_GeographicBoundingBox
+        var li = ol.ext.element.create('DIV', {
+          className: (l.Layer ? 'ol-title ' : '') + 'level-' + level,
+          html: l.Name || l.Title,
+          click: function () {
+            // Reset
+            this._elements.buttons.innerHTML = ''
+            this._elements.data.innerHTML = ''
+            this._elements.legend.src = this._elements.preview.src = ''
+            this._elements.element.classList.remove('ol-form')
+            this.showError()
+            // Load layer
+            var options = this.getOptionsFromCap(l, caps)
+            var layer = this.getLayerFromOptions(options)
+            this._currentOptions = options
+            //
+            list.forEach(function (i) {
+              i.classList.remove('selected')
+            })
+            li.classList.add('selected')
+            // Fill form
+            if (layer) {
+              ol.ext.element.create('BUTTON', {
+                html: this.get('loadLabel') || 'Load',
+                className: 'ol-load',
+                click: function () {
+                  this.dispatchEvent({ type: 'load', layer: layer, options: options })
+                  if (this._dialog)
+                    this._dialog.hide()
+                }.bind(this),
+                parent: this._elements.buttons
+              })
+              ol.ext.element.create('BUTTON', {
+                className: 'ol-wmsform',
+                click: function () {
+                  this._elements.element.classList.toggle('ol-form')
+                }.bind(this),
+                parent: this._elements.buttons
+              })
+              // Show preview
+              var reso = this.getMap().getView().getResolution()
+              var center = this.getMap().getView().getCenter()
+              this._elements.preview.src = layer.getPreview(center, reso, this.getMap().getView().getProjection())
+              this._img.src = this._elements.preview.src
+              // ShowInfo
+              ol.ext.element.create('p', {
+                className: 'ol-title',
+                html: options.data.title,
+                parent: this._elements.data
+              })
+              ol.ext.element.create('p', {
+                html: options.data.abstract,
+                parent: this._elements.data
+              })
+              if (options.data.legend && options.data.legend.length) {
+                this._elements.legend.src = options.data.legend[0]
+                this._elements.legend.classList.add('visible')
+              } else {
+                this._elements.legend.src = ''
+                this._elements.legend.classList.remove('visible')
+              }
+            }
+          }.bind(this),
+          parent: this._elements.select
+        })
+        list.push(li)
+        if (l.Layer) {
+          addLayers(l, level + 1)
+        }
+      }.bind(this))
+    }.bind(this)
+    // Show layers
+    this._elements.select.innerHTML = ''
+    addLayers(caps.Capability.Layer)
+  }
+  /** Get resolution for a layer
+   * @param {string} 'min' or 'max'
+   * @param {*} layer
+   * @param {number} val
+   * @return {number}
+   * @private
+   */
+  getLayerResolution(m, layer, val) {
+    var att = m === 'min' ? 'MinScaleDenominator' : 'MaxScaleDenominator'
+    if (layer[att] !== undefined)
+      return layer[att] / (72 / 2.54 * 100)
+    if (!layer.Layer)
+      return (m === 'min' ? 0 : 156543.03392804097)
+    // Get min / max of contained layers
+    val = (m === 'min' ? 156543.03392804097 : 0)
+    for (var i = 0; i < layer.Layer.length; i++) {
+      var res = this.getLayerResolution(m, layer.Layer[i], val)
+      if (res !== undefined)
+        val = Math[m](val, res)
+    }
+    return val
+  }
+  /** Return a WMS ol.layer.Tile for the given capabilities
+   * @param {*} caps layer capabilities (read from the capabilities)
+   * @param {*} parent capabilities
+   * @return {*} options
+   */
+  getOptionsFromCap(caps, parent) {
+    var formats = parent.Capability.Request.GetMap.Format
+    var format, i
+    // Look for prefered format first
+    var pref = [/png/, /jpeg/, /gif/]
+    for (i = 0; i < 3; i++) {
+      for (var f = 0; f < formats.length; f++) {
+        if (pref[i].test(formats[f])) {
+          format = formats[f]
+          break
+        }
+      }
+      if (format)
+        break
+    }
+    if (!format)
+      format = formats[0]
+    // Check srs
+    var srs = this.getMap().getView().getProjection().getCode()
+    this.showError()
+    var crs = false
+    if (!caps.CRS) {
+      crs = false
+    } else if (caps.CRS.indexOf(srs) >= 0) {
+      crs = true
+    } else if (caps.CRS.indexOf('EPSG:4326') >= 0) {
+      // try to set EPSG:4326 instead
+      srs = 'EPSG:4326'
+      crs = true
+    } else {
+      this.get('srs').forEach(function (s) {
+        if (caps.CRS.indexOf(s) >= 0) {
+          srs = s
+          crs = true
+        }
+      })
+    }
+    if (!crs) {
+      this.showError({ type: 'srs' })
+      if (this.get('trace'))
+        console.log('BAD srs: ', caps.CRS)
+    }
+    var bbox = caps.EX_GeographicBoundingBox
+    //bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', srs);
+    if (bbox)
+      bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection())
+    var attributions = []
+    if (caps.Attribution) {
+      attributions.push('<a href="' + encodeURI(caps.Attribution.OnlineResource) + '">&copy; ' + caps.Attribution.Title.replace(/</g, '&lt;') + '</a>')
+    }
+    var layer_opt = {
+      title: caps.Title,
+      extent: bbox,
+      queryable: caps.queryable,
+      abstract: caps.Abstract,
+      minResolution: this.getLayerResolution('min', caps),
+      maxResolution: this.getLayerResolution('max', caps) || 156543.03392804097
+    }
+    var source_opt = {
+      url: parent.Capability.Request.GetMap.DCPType[0].HTTP.Get.OnlineResource,
+      projection: srs,
+      attributions: attributions,
+      crossOrigin: this.get('cors') ? 'anonymous' : null,
+      params: {
+        'LAYERS': caps.Name,
+        'FORMAT': format,
+        'VERSION': parent.version || '1.3.0'
+      }
+    }
+    // Resolution to zoom
+    var view = new ol.View({
+      projection: this.getMap().getView().getProjection()
+    })
+    view.setResolution(layer_opt.minResolution)
+    var maxZoom = Math.round(view.getZoom())
+    view.setResolution(layer_opt.maxResolution)
+    var minZoom = Math.round(view.getZoom())
+    // Fill form
+    this._fillForm({
+      title: layer_opt.title,
+      layers: source_opt.params.LAYERS,
+      format: source_opt.params.FORMAT,
+      minZoom: minZoom,
+      maxZoom: maxZoom,
+      extent: bbox ? bbox.join(',') : '',
+      projection: source_opt.projection,
+      attribution: source_opt.attributions[0] || '',
+      version: source_opt.params.VERSION
+    })
+    // Trace
+    if (this.get('trace')) {
+      var tso = JSON.stringify([source_opt], null, "\t").replace(/\\"/g, '"')
+      layer_opt.source = "SOURCE"
+      var t = "new ol.layer.Tile (" + JSON.stringify(layer_opt, null, "\t") + ")"
+      t = t.replace(/\\"/g, '"')
+        .replace('"SOURCE"', "new ol.source.TileWMS(" + tso + ")")
+        .replace(/\\t/g, "\t").replace(/\\n/g, "\n")
+        .replace("([\n\t", "(")
+        .replace("}\n])", "})")
+      console.log(t)
+      delete layer_opt.source
+    }
+    // Legend ?
+    var legend = []
+    if (caps.Style) {
+      caps.Style.forEach(function (s) {
+        if (s.LegendURL) {
+          legend.push(s.LegendURL[0].OnlineResource)
+        }
+      })
+    }
+    return ({
+      layer: layer_opt,
+      source: source_opt,
+      data: {
+        title: caps.Title,
+        abstract: caps.Abstract,
+        logo: caps.Attribution && caps.Attribution.LogoURL ? caps.Attribution.LogoURL.OnlineResource : undefined,
+        keyword: caps.KeywordList,
+        legend: legend,
+        opaque: caps.opaque,
+        queryable: caps.queryable
+      }
+    })
+  }
+  /** Get WMS options from control form
+   * @return {*} options
+   * @private
+   */
+  _getFormOptions() {
+    var minZoom = parseInt(this._elements.formMinZoom.value)
+    var maxZoom = parseInt(this._elements.formMaxZoom.value)
+    var view = new ol.View({
+      projection: this.getMap().getView().getProjection()
+    })
+    view.setZoom(minZoom)
+    var maxResolution = view.getResolution()
+    view.setZoom(maxZoom)
+    var minResolution = view.getResolution()
+    var ext = []
+    if (this._elements.formExtent.value) {
+      this._elements.formExtent.value.split(',').forEach(function (b) {
+        ext.push(parseFloat(b))
+      })
+    }
+    if (ext.length !== 4)
+      ext = undefined
+    var attributions = []
+    if (this._elements.formAttribution.value)
+      attributions.push(this._elements.formAttribution.value)
+    var options = {
+      layer: {
+        title: this._elements.formTitle.value,
+        extent: ext,
+        maxResolution: maxResolution,
+        minResolution: minResolution
+      },
+      source: {
+        url: this._elements.input.value,
+        crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
+        projection: this._elements.formProjection.value,
+        attributions: attributions,
+        params: {
+          FORMAT: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
+          LAYERS: this._elements.formLayer.value,
+          VERSION: this._elements.formVersion.value
+        }
+      },
+      data: {
+        title: this._elements.formTitle.value
+      }
+    }
+    if (this._elements.formMap.value)
+      options.source.params.MAP = this._elements.formMap.value
+    return options
+  }
+  /** Fill dialog form
+   * @private
+   */
+  _fillForm(opt) {
+    this._elements.formTitle.value = opt.title
+    this._elements.formLayer.value = opt.layers
+    this._elements.formStyle.value = opt.style
+    var o, i
+    for (i = 0; o = this._elements.formFormat.options[i]; i++) {
+      if (o.value === opt.format) {
+        this._elements.formFormat.selectedIndex = i
+        break
+      }
+    }
+    this._elements.formExtent.value = opt.extent || ''
+    this._elements.formMaxZoom.value = opt.maxZoom
+    this._elements.formMinZoom.value = opt.minZoom
+    this._elements.formProjection.value = opt.projection
+    this._elements.formAttribution.value = opt.attribution
+    this._elements.formVersion.value = opt.version
+  }
+  /** Load a layer using service
+   * @param {string} url service url
+   * @param {string} layername
+   * @param {function} [onload] callback function (or listen to 'load' event)
+   */
+  loadLayer(url, layerName, onload) {
+    this.getCapabilities(url, {
+      onload: function (cap) {
+        if (cap) {
+          cap.Capability.Layer.Layer.forEach(function (l) {
+            if (l.Name === layerName || l.Identifier === layerName) {
+              var options = this.getOptionsFromCap(l, cap)
+              var layer = this.getLayerFromOptions(options)
+              this.dispatchEvent({ type: 'load', layer: layer, options: options })
+              if (typeof (onload) === 'function')
+                onload({ layer: layer, options: options })
+            }
+          }.bind(this))
+        } else {
+          this.dispatchEvent({ type: 'load', error: true })
+        }
+      }.bind(this)
+    })
+  }
+}
 /** Error list: a key/value list of error to display in the dialog 
  * Overwrite it to handle internationalization
  */
@@ -17331,734 +18131,6 @@ ol.control.WMSCapabilities.prototype.labels = {
   formCrossOrigin: 'CrossOrigin:',
   formVersion: 'Version:',
   formAttribution: 'Attribution:',
-};
-/** Create dialog
- * @private
- */
-ol.control.WMSCapabilities.prototype.createDialog = function (options) {
-  var target = options.target;
-  if (!target || target===document.body) {
-    this._dialog = new ol.control.Dialog({
-      className: 'ol-wmscapabilities',
-      closeBox: true,
-      closeOnSubmit: false,
-      target: options.target
-    });
-    this._dialog.on('button', function(e) {
-      if (e.button==='submit') {
-        this.getCapabilities(e.inputs.url.value);
-      }
-    }.bind(this));
-    target = null;
-  }
-  var element = ol.ext.element.create('DIV', {
-    className: ('ol-wmscapabilities '+(options.className||'')).trim(),
-    parent: target
-  });
-  this._elements = {
-    element: target || element
-  };
-  var inputdiv = ol.ext.element.create('DIV', {
-    className: 'ol-url',
-    parent: element
-  });
-  var input = this._elements.input = ol.ext.element.create('INPUT', {
-    className: 'url',
-    type: 'text',
-    tabIndex: 1,
-    placeholder: options.placeholder || 'service url...',
-    autocorrect: 'off',
-    autocapitalize: 'off',
-    parent: inputdiv
-  });
-  input.addEventListener('keyup', function(e) {
-    if (e.keyCode===13) {
-      this.getCapabilities(input.value, options);
-    }
-  }.bind(this));
-  if (options.services) {
-    var qaccess = ol.ext.element.create('SELECT', {
-      className: 'url',
-      on: {
-        change: function(e) {
-          var url = e.target.options[e.target.selectedIndex].value;
-          this.getCapabilities(url, options);
-          e.target.selectedIndex = 0;
-        }.bind(this)
-      },
-      parent: inputdiv
-    });
-    ol.ext.element.create('OPTION', {
-      html: ' ',
-      parent: qaccess
-    });
-    for (var k in options.services) {
-      ol.ext.element.create('OPTION', {
-        html: k,
-        value: options.services[k],
-        parent: qaccess
-      });
-    }
-  }
-  ol.ext.element.create('BUTTON', {
-    click: function() {
-      this.getCapabilities(input.value, options);
-    }.bind(this),
-    html: options.searchLabel || 'search',
-    parent: inputdiv
-  });
-  // Errors
-  this._elements.error = ol.ext.element.create('DIV', {
-    className: 'ol-error',
-    parent: inputdiv
-  });
-  // Result div
-  var rdiv = this._elements.result = ol.ext.element.create('DIV', {
-    className: 'ol-result',
-    parent: element
-  });
-  // Preview
-  var preview = ol.ext.element.create('DIV', {
-    className: 'ol-preview',
-    html: options.previewLabel || 'preview',
-    parent: rdiv
-  });
-  this._elements.preview = ol.ext.element.create('IMG', {
-    parent: preview
-  });
-  // Check tainted canvas
-  this._img = new Image;
-  this._img.crossOrigin = 'Anonymous';
-  this._img.addEventListener('error', function() {
-    preview.className = 'ol-preview tainted';
-    this._elements.formCrossOrigin.checked = false;
-  }.bind(this));
-  this._img.addEventListener('load', function() {
-    preview.className = 'ol-preview ok';
-    this._elements.formCrossOrigin.checked = true;
-  }.bind(this));
-  // Select list
-  this._elements.select = ol.ext.element.create('DIV', {
-    className: 'ol-select-list',
-    tabIndex: 2,
-    parent: rdiv
-  });
-  // Info data
-  this._elements.data = ol.ext.element.create('DIV', {
-    className: 'ol-data',
-    parent: rdiv
-  });
-  this._elements.buttons = ol.ext.element.create('DIV', {
-    className: 'ol-buttons',
-    parent: rdiv
-  });
-  this._elements.legend = ol.ext.element.create('IMG', {
-    className: 'ol-legend',
-    parent: rdiv
-  });
-  // WMS form
-  var form = this._elements.form = ol.ext.element.create('UL', {
-    className: 'ol-wmsform',
-    parent: element
-  });
-  var addLine = function(label, val, pholder) {
-    var li = ol.ext.element.create('LI', {
-      parent: form
-    });
-    ol.ext.element.create('LABEL', {
-      html: this.labels[label],
-      parent: li
-    });
-    if (typeof(val) === 'boolean') {
-      this._elements[label] = ol.ext.element.create('INPUT', {
-        type: 'checkbox',
-        checked: val,
-        parent: li
-      });
-    } else if (val instanceof Array) {
-      var sel = this._elements[label] = ol.ext.element.create('SELECT', {
-        parent: li
-      });
-      val.forEach(function(v) {
-        ol.ext.element.create('OPTION', {
-          html: v,
-          value: v,
-          parent: sel
-        });
-      }.bind(this));
-    } else {
-      this._elements[label] = ol.ext.element.create('INPUT', {
-        value: (val===undefined ? '' : val),
-        placeholder: pholder || '',
-        type: typeof(val)==='number' ? 'number' : 'text',
-        parent: li
-      });
-    }
-    return li;
-  }.bind(this);
-  addLine('formTitle');
-  addLine('formLayer', '', 'layer1,layer2,...');
-  var li = addLine('formMap');
-  li.setAttribute('data-param', 'map');
-  li = addLine('formStyle');
-  li.setAttribute('data-param', 'style');
-  addLine('formFormat', ['image/png', 'image/jpeg']);
-  addLine('formMinZoom', 0);
-  addLine('formMaxZoom', 20);
-  li = addLine('formExtent', '', 'xmin,ymin,xmax,ymax');
-  li.setAttribute('data-param', 'extent');
-  var extent = li.querySelector('input');
-  ol.ext.element.create('BUTTON', {
-    title: this.labels.mapExtent,
-    click: function() {
-      extent.value = this.getMap().getView().calculateExtent(this.getMap().getSize()).join(',');
-    }.bind(this),
-    parent: li
-  });
-  li = addLine('formProjection', '');
-  li.setAttribute('data-param', 'proj');
-  addLine('formCrossOrigin', false);
-  li = addLine('formVersion', '1.3.0');
-  li.setAttribute('data-param', 'version');
-  addLine('formAttribution', '');
-  ol.ext.element.create('BUTTON', {
-    html: this.get('loadLabel') || 'Load',
-    click: function() {
-      var opt = this._getFormOptions();
-      var layer = this.getLayerFromOptions(opt);
-      this.dispatchEvent({ type: 'load', layer: layer, options: opt });
-      this._dialog.hide();
-    }.bind(this),
-    parent: form
-  });
-  return element;
-};
-/** Create a new layer using options received by getOptionsFromCap method
- * @param {*} options
- */
-ol.control.WMSCapabilities.prototype.getLayerFromOptions = function (options) {
-  options.layer.source = new ol.source.TileWMS(options.source);
-  var layer = new ol.layer.Tile(options.layer);
-  delete options.layer.source;
-  return layer;
-};
-/**
- * Set the map instance the control is associated with
- * and add its controls associated to this map.
- * @param {_ol_Map_} map The map instance.
- */
-ol.control.WMSCapabilities.prototype.setMap = function (map) {
-  ol.control.Button.prototype.setMap.call(this, map);
-  if (this._dialog) this._dialog.setMap(map);
-};
-/** Get the dialog
- * @returns {ol.control.Dialog}
- */
-ol.control.WMSCapabilities.prototype.getDialog = function() {
-  return this._dialog;
-};
-/** Show dialog for url
- * @param {string} [url] service url, default ask for an url
- * @param {*} options capabilities options
- *  @param {string} options.map WMS map or get map in url?map=xxx
- *  @param {string} options.version WMS version (yet only 1.3.0 is implemented), default 1.3.0
- *  @param {number} options.timeout timout to get the capabilities, default 10000
- */
-ol.control.WMSCapabilities.prototype.showDialog = function(url, options) {
-  this.showError();
-  if (!this._elements.formProjection.value) {
-    this._elements.formProjection.value = this.getMap().getView().getProjection().getCode();
-  }
-  if (this._dialog) {
-    this._dialog.show({
-      title: this.get('title')===undefined ? 'WMS' : this.get('title'),
-      content: this._elements.element
-    });
-  }
-  this.getCapabilities(url, options);
-  // Center on selection
-  var sel = this._elements.select.querySelector('.selected');
-  if (sel) {
-    this._elements.select.scrollTop = sel.offsetTop - 20;
-  }
-};
-/** Test url and return true if it is a valid url string
- * @param {string} url
- * @return {bolean}
- * @api
- */
-ol.control.WMSCapabilities.prototype.testUrl = function(url) {
-  // var pattern = /(https?:\/\/)([\da-z.-]+)\.([a-z]{2,6})([/\w.-]*)*\/?/
-  var pattern = new RegExp(
-    // protocol
-    '^(https?:\\/\\/)'+ 
-    // domain name
-    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+
-    // OR ip (v4) address
-    '((\\d{1,3}\\.){3}\\d{1,3}))'+
-    // port and path
-    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+
-    // query string
-    '(\\?[;&a-z\\d%_.~+=\\/-]*)?'+
-    // fragment locator
-    '(\\#[-a-z\\d_]*)?$','i');
-  return !!pattern.test(url);
-};
-/** Get Capabilities request parameters
- * @param {*} options
- */
-ol.control.WMSCapabilities.prototype.getRequestParam = function(options) {
-  return {
-    SERVICE: 'WMS',
-    REQUEST: 'GetCapabilities',
-    VERSION: options.version || '1.3.0'
-  }
-};
-/** Get WMS capabilities for a server
- * @fire load
- * @param {string} url service url
- * @param {*} options 
- *  @param {string} options.map WMS map or get map in url?map=xxx
- *  @param {string} [options.version=1.3.0] WMS version (yet only 1.3.0 is implemented), default 1.3.0
- *  @param {number} [options.timeout=10000] timout to get the capabilities, default 10000
- *  @param {function} [options.onload] callback function
- */
-ol.control.WMSCapabilities.prototype.getCapabilities = function(url, options) {
-  if (!url) return;
-  if (!this.testUrl(url)) {
-    this.showError({
-      type: 'badUrl'
-    })
-    return;
-  }
-  options = options || {};
-  // Extract map attributes
-  url = url.split('?');
-  var search = url[1];
-  url = url[0];
-  // reset
-  this._elements.formMap.value = '';
-  this._elements.formLayer.value = '';
-  this._elements.formStyle.value = '';
-  this._elements.formTitle.value = '';
-  this._elements.formProjection.value = this.getMap().getView().getProjection().getCode();
-  this._elements.formFormat.selectedIndex = 0;
-  var map = options.map || '';
-  var optional = {};
-  if (search) {
-    search = search.replace(/^\?/,'').split('&');
-    search.forEach(function(s) {
-      s = s.split('=');
-      s[1] = decodeURIComponent(s[1] || '');
-      if (/^map$/i.test(s[0])) {
-        map = s[1];
-        this._elements.formMap.value = map;
-      }
-      if (/^layers$/i.test(s[0])) {
-        this._elements.formLayer.value = s[1];
-        this._elements.formTitle.value = s[1].split(',')[0];
-      }
-      if (/^style$/i.test(s[0])) {
-        this._elements.formStyle.value = s[1];
-      }
-      if (/^crs$/i.test(s[0])) {
-        this._elements.formProjection.value = s[1];
-      }
-      if (/^format$/i.test(s[0])) {
-        for (var o,i=0; o=this._elements.formFormat.options[i]; i++) {
-          if (o.value===s[1]) {
-            this._elements.formFormat.selectedIndex = i;
-            break;
-          }
-        }
-      }
-      // Check optionals
-      if (this.get('optional')) {
-        this.get('optional').split(',').forEach(function(o) {
-          if (o === s[0]) {
-            optional[o] = s[1];
-          }
-        }.bind(this))
-      }
-    }.bind(this))
-  }
-  // Get request params
-  var request = this.getRequestParam(options);
-  var opt = [];
-  if (map) {
-    request.MAP = map;
-    opt.push('map='+map);
-  }
-  for (var o in optional) {
-    request[o] = optional[o];
-    opt.push(o+'='+optional[o]);
-  }
-  // Fill form
-  this._elements.input.value = (url || '') + (opt ? '?'+opt.join('&') : '');
-  this.clearForm();
-  // Sen drequest
-  if (this._proxy) {
-    var q = '';
-    for (var r in request) q += (q?'&':'')+r+'='+request[r];
-    this._ajax.send(this._proxy, {
-      url: q
-    }, {
-      timeout: options.timeout || 10000,
-      callback: options.onload,
-      abort: false
-    });
-  } else {
-    this._ajax.send(url, request, {
-      timeout: options.timeout || 10000,
-      callback: options.onload,
-      abort: false
-    });
-  }
-};
-/** Display error
- * @param {*} error event
- */
-ol.control.WMSCapabilities.prototype.showError = function(e) {
-  if (!e) this._elements.error.innerHTML = '';
-  else this._elements.error.innerHTML = this.error[e.type] || ('ERROR ('+e.type+')');
-  if (e && e.type === 'load') {
-    this._elements.form.classList.add('visible');
-  } else {
-    this._elements.form.classList.remove('visible');
-  }
-};
-/** Clear form
- */
-ol.control.WMSCapabilities.prototype.clearForm = function() {
-  this._elements.result.classList.remove('ol-visible')
-  this.showError();
-  this._elements.select.innerHTML = '';
-  this._elements.data.innerHTML = '';
-  this._elements.preview.src = '';
-  this._elements.legend.src = '';
-  this._elements.legend.classList.remove('visible');
-};
-/** Display capabilities in the dialog
- * @param {*} caps JSON capabilities
- */
-ol.control.WMSCapabilities.prototype.showCapabilities = function(caps) {
-  this._elements.result.classList.add('ol-visible')
-//  console.log(caps)
-  var list = [];
-  var addLayers = function(parent, level) {
-    level = level || 0;
-    parent.Layer.forEach(function(l) {
-      if (!l.Attribution) l.Attribution = parent.Attribution;
-      if (!l.EX_GeographicBoundingBox) l.EX_GeographicBoundingBox = parent.EX_GeographicBoundingBox;
-      var li = ol.ext.element.create('DIV', {
-        className: (l.Layer ? 'ol-title ' : '') + 'level-'+level,
-        html: l.Name || l.Title,
-        click: function() {
-          // Reset
-          this._elements.buttons.innerHTML = '';
-          this._elements.data.innerHTML = '';
-          this._elements.legend.src = this._elements.preview.src = '';
-          this._elements.element.classList.remove('ol-form');
-          this.showError();
-          // Load layer
-          var options = this.getOptionsFromCap(l, caps);
-          var layer = this.getLayerFromOptions(options);
-          this._currentOptions = options;
-          //
-          list.forEach(function(i) {
-            i.classList.remove('selected');
-          })
-          li.classList.add('selected');
-          // Fill form
-          if (layer) {
-            ol.ext.element.create('BUTTON', {
-              html: this.get('loadLabel') || 'Load',
-              className: 'ol-load',
-              click: function() {
-                this.dispatchEvent({type: 'load', layer: layer, options: options });
-                if (this._dialog) this._dialog.hide();
-              }.bind(this),
-              parent: this._elements.buttons
-            });
-            ol.ext.element.create('BUTTON', {
-              className: 'ol-wmsform',
-              click: function() {
-                this._elements.element.classList.toggle('ol-form');
-              }.bind(this),
-              parent: this._elements.buttons
-            });
-            // Show preview
-            var reso = this.getMap().getView().getResolution();
-            var center = this.getMap().getView().getCenter();
-            this._elements.preview.src = layer.getPreview(center, reso, this.getMap().getView().getProjection());
-            this._img.src = this._elements.preview.src;
-            // ShowInfo
-            ol.ext.element.create('p', {
-              className: 'ol-title',
-              html: options.data.title,
-              parent: this._elements.data
-            });
-            ol.ext.element.create('p', {
-              html: options.data.abstract,
-              parent: this._elements.data
-            });
-            if (options.data.legend && options.data.legend.length) {
-              this._elements.legend.src = options.data.legend[0];
-              this._elements.legend.classList.add('visible');
-            } else {
-              this._elements.legend.src = '';
-              this._elements.legend.classList.remove('visible');
-            }
-          }
-        }.bind(this),
-        parent: this._elements.select
-      });
-      list.push(li);
-      if (l.Layer) {
-        addLayers(l, level+1);
-      }
-    }.bind(this));
-  }.bind(this);
-  // Show layers
-  this._elements.select.innerHTML = '';
-  addLayers(caps.Capability.Layer);
-};
-/** Get resolution for a layer
- * @param {string} 'min' or 'max'
- * @param {*} layer
- * @param {number} val
- * @return {number}
- * @private
- */
-ol.control.WMSCapabilities.prototype.getLayerResolution = function(m, layer, val) {
-  var att = m==='min' ? 'MinScaleDenominator' : 'MaxScaleDenominator';
-  if (layer[att] !== undefined) return layer[att]/(72/2.54*100);
-  if (!layer.Layer) return (m==='min' ? 0 : 156543.03392804097);
-  // Get min / max of contained layers
-  val = (m==='min' ? 156543.03392804097 : 0);
-  for (var i=0; i<layer.Layer.length; i++) {
-    var res = this.getLayerResolution(m, layer.Layer[i], val);
-    if (res !== undefined) val = Math[m](val, res);
-  }
-  return val;
-};
-/** Return a WMS ol.layer.Tile for the given capabilities
- * @param {*} caps layer capabilities (read from the capabilities)
- * @param {*} parent capabilities
- * @return {*} options
- */
-ol.control.WMSCapabilities.prototype.getOptionsFromCap = function(caps, parent) {
-  var formats = parent.Capability.Request.GetMap.Format;
-  var format, i;
-  // Look for prefered format first
-  var pref = [/png/,/jpeg/,/gif/];
-  for (i=0; i<3; i++) {
-    for (var f=0; f<formats.length; f++) {
-      if (pref[i].test(formats[f])) {
-        format = formats[f];
-        break;
-      }
-    }
-    if (format) break;
-  }
-  if (!format) format = formats[0];  
-  // Check srs
-  var srs = this.getMap().getView().getProjection().getCode();
-  this.showError();
-  var crs = false;
-  if (!caps.CRS) {
-    crs = false;
-  } else if (caps.CRS.indexOf(srs)>=0) {
-    crs = true;
-  } else if (caps.CRS.indexOf('EPSG:4326')>=0) {
-    // try to set EPSG:4326 instead
-    srs = 'EPSG:4326';
-    crs = true;
-  } else {
-    this.get('srs').forEach(function(s) {
-      if (caps.CRS.indexOf(s)>=0) {
-        srs = s;
-        crs = true;
-      }
-    })
-  }
-  if (!crs) {
-    this.showError({ type:'srs' });
-    if (this.get('trace')) console.log('BAD srs: ', caps.CRS);
-  }
-  var bbox = caps.EX_GeographicBoundingBox;
-  //bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', srs);
-  if (bbox) bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
-  var attributions = [];
-  if (caps.Attribution) {
-    attributions.push('<a href="'+encodeURI(caps.Attribution.OnlineResource)+'">&copy; '+caps.Attribution.Title.replace(/</g,'&lt;')+'</a>');
-  }
-  var layer_opt = {
-    title: caps.Title,
-    extent: bbox,
-    queryable: caps.queryable,
-    abstract: caps.Abstract,
-    minResolution: this.getLayerResolution('min', caps),
-    maxResolution: this.getLayerResolution('max', caps) || 156543.03392804097
-  };
-  var source_opt = {
-    url: parent.Capability.Request.GetMap.DCPType[0].HTTP.Get.OnlineResource, //parent.Service.OnlineResource,
-    projection: srs,
-    attributions: attributions,
-    crossOrigin: this.get('cors') ? 'anonymous' : null,
-    params: {
-      'LAYERS': caps.Name,
-      'FORMAT': format,
-      'VERSION': parent.version || '1.3.0'
-    }
-  }
-  // Resolution to zoom
-  var view = new ol.View({
-    projection: this.getMap().getView().getProjection()
-  })
-  view.setResolution(layer_opt.minResolution);
-  var maxZoom = Math.round(view.getZoom());
-  view.setResolution(layer_opt.maxResolution);
-  var minZoom = Math.round(view.getZoom());
-  // Fill form
-  this._fillForm({
-    title: layer_opt.title,
-    layers: source_opt.params.LAYERS,
-    format: source_opt.params.FORMAT,
-    minZoom: minZoom,
-    maxZoom: maxZoom,
-    extent: bbox ? bbox.join(',') : '',
-    projection: source_opt.projection,
-    attribution: source_opt.attributions[0] || '',
-    version: source_opt.params.VERSION
-  });
-  // Trace
-  if (this.get('trace')) {
-    var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
-    layer_opt.source = "SOURCE"; 
-    var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
-    t = t.replace(/\\"/g,'"')
-      .replace('"SOURCE"', "new ol.source.TileWMS("+tso+")")
-      .replace(/\\t/g,"\t").replace(/\\n/g,"\n")
-      .replace("([\n\t","(")
-      .replace("}\n])","})");
-    console.log(t);
-    delete layer_opt.source;
-  }
-  // Legend ?
-  var legend = [];
-    if (caps.Style) {
-    caps.Style.forEach(function(s) {
-      if (s.LegendURL) {
-        legend.push(s.LegendURL[0].OnlineResource);
-      }
-    });
-  }
-  return ({ 
-    layer: layer_opt, 
-    source: source_opt,
-    data: {
-      title: caps.Title,
-      abstract: caps.Abstract,
-      logo: caps.Attribution && caps.Attribution.LogoURL ? caps.Attribution.LogoURL.OnlineResource : undefined,
-      keyword: caps.KeywordList,
-      legend: legend,
-      opaque: caps.opaque,
-      queryable: caps.queryable
-    } 
-  });
-};
-/** Get WMS options from control form
- * @return {*} options
- * @private
- */
-ol.control.WMSCapabilities.prototype._getFormOptions = function() {
-  var minZoom = parseInt(this._elements.formMinZoom.value);
-  var maxZoom = parseInt(this._elements.formMaxZoom.value);
-  var view = new ol.View({
-    projection: this.getMap().getView().getProjection()
-  })
-  view.setZoom(minZoom);
-  var maxResolution = view.getResolution();
-  view.setZoom(maxZoom);
-  var minResolution = view.getResolution();
-  var ext = [];
-  if (this._elements.formExtent.value) {
-    this._elements.formExtent.value.split(',').forEach(function(b) {
-      ext.push(parseFloat(b));
-    })
-  }
-  if (ext.length !== 4) ext = undefined;
-  var attributions = []
-  if (this._elements.formAttribution.value) attributions.push(this._elements.formAttribution.value);
-  var options = {
-    layer: {
-      title: this._elements.formTitle.value,
-      extent: ext,
-      maxResolution: maxResolution,
-      minResolution: minResolution
-    },
-    source: {
-      url: this._elements.input.value,
-      crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
-      projection: this._elements.formProjection.value,
-      attributions: attributions,
-      params: {
-        FORMAT: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
-        LAYERS: this._elements.formLayer.value,
-        VERSION: this._elements.formVersion.value
-      }
-    },
-    data: {
-      title: this._elements.formTitle.value
-    }
-  }
-  if (this._elements.formMap.value) options.source.params.MAP = this._elements.formMap.value;
-  return options;
-};
-/** Fill dialog form
- * @private
- */
-ol.control.WMSCapabilities.prototype._fillForm = function(opt) {
-  this._elements.formTitle.value = opt.title;
-  this._elements.formLayer.value = opt.layers;
-  this._elements.formStyle.value = opt.style;
-  var o, i;
-  for (i=0; o=this._elements.formFormat.options[i]; i++) {
-    if (o.value === opt.format) {
-      this._elements.formFormat.selectedIndex = i;
-      break;
-    }
-  }
-  this._elements.formExtent.value = opt.extent || '';
-  this._elements.formMaxZoom.value = opt.maxZoom;
-  this._elements.formMinZoom.value = opt.minZoom;
-  this._elements.formProjection.value = opt.projection;
-  this._elements.formAttribution.value = opt.attribution;
-  this._elements.formVersion.value = opt.version;
-};
-/** Load a layer using service
- * @param {string} url service url
- * @param {string} layername
- * @param {function} [onload] callback function (or listen to 'load' event)
- */
-ol.control.WMSCapabilities.prototype.loadLayer = function(url, layerName, onload) {
-  this.getCapabilities(url, {
-    onload: function(cap) {
-      if (cap) {
-        cap.Capability.Layer.Layer.forEach(function(l) {
-          if (l.Name===layerName || l.Identifier===layerName) {
-            var options = this.getOptionsFromCap(l, cap);
-            var layer = this.getLayerFromOptions(options);
-            this.dispatchEvent({ type: 'load', layer: layer, options: options });
-            if (typeof(onload) === 'function') onload({ layer: layer, options: options });
-          }
-        }.bind(this))
-      } else {
-        this.dispatchEvent({ type: 'load', error: true });
-      }
-    }.bind(this)
-  });
 };
 
 /** WMTSCapabilities
