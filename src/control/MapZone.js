@@ -3,13 +3,11 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-//import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 import {getCenter as ol_extent_getCenter} from 'ol/extent'
 import ol_Map from 'ol/Map'
 import ol_View from 'ol/View'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
-import {ol_ext_inherits} from '../util/ext'
 import ol_ext_element from 'ol-ext/util/element'
 
 /** A control to jump from one zone to another.
@@ -23,175 +21,169 @@ import ol_ext_element from 'ol-ext/util/element'
  *	@param {ol.ProjectionLike} options.projection projection of the control, Default is EPSG:3857 (Spherical Mercator).
  *  @param {bolean} options.centerOnClick center on click when a zone is clicked (or listen to 'select' event to do something), default true
  */
-var ol_control_MapZone = function(options) {
-  if (!options) options={};
-  
-  var element = document.createElement("div");
-  if (options.target) {
-    element = ol_ext_element.create('DIV', {
-      className: options.className || "ol-mapzone"
-    });
-  } else {
-    element = ol_ext_element.create('DIV', {
-      className: (options.className || "ol-mapzone") +' ol-unselectable ol-control ol-collapsed'
-    });
-    var bt = ol_ext_element.create('BUTTON', {
-      type: 'button',
-      on: {
-        'click': function() {
-          element.classList.toggle("ol-collapsed");
-          maps.forEach(function (m) {
-            m.updateSize();
-          });
-        }.bind(this)
-      },
-      parent: element
-    });
-    ol_ext_element.create('I', {
-      parent: bt
-    });
-  }
+var ol_control_MapZone = class olcontrolMapZone extends ol_control_Control {
+  constructor(options) {
+    options = options || {}
 
-  // Parent control
-  ol_control_Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.set('centerOnClick', options.centerOnClick);
+    var element = element = ol_ext_element.create('DIV', {
+      className: options.className || 'ol-mapzone'
+    })
+    super({
+      element: element,
+      target: options.target
+    })
 
-  // Create maps
-  var maps = this._maps = [];
-  this._projection = options.projection;
-  this._layer = options.layer;
-  options.zones.forEach(this.addZone.bind(this));
-
-  // Refresh the maps
-  setTimeout(function() {
-    maps.forEach(function (m) {
-      m.updateSize();
-    });
-  });
-};
-ol_ext_inherits(ol_control_MapZone, ol_control_Control);
-
-/** Collapse the control
- * @param {boolean} b
- */
-ol_control_MapZone.prototype.setCollapsed = function (b) {
-  if (b) {
-    this.element.classList.remove('ol-collapsed');
-    // Force map rendering
-    this.getMaps().forEach(function (m) {
-      m.updateSize();
-    });
-  } else {
-    this.element.classList.add('ol-collapsed');
-  }
-};
-
-/** Get control collapsed
- * @return {boolean} 
- */
-ol_control_MapZone.prototype.getCollapsed = function () {
-  return this.element.classList.contains('ol-collapsed');
-};
-
-/** Set the control visibility (collapsed)
- * @param {boolean} b
- * @deprecated use setCollapsed instead
- */
-ol_control_MapZone.prototype.setVisible = ol_control_MapZone.prototype.setCollapsed;
- 
-/** Get associated maps
- * @return {ol.Map}
- */
-ol_control_MapZone.prototype.getMaps = function () {
-  return this._maps;
-};
-
-/** Get nb zone */
-ol_control_MapZone.prototype.getLength = function () {
-  return this._maps.length;
-};
-
-/** Add a new zone to the control 
- * @param {Object} z 
- *  @param {string} title
- *  @param {ol.extent} extent if map is not defined
- *  @param {ol.Map} map if map is defined use the map extent 
- *  @param {ol.layer.Layer} [layer] layer of the zone, default use default control layer
- */
-ol_control_MapZone.prototype.addZone = function (z) {
-  var view = new ol_View({ zoom: 6, center: [0,0], projection: this._projection });
-  var extent;
-  if (z.map) {
-    extent = ol_proj_transformExtent(z.map.getView().calculateExtent(), z.map.getView().getProjection(), view.getProjection()) ;
-  } else {
-    extent = ol_proj_transformExtent(z.extent, 'EPSG:4326', view.getProjection());
-  }
-  // console.log(extent, z.extent)
-  var div = ol_ext_element.create('DIV', {
-    className: 'ol-mapzonezone',
-    parent: this.element,
-    click : function() {
-      // Get index
-      var index = -1;
-      this._maps.forEach(function(m, i) {
-        if (m.get('zone') === z) {
-          index = i;
-        }
+    if (!options.target) {
+      ['ol-unselectable', 'ol-control', 'ol-collapsed'].forEach(function(c) {
+        element.classList.add(c)
       })
-      this.dispatchEvent({
-        type: 'select',
-        zone: z,
-        index: index,
-        coordinate: ol_extent_getCenter(extent),
-        extent: extent
-      });
-      if (this.get('centerOnClick') !== false) {
-        this.getMap().getView().fit(extent);
-      }
-      this.setVisible(false);
-    }.bind(this)
-  });
-  var layer;
-  if (z.layer) {
-    layer = z.layer;
-  } else if (typeof(this._layer) === 'function') {
-    layer = this._layer(z);
-  } else {
-    // Try to clone the layer
-    layer = new this._layer.constructor({
-      source: this._layer.getSource()
-    });
-  }
-  var map = new ol_Map({
-    target: div,
-    view: view,
-    controls: [],
-    interactions:[],
-    layers: [layer]
-  });
-  map.set('zone', z);
-  this._maps.push(map);
-  view.fit(extent);
-  // Name
-  ol_ext_element.create('P', {
-    html: z.title,
-    parent: div
-  });
-};
+      var bt = ol_ext_element.create('BUTTON', {
+        type: 'button',
+        on: {
+          'click': function () {
+            element.classList.toggle("ol-collapsed")
+            maps.forEach(function (m) {
+              m.updateSize()
+            })
+          }.bind(this)
+        },
+        parent: element
+      })
+      ol_ext_element.create('I', {
+        parent: bt
+      })
+    }
 
-/** Remove a zone from the control 
- * @param {number} index
- */
-ol_control_MapZone.prototype.removeZone = function (index) {
-  var z = this.element.querySelectorAll('.ol-mapzonezone')[index];
-  if (z) {
-    z.remove();
-    this._maps.splice(index, 1);
+    this.set('centerOnClick', options.centerOnClick)
+
+    // Create maps
+    var maps = this._maps = []
+    this._projection = options.projection
+    this._layer = options.layer
+    options.zones.forEach(this.addZone.bind(this))
+
+    // Refresh the maps
+    setTimeout(function () {
+      maps.forEach(function (m) {
+        m.updateSize()
+      })
+    })
   }
-};
+  /** Collapse the control
+   * @param {boolean} b
+   */
+  setCollapsed(b) {
+    if (b) {
+      this.element.classList.remove('ol-collapsed')
+      // Force map rendering
+      this.getMaps().forEach(function (m) {
+        m.updateSize()
+      })
+    } else {
+      this.element.classList.add('ol-collapsed')
+    }
+  }
+  /** Show the control
+   * @param {boolean} b
+   */
+  setVisible(b) {
+    this.setCollapsed(!b);
+  }
+  /** Get control collapsed
+   * @return {boolean}
+   */
+  getCollapsed() {
+    return this.element.classList.contains('ol-collapsed')
+  }
+  /** Get associated maps
+   * @return {ol.Map}
+   */
+  getMaps() {
+    return this._maps
+  }
+  /** Get nb zone */
+  getLength() {
+    return this._maps.length
+  }
+  /** Add a new zone to the control
+   * @param {Object} z
+   *  @param {string} title
+   *  @param {ol.extent} extent if map is not defined
+   *  @param {ol.Map} map if map is defined use the map extent
+   *  @param {ol.layer.Layer} [layer] layer of the zone, default use default control layer
+   */
+  addZone(z) {
+    var view = new ol_View({ zoom: 6, center: [0, 0], projection: this._projection })
+    var extent
+    if (z.map) {
+      extent = ol_proj_transformExtent(z.map.getView().calculateExtent(), z.map.getView().getProjection(), view.getProjection())
+    } else {
+      extent = ol_proj_transformExtent(z.extent, 'EPSG:4326', view.getProjection())
+    }
+    // console.log(extent, z.extent)
+    var div = ol_ext_element.create('DIV', {
+      className: 'ol-mapzonezone',
+      parent: this.element,
+      click: function () {
+        // Get index
+        var index = -1
+        this._maps.forEach(function (m, i) {
+          if (m.get('zone') === z) {
+            index = i
+          }
+        })
+        this.dispatchEvent({
+          type: 'select',
+          zone: z,
+          index: index,
+          coordinate: ol_extent_getCenter(extent),
+          extent: extent
+        })
+        if (this.get('centerOnClick') !== false) {
+          this.getMap().getView().fit(extent)
+        }
+        this.setVisible(false)
+      }.bind(this)
+    })
+    var layer
+    if (z.layer) {
+      layer = z.layer
+    } else if (typeof (this._layer) === 'function') {
+      layer = this._layer(z)
+    } else {
+      // Try to clone the layer
+      layer = new this._layer.constructor({
+        source: this._layer.getSource()
+      })
+    }
+    var map = new ol_Map({
+      target: div,
+      view: view,
+      controls: [],
+      interactions: [],
+      layers: [layer]
+    })
+    map.set('zone', z)
+    this._maps.push(map)
+    view.fit(extent)
+    // Name
+    ol_ext_element.create('P', {
+      html: z.title,
+      parent: div
+    })
+  }
+  /** Remove a zone from the control
+   * @param {number} index
+   */
+  removeZone(index) {
+    var z = this.element.querySelectorAll('.ol-mapzonezone')[index]
+    if (z) {
+      z.remove()
+      this._maps.splice(index, 1)
+    }
+  }
+}
+ol_ext_inherits(ol_control_MapZone, ol_control_Control);
 
 /** Pre-defined zones */
 ol_control_MapZone.zones = {};

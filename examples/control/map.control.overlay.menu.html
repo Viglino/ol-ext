@@ -1,204 +1,198 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2015-2018 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: Control overlay menu</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Control overlay menu</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="styled popup for OL3" />
-	<meta name="keywords" content="ol3, manu, control, overlay, jQuery" />
+  <meta name="description" content="styled popup for OL3" />
+  <meta name="keywords" content="ol3, manu, control, overlay, jQuery" />
 
-	<!-- Prevent image error on load with https -->
-	<script>
-		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
-	      location.href = window.location.href.replace(/^https:/,'http:');
-		}
-	</script>
+  <!-- Prevent image error on load with https -->
+  <script>
+    if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
+      location.href = window.location.href.replace(/^https:/,'http:');
+    }
+  </script>
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
-	
-	<link rel="stylesheet" href="../style.css" />
-	<style>
-		.ol-overlay.menu
-		{	width: 30%;
-			background: #fff;
-			color: #333;
-			box-shadow: 0px 0px 5px #000;
-			padding: 0.5em;
-			-webkit-transition: all 0.25s;
-			transition: all 0.25s;
-		}
-		/* style the close box */
-		.ol-overlay.menu .ol-closebox
-		{	color: #369;
-			left: 1em;
-			top: 0.5em;
-		}
-		.ol-overlay.menu .ol-closebox:before
-		{	content:"\f0c9";
-			font-family:FontAwesome;
-		}
-		#menu
-		{	padding-top: 1.5em;
-			font-size: 0.9em;
-		}
-		/* menu button */
-		.ol-control.menu
-		{	top: 0.5em;
-			left: 0.5em;
-		}
-		.ol-control.menu i
-		{	color: #fff;
-		}
-		.ol-zoom
-		{	left: auto;
-			right: 0.5em;
-		}
-		.ol-rotate 
-		{	right: 3em;
-		}
-		.ol-touch .ol-rotate 
-		{	right: 3.5em;
-		}
-		/**/
-		.ol-overlay img
-		{	max-width: 90%;
-		}
-		.data,
-		.data p
-		{	margin:0;
-			text-align: center;
-			font-size:0.9em;
-		}
-	</style>
+  
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .ol-overlay.menu {
+      width: 30%;
+      background: #fff;
+      color: #333;
+      box-shadow: 0px 0px 5px #000;
+      padding: 0.5em;
+      -webkit-transition: all 0.25s;
+      transition: all 0.25s;
+    }
+    /* style the close box */
+    .ol-overlay.menu .ol-closebox {
+      left: 1em;
+      top: 0.5em;
+    }
+    .ol-overlay.menu .ol-closebox:before {
+      content:"\f0c9";
+      font-family:FontAwesome;
+    }
+    #menu {
+      padding-top: 1.5em;
+      font-size: 0.9em;
+    }
+    /* menu button */
+    .ol-control.menu {
+      top: 0.5em;
+      left: 0.5em;
+    }
+    .ol-zoom {
+      left: auto;
+      right: 0.5em;
+    }
+    .ol-rotate {
+      right: 3em;
+    }
+    .ol-touch .ol-rotate {
+      right: 3.5em;
+    }
+    /**/
+    .ol-overlay img {
+      max-width: 90%;
+    }
+    .data,
+    .data p {
+      margin:0;
+      text-align: center;
+      font-size:0.9em;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Control overlay menu</h1>
-	</a>
+  <a href="../../index.html">
+    <h1>ol-ext: Control overlay menu</h1>
+  </a>
 
-	<div class="info">
-		Display an overlay with a content on the map. 
-		<ul>
-			<li>
-				The <i>closeBox</i> option adds a close button to hide the overlay.
-			</li>
-			<li>
-				The <i>closeOnClick</i> option enable close when click on the element.
-			</li>
-			<li>
-				You can listen to the <i>change:visible</i> event to sknow when overlay is displayed/hidden.
-			</li>
-		</ul>
-		<i>ol.control.Overlay</i> requires jQuery. The example uses the <a href="../bar/map.control.toggle.html">ol.control.Toggle</a> 
-		to display a toggle control to show the menu.
-	</div>
+  <div class="info">
+    Display an overlay with a content on the map. 
+    <ul>
+      <li>
+        The <i>closeBox</i> option adds a close button to hide the overlay.
+      </li>
+      <li>
+        The <i>closeOnClick</i> option enable close when click on the element.
+      </li>
+      <li>
+        You can listen to the <i>change:visible</i> event to sknow when overlay is displayed/hidden.
+      </li>
+    </ul>
+    <i>ol.control.Overlay</i> requires jQuery. The example uses the <a href="../bar/map.control.toggle.html">ol.control.Toggle</a> 
+    to display a toggle control to show the menu.
+  </div>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-	</div>
+  <div class="options">
+  </div>
 
-	<!-- Content of the menu -->
-	<div id="menu">
-		<h1>Menu</h1>
-		<p style="border-bottom:1px solid #999;">
-			<i>ol.control.Overlay</i> can be used to display a menu or information on the top of the map.
-		</p>
-		<div class="data"></div>
-	</div>
-	
-	<script type="text/javascript">
-	// Layers
-	var layers = [
-		new ol.layer.Tile({
-			title:'terrain-background',
-			source: new ol.source.Stamen({ layer: 'terrain' })
-		})
-	]
+  <!-- Content of the menu -->
+  <div id="menu">
+    <h1>Menu</h1>
+    <p style="border-bottom:1px solid #999;">
+      <i>ol.control.Overlay</i> can be used to display a menu or information on the top of the map.
+    </p>
+    <div class="data"></div>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      title:'terrain-background',
+      source: new ol.source.Stamen({ layer: 'terrain' })
+    })
+  ]
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 5,
-				center: [166326, 5992663]
-			}),
-			layers: layers
-		});
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers
+  });
 
-	// Overlay
-	var menu = new ol.control.Overlay ({ 
-		closeBox : true, 
-		className: "slide-left menu", 
-		content: $("#menu").get(0)
-	});
-	map.addControl(menu);
+  // Overlay
+  var menu = new ol.control.Overlay ({ 
+    closeBox : true, 
+    className: "slide-left menu", 
+    content: $("#menu").get(0)
+  });
+  map.addControl(menu);
 
-	// A toggle control to show/hide the menu
-	var t = new ol.control.Toggle(
-			{	html: '<i class="fa fa-bars" ></i>',
-				className: "menu",
-				title: "Menu",
-				onToggle: function() { menu.toggle(); }
-			});
-	map.addControl(t);
+  // A toggle control to show/hide the menu
+  var t = new ol.control.Toggle({
+    html: '<i class="fa fa-bars" ></i>',
+    className: "menu",
+    title: "Menu",
+    onToggle: function() { menu.toggle(); }
+  });
+  map.addControl(t);
 
-	// GeoJSON layer
-	var vectorSource = new ol.source.Vector(
-	{	url: '../data/fond_guerre.geojson',
-		projection: 'EPSG:3857',
-		format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
-	});
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
 
-	map.addLayer(new ol.layer.Vector(
-	{	name: 'Fonds de guerre 14-18',
-		source: vectorSource
-	}));
+  map.addLayer(new ol.layer.Vector({
+    name: 'Fonds de guerre 14-18',
+    source: vectorSource
+  }));
 
-	// Control Select 
-	var select = new ol.interaction.Select({});
-	map.addInteraction(select);
+  // Control Select 
+  var select = new ol.interaction.Select({});
+  map.addInteraction(select);
 
-	// On selected => show/hide popup
-	select.getFeatures().on('add', function(e)
-	{	var feature = e.element;
-		var img = $("<img>").attr("src", feature.get("img"));
-		var info = $("<div>").append( $("<p>").text(feature.get("text")));
-		var content = $("<div>")
-				.append( img )
-				.append(info);
-		$(".data").html(content);
-	});
-	select.getFeatures().on('remove', function(e)
-	{	$(".data").html("");
-	});
-	</script>
-	
+  // On selected => show/hide popup
+  select.getFeatures().on('add', function(e){
+    var feature = e.element;
+    var img = $("<img>").attr("src", feature.get("img"));
+    var info = $("<div>").append( $("<p>").text(feature.get("text")));
+    var content = $("<div>")
+        .append( img )
+        .append(info);
+    $(".data").html(content);
+  });
+  select.getFeatures().on('remove', function(e){
+    $(".data").html("");
+  });
+  </script>
+  
 </body>
 </html>

@@ -4379,122 +4379,142 @@ ol.control.Button = class olcontrolButton extends ol.control.Control {
  *  @param {bool} options.autoActive the control will activate when shown in an ol.control.Bar, default false
  *  @param {function} options.onToggle callback when control is clicked (or use change:active event)
  */
-ol.control.Toggle = function(options) {
-  options = options || {};
-  var self = this;
-  this.interaction_ = options.interaction;
-  if (this.interaction_) {
-    this.interaction_.setActive(options.active);
-    this.interaction_.on("change:active", function() {
-      self.setActive(self.interaction_.getActive());
-    });
-  }
-  if (options.toggleFn) options.onToggle = options.toggleFn; // compat old version
-  options.handleClick = function() {
-    self.toggle();
-    if (options.onToggle) options.onToggle.call(self, self.getActive());
-  };
-  options.className = (options.className||"") + " ol-toggle";
-  ol.control.Button.call(this, options);
-  this.set("title", options.title);
-  this.set ("autoActivate", options.autoActivate);
-  if (options.bar) this.setSubBar(options.bar);
-  this.setActive (options.active);
-  this.setDisable (options.disable);
-};
-ol.ext.inherits(ol.control.Toggle, ol.control.Button);
-/**
- * Set the map instance the control is associated with
- * and add interaction attached to it to this map.
- * @param {_ol_Map_} map The map instance.
- */
-ol.control.Toggle.prototype.setMap = function(map) {
-  if (!map && this.getMap()) {
-    if (this.interaction_) {
-      this.getMap().removeInteraction (this.interaction_);
+ol.control.Toggle = class olcontrolToggle extends ol.control.Button {
+  constructor(options) {
+    options = options || {};
+    if (options.toggleFn) {
+      options.onToggle = options.toggleFn; // compat old version
     }
-    if (this.subbar_) this.getMap().removeControl (this.subbar_);
+    options.handleClick = function () {
+      self.toggle();
+      if (options.onToggle) {
+        options.onToggle.call(self, self.getActive());
+      }
+    };
+    options.className = (options.className || '') + ' ol-toggle';
+    super(options);
+    var self = this;
+    this.interaction_ = options.interaction;
+    if (this.interaction_) {
+      this.interaction_.setActive(options.active);
+      this.interaction_.on("change:active", function () {
+        self.setActive(self.interaction_.getActive());
+      });
+    }
+    this.set("title", options.title);
+    this.set("autoActivate", options.autoActivate);
+    if (options.bar)
+      this.setSubBar(options.bar);
+    this.setActive(options.active);
+    this.setDisable(options.disable);
   }
-  ol.control.Button.prototype.setMap.call(this, map);
-  if (map) {
-    if (this.interaction_) map.addInteraction (this.interaction_);
-    if (this.subbar_) map.addControl (this.subbar_);
+  /**
+   * Set the map instance the control is associated with
+   * and add interaction attached to it to this map.
+   * @param {_ol_Map_} map The map instance.
+   */
+  setMap(map) {
+    if (!map && this.getMap()) {
+      if (this.interaction_) {
+        this.getMap().removeInteraction(this.interaction_);
+      }
+      if (this.subbar_)
+        this.getMap().removeControl(this.subbar_);
+    }
+    ol.control.Button.prototype.setMap.call(this, map);
+    if (map) {
+      if (this.interaction_)
+        map.addInteraction(this.interaction_);
+      if (this.subbar_)
+        map.addControl(this.subbar_);
+    }
   }
-};
-/** Get the subbar associated with a control
- * @return {ol.control.Bar}
- */
-ol.control.Toggle.prototype.getSubBar = function () {
-  return this.subbar_;
-};
-/** Set the subbar associated with a control
- * @param {ol.control.Bar} [bar] a subbar if none remove the current subbar
- */
-ol.control.Toggle.prototype.setSubBar = function (bar) {
-  var map = this.getMap();
-  if (map && this.subbar_) map.removeControl (this.subbar_);
-  this.subbar_ = bar;
-  if (bar) {
-    this.subbar_.setTarget(this.element);
-    this.subbar_.element.classList.add("ol-option-bar");
-    if (map) map.addControl (this.subbar_);
+  /** Get the subbar associated with a control
+   * @return {ol.control.Bar}
+   */
+  getSubBar() {
+    return this.subbar_;
   }
-};
-/**
- * Test if the control is disabled.
- * @return {bool}.
- * @api stable
- */
-ol.control.Toggle.prototype.getDisable = function() {
-  var button = this.element.querySelector("button");
-  return button && button.disabled;
-};
-/** Disable the control. If disable, the control will be deactivated too.
-* @param {bool} b disable (or enable) the control, default false (enable)
-*/
-ol.control.Toggle.prototype.setDisable = function(b) {
-  if (this.getDisable()==b) return;
-  this.element.querySelector("button").disabled = b;
-  if (b && this.getActive()) this.setActive(false);
-  this.dispatchEvent({ type:'change:disable', key:'disable', oldValue:!b, disable:b });
-};
-/**
- * Test if the control is active.
- * @return {bool}.
- * @api stable
- */
-ol.control.Toggle.prototype.getActive = function() {
-  return this.element.classList.contains("ol-active");
-};
-/** Toggle control state active/deactive
- */
-ol.control.Toggle.prototype.toggle = function() {
-  if (this.getActive()) this.setActive(false);
-  else this.setActive(true);
-};
-/** Change control state
- * @param {bool} b activate or deactivate the control, default false
- */
-ol.control.Toggle.prototype.setActive = function(b) {
-  if (this.interaction_) this.interaction_.setActive (b);
-  if (this.subbar_) this.subbar_.setActive(b);
-  if (this.getActive()===b) return;
-  if (b) this.element.classList.add("ol-active");
-  else this.element.classList.remove("ol-active");
-  this.dispatchEvent({ type:'change:active', key:'active', oldValue:!b, active:b });
-};
-/** Set the control interaction
-* @param {_ol_interaction_} i interaction to associate with the control
-*/
-ol.control.Toggle.prototype.setInteraction = function(i) {
-  this.interaction_ = i;
-};
-/** Get the control interaction
-* @return {_ol_interaction_} interaction associated with the control
-*/
-ol.control.Toggle.prototype.getInteraction = function() {
-  return this.interaction_;
-};
+  /** Set the subbar associated with a control
+   * @param {ol.control.Bar} [bar] a subbar if none remove the current subbar
+   */
+  setSubBar(bar) {
+    var map = this.getMap();
+    if (map && this.subbar_)
+      map.removeControl(this.subbar_);
+    this.subbar_ = bar;
+    if (bar) {
+      this.subbar_.setTarget(this.element);
+      this.subbar_.element.classList.add("ol-option-bar");
+      if (map)
+        map.addControl(this.subbar_);
+    }
+  }
+  /**
+   * Test if the control is disabled.
+   * @return {bool}.
+   * @api stable
+   */
+  getDisable() {
+    var button = this.element.querySelector("button");
+    return button && button.disabled;
+  }
+  /** Disable the control. If disable, the control will be deactivated too.
+  * @param {bool} b disable (or enable) the control, default false (enable)
+  */
+  setDisable(b) {
+    if (this.getDisable() == b)
+      return;
+    this.element.querySelector("button").disabled = b;
+    if (b && this.getActive())
+      this.setActive(false);
+    this.dispatchEvent({ type: 'change:disable', key: 'disable', oldValue: !b, disable: b });
+  }
+  /**
+   * Test if the control is active.
+   * @return {bool}.
+   * @api stable
+   */
+  getActive() {
+    return this.element.classList.contains("ol-active");
+  }
+  /** Toggle control state active/deactive
+   */
+  toggle() {
+    if (this.getActive())
+      this.setActive(false);
+    else
+      this.setActive(true);
+  }
+  /** Change control state
+   * @param {bool} b activate or deactivate the control, default false
+   */
+  setActive(b) {
+    if (this.interaction_)
+      this.interaction_.setActive(b);
+    if (this.subbar_)
+      this.subbar_.setActive(b);
+    if (this.getActive() === b)
+      return;
+    if (b)
+      this.element.classList.add("ol-active");
+    else
+      this.element.classList.remove("ol-active");
+    this.dispatchEvent({ type: 'change:active', key: 'active', oldValue: !b, active: b });
+  }
+  /** Set the control interaction
+  * @param {_ol_interaction_} i interaction to associate with the control
+  */
+  setInteraction(i) {
+    this.interaction_ = i;
+  }
+  /** Get the control interaction
+  * @return {_ol_interaction_} interaction associated with the control
+  */
+  getInteraction() {
+    return this.interaction_;
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -10238,7 +10258,6 @@ ol.control.Legend = class olcontrolLegend extends ol.control.CanvasBase {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-//
 /** A control to jump from one zone to another.
  * @constructor
  * @fires select
@@ -10250,164 +10269,164 @@ ol.control.Legend = class olcontrolLegend extends ol.control.CanvasBase {
  *	@param {ol.ProjectionLike} options.projection projection of the control, Default is EPSG:3857 (Spherical Mercator).
  *  @param {bolean} options.centerOnClick center on click when a zone is clicked (or listen to 'select' event to do something), default true
  */
-ol.control.MapZone = function(options) {
-  if (!options) options={};
-  var element = document.createElement("div");
-  if (options.target) {
-    element = ol.ext.element.create('DIV', {
-      className: options.className || "ol-mapzone"
-    });
-  } else {
-    element = ol.ext.element.create('DIV', {
-      className: (options.className || "ol-mapzone") +' ol-unselectable ol-control ol-collapsed'
-    });
-    var bt = ol.ext.element.create('BUTTON', {
-      type: 'button',
-      on: {
-        'click': function() {
-          element.classList.toggle("ol-collapsed");
-          maps.forEach(function (m) {
-            m.updateSize();
-          });
-        }.bind(this)
-      },
-      parent: element
-    });
-    ol.ext.element.create('I', {
-      parent: bt
-    });
-  }
-  // Parent control
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.set('centerOnClick', options.centerOnClick);
-  // Create maps
-  var maps = this._maps = [];
-  this._projection = options.projection;
-  this._layer = options.layer;
-  options.zones.forEach(this.addZone.bind(this));
-  // Refresh the maps
-  setTimeout(function() {
-    maps.forEach(function (m) {
-      m.updateSize();
-    });
-  });
-};
-ol.ext.inherits(ol.control.MapZone, ol.control.Control);
-/** Collapse the control
- * @param {boolean} b
- */
-ol.control.MapZone.prototype.setCollapsed = function (b) {
-  if (b) {
-    this.element.classList.remove('ol-collapsed');
-    // Force map rendering
-    this.getMaps().forEach(function (m) {
-      m.updateSize();
-    });
-  } else {
-    this.element.classList.add('ol-collapsed');
-  }
-};
-/** Get control collapsed
- * @return {boolean} 
- */
-ol.control.MapZone.prototype.getCollapsed = function () {
-  return this.element.classList.contains('ol-collapsed');
-};
-/** Set the control visibility (collapsed)
- * @param {boolean} b
- * @deprecated use setCollapsed instead
- */
-ol.control.MapZone.prototype.setVisible = ol.control.MapZone.prototype.setCollapsed;
-/** Get associated maps
- * @return {ol.Map}
- */
-ol.control.MapZone.prototype.getMaps = function () {
-  return this._maps;
-};
-/** Get nb zone */
-ol.control.MapZone.prototype.getLength = function () {
-  return this._maps.length;
-};
-/** Add a new zone to the control 
- * @param {Object} z 
- *  @param {string} title
- *  @param {ol.extent} extent if map is not defined
- *  @param {ol.Map} map if map is defined use the map extent 
- *  @param {ol.layer.Layer} [layer] layer of the zone, default use default control layer
- */
-ol.control.MapZone.prototype.addZone = function (z) {
-  var view = new ol.View({ zoom: 6, center: [0,0], projection: this._projection });
-  var extent;
-  if (z.map) {
-    extent = ol.proj.transformExtent(z.map.getView().calculateExtent(), z.map.getView().getProjection(), view.getProjection()) ;
-  } else {
-    extent = ol.proj.transformExtent(z.extent, 'EPSG:4326', view.getProjection());
-  }
-  // console.log(extent, z.extent)
-  var div = ol.ext.element.create('DIV', {
-    className: 'ol-mapzonezone',
-    parent: this.element,
-    click : function() {
-      // Get index
-      var index = -1;
-      this._maps.forEach(function(m, i) {
-        if (m.get('zone') === z) {
-          index = i;
-        }
+ol.control.MapZone = class olcontrolMapZone extends ol.control.Control {
+  constructor(options) {
+    options = options || {}
+    var element = element = ol.ext.element.create('DIV', {
+      className: options.className || 'ol-mapzone'
+    })
+    super({
+      element: element,
+      target: options.target
+    })
+    if (!options.target) {
+      ['ol-unselectable', 'ol-control', 'ol-collapsed'].forEach(function(c) {
+        element.classList.add(c)
       })
-      this.dispatchEvent({
-        type: 'select',
-        zone: z,
-        index: index,
-        coordinate: ol.extent.getCenter(extent),
-        extent: extent
-      });
-      if (this.get('centerOnClick') !== false) {
-        this.getMap().getView().fit(extent);
-      }
-      this.setVisible(false);
-    }.bind(this)
-  });
-  var layer;
-  if (z.layer) {
-    layer = z.layer;
-  } else if (typeof(this._layer) === 'function') {
-    layer = this._layer(z);
-  } else {
-    // Try to clone the layer
-    layer = new this._layer.constructor({
-      source: this._layer.getSource()
-    });
+      var bt = ol.ext.element.create('BUTTON', {
+        type: 'button',
+        on: {
+          'click': function () {
+            element.classList.toggle("ol-collapsed")
+            maps.forEach(function (m) {
+              m.updateSize()
+            })
+          }.bind(this)
+        },
+        parent: element
+      })
+      ol.ext.element.create('I', {
+        parent: bt
+      })
+    }
+    this.set('centerOnClick', options.centerOnClick)
+    // Create maps
+    var maps = this._maps = []
+    this._projection = options.projection
+    this._layer = options.layer
+    options.zones.forEach(this.addZone.bind(this))
+    // Refresh the maps
+    setTimeout(function () {
+      maps.forEach(function (m) {
+        m.updateSize()
+      })
+    })
   }
-  var map = new ol.Map({
-    target: div,
-    view: view,
-    controls: [],
-    interactions:[],
-    layers: [layer]
-  });
-  map.set('zone', z);
-  this._maps.push(map);
-  view.fit(extent);
-  // Name
-  ol.ext.element.create('P', {
-    html: z.title,
-    parent: div
-  });
-};
-/** Remove a zone from the control 
- * @param {number} index
- */
-ol.control.MapZone.prototype.removeZone = function (index) {
-  var z = this.element.querySelectorAll('.ol-mapzonezone')[index];
-  if (z) {
-    z.remove();
-    this._maps.splice(index, 1);
+  /** Collapse the control
+   * @param {boolean} b
+   */
+  setCollapsed(b) {
+    if (b) {
+      this.element.classList.remove('ol-collapsed')
+      // Force map rendering
+      this.getMaps().forEach(function (m) {
+        m.updateSize()
+      })
+    } else {
+      this.element.classList.add('ol-collapsed')
+    }
   }
-};
+  /** Show the control
+   * @param {boolean} b
+   */
+  setVisible(b) {
+    this.setCollapsed(!b);
+  }
+  /** Get control collapsed
+   * @return {boolean}
+   */
+  getCollapsed() {
+    return this.element.classList.contains('ol-collapsed')
+  }
+  /** Get associated maps
+   * @return {ol.Map}
+   */
+  getMaps() {
+    return this._maps
+  }
+  /** Get nb zone */
+  getLength() {
+    return this._maps.length
+  }
+  /** Add a new zone to the control
+   * @param {Object} z
+   *  @param {string} title
+   *  @param {ol.extent} extent if map is not defined
+   *  @param {ol.Map} map if map is defined use the map extent
+   *  @param {ol.layer.Layer} [layer] layer of the zone, default use default control layer
+   */
+  addZone(z) {
+    var view = new ol.View({ zoom: 6, center: [0, 0], projection: this._projection })
+    var extent
+    if (z.map) {
+      extent = ol.proj.transformExtent(z.map.getView().calculateExtent(), z.map.getView().getProjection(), view.getProjection())
+    } else {
+      extent = ol.proj.transformExtent(z.extent, 'EPSG:4326', view.getProjection())
+    }
+    // console.log(extent, z.extent)
+    var div = ol.ext.element.create('DIV', {
+      className: 'ol-mapzonezone',
+      parent: this.element,
+      click: function () {
+        // Get index
+        var index = -1
+        this._maps.forEach(function (m, i) {
+          if (m.get('zone') === z) {
+            index = i
+          }
+        })
+        this.dispatchEvent({
+          type: 'select',
+          zone: z,
+          index: index,
+          coordinate: ol.extent.getCenter(extent),
+          extent: extent
+        })
+        if (this.get('centerOnClick') !== false) {
+          this.getMap().getView().fit(extent)
+        }
+        this.setVisible(false)
+      }.bind(this)
+    })
+    var layer
+    if (z.layer) {
+      layer = z.layer
+    } else if (typeof (this._layer) === 'function') {
+      layer = this._layer(z)
+    } else {
+      // Try to clone the layer
+      layer = new this._layer.constructor({
+        source: this._layer.getSource()
+      })
+    }
+    var map = new ol.Map({
+      target: div,
+      view: view,
+      controls: [],
+      interactions: [],
+      layers: [layer]
+    })
+    map.set('zone', z)
+    this._maps.push(map)
+    view.fit(extent)
+    // Name
+    ol.ext.element.create('P', {
+      html: z.title,
+      parent: div
+    })
+  }
+  /** Remove a zone from the control
+   * @param {number} index
+   */
+  removeZone(index) {
+    var z = this.element.querySelectorAll('.ol-mapzonezone')[index]
+    if (z) {
+      z.remove()
+      this._maps.splice(index, 1)
+    }
+  }
+}
+ol.ext.inherits(ol.control.MapZone, ol.control.Control);
 /** Pre-defined zones */
 ol.control.MapZone.zones = {};
 /** French overseas departments  */
@@ -10568,132 +10587,131 @@ ol.control.Notification.prototype.toggle = function(duration) {
 *	@param {bool} options.hideOnClick hide the control on click, default false
 *	@param {bool} options.closeBox add a closeBox to the control, default false
 */
-ol.control.Overlay = function(options) {
-  if (!options) options={};
-/*
-  var element = document.createElement("div");
-  element.classList.add('ol-unselectable', 'ol-overlay');
-  //if (options.className) element.classList.add(options.className);
-*/
-  var element = ol.ext.element.create('DIV', {
-    className: 'ol-unselectable ol-overlay '+(options.className||''),
-    html: options.content
-  });
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  var self = this;
-  if (options.hideOnClick) element.addEventListener("click", function(){self.hide();});
-  this.set("closeBox", options.closeBox);
-  this._timeout = false;
-  this.setContent (options.content);
-};
-ol.ext.inherits(ol.control.Overlay, ol.control.Control);
-/** Set the content of the overlay
-* @param {string|Element} html the html to display in the control
-*/
-ol.control.Overlay.prototype.setContent = function (html) {
-  var self = this;
-  if (html) {
+ol.control.Overlay = class olcontrolOverlay extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    var element = ol.ext.element.create('DIV', {
+      className: 'ol-unselectable ol-overlay ' + (options.className || ''),
+      html: options.content
+    });
+    super({
+      element: element,
+      target: options.target
+    });
+    var self = this;
+    if (options.hideOnClick) {
+      element.addEventListener('click', function () { self.hide(); });
+    }
+    this.set('closeBox', options.closeBox);
+    this._timeout = false;
+    this.setContent(options.content);
+  }
+  /** Set the content of the overlay
+  * @param {string|Element} html the html to display in the control
+  */
+  setContent(html) {
+    var self = this;
+    if (html) {
+      var elt = this.element;
+      if (html instanceof Element) {
+        elt.innerHTML = '';
+        elt.appendChild(html);
+      }
+      else if (html !== undefined)
+        elt.innerHTML = html;
+      if (this.get("closeBox")) {
+        var cb = document.createElement("div");
+        cb.classList.add("ol-closebox");
+        cb.addEventListener("click", function () { self.hide(); });
+        elt.insertBefore(cb, elt.firstChild);
+      }
+    }
+  }
+  /** Set the control visibility
+  * @param {string|Element} html the html to display in the control
+  * @param {ol.coordinate} coord coordinate of the top left corner of the control to start from
+  */
+  show(html, coord) {
+    var self = this;
     var elt = this.element;
-    if (html instanceof Element) {
-      elt.innerHTML='';
-      elt.appendChild(html)
+    elt.style.display = 'block';
+    if (coord) {
+      this.center_ = this.getMap().getPixelFromCoordinate(coord);
+      elt.style.top = this.center_[1] + 'px';
+      elt.style.left = this.center_[0] + 'px';
+    } else {
+      //TODO: Do fix from  hkollmann pull request
+      this.center_ = false;
+      elt.style.top = "";
+      elt.style.left = "";
     }
-    else if (html!==undefined) elt.innerHTML = html;
-    if (this.get("closeBox")) {
-      var cb = document.createElement("div");
-      cb.classList.add("ol-closebox");
-      cb.addEventListener("click", function(){self.hide();});
-      elt.insertBefore(cb, elt.firstChild);
-    }
+    if (html) tContent(html);
+    if (this._timeout) clearTimeout(this._timeout);
+    this._timeout = setTimeout(function () {
+      elt.classList.add("ol-visible");
+      elt.style.top = "";
+      elt.style.left = "";
+      self.dispatchEvent({ type: 'change:visible', visible: true, element: self.element });
+    }, 10);
   }
-};
-/** Set the control visibility
-* @param {string|Element} html the html to display in the control
-* @param {ol.coordinate} coord coordinate of the top left corner of the control to start from
-*/
-ol.control.Overlay.prototype.show = function (html, coord) {
-  var self = this;
-  var elt = this.element;
-  elt.style.display = 'block';
-  if (coord) {
-    this.center_ = this.getMap().getPixelFromCoordinate(coord);
-    elt.style.top = this.center_[1]+'px';
-    elt.style.left = this.center_[0]+'px';
-  } else {
-    //TODO: Do fix from  hkollmann pull request
-    this.center_ = false;
-    elt.style.top = "";
-    elt.style.left = "";
-  }
-  if (html) this.setContent(html);
-  if (this._timeout) clearTimeout(this._timeout);
-  this._timeout = setTimeout(function() {
-    elt.classList.add("ol-visible")
-    elt.style.top = "";
-    elt.style.left = "";
-    self.dispatchEvent({ type:'change:visible', visible:true, element: self.element });
-  }, 10);
-};
-/** Show an image
- * @param {string} src image url
- * @param {*} options
- *  @param {string} options.title
- *  @param {ol.coordinate} coordinate
- */
-ol.control.Overlay.prototype.showImage = function (src, options) {
-  options = options || {};
-  var content = ol.ext.element.create('DIV', {
-    className: 'ol-fullscreen-image'
-  });
-  ol.ext.element.create('IMG', {
-    src: src,
-    parent: content
-  });
-  if (options.title) {
-    content.classList.add('ol-has-title');
-    ol.ext.element.create('P', { 
-      html: options.title,
+  /** Show an image
+   * @param {string} src image url
+   * @param {*} options
+   *  @param {string} options.title
+   *  @param {ol.coordinate} coordinate
+   */
+  showImage(src, options) {
+    options = options || {};
+    var content = ol.ext.element.create('DIV', {
+      className: 'ol-fullscreen-image'
+    });
+    ol.ext.element.create('IMG', {
+      src: src,
       parent: content
     });
+    if (options.title) {
+      content.classList.add('ol-has-title');
+      ol.ext.element.create('P', {
+        html: options.title,
+        parent: content
+      });
+    }
+    this.show(content, options.coordinate);
   }
-  this.show(content, options.coordinate);
-};
-/** Set the control visibility hidden
-*/
-ol.control.Overlay.prototype.hide = function () {
-  var elt = this.element;
-  this.element.classList.remove("ol-visible");
-  if (this.center_) {
-    elt.style.top = this.center_[1]+'px';
-    elt.style.left = this.center_[0]+'px';
-    this.center_ = false;
+  /** Set the control visibility hidden
+  */
+  hide() {
+    var elt = this.element;
+    this.element.classList.remove("ol-visible");
+    if (this.center_) {
+      elt.style.top = this.center_[1] + 'px';
+      elt.style.left = this.center_[0] + 'px';
+      this.center_ = false;
+    }
+    if (this._timeout) clearTimeout(this._timeout);
+    this._timeout = setTimeout(function () { elt.style.display = 'none'; }, 500);
+    this.dispatchEvent({ type: 'change:visible', visible: false, element: this.element });
   }
-  if (this._timeout) clearTimeout(this._timeout);
-  this._timeout = setTimeout(function(){ elt.style.display = 'none'; }, 500);
-  this.dispatchEvent({ type:'change:visible', visible:false, element: this.element });
-};
-/** Toggle control visibility
-*/
-ol.control.Overlay.prototype.toggle = function () {	
-  if (this.getVisible()) this.hide();
-  else this.show();
+  /** Toggle control visibility
+  */
+  toggle() {
+    if (this.getVisible()) this.hide();
+    else this.show();
+  }
+  /** Get the control visibility
+  * @return {boolean} b
+  */
+  getVisible() {
+    return ol.ext.element.getStyle(this.element, 'display') !== 'none';
+  }
+  /** Change class name
+  * @param {String} className a class name or a list of class names separated by a space
+  */
+  setClass(className) {
+    var vis = this.element.classList.contains('ol-visible');
+    this.element.className = ('ol-unselectable ol-overlay ' + (vis ? 'ol-visible ' : '') + className).trim();
+  }
 }
-/** Get the control visibility
-* @return {boolean} b
-*/
-ol.control.Overlay.prototype.getVisible = function () {
-  return ol.ext.element.getStyle(this.element, 'display') !== 'none';
-};
-/** Change class name
-* @param {String} className a class name or a list of class names separated by a space
-*/
-ol.control.Overlay.prototype.setClass = function (className) {
-  var vis = this.element.classList.contains('ol-visible');
-  this.element.className = ('ol-unselectable ol-overlay '+(vis ? 'ol-visible ' : '')+className).trim();
-};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -18152,253 +18170,262 @@ ol.control.WMSCapabilities.prototype.labels = {
  *  @param {boolean} [options.trace=false] Log layer info, default false
  *  @param {*} [options.services] a key/url object of services for quick access in a menu
  */
-ol.control.WMTSCapabilities = function (options) {
-  options = options || {};
-  options.title = options.title || 'WMTS';
-  ol.control.WMSCapabilities.call(this, options);
-  this.getDialog().element.classList.add('ol-wmtscapabilities');
-};
-ol.ext.inherits(ol.control.WMTSCapabilities, ol.control.WMSCapabilities);
-/** Get service parser
- * @private
- */
-ol.control.WMTSCapabilities.prototype._getParser = function() {
-  var pars = new ol.format.WMTSCapabilities();
-  return {
-    read: function(data) {
-      var resp = pars.read(data);
-      resp.Capability = {
-        Layer: resp.Contents,
-      }
-      // Generic attribution for layers
-      resp.Capability.Layer.Attribution = {
-        Title: resp.ServiceProvider.ProviderName
-      }
-      // Remove non image format
-      var layers = [];
-      resp.Contents.Layer.forEach(function(l) {
-        if (l.Format && /jpeg|png/.test(l.Format[0])) {
-          layers.push(l);
-        }
-      })
-      resp.Contents.Layer = layers;
-      return resp;
-    }.bind(this)
+ol.control.WMTSCapabilities = class olcontrolWMTSCapabilities extends ol.control.WMSCapabilities {
+  constructor(options) {
+    options = options || {};
+    options.title = options.title || 'WMTS';
+    super(options);
+    this.getDialog().element.classList.add('ol-wmtscapabilities');
   }
-};
-/** Get Capabilities request parameters
- * @param {*} options
- */
-ol.control.WMTSCapabilities.prototype.getRequestParam = function(options) {
-  return {
-    SERVICE: 'WMTS',
-    REQUEST: 'GetCapabilities',
-    VERSION: options.version || '1.0.0'
+  /** Get service parser
+   * @private
+   */
+  _getParser() {
+    var pars = new ol.format.WMTSCapabilities();
+    return {
+      read: function (data) {
+        var resp = pars.read(data);
+        resp.Capability = {
+          Layer: resp.Contents,
+        };
+        // Generic attribution for layers
+        resp.Capability.Layer.Attribution = {
+          Title: resp.ServiceProvider.ProviderName
+        };
+        // Remove non image format
+        var layers = [];
+        resp.Contents.Layer.forEach(function (l) {
+          if (l.Format && /jpeg|png/.test(l.Format[0])) {
+            layers.push(l);
+          }
+        });
+        resp.Contents.Layer = layers;
+        return resp;
+      }.bind(this)
+    };
   }
-};
-/** Get tile grid options only for EPSG:3857 projection
- * @returns {*}
- * @private
- */
-ol.control.WMTSCapabilities.prototype._getTG = function(tileMatrixSet, minZoom, maxZoom, tilePrefix) {
-  var matrixIds = new Array();
-  var resolutions = new Array();
-  var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
-  for (var z=0; z <= (maxZoom ? maxZoom : 20) ; z++) {
-    var id = tilePrefix ? tileMatrixSet+':'+z : z;
-    matrixIds[z] = id ; 
-    resolutions[z] = size / Math.pow(2, z);
+  /** Get Capabilities request parameters
+   * @param {*} options
+   */
+  getRequestParam(options) {
+    return {
+      SERVICE: 'WMTS',
+      REQUEST: 'GetCapabilities',
+      VERSION: options.version || '1.0.0'
+    };
   }
-  return {
-    origin: [-20037508, 20037508],
-    resolutions: resolutions,
-    matrixIds: matrixIds,
-    minZoom: (minZoom ? minZoom : 0)
-  }
-};
-/** Get WMTS tile grid (only EPSG:3857)
- * @param {sting} tileMatrixSet
- * @param {number} minZoom
- * @param {number} maxZoom
- * @param {boolean} tilePrefix
- * @returns {ol.tilegrid.WMTS}
- * @private
- */
-ol.control.WMTSCapabilities.prototype.getTileGrid = function(tileMatrixSet, minZoom, maxZoom, tilePrefix) {
-  return new ol.tilegrid.WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom, tilePrefix));
-};
-/** Return a WMTS options for the given capabilities
- * @param {*} caps layer capabilities (read from the capabilities)
- * @param {*} parent capabilities
- * @return {*} options
- */
-ol.control.WMTSCapabilities.prototype.getOptionsFromCap = function(caps, parent) {
-  var bbox = caps.WGS84BoundingBox;
-  if (bbox) bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
-  // Tilematrix zoom
-  var minZoom = Infinity, maxZoom = -Infinity;
-  var tmatrix;
-  caps.TileMatrixSetLink.forEach(function(tm) {
-    if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857' || tm.TileMatrixSet === 'webmercator') {
-      tmatrix = tm;
-      caps.TileMatrixSet = tm.TileMatrixSet;
+  /** Get tile grid options only for EPSG:3857 projection
+   * @returns {*}
+   * @private
+   */
+  _getTG(tileMatrixSet, minZoom, maxZoom, tilePrefix) {
+    var matrixIds = new Array();
+    var resolutions = new Array();
+    var size = ol.extent.getWidth(ol.proj.get('EPSG:3857').getExtent()) / 256;
+    for (var z = 0; z <= (maxZoom ? maxZoom : 20); z++) {
+      var id = tilePrefix ? tileMatrixSet + ':' + z : z;
+      matrixIds[z] = id;
+      resolutions[z] = size / Math.pow(2, z);
     }
-  });
-  if (!tmatrix) {
-    this.showError({ type: 'TileMatrix' });
-    return;
+    return {
+      origin: [-20037508, 20037508],
+      resolutions: resolutions,
+      matrixIds: matrixIds,
+      minZoom: (minZoom ? minZoom : 0)
+    };
   }
-  if (tmatrix.TileMatrixSetLimits) {
-    var tilePrefix = tmatrix.TileMatrixSetLimits[0].TileMatrix.split(':').length > 1;
-    tmatrix.TileMatrixSetLimits.forEach(function(tm) {
-      var zoom = tm.TileMatrix.split(':').pop();
-      minZoom = Math.min(minZoom, parseInt(zoom));
-      maxZoom = Math.max(maxZoom, parseInt(zoom));
+  /** Get WMTS tile grid (only EPSG:3857)
+   * @param {sting} tileMatrixSet
+   * @param {number} minZoom
+   * @param {number} maxZoom
+   * @param {boolean} tilePrefix
+   * @returns {ol.tilegrid.WMTS}
+   * @private
+   */
+  getTileGrid(tileMatrixSet, minZoom, maxZoom, tilePrefix) {
+    return new ol.tilegrid.WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom, tilePrefix));
+  }
+  /** Return a WMTS options for the given capabilities
+   * @param {*} caps layer capabilities (read from the capabilities)
+   * @param {*} parent capabilities
+   * @return {*} options
+   */
+  getOptionsFromCap(caps, parent) {
+    var bbox = caps.WGS84BoundingBox;
+    if (bbox)
+      bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
+    // Tilematrix zoom
+    var minZoom = Infinity, maxZoom = -Infinity;
+    var tmatrix;
+    caps.TileMatrixSetLink.forEach(function (tm) {
+      if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857' || tm.TileMatrixSet === 'webmercator') {
+        tmatrix = tm;
+        caps.TileMatrixSet = tm.TileMatrixSet;
+      }
     });
-  } else {
-    minZoom = 0;
-    maxZoom = 20;
-  }
-  var view = new ol.View();
-  view.setZoom(minZoom);
-  var layer_opt = {
-    title: caps.Title,
-    extent: bbox,
-    abstract: caps.Abstract,
-    maxResolution: view.getResolution()
-  };
-  var source_opt = {
-    url: parent.OperationsMetadata.GetTile.DCP.HTTP.Get[0].href,
-    layer: caps.Identifier,
-    matrixSet: caps.TileMatrixSet,
-    format: caps.Format[0] || 'image/jpeg',
-    projection: 'EPSG:3857',
-    //tileGrid: tg,
-    tilePrefix: tilePrefix,
-    minZoom: minZoom,
-    maxZoom: maxZoom,
-    style: caps.Style ? caps.Style[0].Identifier : 'normal',
-    attributions: caps.Attribution.Title,
-    crossOrigin: this.get('cors') ? 'anonymous' : null,
-    wrapX: (this.get('wrapX') !== false),
-  };
-  // Fill form
-  this._fillForm({
-    title: layer_opt.title,
-    layers: source_opt.layer,
-    style: source_opt.style,
-    format: source_opt.format,
-    minZoom: minZoom,
-    maxZoom: maxZoom,
-    extent: bbox ? bbox.join(',') : '',
-    projection: source_opt.projection,
-    attribution: source_opt.attributions || '',
-    version: '1.0.0'
-  });
-  // Trace
-  if (this.get('trace')) {
-    // Source
-    source_opt.tileGrid = 'TILEGRID';
-    var tso = JSON.stringify([ source_opt ], null, "\t").replace(/\\"/g,'"');
-    tso = tso.replace('"TILEGRID"', 'new ol.tilegrid.WMTS('
-      + JSON.stringify(this._getTG(source_opt.matrixSet, source_opt.minZoom, source_opt.maxZoom, source_opt.tilePrefix), null, '\t').replace(/\n/g, '\n\t\t')
-      + ')'
-    );
-    delete source_opt.tileGrid;
-    // Layer
-    layer_opt.source = "SOURCE";
-    var t = "new ol.layer.Tile (" +JSON.stringify(layer_opt, null, "\t")+ ")" 
-    t = t.replace(/\\"/g,'"')
-      .replace('"SOURCE"', "new ol.source.WMTS("+tso+")")
-      .replace(/\\t/g,"\t").replace(/\\n/g,"\n")
-      .replace(/"tileGrid": {/g, '"tileGrid": new ol.tilegrid.WMTS({')
-      .replace(/},\n(\t*)"style"/g, '}),\n$1"style"')
-      .replace("([\n\t","(")
-      .replace("}\n])","})");
-    console.log(t);
-    delete layer_opt.source;
-  }
-  var returnedLegend=undefined;
-  if(caps.Style && caps.Style[0] && caps.Style[0].LegendURL && caps.Style[0].LegendURL[0] )
-    returnedLegend=caps.Style[0].LegendURL[0].href;
-  return ({ 
-    layer: layer_opt, 
-    source: source_opt,
-    data: {
+    if (!tmatrix) {
+      this.showError({ type: 'TileMatrix' });
+      return;
+    }
+    if (tmatrix.TileMatrixSetLimits) {
+      var tilePrefix = tmatrix.TileMatrixSetLimits[0].TileMatrix.split(':').length > 1;
+      tmatrix.TileMatrixSetLimits.forEach(function (tm) {
+        var zoom = tm.TileMatrix.split(':').pop();
+        minZoom = Math.min(minZoom, parseInt(zoom));
+        maxZoom = Math.max(maxZoom, parseInt(zoom));
+      });
+    } else {
+      minZoom = 0;
+      maxZoom = 20;
+    }
+    var view = new ol.View();
+    view.setZoom(minZoom);
+    var layer_opt = {
       title: caps.Title,
+      extent: bbox,
       abstract: caps.Abstract,
-      legend: returnedLegend,
-    } 
-  });
-};
-/** Get WMS options from control form
- * @return {*} original original options 
- * @return {*} options
- * @private
- */
-ol.control.WMTSCapabilities.prototype._getFormOptions = function() {
-  var options = this._currentOptions || {};
-  if (!options.layer) options.layer = {};
-  if (!options.source) options.source = {};
-  if (!options.data) options.data = {};
-  var minZoom = parseInt(this._elements.formMinZoom.value) || 0;
-  var maxZoom = parseInt(this._elements.formMaxZoom.value) || 20;
-  var ext = [];
-  if (this._elements.formExtent.value) {
-    this._elements.formExtent.value.split(',').forEach(function(b) {
-      ext.push(parseFloat(b));
-    })
+      maxResolution: view.getResolution()
+    };
+    var source_opt = {
+      url: parent.OperationsMetadata.GetTile.DCP.HTTP.Get[0].href,
+      layer: caps.Identifier,
+      matrixSet: caps.TileMatrixSet,
+      format: caps.Format[0] || 'image/jpeg',
+      projection: 'EPSG:3857',
+      //tileGrid: tg,
+      tilePrefix: tilePrefix,
+      minZoom: minZoom,
+      maxZoom: maxZoom,
+      style: caps.Style ? caps.Style[0].Identifier : 'normal',
+      attributions: caps.Attribution.Title,
+      crossOrigin: this.get('cors') ? 'anonymous' : null,
+      wrapX: (this.get('wrapX') !== false),
+    };
+    // Fill form
+    this._fillForm({
+      title: layer_opt.title,
+      layers: source_opt.layer,
+      style: source_opt.style,
+      format: source_opt.format,
+      minZoom: minZoom,
+      maxZoom: maxZoom,
+      extent: bbox ? bbox.join(',') : '',
+      projection: source_opt.projection,
+      attribution: source_opt.attributions || '',
+      version: '1.0.0'
+    });
+    // Trace
+    if (this.get('trace')) {
+      // Source
+      source_opt.tileGrid = 'TILEGRID';
+      var tso = JSON.stringify([source_opt], null, "\t").replace(/\\"/g, '"');
+      tso = tso.replace('"TILEGRID"', 'new ol.tilegrid.WMTS('
+        + JSON.stringify(this._getTG(source_opt.matrixSet, source_opt.minZoom, source_opt.maxZoom, source_opt.tilePrefix), null, '\t').replace(/\n/g, '\n\t\t')
+        + ')'
+      );
+      delete source_opt.tileGrid;
+      // Layer
+      layer_opt.source = "SOURCE";
+      var t = "new ol.layer.Tile (" + JSON.stringify(layer_opt, null, "\t") + ")";
+      t = t.replace(/\\"/g, '"')
+        .replace('"SOURCE"', "new ol.source.WMTS(" + tso + ")")
+        .replace(/\\t/g, "\t").replace(/\\n/g, "\n")
+        .replace(/"tileGrid": {/g, '"tileGrid": new ol.tilegrid.WMTS({')
+        .replace(/},\n(\t*)"style"/g, '}),\n$1"style"')
+        .replace("([\n\t", "(")
+        .replace("}\n])", "})");
+      console.log(t);
+      delete layer_opt.source;
+    }
+    var returnedLegend = undefined;
+    if (caps.Style && caps.Style[0] && caps.Style[0].LegendURL && caps.Style[0].LegendURL[0]) {
+      returnedLegend = [ caps.Style[0].LegendURL[0].href ];
+    }
+    return ({
+      layer: layer_opt,
+      source: source_opt,
+      data: {
+        title: caps.Title,
+        abstract: caps.Abstract,
+        legend: returnedLegend,
+      }
+    });
   }
-  if (ext.length !== 4) ext = undefined;
-  var attributions = []
-  if (this._elements.formAttribution.value) attributions.push(this._elements.formAttribution.value);
-  var view = new ol.View({
-    projection: this.getMap().getView().getProjection()
-  })
-  view.setZoom(minZoom);
-  var layer_opt = {
-    title: this._elements.formTitle.value,
-    extent: ext,
-    abstract: options.layer.abstract || '',
-    maxResolution: view.getResolution()
-  }
-  var source_opt = {
-    url: this._elements.input.value,
-    layer: this._elements.formLayer.value,
-    matrixSet: options.source.matrixSet || 'PM',
-    format: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
-    projection: 'EPSG:3857',
-    minZoom: minZoom,
-    maxZoom: maxZoom,
-    // tileGrid: this._getTG(options.source.matrixSet || 'PM', minZoom, maxZoom),
-    style: this._elements.formStyle.value || 'normal',
-    attributions: attributions,
-    crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
-    wrapX: (this.get('wrapX') !== false),
-  }
-  return ({ 
-    layer: layer_opt, 
-    source: source_opt,
-    data: {
+  /** Get WMS options from control form
+   * @return {*} original original options
+   * @return {*} options
+   * @private
+   */
+  _getFormOptions() {
+    var options = this._currentOptions || {};
+    if (!options.layer)
+      options.layer = {};
+    if (!options.source)
+      options.source = {};
+    if (!options.data)
+      options.data = {};
+    var minZoom = parseInt(this._elements.formMinZoom.value) || 0;
+    var maxZoom = parseInt(this._elements.formMaxZoom.value) || 20;
+    var ext = [];
+    if (this._elements.formExtent.value) {
+      this._elements.formExtent.value.split(',').forEach(function (b) {
+        ext.push(parseFloat(b));
+      });
+    }
+    if (ext.length !== 4)
+      ext = undefined;
+    var attributions = [];
+    if (this._elements.formAttribution.value)
+      attributions.push(this._elements.formAttribution.value);
+    var view = new ol.View({
+      projection: this.getMap().getView().getProjection()
+    });
+    view.setZoom(minZoom);
+    var layer_opt = {
       title: this._elements.formTitle.value,
-      abstract: options.data.abstract,
-      legend: options.data.legend,
-    } 
-  });
-};
-/** Create a new layer using options received by getOptionsFromCap method
- * @param {*} options
- */
-ol.control.WMTSCapabilities.prototype.getLayerFromOptions = function (options) {
-  if (!options) return;
-  options.source.tileGrid = this.getTileGrid(options.source.matrixSet, options.source.minZoom, options.source.maxZoom, options.source.tilePrefix);
-  options.layer.source = new ol.source.WMTS(options.source);
-  var layer = new ol.layer.Tile(options.layer);
-  // Restore options
-  delete options.layer.source;
-  delete options.source.tileGrid;
-  return layer;
-};
+      extent: ext,
+      abstract: options.layer.abstract || '',
+      maxResolution: view.getResolution()
+    };
+    var source_opt = {
+      url: this._elements.input.value,
+      layer: this._elements.formLayer.value,
+      matrixSet: options.source.matrixSet || 'PM',
+      format: this._elements.formFormat.options[this._elements.formFormat.selectedIndex].value,
+      projection: 'EPSG:3857',
+      minZoom: minZoom,
+      maxZoom: maxZoom,
+      // tileGrid: this._getTG(options.source.matrixSet || 'PM', minZoom, maxZoom),
+      style: this._elements.formStyle.value || 'normal',
+      attributions: attributions,
+      crossOrigin: this._elements.formCrossOrigin.checked ? 'anonymous' : null,
+      wrapX: (this.get('wrapX') !== false),
+    };
+    return ({
+      layer: layer_opt,
+      source: source_opt,
+      data: {
+        title: this._elements.formTitle.value,
+        abstract: options.data.abstract,
+        legend: options.data.legend,
+      }
+    });
+  }
+  /** Create a new layer using options received by getOptionsFromCap method
+   * @param {*} options
+   */
+  getLayerFromOptions(options) {
+    if (!options)
+      return;
+    options.source.tileGrid = this.getTileGrid(options.source.matrixSet, options.source.minZoom, options.source.maxZoom, options.source.tilePrefix);
+    options.layer.source = new ol.source.WMTS(options.source);
+    var layer = new ol.layer.Tile(options.layer);
+    // Restore options
+    delete options.layer.source;
+    delete options.source.tileGrid;
+    return layer;
+  }
+}
 
 /*
   Copyright (c) 2016 Jean-Marc VIGLINO, 
