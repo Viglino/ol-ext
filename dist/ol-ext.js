@@ -8188,197 +8188,201 @@ var bm = new GeoBookmark ({
   }
 });
  */
-ol.control.GeoBookmark = function(options) {
-  options = options || {};
-  var self = this;
-  var element = document.createElement('div');
-  if (options.target) {
-    element.className = options.className || "ol-bookmark";
-  } else {
-    element.className = (options.className || "ol-bookmark") +
-          " ol-unselectable ol-control ol-collapsed";
-    element.addEventListener("mouseleave", function() {
-      if (input !== document.activeElement) {
+ol.control.GeoBookmark = class olcontrolGeoBookmark extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    var element = document.createElement('div');
+    // Init
+    super({
+      element: element,
+      target: options.target
+    });
+    var self = this;
+    if (options.target) {
+      element.className = options.className || "ol-bookmark";
+    } else {
+      element.className = (options.className || "ol-bookmark") +
+        " ol-unselectable ol-control ol-collapsed";
+      element.addEventListener("mouseleave", function () {
+        if (input !== document.activeElement) {
+          menu.style.display = 'none';
+        }
+      });
+      // Show bookmarks on click
+      this.button = ol.ext.element.create('BUTTON', {
+        type: 'button',
+        title: options.title || 'Geobookmarks',
+        click: function () {
+          var show = (menu.style.display === '' || menu.style.display === 'none');
+          menu.style.display = (show ? 'block' : 'none');
+          if (show)
+            this.setBookmarks();
+        }.bind(this)
+      });
+      element.appendChild(this.button);
+    }
+    // The menu
+    var menu = document.createElement('div');
+    element.appendChild(menu);
+    var ul = document.createElement('ul');
+    menu.appendChild(ul);
+    var input = document.createElement('input');
+    input.setAttribute("placeholder", options.placeholder || "Add a new geomark...");
+    input.addEventListener("keydown", function (e) {
+      e.stopPropagation();
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        var title = this.value;
+        if (title) {
+          self.addBookmark(title);
+          this.value = '';
+          self.dispatchEvent({
+            type: "add",
+            name: title
+          });
+        }
         menu.style.display = 'none';
       }
     });
-    // Show bookmarks on click
-    this.button = ol.ext.element.create('BUTTON', {
-      type: 'button',
-      title: options.title || 'Geobookmarks',
-      click: function() {
-        var show = (menu.style.display === '' || menu.style.display === 'none');
-        menu.style.display = (show ? 'block': 'none');
-        if (show) this.setBookmarks();
-      }.bind(this)
-    });
-    element.appendChild(this.button);
-  }
-  // The menu
-  var menu = document.createElement('div');
-  element.appendChild(menu);
-  var ul = document.createElement('ul');
-  menu.appendChild(ul);
-  var input = document.createElement('input');
-  input.setAttribute("placeholder", options.placeholder || "Add a new geomark...")
-  input.addEventListener("keydown", function(e) {
-    e.stopPropagation();
-    if (e.keyCode === 13) {
-      e.preventDefault();
-      var title = this.value;
-      if (title) {
-        self.addBookmark(title);
-        this.value = '';
-        self.dispatchEvent({
-          type: "add",
-          name: title
-        });
-      }
+    input.addEventListener("blur", function () {
       menu.style.display = 'none';
-    }
-  });
-  input.addEventListener("blur", function() {
-    menu.style.display = 'none';
-  });
-  menu.appendChild(input);
-  // Init
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.on("propertychange", function(e) {
-    if (e.key==='editable') {
-      element.className = element.className.replace(" ol-editable","");
-      if (this.get('editable')) {
-        element.className += " ol-editable";
+    });
+    menu.appendChild(input);
+    this.on("propertychange", function (e) {
+      if (e.key === 'editable') {
+        element.className = element.className.replace(" ol-editable", "");
+        if (this.get('editable')) {
+          element.className += " ol-editable";
+        }
       }
-    }
-    // console.log(e);
-  }.bind(this));
-  this.set("namespace", options.namespace || 'ol');
-  this.set("editable", options.editable !== false);
-  this.set('deleteTitle', options.deleteTitle || 'Suppr.');
-  // Set default bmark
-  var bmark = {};
-  try {
-    if (localStorage[this.get('namespace')+"@bookmark"]) {
-      bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"]);
-    }
-  } catch(e) { console.warn('Failed to access localStorage...'); }
-  if (options.marks) {
-    for (var i in options.marks) {
-      bmark[i] = options.marks[i];
-    }
-  }
-  this.setBookmarks(bmark);
-};
-ol.ext.inherits(ol.control.GeoBookmark, ol.control.Control);
-/** Set bookmarks
- * @param {} bmark a list of bookmarks, default retreave in the localstorage
- * @example 
-bm.setBookmarks({ 
-  "Paris": {pos:_ol_proj_.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
-  "London": {pos:_ol_proj_.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
-});
- */
-ol.control.GeoBookmark.prototype.setBookmarks = function(bmark) {
-  if (!bmark) {
-    bmark = {};
+      // console.log(e);
+    }.bind(this));
+    this.set("namespace", options.namespace || 'ol');
+    this.set("editable", options.editable !== false);
+    this.set('deleteTitle', options.deleteTitle || 'Suppr.');
+    // Set default bmark
+    var bmark = {};
     try {
-      bmark = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
-    } catch(e) { console.warn('Failed to access localStorage...'); }
-  }
-  var modify = this.get("editable");
-  var ul = this.element.querySelector("ul");
-  var menu = this.element.querySelector("div");
-  var self = this;
-  ul.innerHTML = '';
-  for (var b in bmark) {
-    var li = document.createElement('li');
-    li.textContent = b;
-    li.setAttribute('data-bookmark', JSON.stringify(bmark[b]));
-    li.setAttribute('data-name', b);
-    li.addEventListener('click', function() {
-      var bm = JSON.parse(this.getAttribute("data-bookmark"));
-      self.getMap().getView().setCenter(bm.pos);
-      self.getMap().getView().setZoom(bm.zoom);
-      self.getMap().getView().setRotation(bm.rot || 0);
-      menu.style.display = 'none';
-      self.dispatchEvent({ type: 'select', name: this.getAttribute("data-name"), bookmark: bm });
-    });
-    ul.appendChild(li);
-    if (modify && !bmark[b].permanent) {
-      var button = document.createElement('button');
-      button.setAttribute('data-name', b);
-      button.setAttribute('type', 'button');
-      button.setAttribute('title', this.get('deleteTitle') ||'Suppr.');
-      button.addEventListener('click', function(e) {
-        self.removeBookmark(this.getAttribute("data-name"));
-        self.dispatchEvent({ type: "remove", name: this.getAttribute("data-name") });
-        e.stopPropagation();
-      });
-      li.appendChild(button);
+      if (localStorage[this.get('namespace') + "@bookmark"]) {
+        bmark = JSON.parse(localStorage[this.get('namespace') + "@bookmark"]);
+      }
+    } catch (e) { console.warn('Failed to access localStorage...'); }
+    if (options.marks) {
+      for (var i in options.marks) {
+        bmark[i] = options.marks[i];
+      }
     }
+    this.setBookmarks(bmark);
   }
-  try {
-    localStorage[this.get('namespace')+"@bookmark"] = JSON.stringify(bmark);
-  } catch(e) { console.warn('Failed to access localStorage...'); }
-};
-/** Get Geo bookmarks
- * @return {any} a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
- */
-ol.control.GeoBookmark.prototype.getBookmarks = function() {
-  var bm = {};
-  try {
-    bm = JSON.parse(localStorage[this.get('namespace')+"@bookmark"] || "{}");
-  } catch(e) { console.warn('Failed to access localStorage...'); }
-  return bm;
-};
-/** Remove a Geo bookmark
- * @param {string} name
- */
-ol.control.GeoBookmark.prototype.removeBookmark = function(name) {
-  if (!name) {
-    return;
+  /** Set bookmarks
+   * @param {} bmark a list of bookmarks, default retreave in the localstorage
+   * @example
+  bm.setBookmarks({
+    "Paris": {pos:_ol_proj_.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+    "London": {pos:_ol_proj_.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:12}
+  });
+   */
+  setBookmarks(bmark) {
+    if (!bmark) {
+      bmark = {};
+      try {
+        bmark = JSON.parse(localStorage[this.get('namespace') + "@bookmark"] || "{}");
+      } catch (e) { console.warn('Failed to access localStorage...'); }
+    }
+    var modify = this.get("editable");
+    var ul = this.element.querySelector("ul");
+    var menu = this.element.querySelector("div");
+    var self = this;
+    ul.innerHTML = '';
+    for (var b in bmark) {
+      var li = document.createElement('li');
+      li.textContent = b;
+      li.setAttribute('data-bookmark', JSON.stringify(bmark[b]));
+      li.setAttribute('data-name', b);
+      li.addEventListener('click', function () {
+        var bm = JSON.parse(this.getAttribute("data-bookmark"));
+        self.getMap().getView().setCenter(bm.pos);
+        self.getMap().getView().setZoom(bm.zoom);
+        self.getMap().getView().setRotation(bm.rot || 0);
+        menu.style.display = 'none';
+        self.dispatchEvent({ type: 'select', name: this.getAttribute("data-name"), bookmark: bm });
+      });
+      ul.appendChild(li);
+      if (modify && !bmark[b].permanent) {
+        var button = document.createElement('button');
+        button.setAttribute('data-name', b);
+        button.setAttribute('type', 'button');
+        button.setAttribute('title', this.get('deleteTitle') || 'Suppr.');
+        button.addEventListener('click', function (e) {
+          self.removeBookmark(this.getAttribute("data-name"));
+          self.dispatchEvent({ type: "remove", name: this.getAttribute("data-name") });
+          e.stopPropagation();
+        });
+        li.appendChild(button);
+      }
+    }
+    try {
+      localStorage[this.get('namespace') + "@bookmark"] = JSON.stringify(bmark);
+    } catch (e) { console.warn('Failed to access localStorage...'); }
   }
-  var bmark = this.getBookmarks();
-  delete bmark[name];
-  this.setBookmarks(bmark);
-};
-/** Add a new Geo bookmark (replace existing one if any)
- * @param {string} name name of the bookmark (display in the menu)
- * @param {*} options
- *  @param {ol.coordinate} position default current position
- *  @param {number} zoom default current map zoom
- *  @param {number} rotation default current map rotation
- *  @param {bool} permanent prevent from deletion, default false
- */
-ol.control.GeoBookmark.prototype.addBookmark = function(name, position, zoom, permanent) {
-  if (!name) return;
-  var options = position;
-  var rot;
-  if (options && options.position) {
-    zoom = options.zoom;
-    permanent = options.permanent;
-    rot = options.rotation ;
-    position = options.position;
-  } else {
-    rot = this.getMap().getView().getRotation();
+  /** Get Geo bookmarks
+   * @return {any} a list of bookmarks : { BM1:{pos:ol.coordinates, zoom: integer}, BM2:{pos:ol.coordinates, zoom: integer} }
+   */
+  getBookmarks() {
+    var bm = {};
+    try {
+      bm = JSON.parse(localStorage[this.get('namespace') + "@bookmark"] || "{}");
+    } catch (e) { console.warn('Failed to access localStorage...'); }
+    return bm;
   }
-  var bmark = this.getBookmarks();
-  // Don't override permanent bookmark
-  if (bmark[name] && bmark[name].permanent) return;
-  // Create or override
-  bmark[name] = {
-    pos: position || this.getMap().getView().getCenter(),
-    zoom: zoom || this.getMap().getView().getZoom(),
-    permanent: !!permanent
-  };
-  if (rot) {
-    bmark[name].rot = rot;
+  /** Remove a Geo bookmark
+   * @param {string} name
+   */
+  removeBookmark(name) {
+    if (!name) {
+      return;
+    }
+    var bmark = this.getBookmarks();
+    delete bmark[name];
+    this.setBookmarks(bmark);
   }
-  this.setBookmarks(bmark);
-};
+  /** Add a new Geo bookmark (replace existing one if any)
+   * @param {string} name name of the bookmark (display in the menu)
+   * @param {*} options
+   *  @param {ol.coordinate} position default current position
+   *  @param {number} zoom default current map zoom
+   *  @param {number} rotation default current map rotation
+   *  @param {bool} permanent prevent from deletion, default false
+   */
+  addBookmark(name, position, zoom, permanent) {
+    if (!name)
+      return;
+    var options = position;
+    var rot;
+    if (options && options.position) {
+      zoom = options.zoom;
+      permanent = options.permanent;
+      rot = options.rotation;
+      position = options.position;
+    } else {
+      rot = this.getMap().getView().getRotation();
+    }
+    var bmark = this.getBookmarks();
+    // Don't override permanent bookmark
+    if (bmark[name] && bmark[name].permanent)
+      return;
+    // Create or override
+    bmark[name] = {
+      pos: position || this.getMap().getView().getCenter(),
+      zoom: zoom || this.getMap().getView().getZoom(),
+      permanent: !!permanent
+    };
+    if (rot) {
+      bmark[name].rot = rot;
+    }
+    this.setBookmarks(bmark);
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
@@ -8552,8 +8556,8 @@ ol.control.GeolocationButton = function(options) {
 ol.ext.inherits(ol.control.GeolocationButton, ol.control.Toggle);
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /**
  * OpenLayers 3 lobe Overview Control.
@@ -8567,134 +8571,141 @@ ol.ext.inherits(ol.control.GeolocationButton, ol.control.Toggle);
  * 	@param {Array<ol.layer>} layers list of layers to display on the globe
  * 	@param {ol.style.Style | Array.<ol.style.Style> | undefined} style style to draw the position on the map , default a marker
  */
-ol.control.Globe = function(opt_options)
-{	var options = opt_options || {};
-	var self = this;
-	// API
-	var element;
-	if (options.target)
-	{	element = document.createElement("div");
-		this.panel_ = options.target;
-	}
-	else
-	{	element = document.createElement("div");
-		element.classList.add('ol-globe', 'ol-unselectable', 'ol-control');
-		if (/top/.test(options.align)) element.classList.add('ol-control-top');
-		if (/right/.test(options.align)) element.classList.add('ol-control-right');
-		this.panel_ = document.createElement("div");
-		this.panel_.classList.add("panel")
-		element.appendChild(this.panel_);
-		this.pointer_ = document.createElement("div");
-		this.pointer_.classList.add("ol-pointer");
-		element.appendChild(this.pointer_);
-	}
-	ol.control.Control.call(this,
-	{	element: element,
-		target: options.target
-	});
-// http://openlayers.org/en/latest/examples/sphere-mollweide.html ???
-	// Create a globe map
-	this.ovmap_ = new ol.Map(
-	{	controls: new ol.Collection(),
-		interactions: new ol.Collection(),
-		target: this.panel_,
-		view: new ol.View
-			({	zoom: 0,
-				center: [0,0]
-			}),
-		layers: options.layers
-	});
-	setTimeout (function()
-	{	self.ovmap_.updateSize(); 
-	}, 0);
-	this.set('follow', options.follow || false);
-	// Cache extent
-	this.extentLayer = new ol.layer.Vector(
-	{	name: 'Cache extent',
-		source: new ol.source.Vector(),
-		style: options.style || [new ol.style.Style(
-					{	image: new ol.style.Circle(
-						{	fill: new ol.style.Fill({
-								color: 'rgba(255,0,0, 1)'
-							}),
-							stroke: new ol.style.Stroke(
-							{	width: 7,
-								color: 'rgba(255,0,0, 0.8)'
-							}),
-							radius: 5
-						})
-					}
-				)]
-	})
-	this.ovmap_.addLayer(this.extentLayer);
-};
-ol.ext.inherits(ol.control.Globe, ol.control.Control);
-/**
- * Set the map instance the control associated with.
- * @param {ol.Map} map The map instance.
- */
-ol.control.Globe.prototype.setMap = function(map) {
-	if (this._listener) ol.Observable.unByKey(this._listener);
-	this._listener = null;
-	ol.control.Control.prototype.setMap.call(this, map);
-	// Get change (new layer added or removed)
-	if (map) 
-	{	this._listener = map.getView().on('propertychange', this.setView.bind(this));
-		this.setView();
-	}
-};
-/** Set the globe center with the map center
-*/
-ol.control.Globe.prototype.setView = function()
-{	if (this.getMap() && this.get('follow'))
-	{	this.setCenter(this.getMap().getView().getCenter());
-	}
+ol.control.Globe = class olcontrolGlobe extends ol.control.Control {
+  constructor(opt_options) {
+    var options = opt_options || {}
+    var element = document.createElement('div');
+    super({
+      element: element,
+      target: options.target
+    })
+    var self = this
+    // API
+    if (options.target) {
+      this.panel_ = options.target
+    } else {
+      element.classList.add('ol-globe', 'ol-unselectable', 'ol-control')
+      if (/top/.test(options.align))
+        element.classList.add('ol-control-top')
+      if (/right/.test(options.align))
+        element.classList.add('ol-control-right')
+      this.panel_ = document.createElement("div")
+      this.panel_.classList.add("panel")
+      element.appendChild(this.panel_)
+      this.pointer_ = document.createElement("div")
+      this.pointer_.classList.add("ol-pointer")
+      element.appendChild(this.pointer_)
+    }
+    // http://openlayers.org/en/latest/examples/sphere-mollweide.html ???
+    // Create a globe map
+    this.ovmap_ = new ol.Map({
+      controls: new ol.Collection(),
+      interactions: new ol.Collection(),
+      target: this.panel_,
+      view: new ol.View({
+        zoom: 0,
+        center: [0, 0]
+      }),
+      layers: options.layers
+    })
+    setTimeout(function () {
+      self.ovmap_.updateSize()
+    }, 0)
+    this.set('follow', options.follow || false)
+    // Cache extent
+    this.extentLayer = new ol.layer.Vector({
+      name: 'Cache extent',
+      source: new ol.source.Vector(),
+      style: options.style || [ new ol.style.Style({
+        image: new ol.style.Circle({
+          fill: new ol.style.Fill({
+            color: 'rgba(255,0,0, 1)'
+          }),
+          stroke: new ol.style.Stroke(
+            {
+              width: 7,
+              color: 'rgba(255,0,0, 0.8)'
+            }),
+          radius: 5
+        })
+      })]
+    })
+    this.ovmap_.addLayer(this.extentLayer)
+  }
+  /**
+   * Set the map instance the control associated with.
+   * @param {ol.Map} map The map instance.
+   */
+  setMap(map) {
+    if (this._listener)
+      ol.Observable.unByKey(this._listener)
+    this._listener = null
+    ol.control.Control.prototype.setMap.call(this, map)
+    // Get change (new layer added or removed)
+    if (map) {
+      this._listener = map.getView().on('propertychange', this.setView.bind(this))
+      this.setView()
+    }
+  }
+  /** Set the globe center with the map center
+  */
+  setView() {
+    if (this.getMap() && this.get('follow')) {
+      this.setCenter(this.getMap().getView().getCenter())
+    }
+  }
+  /** Get globe map
+  *	@return {ol.Map}
+  */
+  getGlobe() {
+    return this.ovmap_
+  }
+  /** Show/hide the globe
+  */
+  show(b) {
+    if (b !== false)
+      this.element.classList.remove("ol-collapsed")
+    else
+      this.element.classList.add("ol-collapsed")
+    this.ovmap_.updateSize()
+  }
+  /** Set position on the map
+  *	@param {top|bottom-left|right}  align
+  */
+  setPosition(align) {
+    if (/top/.test(align))
+      this.element.classList.add("ol-control-top")
+    else
+      this.element.classList.remove("ol-control-top")
+    if (/right/.test(align))
+      this.element.classList.add("ol-control-right")
+    else
+      this.element.classList.remove("ol-control-right")
+  }
+  /** Set the globe center
+  * @param {_ol_coordinate_} center the point to center to
+  * @param {boolean} show show a pointer on the map, defaylt true
+  */
+  setCenter(center, show) {
+    var self = this
+    this.pointer_.classList.add("hidden")
+    if (center) {
+      var map = this.ovmap_
+      var p = map.getPixelFromCoordinate(center)
+      if (p) {
+        if (show !== false) {
+          var h = this.element.clientHeight
+          setTimeout(function () {
+            self.pointer_.style.top = String(Math.min(Math.max(p[1], 0), h)) + 'px'
+            self.pointer_.style.left = "50%"
+            self.pointer_.classList.remove("hidden")
+          }, 800)
+        }
+        map.getView().animate({ center: [center[0], 0] })
+      }
+    }
+  }
 }
-/** Get globe map
-*	@return {ol.Map}
-*/
-ol.control.Globe.prototype.getGlobe = function()
-{	return this.ovmap_;
-}
-/** Show/hide the globe
-*/
-ol.control.Globe.prototype.show = function(b)
-{	if (b!==false) this.element.classList.remove("ol-collapsed");
-	else this.element.classList.add("ol-collapsed");
-	this.ovmap_.updateSize();
-}
-/** Set position on the map
-*	@param {top|bottom-left|right}  align
-*/
-ol.control.Globe.prototype.setPosition = function(align)
-{	if (/top/.test(align)) this.element.classList.add("ol-control-top");
-	else this.element.classList.remove("ol-control-top");
-	if (/right/.test(align)) this.element.classList.add("ol-control-right");
-	else this.element.classList.remove("ol-control-right");
-}
-/** Set the globe center
-* @param {_ol_coordinate_} center the point to center to
-* @param {boolean} show show a pointer on the map, defaylt true
-*/
-ol.control.Globe.prototype.setCenter = function (center, show)
-{	var self = this;
-	this.pointer_.classList.add("hidden");
-	if (center)
-	{	var map = this.ovmap_;
-		var p = map.getPixelFromCoordinate(center);
-		if (p) {
-			if (show!==false) {
-				var h = this.element.clientHeight;
-				setTimeout(function() {
-					self.pointer_.style.top = String(Math.min(Math.max(p[1],0),h)) + 'px';
-					self.pointer_.style.left = "50%";
-					self.pointer_.classList.remove("hidden");
-				}, 800);
-			}
-			map.getView().animate({ center: [center[0],0] });
-		}
-	}
-};
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -10484,92 +10495,94 @@ ol.control.MapZone.zones.DOMTOM = [{
  *  @param {boolean} options.closeBox add a close button
  *  @param {boolean} options.hideOnClick close dialog when click
  */
-ol.control.Notification = function(options) {
-  options = options || {};
-	var element = document.createElement('DIV');
-  this.contentElement = ol.ext.element.create('DIV', {
-    click: function() {
-      if (this.get('hideOnClick')) this.hide();
-    }.bind(this),
-    parent: element
-  });
-  var classNames = (options.className||"")+ " ol-notification";
-	if (!options.target) {
-    classNames += " ol-unselectable ol-control ol-collapsed";
-  }
-	element.setAttribute('class', classNames);
-	ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.set('closeBox', options.closeBox);
-  this.set('hideOnClick', options.hideOnClick);
-};
-ol.ext.inherits(ol.control.Notification, ol.control.Control);
-/**
- * Display a notification on the map
- * @param {string|node|undefined} what the notification to show, default get the last one
- * @param {number} [duration=3000] duration in ms, if -1 never hide
- */
-ol.control.Notification.prototype.show = function(what, duration) {
-  var self = this;
-  var elt = this.element;
-  if (what) {
-    if (what instanceof Node) {
-      this.contentElement.innerHTML = '';
-      this.contentElement.appendChild(what);
-    } else {
-      this.contentElement.innerHTML = what;
+ol.control.Notification = class olcontrolNotification extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    var element = document.createElement('DIV');
+    super({
+      element: element,
+      target: options.target
+    });
+    this.contentElement = ol.ext.element.create('DIV', {
+      click: function () {
+        if (this.get('hideOnClick'))
+          this.hide();
+      }.bind(this),
+      parent: element
+    });
+    var classNames = (options.className || "") + " ol-notification";
+    if (!options.target) {
+      classNames += " ol-unselectable ol-control ol-collapsed";
     }
-    if (this.get('closeBox')) {
-      this.contentElement.classList.add('ol-close')
-      ol.ext.element.create('SPAN', {
-        className: 'closeBox',
-        click: function() { this.hide(); }.bind(this),
-        parent: this.contentElement
-      })
-    } else {
-      this.contentElement.classList.remove('ol-close')
-    }
-  }  
-  if (this._listener) {
-    clearTimeout(this._listener);
-    this._listener = null;
+    element.setAttribute('class', classNames);
+    this.set('closeBox', options.closeBox);
+    this.set('hideOnClick', options.hideOnClick);
   }
-  elt.classList.add('ol-collapsed');
-  this._listener = setTimeout(function() {
-    elt.classList.remove('ol-collapsed');
-    if (!duration || duration >= 0) {
-      self._listener = setTimeout(function() {
-        elt.classList.add('ol-collapsed');
+  /**
+   * Display a notification on the map
+   * @param {string|node|undefined} what the notification to show, default get the last one
+   * @param {number} [duration=3000] duration in ms, if -1 never hide
+   */
+  show(what, duration) {
+    var self = this;
+    var elt = this.element;
+    if (what) {
+      if (what instanceof Node) {
+        this.contentElement.innerHTML = '';
+        this.contentElement.appendChild(what);
+      } else {
+        this.contentElement.innerHTML = what;
+      }
+      if (this.get('closeBox')) {
+        this.contentElement.classList.add('ol-close');
+        ol.ext.element.create('SPAN', {
+          className: 'closeBox',
+          click: function () { this.hide(); }.bind(this),
+          parent: this.contentElement
+        });
+      } else {
+        this.contentElement.classList.remove('ol-close');
+      }
+    }
+    if (this._listener) {
+      clearTimeout(this._listener);
+      this._listener = null;
+    }
+    elt.classList.add('ol-collapsed');
+    this._listener = setTimeout(function () {
+      elt.classList.remove('ol-collapsed');
+      if (!duration || duration >= 0) {
+        self._listener = setTimeout(function () {
+          elt.classList.add('ol-collapsed');
+          self._listener = null;
+        }, duration || 3000);
+      } else {
         self._listener = null;
-      }, duration || 3000);
-    } else {
-      self._listener = null;
+      }
+    }, 100);
+  }
+  /**
+   * Remove a notification on the map
+   */
+  hide() {
+    if (this._listener) {
+      clearTimeout(this._listener);
+      this._listener = null;
     }
-  }, 100);
-};
-/**
- * Remove a notification on the map
- */
-ol.control.Notification.prototype.hide = function() {
-  if (this._listener) {
-    clearTimeout(this._listener);
-    this._listener = null;
+    this.element.classList.add('ol-collapsed');
   }
-  this.element.classList.add('ol-collapsed');
-};
-/**
- * Toggle a notification on the map
- * @param {number} [duration=3000] duration in ms
- */
-ol.control.Notification.prototype.toggle = function(duration) {
-  if (this.element.classList.contains('ol-collapsed')) {
-    this.show(null, duration);
-  } else {
-    this.hide();
+  /**
+   * Toggle a notification on the map
+   * @param {number} [duration=3000] duration in ms
+   */
+  toggle(duration) {
+    if (this.element.classList.contains('ol-collapsed')) {
+      this.show(null, duration);
+    } else {
+      this.hide();
+    }
   }
-};
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -10736,59 +10749,60 @@ ol.control.Overlay = class olcontrolOverlay extends ol.control.Control {
  *  @param {ol.style.Style | Array.<ol.style.Style> | undefined} options.style style to draw the map extent on the overveiw
  *  @param {bool|elastic} options.panAnimation use animation to center map on click, default true
  */
-ol.control.Overview = function(options)
-{	options = options || {};
-  var self = this;
-  // API
-  this.minZoom = options.minZoom || 0;
-  this.maxZoom = options.maxZoom || 18;
-  this.rotation = options.rotation;
-  var element;
-  if (options.target) {
-    element = document.createElement("div");
-    this.panel_ = options.target;
-  } else {
-    element = document.createElement("div");
-    element.classList.add('ol-overview', 'ol-unselectable', 'ol-control', 'ol-collapsed');
-    if (/top/.test(options.align)) element.classList.add('ol-control-top');
-    if (/right/.test(options.align)) element.classList.add('ol-control-right');
-    var button = document.createElement("button");
-        button.setAttribute('type','button');
-        button.addEventListener("touchstart", function(e){ self.toggleMap(); e.preventDefault(); });
-        button.addEventListener("click", function(){self.toggleMap()});
-        element.appendChild(button);
-    this.panel_ = document.createElement("div");
-    this.panel_.classList.add("panel");
-    element.appendChild(this.panel_);
-  }
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  // Create a overview map
-  this.ovmap_ = new ol.Map({
-    controls: new ol.Collection(),
-    interactions: new ol.Collection(),
-    target: this.panel_,
-    view: new ol.View ({
-      zoom: 2,
-      center: [0,0],
-      projection: options.projection
-    }),
-    layers: options.layers
-  });
-  this.oview_ = this.ovmap_.getView();
-  // Cache extent
-  this.extentLayer = new ol.layer.Vector({
-    name: 'Cache extent',
-    source: new ol.source.Vector(),
-    style: options.style || [new ol.style.Style({
-      image: new ol.style.Circle({
-        fill: new ol.style.Fill({
-          color: 'rgba(255,0,0, 1)'
-        }),
-        stroke: new ol.style.Stroke({
-          width: 7,
+ol.control.Overview = class olcontrolOverview extends ol.control.Control {
+  constructor(options) {
+    options = options || {}
+    var element = document.createElement("div");
+    super({
+      element: element,
+      target: options.target
+    })
+    var self = this
+    // API
+    this.minZoom = options.minZoom || 0
+    this.maxZoom = options.maxZoom || 18
+    this.rotation = options.rotation
+    if (options.target) {
+      this.panel_ = options.target
+    } else {
+      element.classList.add('ol-overview', 'ol-unselectable', 'ol-control', 'ol-collapsed')
+      if (/top/.test(options.align))
+        element.classList.add('ol-control-top')
+      if (/right/.test(options.align))
+        element.classList.add('ol-control-right')
+      var button = document.createElement("button")
+      button.setAttribute('type', 'button')
+      button.addEventListener("touchstart", function (e) { self.toggleMap(); e.preventDefault() })
+      button.addEventListener("click", function () { self.toggleMap() })
+      element.appendChild(button)
+      this.panel_ = document.createElement("div")
+      this.panel_.classList.add("panel")
+      element.appendChild(this.panel_)
+    }
+    // Create a overview map
+    this.ovmap_ = new ol.Map({
+      controls: new ol.Collection(),
+      interactions: new ol.Collection(),
+      target: this.panel_,
+      view: new ol.View({
+        zoom: 2,
+        center: [0, 0],
+        projection: options.projection
+      }),
+      layers: options.layers
+    })
+    this.oview_ = this.ovmap_.getView()
+    // Cache extent
+    this.extentLayer = new ol.layer.Vector({
+      name: 'Cache extent',
+      source: new ol.source.Vector(),
+      style: options.style || [new ol.style.Style({
+        image: new ol.style.Circle({
+          fill: new ol.style.Fill({
+            color: 'rgba(255,0,0, 1)'
+          }),
+          stroke: new ol.style.Stroke({
+            width: 7,
             color: 'rgba(255,0,0, 0.8)'
           }),
           radius: 5
@@ -10798,177 +10812,187 @@ ol.control.Overview = function(options)
           color: "rgba(255,0,0,0.8)"
         })
       }
-    )]
-  })
-  this.ovmap_.addLayer(this.extentLayer);
-  /** Elastic bounce
-  *	@param {Int} bounce number of bounce
-  *	@param {Number} amplitude amplitude of the bounce [0,1] 
-  *	@return {Number}
-  * /
-  var bounceFn = function (bounce, amplitude){
-    var a = (2*bounce+1) * Math.PI/2;
-    var b = amplitude>0 ? -1/amplitude : -100;
-    var c = - Math.cos(a) * Math.pow(2, b);
-    return function(t) {
-      t = 1-Math.cos(t*Math.PI/2);
-      return 1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t;
+      )]
+    })
+    this.ovmap_.addLayer(this.extentLayer)
+    /** Elastic bounce
+    *	@param {Int} bounce number of bounce
+    *	@param {Number} amplitude amplitude of the bounce [0,1]
+    *	@return {Number}
+    * /
+    var bounceFn = function (bounce, amplitude){
+      var a = (2*bounce+1) * Math.PI/2;
+      var b = amplitude>0 ? -1/amplitude : -100;
+      var c = - Math.cos(a) * Math.pow(2, b);
+      return function(t) {
+        t = 1-Math.cos(t*Math.PI/2);
+        return 1 + Math.abs( Math.cos(a*t) ) * Math.pow(2, b*t) + c*t;
+      }
     }
-  }
-  /** Elastic bounce
-  *	@param {Int} bounce number of bounce
-  *	@param {Number} amplitude amplitude of the bounce [0,1] 
-  *	@return {Number}
-  */
-  var elasticFn = function (bounce, amplitude) {
-    var a = 3*bounce * Math.PI/2;
-    var b = amplitude>0 ? -1/amplitude : -100;
-    var c = Math.cos(a) * Math.pow(2, b);
-    return function(t){
-      t = 1-Math.cos(t*Math.PI/2);
-      return 1 - Math.cos(a*t) * Math.pow(2, b*t) + c*t;
+    /** Elastic bounce
+    *	@param {Int} bounce number of bounce
+    *	@param {Number} amplitude amplitude of the bounce [0,1]
+    *	@return {Number}
+    */
+    var elasticFn = function (bounce, amplitude) {
+      var a = 3 * bounce * Math.PI / 2
+      var b = amplitude > 0 ? -1 / amplitude : -100
+      var c = Math.cos(a) * Math.pow(2, b)
+      return function (t) {
+        t = 1 - Math.cos(t * Math.PI / 2)
+        return 1 - Math.cos(a * t) * Math.pow(2, b * t) + c * t
+      }
     }
-  }
-  // Click on the preview center the map
-  this.ovmap_.addInteraction (new ol.interaction.Pointer({
-    handleDownEvent: function(evt) {
-      if (options.panAnimation !==false) {
-        if (options.panAnimation=="elastic" || options.elasticPan) {
-          self.getMap().getView().animate({
-            center: evt.coordinate,
-            easing: elasticFn(2,0.3),
-            duration: 1000
-          });
-        } else {
-          self.getMap().getView().animate({
-            center: evt.coordinate,
-            duration: 300
-          });
+    // Click on the preview center the map
+    this.ovmap_.addInteraction(new ol.interaction.Pointer({
+      handleDownEvent: function (evt) {
+        if (options.panAnimation !== false) {
+          if (options.panAnimation == "elastic" || options.elasticPan) {
+            self.getMap().getView().animate({
+              center: evt.coordinate,
+              easing: elasticFn(2, 0.3),
+              duration: 1000
+            })
+          } else {
+            self.getMap().getView().animate({
+              center: evt.coordinate,
+              duration: 300
+            })
+          }
         }
+        else
+          self.getMap().getView().setCenter(evt.coordinate)
+        return false
       }
-      else self.getMap().getView().setCenter(evt.coordinate);
-      return false;
-    }
-  }));
-};
-ol.ext.inherits(ol.control.Overview, ol.control.Control);
-/** Get overview map
-*	@return {ol.Map}
-*/
-ol.control.Overview.prototype.getOverviewMap = function(){
-  return this.ovmap_;
-};
-/** Toggle overview map
-*/
-ol.control.Overview.prototype.toggleMap = function(){
-  this.element.classList.toggle("ol-collapsed");
-  this.ovmap_.updateSize();
-  this.setView();
-};
-/** Set overview map position
-*	@param {top|bottom-left|right}
-*/
-ol.control.Overview.prototype.setPosition = function(align){
-  if (/top/.test(align)) this.element.classList.add("ol-control-top");
-  else this.element.classList.remove("ol-control-top");
-  if (/right/.test(align)) this.element.classList.add("ol-control-right");
-  else this.element.classList.remove("ol-control-right");
-};
-/**
- * Set the map instance the control associated with.
- * @param {ol.Map} map The map instance.
- */
-ol.control.Overview.prototype.setMap = function(map) {
-  if (this._listener) {
-    for (var i in this._listener) {
-      ol.Observable.unByKey(this._listener[i]);
-    }
+    }))
   }
-  this._listener = {};
-  ol.control.Control.prototype.setMap.call(this, map);
-  if (map) {
-    this._listener.map = map.on('change:view', function() {
-      if (this._listener.view) ol.Observable.unByKey(this._listener.view);
-      if (map.getView()) {
-        this._listener.view = map.getView().on('propertychange', this.setView.bind(this));
-        this.setView();
+  /** Get overview map
+  *	@return {ol.Map}
+  */
+  getOverviewMap() {
+    return this.ovmap_
+  }
+  /** Toggle overview map
+  */
+  toggleMap() {
+    this.element.classList.toggle("ol-collapsed")
+    this.ovmap_.updateSize()
+    this.setView()
+  }
+  /** Set overview map position
+  *	@param {top|bottom-left|right}
+  */
+  setPosition(align) {
+    if (/top/.test(align))
+      this.element.classList.add("ol-control-top")
+    else
+      this.element.classList.remove("ol-control-top")
+    if (/right/.test(align))
+      this.element.classList.add("ol-control-right")
+    else
+      this.element.classList.remove("ol-control-right")
+  }
+  /**
+   * Set the map instance the control associated with.
+   * @param {ol.Map} map The map instance.
+   */
+  setMap(map) {
+    if (this._listener) {
+      for (var i in this._listener) {
+        ol.Observable.unByKey(this._listener[i])
       }
-    }.bind(this));
-    this._listener.view = map.getView().on('propertychange', this.setView.bind(this));
-    this.setView();
-  }
-};
-/** Calculate the extent of the map and draw it on the overview
-*/
-ol.control.Overview.prototype.calcExtent_ = function(extent){
-  var map = this.getMap();
-  if (!map) return;
-  var source = this.extentLayer.getSource();
-  source.clear();
-  var f = new ol.Feature();
-  var size = map.getSize();
-  var resolution = map.getView().getResolution();
-  var rotation = map.getView().getRotation();
-  var center = map.getView().getCenter();
-  if (!resolution) return;
-  var dx = resolution * size[0] / 2;
-  var dy = resolution * size[1] / 2;
-  var res2 = this.oview_.getResolution();
-  if (dx/res2>5 || dy/res2>5) {
-    var cos = Math.cos(rotation);
-    var sin = Math.sin(rotation);
-    var i, x, y;
-    extent=[[-dx,-dy],[-dx,dy],[dx,dy],[dx,-dy]];
-    for (i = 0; i < 4; ++i) {
-      x = extent[i][0];
-      y = extent[i][1];
-      extent[i][0] = center[0] + x * cos - y * sin;
-      extent[i][1] = center[1] + x * sin + y * cos;
     }
-    f.setGeometry (new ol.geom.Polygon( [ extent ]));
-  } else {
-    f.setGeometry (new ol.geom.Point( center ));
-  }
-  source.addFeature(f);
-};
-/**
-*	@private
-*/
-ol.control.Overview.prototype.setView = function(e){
-  if (!e) {
-    // refresh all
-    this.setView({key:'rotation'});
-    this.setView({key:'resolution'});
-    this.setView({key:'center'});
-    return;
-  }
-  // Set the view params
-  switch (e.key){
-    case 'rotation': {
-      if (this.rotation) this.oview_.setRotation(this.getMap().getView().getRotation());
-      else if (this.oview_.getRotation()) this.oview_.setRotation(0);
-      break;
+    this._listener = {}
+    ol.control.Control.prototype.setMap.call(this, map)
+    if (map) {
+      this._listener.map = map.on('change:view', function () {
+        if (this._listener.view)
+          ol.Observable.unByKey(this._listener.view)
+        if (map.getView()) {
+          this._listener.view = map.getView().on('propertychange', this.setView.bind(this))
+          this.setView()
+        }
+      }.bind(this))
+      this._listener.view = map.getView().on('propertychange', this.setView.bind(this))
+      this.setView()
     }
-    case 'center': {
-      var mapExtent = this.getMap().getView().calculateExtent(this.getMap().getSize());
-      var extent = this.oview_.calculateExtent(this.ovmap_.getSize());
-      if (mapExtent[0]<extent[0] || mapExtent[1]<extent[1] 
-      || mapExtent[2]>extent[2] || mapExtent[3]>extent[3]){
-        this.oview_.setCenter(this.getMap().getView().getCenter()); 
+  }
+  /** Calculate the extent of the map and draw it on the overview
+  */
+  calcExtent_(extent) {
+    var map = this.getMap()
+    if (!map)
+      return
+    var source = this.extentLayer.getSource()
+    source.clear()
+    var f = new ol.Feature()
+    var size = map.getSize()
+    var resolution = map.getView().getResolution()
+    var rotation = map.getView().getRotation()
+    var center = map.getView().getCenter()
+    if (!resolution)
+      return
+    var dx = resolution * size[0] / 2
+    var dy = resolution * size[1] / 2
+    var res2 = this.oview_.getResolution()
+    if (dx / res2 > 5 || dy / res2 > 5) {
+      var cos = Math.cos(rotation)
+      var sin = Math.sin(rotation)
+      var i, x, y
+      extent = [[-dx, -dy], [-dx, dy], [dx, dy], [dx, -dy]]
+      for (i = 0; i < 4; ++i) {
+        x = extent[i][0]
+        y = extent[i][1]
+        extent[i][0] = center[0] + x * cos - y * sin
+        extent[i][1] = center[1] + x * sin + y * cos
       }
-      break;
-    }	
-    case 'resolution': {
-      //var z = Math.round(this.getMap().getView().getZoom()/2)*2-4;
-      var z = Math.round(this.oview_.getZoomForResolution(this.getMap().getView().getResolution())/2)*2-4;
-      z = Math.min ( this.maxZoom, Math.max(this.minZoom, z) );
-      this.oview_.setZoom(z);
-      break;
+      f.setGeometry(new ol.geom.Polygon([extent]))
+    } else {
+      f.setGeometry(new ol.geom.Point(center))
     }
-    default: break;
+    source.addFeature(f)
   }
-  this.calcExtent_();
-};
+  /**
+  *	@private
+  */
+  setView(e) {
+    if (!e) {
+      // refresh all
+      this.setView({ key: 'rotation' })
+      this.setView({ key: 'resolution' })
+      this.setView({ key: 'center' })
+      return
+    }
+    // Set the view params
+    switch (e.key) {
+      case 'rotation': {
+        if (this.rotation)
+          this.oview_.setRotation(this.getMap().getView().getRotation())
+        else if (this.oview_.getRotation())
+          this.oview_.setRotation(0)
+        break
+      }
+      case 'center': {
+        var mapExtent = this.getMap().getView().calculateExtent(this.getMap().getSize())
+        var extent = this.oview_.calculateExtent(this.ovmap_.getSize())
+        if (mapExtent[0] < extent[0] || mapExtent[1] < extent[1]
+          || mapExtent[2] > extent[2] || mapExtent[3] > extent[3]) {
+          this.oview_.setCenter(this.getMap().getView().getCenter())
+        }
+        break
+      }
+      case 'resolution': {
+        //var z = Math.round(this.getMap().getView().getZoom()/2)*2-4;
+        var z = Math.round(this.oview_.getZoomForResolution(this.getMap().getView().getResolution()) / 2) * 2 - 4
+        z = Math.min(this.maxZoom, Math.max(this.minZoom, z))
+        this.oview_.setZoom(z)
+        break
+      }
+      default: break
+    }
+    this.calcExtent_()
+  }
+}
 
 /*	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -11002,6 +11026,7 @@ ol.control.Permalink = class olcontrolPermalink extends ol.control.Control {
     })
     var self = this
     var button = document.createElement('button')
+    ol.ext.element.create('I', { parent: button })
     this.replaceState_ = (options.urlReplace !== false)
     this.fixed_ = options.fixed || 6
     this.hash_ = options.anchor ? "#" : "?"
@@ -12497,15 +12522,16 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
     } else {
       element.className = ((options.className || 'ol-profil') + ' ol-unselectable ol-control ol-collapsed').trim()
       this.button = document.createElement('button')
-      this.button.title = options.title || 'Profile',
-        this.button.setAttribute('type', 'button')
+      this.button.title = options.title || 'Profile';
+      this.button.setAttribute('type', 'button')
       var click_touchstart_function = function (e) {
         self.toggle()
         e.preventDefault()
       }
-      this.button.addEventListener("click", click_touchstart_function)
-      this.button.addEventListener("touchstart", click_touchstart_function)
+      this.button.addEventListener('click', click_touchstart_function)
+      this.button.addEventListener('touchstart', click_touchstart_function)
       element.appendChild(this.button)
+      ol.ext.element.create('I', { parent: this.button })
     }
     // Drawing style
     if (options.style instanceof ol.style.Style) {
@@ -15818,371 +15844,391 @@ ol.control.Storymap.prototype.setStory = function (html) {
  *  @param {number} options.position position propertie of the swipe [0,1], default 0.5
  *  @param {string} options.orientation orientation propertie (vertical|horizontal), default vertical
  */
-ol.control.Swipe = function(options) {
-  options = options || {};
-  var button = document.createElement('button');
-  var element = document.createElement('div');
-  element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
-  element.appendChild(button);
-  element.addEventListener("mousedown", this.move.bind(this));
-  element.addEventListener("touchstart", this.move.bind(this));
-  ol.control.Control.call(this, {
-    element: element
-  });
-  // An array of listener on layer postcompose
-  this.precomposeRight_ = this.precomposeRight.bind(this);
-  this.precomposeLeft_ = this.precomposeLeft.bind(this);
-  this.postcompose_ = this.postcompose.bind(this);
-  this.layers = [];
-  if (options.layers) this.addLayer(options.layers, false);
-  if (options.rightLayers) this.addLayer(options.rightLayers, true);
-  this.on('propertychange', function(e) {
-    if (this.getMap()) {
-      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-    }
-    if (this.get('orientation') === "horizontal") {
-      this.element.style.top = this.get('position')*100+"%";
-      this.element.style.left = "";
-    } else {
-      if (this.get('orientation') !== "vertical") this.set('orientation', "vertical");
-      this.element.style.left = this.get('position')*100+"%";
-      this.element.style.top = "";
-    }
-    if (e.key==='orientation') {
-      this.element.classList.remove("horizontal", "vertical");
-      this.element.classList.add(this.get('orientation'));
-    }
-    // Force VectorImage to refresh
-    if (!this.isMoving) {
-      this.layers.forEach(function(l) {
-        if (l.layer.getImageRatio) l.layer.changed();
-      })
-    }
-  }.bind(this));
-  this.set('position', options.position || 0.5);
-  this.set('orientation', options.orientation || 'vertical');
-};
-ol.ext.inherits(ol.control.Swipe, ol.control.Control);
-/**
- * Set the map instance the control associated with.
- * @param {_ol_Map_} map The map instance.
- */
-ol.control.Swipe.prototype.setMap = function(map) {
-  var i;
-  var l;
-  if (this.getMap()) {
-    for (i=0; i<this.layers.length; i++) {
-      l = this.layers[i];
-      if (l.right) l.layer.un(['precompose','prerender'], this.precomposeRight_);
-      else l.layer.un(['precompose','prerender'], this.precomposeLeft_);
-      l.layer.un(['postcompose','postrender'], this.postcompose_);
-    }
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
-  ol.control.Control.prototype.setMap.call(this, map);
-  if (map) {
-    this._listener = [];
-    for (i=0; i<this.layers.length; i++) {
-      l = this.layers[i];
-      if (l.right) l.layer.on(['precompose','prerender'], this.precomposeRight_);
-      else l.layer.on(['precompose','prerender'], this.precomposeLeft_);
-      l.layer.on(['postcompose','postrender'], this.postcompose_);
-    }
-    try { map.renderSync(); } catch(e) { /* ok */ }
-  }
-};
-/** @private
-*/
-ol.control.Swipe.prototype.isLayer_ = function(layer){
-  for (var k=0; k<this.layers.length; k++) {
-    if (this.layers[k].layer === layer) return k;
-  }
-  return -1;
-};
-/** Add a layer to clip
- *	@param {ol.layer|Array<ol.layer>} layer to clip
- *	@param {bool} add layer in the right part of the map, default left.
- */
-ol.control.Swipe.prototype.addLayer = function(layers, right) {
-  if (!(layers instanceof Array)) layers = [layers];
-  for (var i=0; i<layers.length; i++) {
-    var l = layers[i];
-    if (this.isLayer_(l) < 0) {
-      this.layers.push({ layer:l, right:right });
+ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    var element = document.createElement('div');
+    super({
+      element: element
+    });
+    element.className = (options.className || 'ol-swipe') + ' ol-unselectable ol-control';
+    var button = document.createElement('button');
+    element.appendChild(button);
+    element.addEventListener('mousedown', this.move.bind(this));
+    element.addEventListener('touchstart', this.move.bind(this));
+    // An array of listener on layer postcompose
+    this.precomposeRight_ = this.precomposeRight.bind(this);
+    this.precomposeLeft_ = this.precomposeLeft.bind(this);
+    this.postcompose_ = this.postcompose.bind(this);
+    this.layers = [];
+    if (options.layers)
+      this.addLayer(options.layers, false);
+    if (options.rightLayers)
+      this.addLayer(options.rightLayers, true);
+    this.on('propertychange', function (e) {
       if (this.getMap()) {
-        if (right) l.on(['precompose','prerender'], this.precomposeRight_);
-        else l.on(['precompose','prerender'], this.precomposeLeft_);
-        l.on(['postcompose','postrender'], this.postcompose_);
-        try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+        try { this.getMap().renderSync(); } catch (e) { /* ok */ }
       }
-    }
-  }
-};
-/** Remove all layers
- */
-ol.control.Swipe.prototype.removeLayers = function() {
-  var layers = [];
-  this.layers.forEach(function(l) { layers.push(l.layer); });
-  this.removeLayer(layers)
-};
-/** Remove a layer to clip
- *	@param {ol.layer|Array<ol.layer>} layer to clip
- */
-ol.control.Swipe.prototype.removeLayer = function(layers) {
-  if (!(layers instanceof Array)) layers = [layers];
-  for (var i=0; i<layers.length; i++) {
-    var k = this.isLayer_(layers[i]);
-    if (k >=0 && this.getMap()) {
-      if (this.layers[k].right) layers[i].un(['precompose','prerender'], this.precomposeRight_);
-      else layers[i].un(['precompose','prerender'], this.precomposeLeft_);
-      layers[i].un(['postcompose','postrender'], this.postcompose_);
-      this.layers.splice(k,1);
-    }
-  }
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
-};
-/** Get visible rectangle
- * @returns {ol.extent}
- */
-ol.control.Swipe.prototype.getRectangle = function() {
-  var s;
-  if (this.get('orientation') === 'vertical') {
-    s = this.getMap().getSize();
-    return [ 0, 0, s[0]*this.get('position'), s[1]];
-  } else {
-    s = this.getMap().getSize();
-    return [ 0, 0, s[0], s[1]*this.get('position')];
-  }
-};
-/** @private
- */
-ol.control.Swipe.prototype.move = function(e) {
-  var self = this;
-  var l;
-  if (!this._movefn) this._movefn = this.move.bind(this);
-  switch (e.type) {
-    case 'touchcancel':
-    case 'touchend':
-    case 'mouseup': {
-      self.isMoving = false;
-      ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
-        .forEach(function(eventName) {
-          document.removeEventListener(eventName, self._movefn);
-        });
+      if (this.get('orientation') === "horizontal") {
+        this.element.style.top = this.get('position') * 100 + "%";
+        this.element.style.left = "";
+      } else {
+        if (this.get('orientation') !== "vertical")
+          this.set('orientation', "vertical");
+        this.element.style.left = this.get('position') * 100 + "%";
+        this.element.style.top = "";
+      }
+      if (e.key === 'orientation') {
+        this.element.classList.remove("horizontal", "vertical");
+        this.element.classList.add(this.get('orientation'));
+      }
       // Force VectorImage to refresh
-      this.layers.forEach(function(l) {
-        if (l.layer.getImageRatio) l.layer.changed();
-      })
-      break;
-    }
-    case 'mousedown':
-    case 'touchstart': {
-      self.isMoving = true;
-      ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
-        .forEach(function(eventName) {
-          document.addEventListener(eventName, self._movefn);
+      if (!this.isMoving) {
+        this.layers.forEach(function (l) {
+          if (l.layer.getImageRatio)
+            l.layer.changed();
         });
+      }
+    }.bind(this));
+    this.set('position', options.position || 0.5);
+    this.set('orientation', options.orientation || 'vertical');
+  }
+  /**
+   * Set the map instance the control associated with.
+   * @param {_ol_Map_} map The map instance.
+   */
+  setMap(map) {
+    var i;
+    var l;
+    if (this.getMap()) {
+      for (i = 0; i < this.layers.length; i++) {
+        l = this.layers[i];
+        if (l.right)
+          l.layer.un(['precompose', 'prerender'], this.precomposeRight_);
+        else
+          l.layer.un(['precompose', 'prerender'], this.precomposeLeft_);
+        l.layer.un(['postcompose', 'postrender'], this.postcompose_);
+      }
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
     }
-    // fallthrough
-    case 'mousemove':
-    case 'touchmove': {
-      if (self.isMoving) {
-        if (self.get('orientation') === 'vertical') {
-          var pageX = e.pageX
-            || (e.touches && e.touches.length && e.touches[0].pageX)
-            || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
-          if (!pageX) break;
-          pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
-            window.pageXOffset - document.documentElement.clientLeft;
-          l = self.getMap().getSize()[0];
-          var w = l - Math.min(Math.max(0, l-pageX), l);
-          l = w/l;
-          self.set('position', l);
-          self.dispatchEvent({ type: 'moving', size: [w, self.getMap().getSize()[1]], position: [l,0] });
-        } else {
-          var pageY = e.pageY
-            || (e.touches && e.touches.length && e.touches[0].pageY)
-            || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
-          if (!pageY) break;
-          pageY -= self.getMap().getTargetElement().getBoundingClientRect().top +
-            window.pageYOffset - document.documentElement.clientTop;
-          l = self.getMap().getSize()[1];
-          var h = l - Math.min(Math.max(0, l-pageY), l);
-          l = h/l;
-          self.set('position', l);
-          self.dispatchEvent({ type: 'moving', size: [self.getMap().getSize()[0],h], position: [0,l] });
+    super.setMap(map);
+    if (map) {
+      this._listener = [];
+      for (i = 0; i < this.layers.length; i++) {
+        l = this.layers[i];
+        if (l.right)
+          l.layer.on(['precompose', 'prerender'], this.precomposeRight_);
+        else
+          l.layer.on(['precompose', 'prerender'], this.precomposeLeft_);
+        l.layer.on(['postcompose', 'postrender'], this.postcompose_);
+      }
+      try { map.renderSync(); } catch (e) { /* ok */ }
+    }
+  }
+  /** @private
+  */
+  isLayer_(layer) {
+    for (var k = 0; k < this.layers.length; k++) {
+      if (this.layers[k].layer === layer)
+        return k;
+    }
+    return -1;
+  }
+  /** Add a layer to clip
+   *	@param {ol.layer|Array<ol.layer>} layer to clip
+   *	@param {bool} add layer in the right part of the map, default left.
+   */
+  addLayer(layers, right) {
+    if (!(layers instanceof Array))
+      layers = [layers];
+    for (var i = 0; i < layers.length; i++) {
+      var l = layers[i];
+      if (this.isLayer_(l) < 0) {
+        this.layers.push({ layer: l, right: right });
+        if (this.getMap()) {
+          if (right)
+            l.on(['precompose', 'prerender'], this.precomposeRight_);
+          else
+            l.on(['precompose', 'prerender'], this.precomposeLeft_);
+          l.on(['postcompose', 'postrender'], this.postcompose_);
+          try { this.getMap().renderSync(); } catch (e) { /* ok */ }
         }
       }
-      break;
     }
-    default: break;
   }
-};
-/** @private
- */
-ol.control.Swipe.prototype._transformPt = function(e, pt) {
-  var tr = e.inversePixelTransform;
-  var x = pt[0];
-  var y = pt[1];
-  pt[0] = tr[0] * x + tr[2] * y + tr[4];
-  pt[1] = tr[1] * x + tr[3] * y + tr[5];
-  return pt;
-};
-/** @private
- */
-ol.control.Swipe.prototype._drawRect = function(e, pts) {
-  var tr = e.inversePixelTransform;
-  if (tr) {
-    var r = [
-      [pts[0][0], pts[0][1]],
-      [pts[0][0], pts[1][1]],
-      [pts[1][0], pts[1][1]],
-      [pts[1][0], pts[0][1]],
-      [pts[0][0], pts[0][1]]
-    ];
-    e.context.save()
-    // Rotate VectorImages 
-    if (e.target.getImageRatio) {
-      var rot = -Math.atan2(e.frameState.pixelToCoordinateTransform[1], e.frameState.pixelToCoordinateTransform[0]);
-      e.context.translate(e.frameState.size[0]/2, e.frameState.size[1]/2)
-      e.context.rotate(rot)
-      e.context.translate(-e.frameState.size[0]/2, -e.frameState.size[1]/2)
-    }
-    r.forEach(function (pt, i) {
-      pt = [
-        (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
-        (-pt[0]*tr[2] + pt[1]*tr[3] + tr[5])
-      ];
-      if (!i) {
-        e.context.moveTo(pt[0], pt[1]);
-      } else {
-        e.context.lineTo(pt[0], pt[1]);
+  /** Remove all layers
+   */
+  removeLayers() {
+    var layers = [];
+    this.layers.forEach(function (l) { layers.push(l.layer); });
+    this.removeLayer(layers);
+  }
+  /** Remove a layer to clip
+   *	@param {ol.layer|Array<ol.layer>} layer to clip
+   */
+  removeLayer(layers) {
+    if (!(layers instanceof Array))
+      layers = [layers];
+    for (var i = 0; i < layers.length; i++) {
+      var k = this.isLayer_(layers[i]);
+      if (k >= 0 && this.getMap()) {
+        if (this.layers[k].right)
+          layers[i].un(['precompose', 'prerender'], this.precomposeRight_);
+        else
+          layers[i].un(['precompose', 'prerender'], this.precomposeLeft_);
+        layers[i].un(['postcompose', 'postrender'], this.postcompose_);
+        this.layers.splice(k, 1);
       }
-    });
-    e.context.restore();
-  } else {
-    var ratio = e.frameState.pixelRatio;
-    e.context.rect(pts[0][0]*ratio,pts[0][1]*ratio,pts[1][0]*ratio,pts[1][1]*ratio);
+    }
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
   }
-};
-/** @private
-*/
-ol.control.Swipe.prototype.precomposeLeft = function(e) {
-  var ctx = e.context;
-  if (ctx instanceof WebGLRenderingContext) {
-    if (e.type === 'prerender') {
-      // Clear
-      ctx.clearColor(0, 0, 0, 0);
-      ctx.clear(ctx.COLOR_BUFFER_BIT);
-      // Clip
-      ctx.enable(ctx.SCISSOR_TEST);
-      var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
-      // get render coordinates and dimensions given CSS coordinates
-      var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
-      var topRight = this._transformPt(e, [mapSize[0], 0]);
-      var fullWidth = topRight[0] - bottomLeft[0];
-      var fullHeight = topRight[1] - bottomLeft[1];
-      var width, height;
-      if (this.get('orientation') === "vertical") {
-        width = Math.round(fullWidth * this.get('position'));
-        height = fullHeight;
-      } else {
-        width = fullWidth;
-        height = Math.round((fullHeight * this.get('position')));
-        bottomLeft[1] += fullHeight - height;
+  /** Get visible rectangle
+   * @returns {ol.extent}
+   */
+  getRectangle() {
+    var s;
+    if (this.get('orientation') === 'vertical') {
+      s = this.getMap().getSize();
+      return [0, 0, s[0] * this.get('position'), s[1]];
+    } else {
+      s = this.getMap().getSize();
+      return [0, 0, s[0], s[1] * this.get('position')];
+    }
+  }
+  /** @private
+   */
+  move(e) {
+    var self = this;
+    var l;
+    if (!this._movefn)
+      this._movefn = this.move.bind(this);
+    switch (e.type) {
+      case 'touchcancel':
+      case 'touchend':
+      case 'mouseup': {
+        self.isMoving = false;
+        ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
+          .forEach(function (eventName) {
+            document.removeEventListener(eventName, self._movefn);
+          });
+        // Force VectorImage to refresh
+        this.layers.forEach(function (l) {
+          if (l.layer.getImageRatio)
+            l.layer.changed();
+        });
+        break;
       }
-      ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
-    }
-  } else {
-    var size = e.frameState.size;
-    ctx.save();
-    ctx.beginPath();
-    var pts = [[0,0],[size[0],size[1]]];
-    if (this.get('orientation') === "vertical") {
-      pts[1] = [
-        size[0]*.5 + this.getMap().getSize()[0] * (this.get('position') - .5), 
-        size[1]
-      ];
-    } else {
-      pts[1] = [
-        size[0],
-        size[1]*.5 + this.getMap().getSize()[1] * (this.get('position') - .5)
-      ];
-    }
-    this._drawRect(e, pts);
-    ctx.clip();
-  }
-};
-/** @private
-*/
-ol.control.Swipe.prototype.precomposeRight = function(e) {
-  var ctx = e.context;
-  if (ctx instanceof WebGLRenderingContext) {
-    if (e.type === 'prerender') {
-      // Clear
-      ctx.clearColor(0, 0, 0, 0);
-      ctx.clear(ctx.COLOR_BUFFER_BIT);
-      // Clip
-      ctx.enable(ctx.SCISSOR_TEST);
-      var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
-      // get render coordinates and dimensions given CSS coordinates
-      var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
-      var topRight = this._transformPt(e, [mapSize[0], 0]);
-      var fullWidth = topRight[0] - bottomLeft[0];
-      var fullHeight = topRight[1] - bottomLeft[1];
-      var width, height;
-      if (this.get('orientation') === "vertical") {
-        height = fullHeight;
-        width = Math.round(fullWidth * (1-this.get('position')));
-        bottomLeft[0] += fullWidth - width;
-      } else {
-        width = fullWidth;
-        height = Math.round(fullHeight * (1-this.get('position')));
+      case 'mousedown':
+      case 'touchstart': {
+        self.isMoving = true;
+        ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
+          .forEach(function (eventName) {
+            document.addEventListener(eventName, self._movefn);
+          });
       }
-      ctx.scissor(bottomLeft[0], bottomLeft[1], width, height); 
+      // fallthrough
+      case 'mousemove':
+      case 'touchmove': {
+        if (self.isMoving) {
+          if (self.get('orientation') === 'vertical') {
+            var pageX = e.pageX
+              || (e.touches && e.touches.length && e.touches[0].pageX)
+              || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
+            if (!pageX)
+              break;
+            pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
+              window.pageXOffset - document.documentElement.clientLeft;
+            l = self.getMap().getSize()[0];
+            var w = l - Math.min(Math.max(0, l - pageX), l);
+            l = w / l;
+            self.set('position', l);
+            self.dispatchEvent({ type: 'moving', size: [w, self.getMap().getSize()[1]], position: [l, 0] });
+          } else {
+            var pageY = e.pageY
+              || (e.touches && e.touches.length && e.touches[0].pageY)
+              || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
+            if (!pageY)
+              break;
+            pageY -= self.getMap().getTargetElement().getBoundingClientRect().top +
+              window.pageYOffset - document.documentElement.clientTop;
+            l = self.getMap().getSize()[1];
+            var h = l - Math.min(Math.max(0, l - pageY), l);
+            l = h / l;
+            self.set('position', l);
+            self.dispatchEvent({ type: 'moving', size: [self.getMap().getSize()[0], h], position: [0, l] });
+          }
+        }
+        break;
+      }
+      default: break;
     }
-  } else {
-    var size = e.frameState.size;
-    ctx.save();
-    ctx.beginPath();
-    var pts = [[0,0],[size[0],size[1]]];
-    if (this.get('orientation') === "vertical") {
-      pts[0] = [
-        size[0]*.5 + this.getMap().getSize()[0] * (this.get('position') - .5), 
-        0
-      ];
-    } else {
-      pts[0] = [
-        0,
-        size[1]*.5 + this.getMap().getSize()[1] * (this.get('position') - .5)
-      ]
-    }
-    this._drawRect(e, pts);
-    ctx.clip();
   }
-};
-/** @private
-*/
-ol.control.Swipe.prototype.postcompose = function(e) {
-  if (e.context instanceof WebGLRenderingContext) {
-    if (e.type === 'postrender') {
-      var gl = e.context;
-      gl.disable(gl.SCISSOR_TEST);
-    }
-  } else {
-    // restore context when decluttering is done (ol>=6)
-    // https://github.com/openlayers/openlayers/issues/10096
-    if (e.target.getClassName && e.target.getClassName()!=='ol-layer' && e.target.get('declutter')) {
-      setTimeout(function () {
-        e.context.restore();
-      }, 0);
-    } else {
+  /** @private
+   */
+  _transformPt(e, pt) {
+    var tr = e.inversePixelTransform;
+    var x = pt[0];
+    var y = pt[1];
+    pt[0] = tr[0] * x + tr[2] * y + tr[4];
+    pt[1] = tr[1] * x + tr[3] * y + tr[5];
+    return pt;
+  }
+  /** @private
+   */
+  _drawRect(e, pts) {
+    var tr = e.inversePixelTransform;
+    if (tr) {
+      var r = [
+        [pts[0][0], pts[0][1]],
+        [pts[0][0], pts[1][1]],
+        [pts[1][0], pts[1][1]],
+        [pts[1][0], pts[0][1]],
+        [pts[0][0], pts[0][1]]
+      ];
+      e.context.save();
+      // Rotate VectorImages 
+      if (e.target.getImageRatio) {
+        var rot = -Math.atan2(e.frameState.pixelToCoordinateTransform[1], e.frameState.pixelToCoordinateTransform[0]);
+        e.context.translate(e.frameState.size[0] / 2, e.frameState.size[1] / 2);
+        e.context.rotate(rot);
+        e.context.translate(-e.frameState.size[0] / 2, -e.frameState.size[1] / 2);
+      }
+      r.forEach(function (pt, i) {
+        pt = [
+          (pt[0] * tr[0] - pt[1] * tr[1] + tr[4]),
+          (-pt[0] * tr[2] + pt[1] * tr[3] + tr[5])
+        ];
+        if (!i) {
+          e.context.moveTo(pt[0], pt[1]);
+        } else {
+          e.context.lineTo(pt[0], pt[1]);
+        }
+      });
       e.context.restore();
+    } else {
+      var ratio = e.frameState.pixelRatio;
+      e.context.rect(pts[0][0] * ratio, pts[0][1] * ratio, pts[1][0] * ratio, pts[1][1] * ratio);
     }
   }
-};
+  /** @private
+  */
+  precomposeLeft(e) {
+    var ctx = e.context;
+    if (ctx instanceof WebGLRenderingContext) {
+      if (e.type === 'prerender') {
+        // Clear
+        ctx.clearColor(0, 0, 0, 0);
+        ctx.clear(ctx.COLOR_BUFFER_BIT);
+        // Clip
+        ctx.enable(ctx.SCISSOR_TEST);
+        var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
+        // get render coordinates and dimensions given CSS coordinates
+        var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
+        var topRight = this._transformPt(e, [mapSize[0], 0]);
+        var fullWidth = topRight[0] - bottomLeft[0];
+        var fullHeight = topRight[1] - bottomLeft[1];
+        var width, height;
+        if (this.get('orientation') === "vertical") {
+          width = Math.round(fullWidth * this.get('position'));
+          height = fullHeight;
+        } else {
+          width = fullWidth;
+          height = Math.round((fullHeight * this.get('position')));
+          bottomLeft[1] += fullHeight - height;
+        }
+        ctx.scissor(bottomLeft[0], bottomLeft[1], width, height);
+      }
+    } else {
+      var size = e.frameState.size;
+      ctx.save();
+      ctx.beginPath();
+      var pts = [[0, 0], [size[0], size[1]]];
+      if (this.get('orientation') === "vertical") {
+        pts[1] = [
+          size[0] * .5 + this.getMap().getSize()[0] * (this.get('position') - .5),
+          size[1]
+        ];
+      } else {
+        pts[1] = [
+          size[0],
+          size[1] * .5 + this.getMap().getSize()[1] * (this.get('position') - .5)
+        ];
+      }
+      this._drawRect(e, pts);
+      ctx.clip();
+    }
+  }
+  /** @private
+  */
+  precomposeRight(e) {
+    var ctx = e.context;
+    if (ctx instanceof WebGLRenderingContext) {
+      if (e.type === 'prerender') {
+        // Clear
+        ctx.clearColor(0, 0, 0, 0);
+        ctx.clear(ctx.COLOR_BUFFER_BIT);
+        // Clip
+        ctx.enable(ctx.SCISSOR_TEST);
+        var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
+        // get render coordinates and dimensions given CSS coordinates
+        var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
+        var topRight = this._transformPt(e, [mapSize[0], 0]);
+        var fullWidth = topRight[0] - bottomLeft[0];
+        var fullHeight = topRight[1] - bottomLeft[1];
+        var width, height;
+        if (this.get('orientation') === "vertical") {
+          height = fullHeight;
+          width = Math.round(fullWidth * (1 - this.get('position')));
+          bottomLeft[0] += fullWidth - width;
+        } else {
+          width = fullWidth;
+          height = Math.round(fullHeight * (1 - this.get('position')));
+        }
+        ctx.scissor(bottomLeft[0], bottomLeft[1], width, height);
+      }
+    } else {
+      var size = e.frameState.size;
+      ctx.save();
+      ctx.beginPath();
+      var pts = [[0, 0], [size[0], size[1]]];
+      if (this.get('orientation') === "vertical") {
+        pts[0] = [
+          size[0] * .5 + this.getMap().getSize()[0] * (this.get('position') - .5),
+          0
+        ];
+      } else {
+        pts[0] = [
+          0,
+          size[1] * .5 + this.getMap().getSize()[1] * (this.get('position') - .5)
+        ];
+      }
+      this._drawRect(e, pts);
+      ctx.clip();
+    }
+  }
+  /** @private
+  */
+  postcompose(e) {
+    if (e.context instanceof WebGLRenderingContext) {
+      if (e.type === 'postrender') {
+        var gl = e.context;
+        gl.disable(gl.SCISSOR_TEST);
+      }
+    } else {
+      // restore context when decluttering is done (ol>=6)
+      // https://github.com/openlayers/openlayers/issues/10096
+      if (e.target.getClassName && e.target.getClassName() !== 'ol-layer' && e.target.get('declutter')) {
+        setTimeout(function () {
+          e.context.restore();
+        }, 0);
+      } else {
+        e.context.restore();
+      }
+    }
+  }
+}
 
 /*
   Copyright (c) 2015 Jean-Marc VIGLINO,

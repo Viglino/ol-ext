@@ -766,69 +766,70 @@ body > .ol-ext-dialog > form {
   max-width:100%;
 }
 
-.ol-control.ol-bookmark 
-{	top: 0.5em;
-	left: 3em;
+.ol-control.ol-bookmark {
+  top: 0.5em;
+  left: 3em;
+  background-color: rgba(255,255,255,.5);
 }
-.ol-control.ol-bookmark button
-{	position: relative;
+.ol-control.ol-bookmark button {
+  position: relative;
 }
-.ol-control.ol-bookmark > button::before
-{	content: "";
-	position: absolute;
-	border-width: 10px 5px 4px;
-	border-style: solid;
-	border-color: #fff;
-	border-bottom-color: transparent;
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
-	height: 0;
-}
-
-.ol-control.ol-bookmark > div
-{	display: none;
-	min-width: 5em;
-}
-.ol-control.ol-bookmark input
-{	font-size: 0.9em;
-	margin: 0.1em 0 ;
-	padding: 0 0.5em;
-}
-.ol-control.ol-bookmark ul
-{	margin:0;
-	padding: 0;
-	list-style: none;
-	min-width: 10em;
-}
-.ol-control.ol-bookmark li
-{	color: rgba(0,60,136,0.8);
-	font-size: 0.9em;
-	padding: 0 0.2em 0 0.5em;
-	cursor: default;
-	clear:both;
+.ol-control.ol-bookmark > button::before {
+  content: "";
+  position: absolute;
+  border-width: 10px 5px 4px;
+  border-style: solid;
+  border-color: currentColor;
+  border-bottom-color: transparent;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  height: 0;
 }
 
-.ol-control.ol-bookmark li:hover
-{	background-color: rgba(0,60,136,.5);
-	color: #fff;
+.ol-control.ol-bookmark > div {
+  display: none;
+  min-width: 5em;
+}
+.ol-control.ol-bookmark input {
+  font-size: 0.9em;
+  margin: 0.1em 0 ;
+  padding: 0 0.5em;
+}
+.ol-control.ol-bookmark ul {
+  margin:0;
+  padding: 0;
+  list-style: none;
+  min-width: 10em;
+}
+.ol-control.ol-bookmark li {
+  color: rgba(0,60,136,0.8);
+  font-size: 0.9em;
+  padding: 0 0.2em 0 0.5em;
+  cursor: default;
+  clear:both;
 }
 
-.ol-control.ol-bookmark > div button
-{	width: 1em;
-	height: 0.8em;
-	float: right;
-	background-color: transparent;
-	cursor: pointer;
-	border-radius: 0;
+.ol-control.ol-bookmark li:hover {
+  background-color: rgba(0,60,136,.5);
+  color: #fff;
 }
-.ol-control.ol-bookmark > div button:before
-{	content: "\2A2F";
-    color: #936;
-	font-size: 1.2em;
-	line-height: 1em;
-	border-radius: 0;
+
+.ol-control.ol-bookmark > div button {
+  width: 1em;
+  height: 0.8em;
+  float: right;
+  background-color: transparent;
+  cursor: pointer;
+  border-radius: 0;
+}
+.ol-control.ol-bookmark > div button:before {
+  content: "\2A2F";
+  color: #936;
+  font-size: 1.2em;
+  line-height: 1em;
+  border-radius: 0;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -837,12 +838,12 @@ body > .ol-ext-dialog > form {
 }
 
 .ol-bookmark ul li button,
-.ol-bookmark input
-{	display: none;
+.ol-bookmark input {
+  display: none;
 }
 .ol-bookmark.ol-editable ul li button,
-.ol-bookmark.ol-editable input
-{	display: block;
+.ol-bookmark.ol-editable input {
+  display: block;
 }
 
 
@@ -2686,19 +2687,50 @@ ul.ol-legend li div {
 	top:2px;
 }
 
-.ol-permalink
-{	position: absolute;
-	top:0.5em;
-	right: 2.5em;
+.ol-permalink {
+  position: absolute;
+  top:0.5em;
+  right: 2.5em;
 }
-.ol-touch .ol-permalink
-{	right: 3em;
+.ol-touch .ol-permalink {
+  right: 3em;
 }
 
-.ol-permalink button
-{	background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AcFBjYE1ZK03gAAAUlJREFUOMuVk71KA1EQhc/NaiP+gCRpFHwGBSFlCrFVfAsbwSJCBMv06QIGJOBziI3EYAgkjU8gIloIAasIn4WzMqx34zrN7J6de+6ZmbNSgQDSfADcATPgHbgCyvonSYv8KEzWdofegH3gwmG9Ikq67sAESFzNueHThTyiEIKAmr2OJCUhhO30Aou+5aUQU2Ik65K2JC1KegohPGfUBkmvksqShnntHEcGOs60NXHfjmKz6czZTsNqbhzW+muwY2ATWAWawCOwBgxcTfvnvCPxKx4Cy5bPgBWgauRpdL2ImNlGhp3MabETm8mh94nDk4yCNE5/KTGg7xxbyhYAG0AN2AEqURIDZ0a0Fxn+LXAPXDpzRqMk6cOedz1ubdYl1b6NHgZRJe72nuu/CdSBl+yKi/zZlTnbaeXOJIesClwDU+ATeEhtX5TkCwAWUyAsHH1QAAAAAElFTkSuQmCC');
-	background-position: center;
-	background-repeat: no-repeat;
+.ol-permalink button i {
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  display: block;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+}
+.ol-permalink button i:before {
+  content: '\2197';
+  position: absolute;
+  border: 1px solid currentColor;
+  left: 0;
+  top: 0;
+  width: 0.3em;
+  height: 1em;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  border-width: 1px 0 0 1px;
+  padding: 0 0.2em;
+}
+.ol-permalink button i:after {
+  content: '';
+  position: absolute;
+  border: 1px solid currentColor;
+  right: 0;
+  bottom: 0;
+  width: 1em;
+  height: 0.3em;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  border-width: 0 1px 1px 0;
+  padding: 0.2em;
 }
 .ol-control.ol-print {
   top:.5em;
@@ -3117,10 +3149,33 @@ ul.ol-legend li div {
 .ol-profil button {
   display: block;
   position: absolute;
-  right: 2px;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAPCAYAAAALWoRrAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AgXCR4dn7j9TAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAz0lEQVQ4y7WTMU4CURRFz0xIpLUBEhdAY2tJYW1jaWlsXYVxDWyBhWCFCYugYgnDFPMOhTMJGf3AwHiqn/uTk5v/3gfAH6b0RH7sMiIe1Ts162z+q2lVVbd1XqijLuJk0zzP1/VxCGyApLgsy+HJphGx8DeFOm6L1bn6eVQaEW+m2amTRqx+1fkqKY2Ie0+zUx/U7WGYfNMsy57PmMMN8A1MWsWeUoPyivV8PWtPOzL7D+lYHfUtBXgHGLTCJfBxodD6k9Dsm8BLE17LobQ39nJC61aLVoVsAAAAAElFTkSuQmCC');
+  right: 0;
+  overflow: hidden;
+}
+.ol-profil button i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+}
+.ol-profil button i:before,
+.ol-profil button i:after {
+  content: "";
+  position: absolute;
+  display: block;
+  background-color: currentColor;
+  width: 1em;
+  height: .9em;
+  -webkit-transform: scaleX(.8) translate(-.25em, .5em) rotate(45deg);
+          transform: scaleX(.8) translate(-.25em, .5em) rotate(45deg);
+}
+.ol-profil button i:after {
+  -webkit-transform: scaleX(.8) translate(.35em, .7em) rotate(45deg);
+          transform: scaleX(.8) translate(.35em, .7em) rotate(45deg);
 }
 
 .ol-profil.ol-collapsed button {
@@ -4114,17 +4169,17 @@ ul.ol-legend li div {
   bottom: 25%;
   left: 50%;
   width: 2px;
-  background: rgba(255,255,255,0.8);
+  background: currentColor;
   transform: translate(-1px, 0);
   -webkit-transform: translate(-1px, 0);
 }
 .ol-swipe button:after {
-  transform: translateX(5px);
-  -webkit-transform: translateX(5px);
+  -webkit-transform: translateX(4px);
+          transform: translateX(4px);
 }
 .ol-swipe button:before {
-  transform: translateX(-7px);
-  -webkit-transform: translateX(-7px);
+  -webkit-transform: translateX(-6px);
+          transform: translateX(-6px);
 }
 
 .ol-control.ol-timeline {

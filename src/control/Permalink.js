@@ -40,6 +40,7 @@ var ol_control_Permalink = class olcontrolPermalink extends ol_control_Control {
     
     var self = this
     var button = document.createElement('button')
+    ol_ext_element.create('I', { parent: button })
     this.replaceState_ = (options.urlReplace !== false)
     this.fixed_ = options.fixed || 6
     this.hash_ = options.anchor ? "#" : "?"

@@ -51,10 +51,30 @@
 .ol-profil button {
   display: block;
   position: absolute;
-  right: 2px;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAPCAYAAAALWoRrAAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AgXCR4dn7j9TAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAAz0lEQVQ4y7WTMU4CURRFz0xIpLUBEhdAY2tJYW1jaWlsXYVxDWyBhWCFCYugYgnDFPMOhTMJGf3AwHiqn/uTk5v/3gfAH6b0RH7sMiIe1Ts162z+q2lVVbd1XqijLuJk0zzP1/VxCGyApLgsy+HJphGx8DeFOm6L1bn6eVQaEW+m2amTRqx+1fkqKY2Ie0+zUx/U7WGYfNMsy57PmMMN8A1MWsWeUoPyivV8PWtPOzL7D+lYHfUtBXgHGLTCJfBxodD6k9Dsm8BLE17LobQ39nJC61aLVoVsAAAAAElFTkSuQmCC');
+  right: 0;
+  overflow: hidden;
+}
+.ol-profil button i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+}
+.ol-profil button i:before,
+.ol-profil button i:after {
+  content: "";
+  position: absolute;
+  display: block;
+  background-color: currentColor;
+  width: 1em;
+  height: .9em;
+  transform: scaleX(.8) translate(-.25em, .5em) rotate(45deg);
+}
+.ol-profil button i:after {
+  transform: scaleX(.8) translate(.35em, .7em) rotate(45deg);
 }
 
 .ol-profil.ol-collapsed button {

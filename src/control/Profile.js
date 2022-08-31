@@ -61,15 +61,16 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     } else {
       element.className = ((options.className || 'ol-profil') + ' ol-unselectable ol-control ol-collapsed').trim()
       this.button = document.createElement('button')
-      this.button.title = options.title || 'Profile',
-        this.button.setAttribute('type', 'button')
+      this.button.title = options.title || 'Profile';
+      this.button.setAttribute('type', 'button')
       var click_touchstart_function = function (e) {
         self.toggle()
         e.preventDefault()
       }
-      this.button.addEventListener("click", click_touchstart_function)
-      this.button.addEventListener("touchstart", click_touchstart_function)
+      this.button.addEventListener('click', click_touchstart_function)
+      this.button.addEventListener('touchstart', click_touchstart_function)
       element.appendChild(this.button)
+      ol_ext_element.create('I', { parent: this.button })
     }
 
     // Drawing style

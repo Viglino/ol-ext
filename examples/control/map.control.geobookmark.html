@@ -1,85 +1,82 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-	<title>ol-ext: Control GeoBookmark</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	
-	<meta name="description" content="ol.control.Geobookmark add a control to handle bookmarks." />
-	<meta name="keywords" content="ol3, control, bookmark, place" />
+  <title>ol-ext: Control GeoBookmark</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <meta name="description" content="ol.control.Geobookmark add a control to handle bookmarks." />
+  <meta name="keywords" content="ol3, control, bookmark, place" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<!-- -->
-	<link rel="stylesheet" href="../style.css" />
+  <!-- -->
+  <link rel="stylesheet" href="../style.css" />
 
-	<style>
-
-	</style>
-
-	</head>
+  </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>GeoBookmark control</h1>
-	</a>
-	<div class="info">
-		<i>ol.control.GeoBookmark</i> adds a control to handle geo bookmarks, ie. save places.
-		<ul>
-			<li>
-				The <i>editable</i> option enable modification (add or delate bookmarks)
-			</li>
-			<li>
-				You can define permanet bookmarks that can't be deleted
-			</li>
-		</ul>
-		GeoBookmarks are stored in the localStorage.
-	</div>
+  <a href="../../index.html">
+    <h1>GeoBookmark control</h1>
+  </a>
+  <div class="info">
+    <i>ol.control.GeoBookmark</i> adds a control to handle geo bookmarks, ie. save places.
+    <ul>
+      <li>
+        The <i>editable</i> option enable modification (add or delate bookmarks)
+      </li>
+      <li>
+        You can define permanet bookmarks that can't be deleted
+      </li>
+    </ul>
+    GeoBookmarks are stored in the localStorage.
+  </div>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<ul>
-			<li>
-				<label><input type="checkbox" checked="checked" onchange="bm.set('editable',$(this).prop('checked'));" /> editable</label>
-			</li>
-		</ul>
-	</div>
-	
-	<script type="text/javascript">
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View ({ zoom: 13, center: [649083, 5408224] }),
-			layers: [new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })]
-		});
+  <div class="options">
+    <ul>
+      <li>
+        <label><input type="checkbox" checked="checked" onchange="bm.set('editable',$(this).prop('checked'));" /> editable</label>
+      </li>
+    </ul>
+  </div>
+  
+  <script type="text/javascript">
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View ({ zoom: 13, center: [649083, 5408224] }),
+    layers: [new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })]
+  });
 
-	var bm = new ol.control.GeoBookmark({	marks:
-			{	Paris: {pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
-				London: {pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
-				Geneve: {pos:ol.proj.transform([6.149985,46.200013], 'EPSG:4326', 'EPSG:3857'), zoom:13, permanent: true },
-				Bruxelles: {pos:ol.proj.transform([4.35,50.83], 'EPSG:4326', 'EPSG:3857'), zoom:12, permanent: true },
-				Berlin: {pos:ol.proj.transform([13.383333,52.516667], 'EPSG:4326', 'EPSG:3857'), zoom:12, permanent: true },
-				Madrid: {pos:ol.proj.transform([-3.683333,40.433333], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
-				Roma: {pos:ol.proj.transform([12.48657,41.888732], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
-			}
-		});
-	map.addControl(bm);
+  var bm = new ol.control.GeoBookmark({	
+    marks: {
+      Paris: {pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+      London: {pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:11, permanent: true },
+      Geneve: {pos:ol.proj.transform([6.149985,46.200013], 'EPSG:4326', 'EPSG:3857'), zoom:13, permanent: true },
+      Bruxelles: {pos:ol.proj.transform([4.35,50.83], 'EPSG:4326', 'EPSG:3857'), zoom:12, permanent: true },
+      Berlin: {pos:ol.proj.transform([13.383333,52.516667], 'EPSG:4326', 'EPSG:3857'), zoom:12, permanent: true },
+      Madrid: {pos:ol.proj.transform([-3.683333,40.433333], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
+      Roma: {pos:ol.proj.transform([12.48657,41.888732], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
+    }
+  });
+  map.addControl(bm);
 
-	</script>
+  </script>
 
 </body>
 </html>
