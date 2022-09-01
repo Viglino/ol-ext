@@ -20,8 +20,8 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 
   <!-- ol-ext -->
@@ -98,7 +98,7 @@ var map = new ol.Map({
     zoom: 5,
     center: [266812, 5960201]
   }),
-  controls: ol.control.defaults({ "attribution": false }),
+  controls: ol.control.defaults.defaults({ "attribution": false }),
   layers: [
     new ol.layer.Tile({ title:'Waterolor', visible: false, source: new ol.source.Stamen({ layer: 'watercolor' }) }),
     new ol.layer.Tile({ title:'Labels', visible: false, source: new ol.source.Stamen({ layer: 'toner-labels' }) }),

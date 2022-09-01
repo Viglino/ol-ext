@@ -10,13 +10,14 @@ import ol_ext_input_Checkbox from './Checkbox'
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
  */
-var ol_ext_input_Switch = function(options) {
-  options = options || {};
+var ol_ext_input_Switch = class olextinputSwitch extends ol_ext_input_Checkbox {
+  constructor(options) {
+    options = options || {};
 
-  ol_ext_input_Checkbox.call(this, options);
+    super(options);
 
-  this.element.className = ('ol-ext-toggle-switch ' + (options.className || '')).trim();
+    this.element.className = ('ol-ext-toggle-switch ' + (options.className || '')).trim();
+  }
 };
-ol_ext_inherits(ol_ext_input_Switch, ol_ext_input_Checkbox);
   
 export default ol_ext_input_Switch

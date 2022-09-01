@@ -2567,28 +2567,32 @@ ol.ext.input.PopupBase.prototype.toggle = function() {
  *  @param {boolean} [options.autoClose=true]
  *  @param {boolean} [options.visible=false] display the input
  */
-ol.ext.input.Checkbox = function(options) {
-  options = options || {};
-  ol.ext.input.Base.call(this, options);
-  var label = this.element = document.createElement('LABEL');
-  if (options.html instanceof Element) label.appendChild(options.html)
-  else if (options.html !== undefined) label.innerHTML = options.html;
-  label.className = ('ol-ext-check ol-ext-checkbox '  + (options.className || '')).trim();
-  if (this.input.parentNode) this.input.parentNode.insertBefore(label, this.input);
-  label.appendChild(this.input);
-  label.appendChild(document.createElement('SPAN'));
-  if (options.after) {
-    label.appendChild(document.createTextNode(options.after));
+ol.ext.input.Checkbox = class olextinputCheckbox extends ol.ext.input.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    var label = this.element = document.createElement('LABEL');
+    if (options.html instanceof Element)
+      label.appendChild(options.html);
+    else if (options.html !== undefined)
+      label.innerHTML = options.html;
+    label.className = ('ol-ext-check ol-ext-checkbox ' + (options.className || '')).trim();
+    if (this.input.parentNode)
+      this.input.parentNode.insertBefore(label, this.input);
+    label.appendChild(this.input);
+    label.appendChild(document.createElement('SPAN'));
+    if (options.after) {
+      label.appendChild(document.createTextNode(options.after));
+    }
+    // Handle change
+    this.input.addEventListener('change', function () {
+      this.dispatchEvent({ type: 'check', checked: this.input.checked, value: this.input.value });
+    }.bind(this));
   }
-  // Handle change
-  this.input.addEventListener('change', function() {
-    this.dispatchEvent({ type: 'check', checked: this.input.checked, value: this.input.value });
-  }.bind(this));
-};
-ol.ext.inherits(ol.ext.input.Checkbox, ol.ext.input.Base);
-ol.ext.input.Checkbox.prototype.isChecked = function () {
-  return this.input.checked;
-};
+  isChecked() {
+    return this.input.checked;
+  }
+}
 
 /** A list element synchronize with a Collection. 
  * Element in the list can be reordered interactively and the associated Collection is kept up to date.
@@ -3384,12 +3388,13 @@ ol.ext.input.Size.prototype.getValue = function() {
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
  */
-ol.ext.input.Switch = function(options) {
-  options = options || {};
-  ol.ext.input.Checkbox.call(this, options);
-  this.element.className = ('ol-ext-toggle-switch ' + (options.className || '')).trim();
+ol.ext.input.Switch = class olextinputSwitch extends ol.ext.input.Checkbox {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.element.className = ('ol-ext-toggle-switch ' + (options.className || '')).trim();
+  }
 };
-ol.ext.inherits(ol.ext.input.Switch, ol.ext.input.Checkbox);
 
 /** Checkbox input
  * @constructor
@@ -6639,128 +6644,138 @@ ol.control.Bar = class olcontrolBar extends ol.control.Control {
  * 	@param {ol.style.Style} options.style  option is usesd to draw the text.
  *  @paream {boolean} [options.canvas=false] draw on canvas
  */
-ol.control.CanvasAttribution = function(options) {
-  if (!options) options = {};
-  ol.control.Attribution.call(this, options);
-  this.element.classList.add('ol-canvas-control');
-  // Draw in canvas
-  this.setCanvas(!!options.canvas);
-  // Get style options
-  if (!options) options={};
-  if (!options.style) options.style = new ol.style.Style();
-  this.setStyle (options.style);
+ol.control.CanvasAttribution = class olcontrolCanvasAttribution extends ol.control.Attribution {
+  constructor(options) {
+    options = options || {}
+    super(options)
+    this.element.classList.add('ol-canvas-control')
+    // Draw in canvas
+    this.setCanvas(!!options.canvas)
+    // Get style options
+    if (!options)
+      options = {}
+    if (!options.style)
+      options.style = new ol.style.Style()
+    this.setStyle(options.style)
+  }
+  /**
+   * Draw attribution on canvas
+   * @param {boolean} b draw the attribution on canvas.
+   */
+  setCanvas(b) {
+    this.isCanvas_ = b
+    if (b)
+      this.setCollapsed(false)
+    this.element.style.visibility = b ? "hidden" : "visible"
+    if (this.getMap()) {
+      try {
+        this.getMap().renderSync()
+      } catch (e) { /* ok */ }
+    }
+  }
+  /**
+   * Change the control style
+   * @param {ol.style.Style} style
+   */
+  setStyle(style) {
+    var text = style.getText()
+    this.font_ = text ? text.getFont() : "10px sans-serif"
+    var stroke = text ? text.getStroke() : null
+    var fill = text ? text.getFill() : null
+    this.fontStrokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#fff"
+    this.fontFillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#000"
+    this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3
+    if (this.getMap())
+      this.getMap().render()
+  }
+  /**
+   * Remove the control from its current map and attach it to the new map.
+   * Subclasses may set up event handlers to get notified about changes to
+   * the map here.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    ol.control.CanvasBase.prototype.getCanvas.call(this, map)
+    var oldmap = this.getMap()
+    if (this._listener)
+      ol.Observable.unByKey(this._listener)
+    this._listener = null
+    ol.control.Attribution.prototype.setMap.call(this, map)
+    if (oldmap) {
+      try { oldmap.renderSync()}  catch (e) { /* ok */ }
+    }
+    // Get change (new layer added or removed)
+    if (map) {
+      this._listener = map.on('postcompose', this.drawAttribution_.bind(this))
+    }
+    this.setCanvas(this.isCanvas_)
+  }
+  /**
+   * Draw attribution in the final canvas
+   * @private
+   */
+  drawAttribution_(e) {
+    if (!this.isCanvas_)
+      return
+    var ctx = this.getContext(e)
+    if (!ctx)
+      return
+    var text = ""
+    Array.prototype.slice.call(this.element.querySelectorAll('li'))
+      .filter(function (el) {
+        return el.style.display !== "none"
+      })
+      .map(function (el) {
+        text += (text ? " - " : "") + el.textContent
+      })
+    // Retina device
+    var ratio = e.frameState.pixelRatio
+    ctx.save()
+    ctx.scale(ratio, ratio)
+    // Position
+    var eltRect = this.element.getBoundingClientRect()
+    var mapRect = this.getMap().getViewport().getBoundingClientRect()
+    var sc = this.getMap().getSize()[0] / mapRect.width
+    ctx.translate((eltRect.left - mapRect.left) * sc, (eltRect.top - mapRect.top) * sc)
+    var h = this.element.clientHeight
+    var w = this.element.clientWidth
+    var textAlign = ol.ext.element.getStyle(this.element, 'textAlign') || 'center'
+    var left
+    switch (textAlign) {
+      case 'left': {
+        left = 0
+        break
+      }
+      case 'right': {
+        left = w
+        break
+      }
+      default: {
+        left = w / 2
+        break
+      }
+    }
+    // Draw scale text
+    ctx.beginPath()
+    ctx.strokeStyle = this.fontStrokeStyle_
+    ctx.fillStyle = this.fontFillStyle_
+    ctx.lineWidth = this.fontStrokeWidth_
+    ctx.textAlign = textAlign
+    ctx.textBaseline = 'middle'
+    ctx.font = this.font_
+    ctx.strokeText(text, left, h / 2)
+    ctx.fillText(text, left, h / 2)
+    ctx.closePath()
+    ctx.restore()
+  }
+  /** Get map Canvas
+   * @private
+   */
+  getContext(e) {
+    return ol.control.CanvasBase.prototype.getContext.call(this, e);
+  }
 }
-ol.ext.inherits(ol.control.CanvasAttribution, ol.control.Attribution);
-/**
- * Draw attribution on canvas
- * @param {boolean} b draw the attribution on canvas.
- */
-ol.control.CanvasAttribution.prototype.setCanvas = function (b) {
-  this.isCanvas_ = b;
-  if (b) this.setCollapsed(false);
-  this.element.style.visibility = b ? "hidden":"visible";
-  if (this.getMap()) {
-    try {
-      this.getMap().renderSync();
-    } catch(e) { /* ok */ }
-  }
-};
-/** Get map Canvas
- * @private
- */
-ol.control.CanvasAttribution.prototype.getContext = ol.control.CanvasBase.prototype.getContext;
-/**
- * Change the control style
- * @param {ol.style.Style} style
- */
-ol.control.CanvasAttribution.prototype.setStyle = function (style) {
-  var text = style.getText();
-  this.font_ = text ? text.getFont() : "10px sans-serif";
-  var stroke = text ? text.getStroke() : null;
-  var fill = text ? text.getFill() : null;
-  this.fontStrokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#fff";
-  this.fontFillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#000";
-  this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3;
-  if (this.getMap()) this.getMap().render();
-};
-/**
- * Remove the control from its current map and attach it to the new map.
- * Subclasses may set up event handlers to get notified about changes to
- * the map here.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.control.CanvasAttribution.prototype.setMap = function (map) {
-  ol.control.CanvasBase.prototype.getCanvas.call(this, map);
-  var oldmap = this.getMap();
-  if (this._listener) ol.Observable.unByKey(this._listener);
-  this._listener = null;
-  ol.control.Attribution.prototype.setMap.call(this, map);
-  if (oldmap) {
-    try { oldmap.renderSync(); } catch(e) { /* ok */ }
-  }
-  // Get change (new layer added or removed)
-  if (map) {
-    this._listener = map.on('postcompose', this.drawAttribution_.bind(this));
-  }
-  this.setCanvas (this.isCanvas_);
-};
-/** 
- * Draw attribution in the final canvas
- * @private
- */
-ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
-  if (!this.isCanvas_) return;
-  var ctx = this.getContext(e);
-  if (!ctx) return;
-  var text = "";
-  Array.prototype.slice.call(this.element.querySelectorAll('li'))
-    .filter(function(el) {
-      return el.style.display !== "none";
-    })
-    .map(function(el) {
-      text += (text ? " - ":"") + el.textContent;
-    });
-  // Retina device
-  var ratio = e.frameState.pixelRatio;
-  ctx.save();
-  ctx.scale(ratio,ratio);
-  // Position
-  var eltRect = this.element.getBoundingClientRect();
-  var mapRect = this.getMap().getViewport().getBoundingClientRect();
-  var sc = this.getMap().getSize()[0] / mapRect.width;
-  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
-  var h = this.element.clientHeight;
-  var w = this.element.clientWidth;
-  var textAlign = ol.ext.element.getStyle(this.element, 'textAlign') || 'center';
-  var left;
-  switch(textAlign) {
-    case 'left': {
-      left = 0;
-      break;
-    }
-    case 'right': {
-      left = w;
-      break;
-    }
-    default: {
-      left = w/2;
-      break;
-    }
-  }
-  // Draw scale text
-  ctx.beginPath();
-    ctx.strokeStyle = this.fontStrokeStyle_;
-    ctx.fillStyle = this.fontFillStyle_;
-    ctx.lineWidth = this.fontStrokeWidth_;
-    ctx.textAlign = textAlign;
-    ctx.textBaseline = 'middle';
-    ctx.font = this.font_;
-    ctx.strokeText(text, left, h/2);
-    ctx.fillText(text, left, h/2);
-  ctx.closePath();
-  ctx.restore();
-};
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -6776,112 +6791,124 @@ ol.control.CanvasAttribution.prototype.drawAttribution_ = function(e) {
  * @param {Object=} options extend the ol.control.ScaleLine options.
  * 	@param {ol.style.Style} options.style used to draw the scale line (default is black/white, 10px Arial).
  */
-ol.control.CanvasScaleLine = function(options) {
-  ol.control.ScaleLine.call(this, options);
-  this.element.classList.add('ol-canvas-control');
-  this.scaleHeight_ = 6;
-  // Get style options
-  if (!options) options={};
-  if (!options.style) options.style = new ol.style.Style();
-  this.setStyle(options.style);
-}
-ol.ext.inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
-/** Get map Canvas
- * @private
- */
-ol.control.CanvasScaleLine.prototype.getContext = ol.control.CanvasBase.prototype.getContext;
-/**
- * Remove the control from its current map and attach it to the new map.
- * Subclasses may set up event handlers to get notified about changes to
- * the map here.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.control.CanvasScaleLine.prototype.setMap = function (map) {	
-  ol.control.CanvasBase.prototype.getCanvas.call(this, map);
-  var oldmap = this.getMap();
-  if (this._listener) ol.Observable.unByKey(this._listener);
-  this._listener = null;
-  ol.control.ScaleLine.prototype.setMap.call(this, map);
-  if (oldmap) {
-    try { oldmap.renderSync(); } catch(e) { /* ok */ }
+ol.control.CanvasScaleLine = class olcontrolCanvasScaleLine extends ol.control.ScaleLine {
+  constructor(options) {
+    super(options)
+    this.element.classList.add('ol-canvas-control')
+    this.scaleHeight_ = 6
+    // Get style options
+    if (!options)
+      options = {}
+    if (!options.style)
+      options.style = new ol.style.Style()
+    this.setStyle(options.style)
   }
-  // Add postcompose on the map
-  if (map) {
-    this._listener = map.on('postcompose', this.drawScale_.bind(this));
-  } 
-  // Hide the default DOM element
-  this.element.style.visibility = 'hidden';
-  this.olscale = this.element.querySelector(".ol-scale-line-inner");
-}
-/**
- * Change the control style
- * @param {ol.style.Style} style
- */
-ol.control.CanvasScaleLine.prototype.setStyle = function (style) {
-  var stroke = style.getStroke();
-  this.strokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#000";
-  this.strokeWidth_ = stroke ? stroke.getWidth() : 2;
-  var fill = style.getFill();
-  this.fillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#fff";
-  var text = style.getText();
-  this.font_ = text ? text.getFont() : "10px Arial";
-  stroke = text ? text.getStroke() : null;
-  fill = text ? text.getFill() : null;
-  this.fontStrokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : this.fillStyle_;
-  this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3;
-  this.fontFillStyle_ = fill ? ol.color.asString(fill.getColor()) : this.strokeStyle_;
-  // refresh
-  if (this.getMap()) this.getMap().render();
-}
-/** 
- * Draw attribution in the final canvas
- * @param {ol.render.Event} e
- * @private
- */
-ol.control.CanvasScaleLine.prototype.drawScale_ = function(e) {
-  if ( this.element.style.visibility !== 'hidden' || ol.ext.element.getStyle(this.element, 'display') === 'none' ) return;
-  var ctx = this.getContext(e);
-  if (!ctx) return;
-  // Get size of the scale div
-  var scalewidth = parseInt(this.olscale.style.width);
-  if (!scalewidth) return;
-  var text = this.olscale.textContent;
-  var position = {left: this.element.offsetLeft, top: this.element.offsetTop};
-  // Retina device
-  var ratio = e.frameState.pixelRatio;
-  ctx.save();
-  ctx.scale(ratio,ratio);
-  // On top
-  position.top += this.element.clientHeight - this.scaleHeight_;
-  // Draw scale text
-  ctx.beginPath();
-    ctx.strokeStyle = this.fontStrokeStyle_;
-    ctx.fillStyle = this.fontFillStyle_;
-    ctx.lineWidth = this.fontStrokeWidth_;
-    ctx.textAlign = "center";
-  ctx.textBaseline ="bottom";
-    ctx.font = this.font_;
-  ctx.strokeText(text, position.left+scalewidth/2, position.top);
-    ctx.fillText(text, position.left+scalewidth/2, position.top);
-  ctx.closePath();
-  // Draw scale bar
-  position.top += 2;
-  ctx.lineWidth = this.strokeWidth_;
-  ctx.strokeStyle = this.strokeStyle_;
-  var max = 4;
-  var n = parseInt(text);
-  while (n%10 === 0) n/=10;
-  if (n%5 === 0) max = 5;
-  for (var i=0; i<max; i++) {
-    ctx.beginPath();
-    ctx.fillStyle = i%2 ? this.fillStyle_ : this.strokeStyle_;
-    ctx.rect(position.left+i*scalewidth/max, position.top, scalewidth/max, this.scaleHeight_);
-    ctx.stroke();
-    ctx.fill();
-    ctx.closePath();
+  /**
+   * Remove the control from its current map and attach it to the new map.
+   * Subclasses may set up event handlers to get notified about changes to
+   * the map here.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    ol.control.CanvasBase.prototype.getCanvas.call(this, map)
+    var oldmap = this.getMap()
+    if (this._listener)
+      ol.Observable.unByKey(this._listener)
+    this._listener = null
+    ol.control.ScaleLine.prototype.setMap.call(this, map)
+    if (oldmap) {
+      try { oldmap.renderSync()}  catch (e) { /* ok */ }
+    }
+    // Add postcompose on the map
+    if (map) {
+      this._listener = map.on('postcompose', this.drawScale_.bind(this))
+    }
+    // Hide the default DOM element
+    this.element.style.visibility = 'hidden'
+    this.olscale = this.element.querySelector(".ol-scale-line-inner")
   }
-  ctx.restore();
+  /**
+   * Change the control style
+   * @param {ol.style.Style} style
+   */
+  setStyle(style) {
+    var stroke = style.getStroke()
+    this.strokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : "#000"
+    this.strokeWidth_ = stroke ? stroke.getWidth() : 2
+    var fill = style.getFill()
+    this.fillStyle_ = fill ? ol.color.asString(fill.getColor()) : "#fff"
+    var text = style.getText()
+    this.font_ = text ? text.getFont() : "10px Arial"
+    stroke = text ? text.getStroke() : null
+    fill = text ? text.getFill() : null
+    this.fontStrokeStyle_ = stroke ? ol.color.asString(stroke.getColor()) : this.fillStyle_
+    this.fontStrokeWidth_ = stroke ? stroke.getWidth() : 3
+    this.fontFillStyle_ = fill ? ol.color.asString(fill.getColor()) : this.strokeStyle_
+    // refresh
+    if (this.getMap())
+      this.getMap().render()
+  }
+  /**
+   * Draw attribution in the final canvas
+   * @param {ol.render.Event} e
+   * @private
+   */
+  drawScale_(e) {
+    if (this.element.style.visibility !== 'hidden' || ol.ext.element.getStyle(this.element, 'display') === 'none')
+      return
+    var ctx = this.getContext(e)
+    if (!ctx)
+      return
+    // Get size of the scale div
+    var scalewidth = parseInt(this.olscale.style.width)
+    if (!scalewidth)
+      return
+    var text = this.olscale.textContent
+    var position = { left: this.element.offsetLeft, top: this.element.offsetTop }
+    // Retina device
+    var ratio = e.frameState.pixelRatio
+    ctx.save()
+    ctx.scale(ratio, ratio)
+    // On top
+    position.top += this.element.clientHeight - this.scaleHeight_
+    // Draw scale text
+    ctx.beginPath()
+    ctx.strokeStyle = this.fontStrokeStyle_
+    ctx.fillStyle = this.fontFillStyle_
+    ctx.lineWidth = this.fontStrokeWidth_
+    ctx.textAlign = "center"
+    ctx.textBaseline = "bottom"
+    ctx.font = this.font_
+    ctx.strokeText(text, position.left + scalewidth / 2, position.top)
+    ctx.fillText(text, position.left + scalewidth / 2, position.top)
+    ctx.closePath()
+    // Draw scale bar
+    position.top += 2
+    ctx.lineWidth = this.strokeWidth_
+    ctx.strokeStyle = this.strokeStyle_
+    var max = 4
+    var n = parseInt(text)
+    while (n % 10 === 0)
+      n /= 10
+    if (n % 5 === 0)
+      max = 5
+    for (var i = 0; i < max; i++) {
+      ctx.beginPath()
+      ctx.fillStyle = i % 2 ? this.fillStyle_ : this.strokeStyle_
+      ctx.rect(position.left + i * scalewidth / max, position.top, scalewidth / max, this.scaleHeight_)
+      ctx.stroke()
+      ctx.fill()
+      ctx.closePath()
+    }
+    ctx.restore()
+  }
+  /** Get map Canvas
+   * @private
+   */
+  getContext(e) {
+    return ol.control.CanvasBase.prototype.getContext.call(this, e);
+  }
 }
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -6897,115 +6924,120 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e) {
  *  @param {string} options.title the title, default 'Title'
  *  @param {ol.style.Style} options.style style used to draw the title.
  */
-ol.control.CanvasTitle = function(options) {
-  if (!options) options = {};
-  var elt = ol.ext.element.create('DIV', {
-    className: (options.className || '') + ' ol-control-title ol-unselectable',
-    style: {
-      display: 'block',
-      visibility: 'hidden'
-    }
-  });
-  ol.control.CanvasBase.call(this, {
-    element: elt,
-    style: options.style
-  });
-  this.setTitle(options.title || '');
-  this.setVisible(options.visible);
-  this.element.style.font = this.getTextFont();
-};
-ol.ext.inherits(ol.control.CanvasTitle, ol.control.CanvasBase);
-/**
- * Change the control style
- * @param {ol.style.Style} style
- */
-ol.control.CanvasTitle.prototype.setStyle = function (style) {
-  ol.control.CanvasBase.prototype.setStyle.call(this, style);
-  // Element style
-  if (this.element) {
+ol.control.CanvasTitle = class olcontrolCanvasTitle extends ol.control.CanvasBase {
+  constructor(options) {
+    options = options || {};
+    var elt = ol.ext.element.create('DIV', {
+      className: (options.className || '') + ' ol-control-title ol-unselectable',
+      style: {
+        display: 'block',
+        visibility: 'hidden'
+      }
+    });
+    super({
+      element: elt,
+      style: options.style
+    });
+    this.setTitle(options.title || '');
+    this.setVisible(options.visible);
     this.element.style.font = this.getTextFont();
   }
-  // refresh
-  if (this.getMap()) this.getMap().render();
-};
-/**
- * Set the map title 
- * @param {string} map title.
- * @api stable
- */
-ol.control.CanvasTitle.prototype.setTitle = function (title) {
-  this.element.textContent = title;
-  this.set('title', title);
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  /**
+   * Change the control style
+   * @param {ol.style.Style} style
+   */
+  setStyle(style) {
+    ol.control.CanvasBase.prototype.setStyle.call(this, style);
+    // Element style
+    if (this.element) {
+      this.element.style.font = this.getTextFont();
+    }
+    // refresh
+    if (this.getMap())
+      this.getMap().render();
   }
-};
-/**
- * Get the map title 
- * @param {string} map title.
- * @api stable
- */
-ol.control.CanvasTitle.prototype.getTitle = function () {
-  return this.get('title');
-};
-/**
- * Set control visibility
- * @param {bool} b
- * @api stable
- */
-ol.control.CanvasTitle.prototype.setVisible = function (b) {
-  this.element.style.display = (b ? 'block' : 'none');
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  /**
+   * Set the map title
+   * @param {string} map title.
+   * @api stable
+   */
+  setTitle(title) {
+    this.element.textContent = title;
+    this.set('title', title);
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
   }
-};
-/**
- * Get control visibility
- * @return {bool} 
- * @api stable
- */
-ol.control.CanvasTitle.prototype.getVisible = function () {
-  return this.element.style.display !== 'none';
-};
-/** Draw title in the final canvas
- * @private
-*/
-ol.control.CanvasTitle.prototype._draw = function(e) {
-  if (!this.getVisible()) return;
-  var ctx = this.getContext(e);
-	if (!ctx) return;
-  // Retina device
-  var ratio = e.frameState.pixelRatio;
-  ctx.save();
-  ctx.scale(ratio,ratio);
-  // Position
-  var eltRect = this.element.getBoundingClientRect();
-  var mapRect = this.getMap().getViewport().getBoundingClientRect();
-  var sc = this.getMap().getSize()[0] / mapRect.width;
-  ctx.translate(
-    Math.round((eltRect.left-mapRect.left)*sc), 
-    Math.round((eltRect.top-mapRect.top)*sc)
-  );
-  var h = this.element.clientHeight;
-  var w = this.element.clientWidth;
-  var left = w/2;
-  ctx.beginPath();
-  ctx.fillStyle = ol.color.asString(this.getFill().getColor());
-  ctx.rect(0,0, w, h);
-  ctx.fill();
-  ctx.closePath();
-  ctx.beginPath();
-  ctx.fillStyle = ol.color.asString(this.getTextFill().getColor());
-  ctx.strokeStyle = ol.color.asString(this.getTextStroke().getColor());
-  ctx.lineWidth = this.getTextStroke().getWidth();
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = this.getTextFont();
-  if (ctx.lineWidth) ctx.strokeText(this.getTitle(), left, h/2);
-  ctx.fillText(this.getTitle(), left, h/2);
-  ctx.closePath();
-  ctx.restore();
-};
+  /**
+   * Get the map title
+   * @param {string} map title.
+   * @api stable
+   */
+  getTitle() {
+    return this.get('title');
+  }
+  /**
+   * Set control visibility
+   * @param {bool} b
+   * @api stable
+   */
+  setVisible(b) {
+    this.element.style.display = (b ? 'block' : 'none');
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
+  }
+  /**
+   * Get control visibility
+   * @return {bool}
+   * @api stable
+   */
+  getVisible() {
+    return this.element.style.display !== 'none';
+  }
+  /** Draw title in the final canvas
+   * @private
+  */
+  _draw(e) {
+    if (!this.getVisible())
+      return;
+    var ctx = this.getContext(e);
+    if (!ctx)
+      return;
+    // Retina device
+    var ratio = e.frameState.pixelRatio;
+    ctx.save();
+    ctx.scale(ratio, ratio);
+    // Position
+    var eltRect = this.element.getBoundingClientRect();
+    var mapRect = this.getMap().getViewport().getBoundingClientRect();
+    var sc = this.getMap().getSize()[0] / mapRect.width;
+    ctx.translate(
+      Math.round((eltRect.left - mapRect.left) * sc),
+      Math.round((eltRect.top - mapRect.top) * sc)
+    );
+    var h = this.element.clientHeight;
+    var w = this.element.clientWidth;
+    var left = w / 2;
+    ctx.beginPath();
+    ctx.fillStyle = ol.color.asString(this.getFill().getColor());
+    ctx.rect(0, 0, w, h);
+    ctx.fill();
+    ctx.closePath();
+    ctx.beginPath();
+    ctx.fillStyle = ol.color.asString(this.getTextFill().getColor());
+    ctx.strokeStyle = ol.color.asString(this.getTextStroke().getColor());
+    ctx.lineWidth = this.getTextStroke().getWidth();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = this.getTextFont();
+    if (ctx.lineWidth)
+      ctx.strokeText(this.getTitle(), left, h / 2);
+    ctx.fillText(this.getTitle(), left, h / 2);
+    ctx.closePath();
+    ctx.restore();
+  }
+}
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -7139,223 +7171,230 @@ ol.control.CenterPosition.prototype._draw = function(e) {
  *  @param {boolean} options.rotateVithView rotate vith view (false to show watermark), default true
  *  @param {ol.style.Stroke} options.style style to draw the lines, default draw no lines
  */
-ol.control.Compass = function(options) {
-  if (!options) options = {};
-  // Initialize parent
-  var elt = document.createElement("div");
-  elt.className = "ol-control ol-compassctrl ol-unselectable ol-hidden" + (options.className ? " "+options.className : "");
-  elt.style.position = "absolute";
-  elt.style.visibility = "hidden";
-  var style = (options.style instanceof ol.style.Stroke) ? new ol.style.Style({stroke: options.style}) : options.style;
-  if (!options.style) {
-    style = new ol.style.Style({stroke: new ol.style.Stroke({width:0}) });
-  }
-  ol.control.CanvasBase.call(this, { 
-    element: elt,
-    style: style
-  });
-  this.set('rotateVithView', options.rotateWithView!==false);
-  this.setVisible(options.visible!==false);
-  this.setImage(options.image || options.src);
-};
-ol.ext.inherits(ol.control.Compass, ol.control.CanvasBase);
-/** Set compass image
- * @param {Image|string} [img=default] the image or an url or 'compact' or 'default'
- */
-ol.control.Compass.prototype.setImage = function (img) {
-  // The image
-  if (img instanceof Image) {
-    this.img_ = img;
-    this.img_.onload = function(){ 
-      if (this.getMap()) {
-        try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-      }
-    }.bind(this);
-  } else if (typeof(img) === 'string') {
-    // Load source
-    switch (img) {
-      case 'compact': {
-        this.img_ = this.compactCompass_(this.element.clientWidth, this.getStroke().getColor());
-        break;
-      }
-      case 'default': {
-        this.img_ = this.defaultCompass_(this.element.clientWidth, this.getStroke().getColor());
-        break;
-      }
-      default: {
-        this.img_ = new Image();
-        this.img_.onload = function(){ 
-          if (this.getMap()) {
-            try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-          }
-        }.bind(this);
-        this.img_.src = img;
-        break;
-      }
+ol.control.Compass = class olcontrolCompass extends ol.control.CanvasBase {
+  constructor(options) {
+    options = options || {};
+    // Initialize parent
+    var elt = document.createElement("div");
+    elt.className = "ol-control ol-compassctrl ol-unselectable ol-hidden" + (options.className ? " " + options.className : "");
+    elt.style.position = "absolute";
+    elt.style.visibility = "hidden";
+    var style = (options.style instanceof ol.style.Stroke) ? new ol.style.Style({ stroke: options.style }) : options.style;
+    if (!options.style) {
+      style = new ol.style.Style({ stroke: new ol.style.Stroke({ width: 0 }) });
     }
-  } else {
-    this.img_ = this.defaultCompass_(this.element.clientWidth, this.getStroke().getColor());
-  }  
-}  
-/** Create a default image.
- * @param {number} s the size of the compass
- * @private
- */
-ol.control.Compass.prototype.compactCompass_ = function (s, color) {
-  var canvas = document.createElement('canvas');
-  var ctx = canvas.getContext("2d");
-  s = canvas.width = canvas.height = s || 150;
-  var r = s/2;
-  ctx.translate(r,r);
-  ctx.fillStyle = color || '#963';
-  ctx.lineWidth = 5;
-  ctx.lineJoin = ctx.lineCap = 'round';
-  ctx.font = 'bold '+(r*0.4)+'px sans-serif';
-  ctx.textBaseline = 'bottom';
-  ctx.textAlign = 'center';
-  ctx.strokeStyle = '#fff';
-  ctx.globalAlpha = .75;
-  ctx.strokeText('N', 0,-r/2);
-  ctx.globalAlpha = 1;
-  ctx.fillText('N', 0,-r/2);
-  ctx.beginPath();
-    ctx.moveTo(0,r/4);
-    ctx.lineTo(r/3,r/2);
-    ctx.lineTo(0,-r/2);
-    ctx.lineTo(-r/3,r/2);
-    ctx.lineTo(0,r/4);
-  ctx.lineWidth = 12;
-  ctx.fillStyle = "#fff";
-  ctx.globalAlpha = .75;
-  ctx.fill();
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = ctx.strokeStyle = color || '#963';
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(0,r/4);
-  ctx.lineTo(0,-r/2);
-  ctx.lineTo(r/3,r/2);
-  ctx.lineTo(0,r/4);
-  ctx.fill();
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(0,r/4);
-  ctx.lineTo(0,-r/2);
-  ctx.lineTo(-r/3,r/2);
-  ctx.lineTo(0,r/4);
-  ctx.stroke();
-  return canvas;
-};
-/** Create a default image.
- * @param {number} s the size of the compass
- * @private
- */
-ol.control.Compass.prototype.defaultCompass_ = function (s, color) {
-  var canvas = document.createElement('canvas');
-  var ctx = canvas.getContext("2d");
-  s = canvas.width = canvas.height = s || 150;
-  var r = s/2;
-  var r2 = 0.22*r;
-  function draw (r, r2) {
-    ctx.fillStyle = color ||"#963";
-    ctx.beginPath();
-    ctx.moveTo (0,0); 
-    ctx.lineTo (r,0); ctx.lineTo (r2,r2); ctx.moveTo (0,0);
-    ctx.lineTo (-r,0); ctx.lineTo (-r2,-r2); ctx.moveTo (0,0);
-    ctx.lineTo (0,r); ctx.lineTo (-r2,r2); ctx.moveTo (0,0);
-    ctx.lineTo (0,-r); ctx.lineTo (r2,-r2); ctx.moveTo (0,0);
-    ctx.fill();
-    ctx.stroke();
+    super({
+      element: elt,
+      style: style
+    });
+    this.set('rotateVithView', options.rotateWithView !== false);
+    this.setVisible(options.visible !== false);
+    this.setImage(options.image || options.src);
   }
-  function draw2 (r, r2) {
-    ctx.globalCompositeOperation = "destination-out";
+  /** Set compass image
+   * @param {Image|string} [img=default] the image or an url or 'compact' or 'default'
+   */
+  setImage(img) {
+    // The image
+    if (img instanceof Image) {
+      this.img_ = img;
+      this.img_.onload = function () {
+        if (this.getMap()) {
+          try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+        }
+      }.bind(this);
+    } else if (typeof (img) === 'string') {
+      // Load source
+      switch (img) {
+        case 'compact': {
+          this.img_ = this.compactCompass_(this.element.clientWidth, this.getStroke().getColor());
+          break;
+        }
+        case 'default': {
+          this.img_ = this.defaultCompass_(this.element.clientWidth, this.getStroke().getColor());
+          break;
+        }
+        default: {
+          this.img_ = new Image();
+          this.img_.onload = function () {
+            if (this.getMap()) {
+              try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+            }
+          }.bind(this);
+          this.img_.src = img;
+          break;
+        }
+      }
+    } else {
+      this.img_ = this.defaultCompass_(this.element.clientWidth, this.getStroke().getColor());
+    }
+  }
+  /** Create a default image.
+   * @param {number} s the size of the compass
+   * @private
+   */
+  compactCompass_(s, color) {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext("2d");
+    s = canvas.width = canvas.height = s || 150;
+    var r = s / 2;
+    ctx.translate(r, r);
+    ctx.fillStyle = color || '#963';
+    ctx.lineWidth = 5;
+    ctx.lineJoin = ctx.lineCap = 'round';
+    ctx.font = 'bold ' + (r * 0.4) + 'px sans-serif';
+    ctx.textBaseline = 'bottom';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#fff';
+    ctx.globalAlpha = .75;
+    ctx.strokeText('N', 0, -r / 2);
+    ctx.globalAlpha = 1;
+    ctx.fillText('N', 0, -r / 2);
+    ctx.beginPath();
+    ctx.moveTo(0, r / 4);
+    ctx.lineTo(r / 3, r / 2);
+    ctx.lineTo(0, -r / 2);
+    ctx.lineTo(-r / 3, r / 2);
+    ctx.lineTo(0, r / 4);
+    ctx.lineWidth = 12;
     ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.moveTo (0,0); 
-    ctx.lineTo (r,0); ctx.lineTo (r2,-r2); ctx.moveTo (0,0);
-    ctx.lineTo (-r,0); ctx.lineTo (-r2,r2); ctx.moveTo (0,0);
-    ctx.lineTo (0,r); ctx.lineTo (r2,r2); ctx.moveTo (0,0);
-    ctx.lineTo (0,-r); ctx.lineTo (-r2,-r2); ctx.moveTo (0,0);
+    ctx.globalAlpha = .75;
     ctx.fill();
-    ctx.globalCompositeOperation="source-over";
-    ctx.beginPath();
-    ctx.moveTo (0,0); 
-    ctx.lineTo (r,0); ctx.lineTo (r2,-r2); ctx.moveTo (0,0);
-    ctx.lineTo (-r,0); ctx.lineTo (-r2,r2); ctx.moveTo (0,0);
-    ctx.lineTo (0,r); ctx.lineTo (r2,r2); ctx.moveTo (0,0);
-    ctx.lineTo (0,-r); ctx.lineTo (-r2,-r2); ctx.moveTo (0,0);
     ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = ctx.strokeStyle = color || '#963';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(0, r / 4);
+    ctx.lineTo(0, -r / 2);
+    ctx.lineTo(r / 3, r / 2);
+    ctx.lineTo(0, r / 4);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, r / 4);
+    ctx.lineTo(0, -r / 2);
+    ctx.lineTo(-r / 3, r / 2);
+    ctx.lineTo(0, r / 4);
+    ctx.stroke();
+    return canvas;
   }
-  ctx.translate(r,r);
-  ctx.strokeStyle = color || "#963";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc (0,0, s*0.41, 0, 2*Math.PI);
-  ctx.arc (0,0, s*0.44, 0, 2*Math.PI);
-  ctx.stroke();
-  ctx.rotate(Math.PI/4)
-  draw (r*0.9, r2*0.8);
-  draw2 (r*0.9, r2*0.8);
-  ctx.rotate(-Math.PI/4)
-  draw (r, r2);
-  draw2 (r, r2);
-  return canvas;
-};
-/** Get control visibility
- * @return {boolean}
- */
-ol.control.Compass.prototype.getVisible = function() {
-  return ol.ext.element.getStyle(this.element, 'display') === 'block';
-};
-/** Set visibility
- * @param {boolean} b
- */
-ol.control.Compass.prototype.setVisible = function(b) {
-  if (b) this.element.classList.add('ol-visible');
-  else this.element.classList.remove('ol-visible');
-  if (this.getMap()) this.getMap().render();
-};
-/** Draw compass
-* @param {ol.event} e postcompose event
-* @private
-*/
-ol.control.Compass.prototype._draw = function(e) {
-  var ctx = this.getContext(e);
-  if (!ctx || !this.getVisible()) return;
-  var canvas = ctx.canvas;
-  // 8 angles
-  var i, da = [];
-  for (i=0; i<8; i++) da[i] = [ Math.cos(Math.PI*i/8), Math.sin(Math.PI*i/8) ];
-  // Retina device
-  var ratio = e.frameState.pixelRatio;
-  ctx.save();
-  ctx.scale(ratio,ratio);
-  var w = this.element.clientWidth;
-  var h = this.element.clientHeight;
-  var pos = {left: this.element.offsetLeft, top: this.element.offsetTop};
-  var compass = this.img_;
-  var rot = e.frameState.viewState.rotation;
-  ctx.beginPath();
-    ctx.translate(pos.left+w/2, pos.top+h/2);
-    if (this.get('rotateVithView')) ctx.rotate(rot);
+  /** Create a default image.
+   * @param {number} s the size of the compass
+   * @private
+   */
+  defaultCompass_(s, color) {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext("2d");
+    s = canvas.width = canvas.height = s || 150;
+    var r = s / 2;
+    var r2 = 0.22 * r;
+    function draw(r, r2) {
+      ctx.fillStyle = color || "#963";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(r, 0); ctx.lineTo(r2, r2); ctx.moveTo(0, 0);
+      ctx.lineTo(-r, 0); ctx.lineTo(-r2, -r2); ctx.moveTo(0, 0);
+      ctx.lineTo(0, r); ctx.lineTo(-r2, r2); ctx.moveTo(0, 0);
+      ctx.lineTo(0, -r); ctx.lineTo(r2, -r2); ctx.moveTo(0, 0);
+      ctx.fill();
+      ctx.stroke();
+    }
+    function draw2(r, r2) {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(r, 0); ctx.lineTo(r2, -r2); ctx.moveTo(0, 0);
+      ctx.lineTo(-r, 0); ctx.lineTo(-r2, r2); ctx.moveTo(0, 0);
+      ctx.lineTo(0, r); ctx.lineTo(r2, r2); ctx.moveTo(0, 0);
+      ctx.lineTo(0, -r); ctx.lineTo(-r2, -r2); ctx.moveTo(0, 0);
+      ctx.fill();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(r, 0); ctx.lineTo(r2, -r2); ctx.moveTo(0, 0);
+      ctx.lineTo(-r, 0); ctx.lineTo(-r2, r2); ctx.moveTo(0, 0);
+      ctx.lineTo(0, r); ctx.lineTo(r2, r2); ctx.moveTo(0, 0);
+      ctx.lineTo(0, -r); ctx.lineTo(-r2, -r2); ctx.moveTo(0, 0);
+      ctx.stroke();
+    }
+    ctx.translate(r, r);
+    ctx.strokeStyle = color || "#963";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 0.41, 0, 2 * Math.PI);
+    ctx.arc(0, 0, s * 0.44, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.rotate(Math.PI / 4);
+    draw(r * 0.9, r2 * 0.8);
+    draw2(r * 0.9, r2 * 0.8);
+    ctx.rotate(-Math.PI / 4);
+    draw(r, r2);
+    draw2(r, r2);
+    return canvas;
+  }
+  /** Get control visibility
+   * @return {boolean}
+   */
+  getVisible() {
+    return ol.ext.element.getStyle(this.element, 'display') === 'block';
+  }
+  /** Set visibility
+   * @param {boolean} b
+   */
+  setVisible(b) {
+    if (b)
+      this.element.classList.add('ol-visible');
+    else
+      this.element.classList.remove('ol-visible');
+    if (this.getMap())
+      this.getMap().render();
+  }
+  /** Draw compass
+  * @param {ol.event} e postcompose event
+  * @private
+  */
+  _draw(e) {
+    var ctx = this.getContext(e);
+    if (!ctx || !this.getVisible())
+      return;
+    var canvas = ctx.canvas;
+    // 8 angles
+    var i, da = [];
+    for (i = 0; i < 8; i++)
+      da[i] = [Math.cos(Math.PI * i / 8), Math.sin(Math.PI * i / 8)];
+    // Retina device
+    var ratio = e.frameState.pixelRatio;
+    ctx.save();
+    ctx.scale(ratio, ratio);
+    var w = this.element.clientWidth;
+    var h = this.element.clientHeight;
+    var pos = { left: this.element.offsetLeft, top: this.element.offsetTop };
+    var compass = this.img_;
+    var rot = e.frameState.viewState.rotation;
+    ctx.beginPath();
+    ctx.translate(pos.left + w / 2, pos.top + h / 2);
+    if (this.get('rotateVithView'))
+      ctx.rotate(rot);
     if (this.getStroke().getWidth()) {
       ctx.beginPath();
-        ctx.strokeStyle = this.getStroke().getColor();
-        ctx.lineWidth = this.getStroke().getWidth();
-        var m = Math.max(canvas.width, canvas.height);
-        for (i=0; i<8; i++) {
-          ctx.moveTo (-da[i][0]*m, -da[i][1]*m);
-          ctx.lineTo (da[i][0]*m, da[i][1]*m);
-        }
+      ctx.strokeStyle = this.getStroke().getColor();
+      ctx.lineWidth = this.getStroke().getWidth();
+      var m = Math.max(canvas.width, canvas.height);
+      for (i = 0; i < 8; i++) {
+        ctx.moveTo(-da[i][0] * m, -da[i][1] * m);
+        ctx.lineTo(da[i][0] * m, da[i][1] * m);
+      }
       ctx.stroke();
     }
     if (compass.width) {
-      ctx.drawImage (compass, -w/2, -h/2, w, h);
+      ctx.drawImage(compass, -w / 2, -h / 2, w, h);
     }
-  ctx.closePath();
-  ctx.restore();
-};
+    ctx.closePath();
+    ctx.restore();
+  }
+}
 
 /** 
  * @classdesc
@@ -11654,556 +11693,754 @@ ol.control.Print = class olcontrolPrint extends ol.control.Control {
  *	@param {function} [options.saveAs] a function to save the image as blob
  *	@param {*} [options.jsPDF] jsPDF object to save map as pdf
  */
-ol.control.PrintDialog = function(options) {
-  if (!options) options = {};
-  this._lang = options.lang || 'en';
-  var element = ol.ext.element.create('DIV', {
-    className: (options.className || 'ol-print') + ' ol-unselectable ol-control'
-  });
-  ol.ext.element.create('BUTTON', {
-    type: 'button',
-    title: options.title || 'Print',
-    click: function() { 
-      this.print(); 
-    }.bind(this),
-    parent: element
-  });
-  ol.control.Control.call(this, {
-    element: element
-  });
-  // Open in a new window
-  if (options.openWindow) {
-    this.on('print', function(e) {
-      // Print success
-      if (e.canvas) {
-        window.open().document.write('<img src="'+e.canvas.toDataURL()+'"/>');
-      }
-    });
-  }
-  // Print control
-  options.target = ol.ext.element.create('DIV');
-  var printCtrl = this._printCtrl = new ol.control.Print(options);
-  printCtrl.on(['print','error','printing'], function(e) {
-    content.setAttribute('data-status', e.type);
-    if (!e.clipboard) {
-      this.dispatchEvent(e);
+ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
+  constructor(options) {
+    options = options || {}
+    var element = ol.ext.element.create('DIV', {
+      className: (options.className || 'ol-print') + ' ol-unselectable ol-control'
+    })
+    super({
+      element: element
+    })
+    this._lang = options.lang || 'en'
+    ol.ext.element.create('BUTTON', {
+      type: 'button',
+      title: options.title || 'Print',
+      click: function () {
+        this.print()
+      }.bind(this),
+      parent: element
+    })
+    // Open in a new window
+    if (options.openWindow) {
+      this.on('print', function (e) {
+        // Print success
+        if (e.canvas) {
+          window.open().document.write('<img src="' + e.canvas.toDataURL() + '"/>')
+        }
+      })
     }
-  }.bind(this));
-  // North arrow
-  this._compass = new ol.control.Compass({ 
-    src: options.northImage || 'compact', 
-    visible: false, 
-    className: 'olext-print-compass',
-    style: new ol.style.Stroke({ color: '#333', width: 0 })
-  });
-  // Print dialog
-  var printDialog = this._printDialog = new ol.control.Dialog({
-    target: document.body,
-    closeBox: true,
-    className: 'ol-ext-print-dialog'
-  });
-  var content = printDialog.getContentElement();
-  this._input = {};
-  var param = ol.ext.element.create('DIV',{
-    className: 'ol-print-param',
-    parent: content
-  });
-  this._pages = [ ol.ext.element.create('DIV', { 
-    className: 'ol-page'
-  })];
-  var printMap = ol.ext.element.create('DIV', {
-    className: 'ol-map',
-    parent: this._pages[0]
-  });
-  ol.ext.element.create('DIV', {
-    html: this._pages[0],
-    className: 'ol-print-map',
-    parent: content
-  });
-  ol.ext.element.create('H2',{
-    html: this.i18n('title'),
-    parent: param
-  });
-  var ul = ol.ext.element.create('UL',{ parent: param });
-  // Orientation
-  var li = ol.ext.element.create('LI', { 
-    /*
-    html: ol.ext.element.create('LABEL', {
-      html: this.18n('orientation')
-    }),
-    */
-    className: 'ol-orientation',
-    parent: ul 
-  });
-  this._input.orientation = { list: li };
-  var label = ol.ext.element.create('LABEL', {
-    className: 'portrait',
-    parent: li
-  });
-  this._input.orientation.portrait = ol.ext.element.create('INPUT', {
-    type: 'radio',
-    name: 'ol-print-orientation',
-    value: 'portrait',
-    checked: true,
-    on: { change: function(e) { 
-      this.setOrientation(e.target.value);
-    }.bind(this) },
-    parent: label
-  });
-  ol.ext.element.create('SPAN', { 
-    html: this.i18n('portrait'),
-    parent: label
-  });
-  label = ol.ext.element.create('LABEL', {
-    className: 'landscape',
-    parent: li
-  });
-  this._input.orientation.landscape = ol.ext.element.create('INPUT',{
-    type: 'radio',
-    name: 'ol-print-orientation',
-    value: 'landscape',
-    on: { change: function(e) { 
-      this.setOrientation(e.target.value);
-    }.bind(this) },
-    parent: label
-  });
-  ol.ext.element.create('SPAN', { 
-    html: this.i18n('landscape'),
-    parent: label 
-  });
-  // Page size
-  var s; 
-  li = ol.ext.element.create('LI',{ 
-    html: ol.ext.element.create('LABEL', {
-      html: this.i18n('size'),
-    }),
-    className: 'ol-size',
-    parent: ul 
-  });
-  var size = this._input.size = ol.ext.element.create('SELECT', {
-    on: { change: function(){
-      this.setSize(size.value || originalSize);
-    }.bind(this) },
-    parent: li
-  });
-  for (s in this.paperSize) {
-    ol.ext.element.create('OPTION', {
-      html: s + (this.paperSize[s] ? ' - '+this.paperSize[s][0]+'x'+this.paperSize[s][1]+' mm' : this.i18n('custom')),
-      value: s,
-      parent: size
-    });
-  }
-  // Margin
-  li = ol.ext.element.create('LI',{ 
-    html: ol.ext.element.create('LABEL', {
-      html: this.i18n('margin'),
-    }),
-    className: 'ol-margin',
-    parent: ul 
-  });
-  var margin = this._input.margin = ol.ext.element.create('SELECT', {
-    on: { change: function(){
-      this.setMargin(margin.value);
-    }.bind(this) },
-    parent: li
-  });
-  for (s in this.marginSize) {
-    ol.ext.element.create('OPTION', {
-      html: this.i18n(s) + ' - ' + this.marginSize[s] + ' mm',
-      value: this.marginSize[s],
-      parent: margin
-    });
-  }
-  // Scale
-  li = ol.ext.element.create('LI',{ 
-    html: ol.ext.element.create('LABEL', {
-      html: this.i18n('scale'),
-    }),
-    className: 'ol-scale',
-    parent: ul 
-  });
-  var scale = this._input.scale = ol.ext.element.create('SELECT', {
-    on: { change: function() {
-      this.setScale(parseInt(scale.value))
-    }.bind(this) },
-    parent: li
-  });
-  Object.keys(this.scales).forEach(function(s) {
-    ol.ext.element.create('OPTION', {
-      html: this.scales[s],
-      value: s,
-      parent: scale
-    });
-  }.bind(this));
-  // Legend
-  li = ol.ext.element.create('LI',{ 
-    className: 'ol-legend',
-    parent: ul 
-  });
-  var legend = ol.ext.element.createSwitch({ 
-    html: (this.i18n('legend')),
-    checked: false,
-    on: { change: function() {
-      extraCtrl.legend.control.setCanvas(legend.checked);
-    }.bind(this) },
-    parent: li 
-  });
-  // North
-  li = ol.ext.element.create('LI',{ 
-    className: 'ol-print-north',
-    parent: ul 
-  });
-  var north = this._input.north = ol.ext.element.createSwitch({ 
-    html: this.i18n('north'),
-    checked: 'checked',
-    on:  { change: function() {
-      if (north.checked) this._compass.element.classList.add('ol-print-compass');
-      else this._compass.element.classList.remove('ol-print-compass');
-      this.getMap().render();
-    }.bind(this)},
-    parent: li 
-  });
-  // Title
-  li = ol.ext.element.create('LI',{ 
-    className: 'ol-print-title',
-    parent: ul 
-  });
-  var title = ol.ext.element.createSwitch({ 
-    html: this.i18n('mapTitle'),
-    checked: false,
-    on: { change: function(e) {
-      extraCtrl.title.control.setVisible(e.target.checked);
-    }.bind(this) },
-    parent: li 
-  });
-  var titleText = ol.ext.element.create('INPUT', {
-    type: 'text',
-    placeholder: this.i18n('mapTitle'),
-    on: {
-      keydown: function(e) { 
-        if (e.keyCode === 13) e.preventDefault();
-      },
-      keyup: function() { 
-        extraCtrl.title.control.setTitle(titleText.value);
-      },
-      change: function() {
-        extraCtrl.title.control.setTitle(titleText.value);
-      }.bind(this)
-    },
-    parent: li
-  });
-  // User div element
-  var userElt = ol.ext.element.create('DIV', {
-    className: 'ol-user-param',
-    parent: param
-  });
-  // Save as
-  li = ol.ext.element.create('LI',{ 
-    className: 'ol-saveas',
-    parent: ul 
-  });
-  var copied = ol.ext.element.create('DIV', {
-    html: this.i18n('copied'),
-    className: 'ol-clipboard-copy',
-    parent: li
-  });
-  var save = ol.ext.element.create('SELECT', {
-    on: { change: function() {
-      // Copy to clipboard
-      if (this.formats[save.value].clipboard) {
-        printCtrl.copyMap(this.formats[save.value], function(isok) {
-          if (isok) {
-            copied.classList.add('visible');
-            setTimeout(function() { copied.classList.remove('visible'); }, 1000);
-          }
-        });
-      } else {
-        // Print to file
-        var format = (typeof(this.getSize())==='string' ? this.getSize() : null);
-        var opt = Object.assign({
-          format: format,
-          size: format ? this.paperSize[format] : null,
-          orient: this.getOrientation(),
-          margin: this.getMargin(),
-        }, this.formats[save.value]);
-        printCtrl.print(opt);
+    // Print control
+    options.target = ol.ext.element.create('DIV')
+    var printCtrl = this._printCtrl = new ol.control.Print(options)
+    printCtrl.on(['print', 'error', 'printing'], function (e) {
+      content.setAttribute('data-status', e.type)
+      if (!e.clipboard) {
+        this.dispatchEvent(e)
       }
-      save.value = '';
-    }.bind(this) },
-    parent: li
-  });
-  ol.ext.element.create('OPTION', {
-    html: this.i18n('saveas'),
-    style: { display: 'none' },
-    value: '',
-    parent: save
-  });
-  this.formats.forEach(function(format, i) {
-    if (format.pdf) {
-      if (options.pdf === false) return;
-    } else if (format.clipboard) {
-      if (options.copy === false) return;
-    } else if (options.save === false) {
-      return;
+    }.bind(this))
+    // North arrow
+    this._compass = new ol.control.Compass({
+      src: options.northImage || 'compact',
+      visible: false,
+      className: 'olext-print-compass',
+      style: new ol.style.Stroke({ color: '#333', width: 0 })
+    })
+    // Print dialog
+    var printDialog = this._printDialog = new ol.control.Dialog({
+      target: document.body,
+      closeBox: true,
+      className: 'ol-ext-print-dialog'
+    })
+    var content = printDialog.getContentElement()
+    this._input = {}
+    var param = ol.ext.element.create('DIV', {
+      className: 'ol-print-param',
+      parent: content
+    })
+    this._pages = [ol.ext.element.create('DIV', {
+      className: 'ol-page'
+    })]
+    var printMap = ol.ext.element.create('DIV', {
+      className: 'ol-map',
+      parent: this._pages[0]
+    })
+    ol.ext.element.create('DIV', {
+      html: this._pages[0],
+      className: 'ol-print-map',
+      parent: content
+    })
+    ol.ext.element.create('H2', {
+      html: this.i18n('title'),
+      parent: param
+    })
+    var ul = ol.ext.element.create('UL', { parent: param })
+    // Orientation
+    var li = ol.ext.element.create('LI', {
+      /*
+      html: ol.ext.element.create('LABEL', {
+        html: this.18n('orientation')
+      }),
+      */
+      className: 'ol-orientation',
+      parent: ul
+    })
+    this._input.orientation = { list: li }
+    var label = ol.ext.element.create('LABEL', {
+      className: 'portrait',
+      parent: li
+    })
+    this._input.orientation.portrait = ol.ext.element.create('INPUT', {
+      type: 'radio',
+      name: 'ol-print-orientation',
+      value: 'portrait',
+      checked: true,
+      on: {
+        change: function (e) {
+          this.setOrientation(e.target.value)
+        }.bind(this)
+      },
+      parent: label
+    })
+    ol.ext.element.create('SPAN', {
+      html: this.i18n('portrait'),
+      parent: label
+    })
+    label = ol.ext.element.create('LABEL', {
+      className: 'landscape',
+      parent: li
+    })
+    this._input.orientation.landscape = ol.ext.element.create('INPUT', {
+      type: 'radio',
+      name: 'ol-print-orientation',
+      value: 'landscape',
+      on: {
+        change: function (e) {
+          this.setOrientation(e.target.value)
+        }.bind(this)
+      },
+      parent: label
+    })
+    ol.ext.element.create('SPAN', {
+      html: this.i18n('landscape'),
+      parent: label
+    })
+    // Page size
+    var s
+    li = ol.ext.element.create('LI', {
+      html: ol.ext.element.create('LABEL', {
+        html: this.i18n('size'),
+      }),
+      className: 'ol-size',
+      parent: ul
+    })
+    var size = this._input.size = ol.ext.element.create('SELECT', {
+      on: {
+        change: function () {
+          this.setSize(size.value || originalSize)
+        }.bind(this)
+      },
+      parent: li
+    })
+    for (s in this.paperSize) {
+      ol.ext.element.create('OPTION', {
+        html: s + (this.paperSize[s] ? ' - ' + this.paperSize[s][0] + 'x' + this.paperSize[s][1] + ' mm' : this.i18n('custom')),
+        value: s,
+        parent: size
+      })
     }
-    ol.ext.element.create('OPTION', {
-      html: this.i18n(format.title),
-      value: i,
-      parent: save
-    });
-  }.bind(this));
-  // Save Legend
-  li = ol.ext.element.create('LI',{ 
-    className: 'ol-savelegend',
-    parent: ul 
-  });
-  var copylegend = ol.ext.element.create('DIV', {
-    html: this.i18n('copied'),
-    className: 'ol-clipboard-copy',
-    parent: li
-  });
-  var saveLegend = ol.ext.element.create('SELECT', {
-    on: { change: function() {
-      // Print canvas (with white background)
-      var clegend = extraCtrl.legend.control.getLegend().getCanvas();
-      var canvas = document.createElement('CANVAS');
-      canvas.width = clegend.width;
-      canvas.height = clegend.height;
-      var ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(clegend, 0, 0);
-      // Copy to clipboard
-      if (this.formats[saveLegend.value].clipboard) {
-        canvas.toBlob(function(blob) {
-          try {
-            navigator.clipboard.write([
-              new window.ClipboardItem(
-                Object.defineProperty({}, blob.type, {
-                  value: blob,
-                  enumerable: true
-                })
-              )
-            ])
-            copylegend.classList.add('visible');
-            setTimeout(function() { copylegend.classList.remove('visible'); }, 1000);
-          } catch (err) { /* errror */ }
-        }, 'image/png');
-      } else {
-        var image;
-        try {
-          image = canvas.toDataURL(this.formats[saveLegend.value].imageType, this.formats[saveLegend.value].quality);
-          var format = (typeof(this.getSize())==='string' ? this.getSize() : 'A4');
-          var w = canvas.width / 96 * 25.4;
-          var h = canvas.height / 96 * 25.4;
-          var size = this.paperSize[format];
-          if (this.getOrientation()==='landscape') size = [size[1], size[0]];
-          var position = [
-            (size[0] - w) /2,
-            (size[1] - h) /2
-          ]; 
-          this.dispatchEvent({
-            type: 'print',
-            print: {
-              legend: true,
+    // Margin
+    li = ol.ext.element.create('LI', {
+      html: ol.ext.element.create('LABEL', {
+        html: this.i18n('margin'),
+      }),
+      className: 'ol-margin',
+      parent: ul
+    })
+    var margin = this._input.margin = ol.ext.element.create('SELECT', {
+      on: {
+        change: function () {
+          this.setMargin(margin.value)
+        }.bind(this)
+      },
+      parent: li
+    })
+    for (s in this.marginSize) {
+      ol.ext.element.create('OPTION', {
+        html: this.i18n(s) + ' - ' + this.marginSize[s] + ' mm',
+        value: this.marginSize[s],
+        parent: margin
+      })
+    }
+    // Scale
+    li = ol.ext.element.create('LI', {
+      html: ol.ext.element.create('LABEL', {
+        html: this.i18n('scale'),
+      }),
+      className: 'ol-scale',
+      parent: ul
+    })
+    var scale = this._input.scale = ol.ext.element.create('SELECT', {
+      on: {
+        change: function () {
+          this.setScale(parseInt(scale.value))
+        }.bind(this)
+      },
+      parent: li
+    })
+    Object.keys(this.scales).forEach(function (s) {
+      ol.ext.element.create('OPTION', {
+        html: this.scales[s],
+        value: s,
+        parent: scale
+      })
+    }.bind(this))
+    // Legend
+    li = ol.ext.element.create('LI', {
+      className: 'ol-legend',
+      parent: ul
+    })
+    var legend = ol.ext.element.createSwitch({
+      html: (this.i18n('legend')),
+      checked: false,
+      on: {
+        change: function () {
+          extraCtrl.legend.control.setCanvas(legend.checked)
+        }.bind(this)
+      },
+      parent: li
+    })
+    // North
+    li = ol.ext.element.create('LI', {
+      className: 'ol-print-north',
+      parent: ul
+    })
+    var north = this._input.north = ol.ext.element.createSwitch({
+      html: this.i18n('north'),
+      checked: 'checked',
+      on: {
+        change: function () {
+          if (north.checked)
+            this._compass.element.classList.add('ol-print-compass')
+          else
+            this._compass.element.classList.remove('ol-print-compass')
+          this.getMap().render()
+        }.bind(this)
+      },
+      parent: li
+    })
+    // Title
+    li = ol.ext.element.create('LI', {
+      className: 'ol-print-title',
+      parent: ul
+    })
+    var title = ol.ext.element.createSwitch({
+      html: this.i18n('mapTitle'),
+      checked: false,
+      on: {
+        change: function (e) {
+          extraCtrl.title.control.setVisible(e.target.checked)
+        }.bind(this)
+      },
+      parent: li
+    })
+    var titleText = ol.ext.element.create('INPUT', {
+      type: 'text',
+      placeholder: this.i18n('mapTitle'),
+      on: {
+        keydown: function (e) {
+          if (e.keyCode === 13)
+            e.preventDefault()
+        },
+        keyup: function () {
+          extraCtrl.title.control.setTitle(titleText.value)
+        },
+        change: function () {
+          extraCtrl.title.control.setTitle(titleText.value)
+        }.bind(this)
+      },
+      parent: li
+    })
+    // User div element
+    var userElt = ol.ext.element.create('DIV', {
+      className: 'ol-user-param',
+      parent: param
+    })
+    // Save as
+    li = ol.ext.element.create('LI', {
+      className: 'ol-saveas',
+      parent: ul
+    })
+    var copied = ol.ext.element.create('DIV', {
+      html: this.i18n('copied'),
+      className: 'ol-clipboard-copy',
+      parent: li
+    })
+    var save = ol.ext.element.create('SELECT', {
+      on: {
+        change: function () {
+          // Copy to clipboard
+          if (this.formats[save.value].clipboard) {
+            printCtrl.copyMap(this.formats[save.value], function (isok) {
+              if (isok) {
+                copied.classList.add('visible')
+                setTimeout(function () { copied.classList.remove('visible') }, 1000)
+              }
+            })
+          } else {
+            // Print to file
+            var format = (typeof (this.getSize()) === 'string' ? this.getSize() : null)
+            var opt = Object.assign({
               format: format,
-              orientation: this.getOrientation(),
-              unit: 'mm',
-              size: this.paperSize[format],
-              position: position,
-              imageWidth: w,
-              imageHeight: h
-            },
-            image: image,
-            imageType: this.formats[saveLegend.value].imageType,
-            pdf: this.formats[saveLegend.value].pdf,
-            quality: this.formats[saveLegend.value].quality,
-            canvas: canvas
-          })
-        } catch(err) { /* error */ }
-      }
-      saveLegend.value = '';
-    }.bind(this) },
-    parent: li
-  });
-  ol.ext.element.create('OPTION', {
-    html: this.i18n('saveLegend'),
-    style: { display: 'none' },
-    value: '',
-    parent: saveLegend
-  });
-  this.formats.forEach(function(format, i) {
+              size: format ? this.paperSize[format] : null,
+              orient: this.getOrientation(),
+              margin: this.getMargin(),
+            }, this.formats[save.value])
+            printCtrl.print(opt)
+          }
+          save.value = ''
+        }.bind(this)
+      },
+      parent: li
+    })
     ol.ext.element.create('OPTION', {
-      html: this.i18n(format.title),
-      value: i,
+      html: this.i18n('saveas'),
+      style: { display: 'none' },
+      value: '',
+      parent: save
+    })
+    this.formats.forEach(function (format, i) {
+      if (format.pdf) {
+        if (options.pdf === false)
+          return
+      } else if (format.clipboard) {
+        if (options.copy === false)
+          return
+      } else if (options.save === false) {
+        return
+      }
+      ol.ext.element.create('OPTION', {
+        html: this.i18n(format.title),
+        value: i,
+        parent: save
+      })
+    }.bind(this))
+    // Save Legend
+    li = ol.ext.element.create('LI', {
+      className: 'ol-savelegend',
+      parent: ul
+    })
+    var copylegend = ol.ext.element.create('DIV', {
+      html: this.i18n('copied'),
+      className: 'ol-clipboard-copy',
+      parent: li
+    })
+    var saveLegend = ol.ext.element.create('SELECT', {
+      on: {
+        change: function () {
+          // Print canvas (with white background)
+          var clegend = extraCtrl.legend.control.getLegend().getCanvas()
+          var canvas = document.createElement('CANVAS')
+          canvas.width = clegend.width
+          canvas.height = clegend.height
+          var ctx = canvas.getContext('2d')
+          ctx.fillStyle = '#fff'
+          ctx.fillRect(0, 0, canvas.width, canvas.height)
+          ctx.drawImage(clegend, 0, 0)
+          // Copy to clipboard
+          if (this.formats[saveLegend.value].clipboard) {
+            canvas.toBlob(function (blob) {
+              try {
+                navigator.clipboard.write([
+                  new window.ClipboardItem(
+                    Object.defineProperty({}, blob.type, {
+                      value: blob,
+                      enumerable: true
+                    })
+                  )
+                ])
+                copylegend.classList.add('visible')
+                setTimeout(function () { copylegend.classList.remove('visible') }, 1000)
+              } catch (err) { /* errror */ }
+            }, 'image/png')
+          } else {
+            var image
+            try {
+              image = canvas.toDataURL(this.formats[saveLegend.value].imageType, this.formats[saveLegend.value].quality)
+              var format = (typeof (this.getSize()) === 'string' ? this.getSize() : 'A4')
+              var w = canvas.width / 96 * 25.4
+              var h = canvas.height / 96 * 25.4
+              var size = this.paperSize[format]
+              if (this.getOrientation() === 'landscape')
+                size = [size[1], size[0]]
+              var position = [
+                (size[0] - w) / 2,
+                (size[1] - h) / 2
+              ]
+              this.dispatchEvent({
+                type: 'print',
+                print: {
+                  legend: true,
+                  format: format,
+                  orientation: this.getOrientation(),
+                  unit: 'mm',
+                  size: this.paperSize[format],
+                  position: position,
+                  imageWidth: w,
+                  imageHeight: h
+                },
+                image: image,
+                imageType: this.formats[saveLegend.value].imageType,
+                pdf: this.formats[saveLegend.value].pdf,
+                quality: this.formats[saveLegend.value].quality,
+                canvas: canvas
+              })
+            } catch (err) { /* error */ }
+          }
+          saveLegend.value = ''
+        }.bind(this)
+      },
+      parent: li
+    })
+    ol.ext.element.create('OPTION', {
+      html: this.i18n('saveLegend'),
+      style: { display: 'none' },
+      value: '',
       parent: saveLegend
-    });
-  }.bind(this));
-  // Print
-  var prButtons = ol.ext.element.create('DIV', {
-    className: 'ol-ext-buttons',
-    parent: param
-  });
-  ol.ext.element.create('BUTTON', {
-    html: this.i18n('printBt'),
-    type: 'submit',
-    click: function(e) {
-      e.preventDefault();
-      window.print();
-    },
-    parent: prButtons
-  });
-  ol.ext.element.create('BUTTON', {
-    html: this.i18n('cancel'),
-    type: 'button',
-    click: function() { printDialog.hide(); },
-    parent: prButtons
-  });
-  ol.ext.element.create('DIV', {
-    html: this.i18n('errorMsg'),
-    className: 'ol-error',
-    parent: param
-  });
-  // Handle dialog show/hide
-  var originalTarget;
-  var originalSize;
-  var scalelistener;
-  var extraCtrl = {};
-  printDialog.on('show', function() {
-    // Dialog is showing
-    this.dispatchEvent({ type: 'show', userElement: userElt, dialog: this._printDialog, page: this.getPage() });
-    //
-    var map = this.getMap();
-    if (!map) return;
-    // Print document
-    document.body.classList.add('ol-print-document');
-    originalTarget = map.getTargetElement();
-    originalSize = map.getSize();
-    if (typeof(this.getSize()) === 'string') this.setSize(this.getSize());
-    else this.setSize(originalSize);
-    map.setTarget(printMap);
-    // Refresh on move end
-    if (scalelistener) ol.Observable.unByKey(scalelistener);
-    scalelistener = map.on('moveend', function() {
-      this.setScale(ol.sphere.getMapScale(map));
-    }.bind(this));
-    this.setScale(ol.sphere.getMapScale(map));
-    // Get extra controls
-    extraCtrl = {};
-    this.getMap().getControls().forEach(function(c) {
-      if (c instanceof ol.control.Legend) {
-        extraCtrl.legend = { control: c };
+    })
+    this.formats.forEach(function (format, i) {
+      ol.ext.element.create('OPTION', {
+        html: this.i18n(format.title),
+        value: i,
+        parent: saveLegend
+      })
+    }.bind(this))
+    // Print
+    var prButtons = ol.ext.element.create('DIV', {
+      className: 'ol-ext-buttons',
+      parent: param
+    })
+    ol.ext.element.create('BUTTON', {
+      html: this.i18n('printBt'),
+      type: 'submit',
+      click: function (e) {
+        e.preventDefault()
+        window.print()
+      },
+      parent: prButtons
+    })
+    ol.ext.element.create('BUTTON', {
+      html: this.i18n('cancel'),
+      type: 'button',
+      click: function () { printDialog.hide() },
+      parent: prButtons
+    })
+    ol.ext.element.create('DIV', {
+      html: this.i18n('errorMsg'),
+      className: 'ol-error',
+      parent: param
+    })
+    // Handle dialog show/hide
+    var originalTarget
+    var originalSize
+    var scalelistener
+    var extraCtrl = {}
+    printDialog.on('show', function () {
+      // Dialog is showing
+      this.dispatchEvent({ type: 'show', userElement: userElt, dialog: this._printDialog, page: this.getPage() })
+      //
+      var map = this.getMap()
+      if (!map)
+        return
+      // Print document
+      document.body.classList.add('ol-print-document')
+      originalTarget = map.getTargetElement()
+      originalSize = map.getSize()
+      if (typeof (this.getSize()) === 'string')
+        this.setSize(this.getSize())
+      else
+        this.setSize(originalSize)
+      map.setTarget(printMap)
+      // Refresh on move end
+      if (scalelistener)
+        ol.Observable.unByKey(scalelistener)
+      scalelistener = map.on('moveend', function () {
+        this.setScale(ol.sphere.getMapScale(map))
+      }.bind(this))
+      this.setScale(ol.sphere.getMapScale(map))
+      // Get extra controls
+      extraCtrl = {}
+      this.getMap().getControls().forEach(function (c) {
+        if (c instanceof ol.control.Legend) {
+          extraCtrl.legend = { control: c }
+        }
+        if (c instanceof ol.control.CanvasTitle) {
+          extraCtrl.title = { control: c }
+        }
+        if (c instanceof ol.control.Compass) {
+          if (extraCtrl.compass) {
+            c.element.classList.remove('ol-print-compass')
+          } else {
+            if (this._input.north.checked)
+              c.element.classList.add('ol-print-compass')
+            else
+              c.element.classList.remove('ol-print-compass')
+            this._compass = c
+            extraCtrl.compass = { control: c }
+          }
+        }
+      }.bind(this))
+      // Show hide title
+      if (extraCtrl.title) {
+        title.checked = extraCtrl.title.isVisible = extraCtrl.title.control.getVisible()
+        titleText.value = extraCtrl.title.control.getTitle()
+        title.parentNode.parentNode.classList.remove('hidden')
+      } else {
+        title.parentNode.parentNode.classList.add('hidden')
       }
-      if (c instanceof ol.control.CanvasTitle) {
-        extraCtrl.title = { control: c };
+      // Show hide legend
+      if (extraCtrl.legend) {
+        extraCtrl.legend.ison = extraCtrl.legend.control.onCanvas()
+        extraCtrl.legend.collapsed = extraCtrl.legend.control.isCollapsed()
+        extraCtrl.legend.control.collapse(false)
+        saveLegend.parentNode.classList.remove('hidden')
+        legend.parentNode.parentNode.classList.remove('hidden')
+        legend.checked = !extraCtrl.legend.collapsed
+        extraCtrl.legend.control.setCanvas(!extraCtrl.legend.collapsed)
+      } else {
+        saveLegend.parentNode.classList.add('hidden')
+        legend.parentNode.parentNode.classList.add('hidden')
       }
-      if (c instanceof ol.control.Compass) {
-        if (extraCtrl.compass) {
-          c.element.classList.remove('ol-print-compass')
-        } else {
-          if (this._input.north.checked) c.element.classList.add('ol-print-compass')
-          else c.element.classList.remove('ol-print-compass')
-          this._compass = c;
-          extraCtrl.compass = { control: c };
+    }.bind(this))
+    printDialog.on('hide', function () {
+      // No print
+      document.body.classList.remove('ol-print-document')
+      if (!originalTarget)
+        return
+      this.getMap().setTarget(originalTarget)
+      originalTarget = null
+      if (scalelistener)
+        ol.Observable.unByKey(scalelistener)
+      // restore
+      if (extraCtrl.title) {
+        extraCtrl.title.control.setVisible(extraCtrl.title.isVisible)
+      }
+      if (extraCtrl.legend) {
+        extraCtrl.legend.control.setCanvas(extraCtrl.legend.ison)
+        extraCtrl.legend.control.collapse(extraCtrl.legend.collapsed)
+      }
+      this.dispatchEvent({ type: 'hide' })
+    }.bind(this))
+    // Update preview on resize
+    window.addEventListener('resize', function () {
+      this.setSize()
+    }.bind(this))
+    // Save or print
+    if (options.saveAs) {
+      this.on('print', function (e) {
+        if (!e.pdf) {
+          // Save image as file
+          e.canvas.toBlob(function (blob) {
+            var name = (e.print.legend ? 'legend.' : 'map.') + e.imageType.replace('image/', '')
+            options.saveAs(blob, name)
+          }, e.imageType, e.quality)
+        }
+      })
+    }
+    // Save or print
+    if (options.jsPDF) {
+      this.on('print', function (e) {
+        if (e.pdf) {
+          // Export pdf using the print info
+          var pdf = new options.jsPDF({
+            orientation: e.print.orientation,
+            unit: e.print.unit,
+            format: e.print.size
+          })
+          pdf.addImage(e.image, 'JPEG', e.print.position[0], e.print.position[0], e.print.imageWidth, e.print.imageHeight)
+          pdf.save(e.print.legend ? 'legend.pdf' : 'map.pdf')
+        }
+      })
+    }
+  }
+  /** Add a new language
+   * @param {string} lang lang id
+   * @param {Objetct} labels
+   */
+  static addLang(lang, labels) {
+    ol.control.PrintDialog.prototype._labels[lang] = labels
+  }
+  /** Check if the dialog is oprn
+   * @return {boolean}
+   */
+  isOpen() {
+    return this._printDialog.isOpen()
+  }
+  /** Translate
+   * @param {string} what
+   * @returns {string}
+   */
+  i18n(what) {
+    var rep = this._labels.en[what] || 'bad param'
+    if (this._labels[this._lang] && this._labels[this._lang][what]) {
+      rep = this._labels[this._lang][what]
+    }
+    return rep
+  }
+  /** Get print orientation
+   * @returns {string}
+   */
+  getOrientation() {
+    return this._orientation || 'portrait'
+  }
+  /** Set print orientation
+   * @param {string} ori landscape or portrait
+   */
+  setOrientation(ori) {
+    this._orientation = (ori === 'landscape' ? 'landscape' : 'portrait')
+    this._input.orientation[this._orientation].checked = true
+    this.setSize()
+  }
+  /** Get print margin
+   * @returns {number}
+   */
+  getMargin() {
+    return this._margin || 0
+  }
+  /** Set print margin
+   * @param {number}
+   */
+  setMargin(margin) {
+    this._margin = margin
+    this._input.margin.value = margin
+    this.setSize()
+  }
+  /** Get print size
+   * @returns {ol.size}
+   */
+  getSize() {
+    return this._size
+  }
+  /** Set map print size
+   * @param {ol/size|string} size map size as ol/size or A4, etc.
+   */
+  setSize(size) {
+    // reset status
+    this._printDialog.getContentElement().setAttribute('data-status', '')
+    if (size)
+      this._size = size
+    else
+      size = this._size
+    if (!size)
+      return
+    if (typeof (size) === 'string') {
+      // Test uppercase
+      for (var k in this.paperSize) {
+        if (k && new RegExp(k, 'i').test(size)) {
+          size = k
         }
       }
-    }.bind(this));
-    // Show hide title
-    if (extraCtrl.title) {
-      title.checked = extraCtrl.title.isVisible = extraCtrl.title.control.getVisible();
-      titleText.value = extraCtrl.title.control.getTitle();
-      title.parentNode.parentNode.classList.remove('hidden');
-    } else {
-      title.parentNode.parentNode.classList.add('hidden');
-    }
-    // Show hide legend
-    if (extraCtrl.legend) {
-      extraCtrl.legend.ison = extraCtrl.legend.control.onCanvas();
-      extraCtrl.legend.collapsed = extraCtrl.legend.control.isCollapsed();
-      extraCtrl.legend.control.collapse(false);
-      saveLegend.parentNode.classList.remove('hidden');
-      legend.parentNode.parentNode.classList.remove('hidden');
-      legend.checked = !extraCtrl.legend.collapsed;
-      extraCtrl.legend.control.setCanvas(!extraCtrl.legend.collapsed);
-    } else {
-      saveLegend.parentNode.classList.add('hidden');
-      legend.parentNode.parentNode.classList.add('hidden');
-    }
-  }.bind(this));
-  printDialog.on('hide', function() {
-    // No print
-    document.body.classList.remove('ol-print-document');
-    if (!originalTarget) return;
-    this.getMap().setTarget(originalTarget);
-    originalTarget = null;
-    if (scalelistener) ol.Observable.unByKey(scalelistener);
-    // restore
-    if (extraCtrl.title) {
-      extraCtrl.title.control.setVisible(extraCtrl.title.isVisible);
-    }
-    if (extraCtrl.legend) {
-      extraCtrl.legend.control.setCanvas(extraCtrl.legend.ison);
-      extraCtrl.legend.control.collapse(extraCtrl.legend.collapsed);
-    }
-    this.dispatchEvent({ type: 'hide' });
-  }.bind(this));
-  // Update preview on resize
-  window.addEventListener('resize', function() {
-    this.setSize();
-  }.bind(this));
-  // Save or print
-  if (options.saveAs) {
-    this.on('print', function(e) {
-      if (!e.pdf) {
-        // Save image as file
-        e.canvas.toBlob(function(blob) {
-          var name = (e.print.legend ? 'legend.' : 'map.')+e.imageType.replace('image/','');
-          options.saveAs(blob, name);
-        }, e.imageType, e.quality);
+      // Default
+      if (!this.paperSize[size])
+        size = this._size = 'A4'
+      this._input.size.value = size
+      size = [
+        Math.trunc(this.paperSize[size][0] * 96 / 25.4),
+        Math.trunc(this.paperSize[size][1] * 96 / 25.4)
+      ]
+      if (this.getOrientation() === 'landscape') {
+        size = [size[1], size[0]]
       }
-    });
+      this.getPage().classList.remove('margin')
+    } else {
+      this._input.size.value = ''
+      this.getPage().classList.add('margin')
+    }
+    var printElement = this.getPage()
+    var s = printElement.parentNode.getBoundingClientRect()
+    var scx = (s.width - 40) / size[0]
+    var scy = (s.height - 40) / size[1]
+    var sc = Math.min(scx, scy, 1)
+    printElement.style.width = size[0] + 'px'
+    printElement.style.height = size[1] + 'px'
+    printElement.style['-webkit-transform'] =
+      printElement.style.transform = 'translate(-50%,-50%) scale(' + sc + ')'
+    var px = Math.round(5 / sc)
+    printElement.style['-webkit-box-shadow'] =
+      printElement.style['box-shadow'] = px + 'px ' + px + 'px ' + px + 'px rgba(0,0,0,.6)'
+    printElement.style['padding'] = (this.getMargin() * 96 / 25.4) + 'px'
+    if (this.getMap()) {
+      this.getMap().updateSize()
+    }
+    this.dispatchEvent({ type: 'dialog:refresh' })
   }
-  // Save or print
-  if (options.jsPDF) {
-    this.on('print', function(e) {
-      if (e.pdf) {
-        // Export pdf using the print info
-        var pdf = new options.jsPDF({
-          orientation: e.print.orientation,
-          unit: e.print.unit,
-          format: e.print.size
-        });
-        pdf.addImage(e.image, 'JPEG', e.print.position[0], e.print.position[0], e.print.imageWidth, e.print.imageHeight);
-        pdf.save(e.print.legend ? 'legend.pdf' : 'map.pdf');
-      } 
-    });
+  /** Get dialog content element
+   * @return {Element}
+   */
+  getContentElement() {
+    return this._printDialog.getContentElement()
   }
-};
-ol.ext.inherits(ol.control.PrintDialog, ol.control.Control);
-/** Check if the dialog is oprn
- * @return {boolean}
- */
- ol.control.PrintDialog.prototype.isOpen = function() {
-  return this._printDialog.isOpen();
-};
-/** Add a new language
- * @param {string} lang lang id
- * @param {Objetct} labels
- */
-ol.control.PrintDialog.addLang = function(lang, labels) {
-  ol.control.PrintDialog.prototype._labels[lang] = labels;
-};
-/** Translate 
- * @param {string} what
- * @returns {string}
- */
-ol.control.PrintDialog.prototype.i18n = function(what) {
-  var rep = this._labels.en[what] || 'bad param';
-  if (this._labels[this._lang] && this._labels[this._lang][what]) {
-    rep = this._labels[this._lang][what];
+  /** Get dialog user element
+   * @return {Element}
+   */
+  getUserElement() {
+    return this._printDialog.getContentElement().querySelector('.ol-user-param')
   }
-  return rep;
-};
+  /** Get page element
+   * @return {Element}
+   */
+  getPage() {
+    return this._pages[0]
+  }
+  /**
+   * Remove the control from its current map and attach it to the new map.
+   * Subclasses may set up event handlers to get notified about changes to
+   * the map here.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this.getMap()) {
+      this.getMap().removeControl(this._compass)
+      this.getMap().removeControl(this._printCtrl)
+      this.getMap().removeControl(this._printDialog)
+    }
+    ol.control.Control.prototype.setMap.call(this, map)
+    if (this.getMap()) {
+      this.getMap().addControl(this._compass)
+      this.getMap().addControl(this._printCtrl)
+      this.getMap().addControl(this._printDialog)
+    }
+  }
+  /** Set the current scale (will change the scale of the map)
+   * @param {number|string} value the scale factor or a scale string as 1/xxx
+   */
+  setScale(value) {
+    ol.sphere.setMapScale(this.getMap(), value)
+    this._input.scale.value = ' ' + (Math.round(value / 100) * 100)
+  }
+  /** Get the current map scale factor
+   * @return {number}
+   */
+  getScale() {
+    return ol.sphere.getMapScale(this.getMap())
+  }
+  /** Show print dialog
+   * @param {*}
+   *  @param {ol/size|string} options.size map size as ol/size or A4, etc.
+   *  @param {number|string} options.value the scale factor or a scale string as 1/xxx
+   *  @param {string} options.orientation landscape or portrait
+   *  @param {number} options.margin
+   */
+  print(options) {
+    options = options || {}
+    if (options.size)
+      this.setSize(options.size)
+    if (options.scale)
+      this.setScale(options.scale)
+    if (options.orientation)
+      this.setOrientation(options.orientation)
+    if (options.margin)
+      this.setMargin(options.margin)
+    this._printDialog.show()
+  }
+  /** Get print control
+   * @returns {ol.control.Print}
+   */
+  getrintControl() {
+    return this._printCtrl
+  }
+}
 /** Print dialog labels (for customisation) */
 ol.control.PrintDialog.prototype._labels = {
   en: {
@@ -12357,161 +12594,6 @@ ol.control.PrintDialog.prototype.scales = {
   ' 250000': '1/250.000',
   ' 1000000': '1/1.000.000'
 };
-/** Get print orientation
- * @returns {string}
- */
-ol.control.PrintDialog.prototype.getOrientation = function () {
-  return this._orientation || 'portrait';
-};
-/** Set print orientation
- * @param {string} ori landscape or portrait
- */
-ol.control.PrintDialog.prototype.setOrientation = function (ori) {
-  this._orientation = (ori==='landscape' ? 'landscape' : 'portrait');
-  this._input.orientation[this._orientation].checked = true;
-  this.setSize();
-};
-/** Get print margin
- * @returns {number}
- */
-ol.control.PrintDialog.prototype.getMargin = function () {
-  return this._margin || 0;
-};
-/** Set print margin
- * @param {number}
- */
-ol.control.PrintDialog.prototype.setMargin = function (margin) {
-  this._margin = margin;
-  this._input.margin.value = margin;
-  this.setSize();
-};
-/** Get print size
- * @returns {ol.size}
- */
-ol.control.PrintDialog.prototype.getSize = function () {
-  return this._size;
-};
-/** Set map print size
- * @param {ol/size|string} size map size as ol/size or A4, etc.
- */
-ol.control.PrintDialog.prototype.setSize = function (size) {
-  // reset status
-  this._printDialog.getContentElement().setAttribute('data-status','');
-  if (size) this._size = size;
-  else size = this._size;
-  if (!size) return;
-  if (typeof(size) === 'string') {
-    // Test uppercase
-    for (var k in this.paperSize) {
-      if (k && new RegExp(k, 'i').test(size)) {
-        size = k;
-      }
-    }
-    // Default
-    if (!this.paperSize[size]) size = this._size = 'A4';
-    this._input.size.value = size;
-    size = [
-      Math.trunc(this.paperSize[size][0]* 96/25.4),
-      Math.trunc(this.paperSize[size][1]* 96/25.4)
-    ]
-    if (this.getOrientation() === 'landscape') {
-      size = [size[1], size[0]];
-    }
-    this.getPage().classList.remove('margin');
-  } else {
-    this._input.size.value = '';
-    this.getPage().classList.add('margin');
-  }
-  var printElement = this.getPage();
-  var s = printElement.parentNode.getBoundingClientRect();
-  var scx = (s.width - 40) / size[0];
-  var scy = (s.height - 40) / size[1];
-  var sc = Math.min(scx, scy, 1);
-  printElement.style.width = size[0]+'px';
-  printElement.style.height = size[1]+'px';
-  printElement.style['-webkit-transform'] = 
-  printElement.style.transform = 'translate(-50%,-50%) scale('+sc+')';
-  var px = Math.round(5/sc);
-  printElement.style['-webkit-box-shadow'] = 
-  printElement.style['box-shadow'] = px+'px '+px+'px '+px+'px rgba(0,0,0,.6)';
-  printElement.style['padding'] = (this.getMargin() * 96/25.4)+'px';
-  if (this.getMap()) {
-    this.getMap().updateSize();
-  }
-  this.dispatchEvent({ type: 'dialog:refresh' });
-};
-/** Get dialog content element 
- * @return {Element}
- */
-ol.control.PrintDialog.prototype.getContentElement = function () {
-  return this._printDialog.getContentElement();
-};
-/** Get dialog user element 
- * @return {Element}
- */
-ol.control.PrintDialog.prototype.getUserElement = function () {
-  return this._printDialog.getContentElement().querySelector('.ol-user-param');
-};
-/** Get page element
- * @return {Element}
- */
-ol.control.PrintDialog.prototype.getPage = function () {
-  return this._pages[0]
-};
-/**
- * Remove the control from its current map and attach it to the new map.
- * Subclasses may set up event handlers to get notified about changes to
- * the map here.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.control.PrintDialog.prototype.setMap = function (map) {
-  if (this.getMap()) {
-    this.getMap().removeControl(this._compass);
-    this.getMap().removeControl(this._printCtrl);
-    this.getMap().removeControl(this._printDialog);
-  }
-  ol.control.Control.prototype.setMap.call(this, map);
-  if (this.getMap()) {
-    this.getMap().addControl(this._compass);
-    this.getMap().addControl(this._printCtrl);
-    this.getMap().addControl(this._printDialog);
-  }
-};
-/** Set the current scale (will change the scale of the map)
- * @param {number|string} value the scale factor or a scale string as 1/xxx
- */
-ol.control.PrintDialog.prototype.setScale = function (value) {
-  ol.sphere.setMapScale(this.getMap(), value);
-  this._input.scale.value = ' '+(Math.round(value/100) * 100);
-};
-/** Get the current map scale factor
- * @return {number} 
- */
-ol.control.PrintDialog.prototype.getScale = function () {
-  return ol.sphere.getMapScale(this.getMap());
-};
-/** Show print dialog 
- * @param {*}
- *  @param {ol/size|string} options.size map size as ol/size or A4, etc.
- *  @param {number|string} options.value the scale factor or a scale string as 1/xxx
- *  @param {string} options.orientation landscape or portrait
- *  @param {number} options.margin
- */
-ol.control.PrintDialog.prototype.print = function(options) {
-  options = options || {};
-  if (options.size) this.setSize(options.size);
-  if (options.scale) this.setScale(options.scale);
-  if (options.orientation) this.setOrientation(options.orientation);
-  if (options.margin) this.setMargin(options.margin);
-  this._printDialog.show();
-};
-/** Get print control
- * @returns {ol.control.Print}
- */
-ol.control.PrintDialog.prototype.getrintControl = function() {
-  return this._printCtrl;
-}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
