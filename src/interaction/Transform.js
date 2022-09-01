@@ -727,8 +727,8 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
               var pointA1 = [g1[8], g1[9]]
 
               if (stretch) {
-                var base = (opt % 2 === 0) ? countVector(pointA, pointB) : countVector(pointD, pointA)
-                var projectedVector = projectVectorOnVector(displacementVector, base)
+                var base = (opt % 2 === 0) ? this._countVector(pointA, pointB) : this._countVector(pointD, pointA)
+                var projectedVector = this._projectVectorOnVector(displacementVector, base)
                 var nextIndex = opt + 1 < pointArray.length ? opt + 1 : 0
                 var coordsToChange = [...pointArray[opt], ...pointArray[nextIndex]]
 
@@ -740,39 +740,39 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
                 var projectedLeft, projectedRight
                 switch (opt) {
                   case 0:
-                    displacementVector = countVector(pointD, dragCoordinate)
-                    projectedLeft = projectVectorOnVector(displacementVector, countVector(pointC, pointD))
-                    projectedRight = projectVectorOnVector(displacementVector, countVector(pointA, pointD));
-                    [g2[0], g2[1]] = movePoint(pointA, projectedLeft);
-                    [g2[4], g2[5]] = movePoint(pointC, projectedRight);
-                    [g2[6], g2[7]] = movePoint(pointD, displacementVector);
-                    [g2[8], g2[9]] = movePoint(pointA1, projectedLeft)
+                    displacementVector = this._countVector(pointD, dragCoordinate)
+                    projectedLeft = this._projectVectorOnVector(displacementVector, this._countVector(pointC, pointD))
+                    projectedRight = this._projectVectorOnVector(displacementVector, this._countVector(pointA, pointD));
+                    [g2[0], g2[1]] = this._movePoint(pointA, projectedLeft);
+                    [g2[4], g2[5]] = this._movePoint(pointC, projectedRight);
+                    [g2[6], g2[7]] = this._movePoint(pointD, displacementVector);
+                    [g2[8], g2[9]] = this._movePoint(pointA1, projectedLeft)
                     break
                   case 1:
-                    displacementVector = countVector(pointA, dragCoordinate)
-                    projectedLeft = projectVectorOnVector(displacementVector, countVector(pointD, pointA))
-                    projectedRight = projectVectorOnVector(displacementVector, countVector(pointB, pointA));
-                    [g2[0], g2[1]] = movePoint(pointA, displacementVector);
-                    [g2[2], g2[3]] = movePoint(pointB, projectedLeft);
-                    [g2[6], g2[7]] = movePoint(pointD, projectedRight);
-                    [g2[8], g2[9]] = movePoint(pointA1, displacementVector)
+                    displacementVector = this._countVector(pointA, dragCoordinate)
+                    projectedLeft = this._projectVectorOnVector(displacementVector, this._countVector(pointD, pointA))
+                    projectedRight = this._projectVectorOnVector(displacementVector, this._countVector(pointB, pointA));
+                    [g2[0], g2[1]] = this._movePoint(pointA, displacementVector);
+                    [g2[2], g2[3]] = this._movePoint(pointB, projectedLeft);
+                    [g2[6], g2[7]] = this._movePoint(pointD, projectedRight);
+                    [g2[8], g2[9]] = this._movePoint(pointA1, displacementVector)
                     break
                   case 2:
-                    displacementVector = countVector(pointB, dragCoordinate)
-                    projectedLeft = projectVectorOnVector(displacementVector, countVector(pointA, pointB))
-                    projectedRight = projectVectorOnVector(displacementVector, countVector(pointC, pointB));
-                    [g2[0], g2[1]] = movePoint(pointA, projectedRight);
-                    [g2[2], g2[3]] = movePoint(pointB, displacementVector);
-                    [g2[4], g2[5]] = movePoint(pointC, projectedLeft);
-                    [g2[8], g2[9]] = movePoint(pointA1, projectedRight)
+                    displacementVector = this._countVector(pointB, dragCoordinate)
+                    projectedLeft = this._projectVectorOnVector(displacementVector, this._countVector(pointA, pointB))
+                    projectedRight = this._projectVectorOnVector(displacementVector, this._countVector(pointC, pointB));
+                    [g2[0], g2[1]] = this._movePoint(pointA, projectedRight);
+                    [g2[2], g2[3]] = this._movePoint(pointB, displacementVector);
+                    [g2[4], g2[5]] = this._movePoint(pointC, projectedLeft);
+                    [g2[8], g2[9]] = this._movePoint(pointA1, projectedRight)
                     break
                   case 3:
-                    displacementVector = countVector(pointC, dragCoordinate)
-                    projectedLeft = projectVectorOnVector(displacementVector, countVector(pointB, pointC))
-                    projectedRight = projectVectorOnVector(displacementVector, countVector(pointD, pointC));
-                    [g2[2], g2[3]] = movePoint(pointB, projectedRight);
-                    [g2[4], g2[5]] = movePoint(pointC, displacementVector);
-                    [g2[6], g2[7]] = movePoint(pointD, projectedLeft)
+                    displacementVector = this._countVector(pointC, dragCoordinate)
+                    projectedLeft = this._projectVectorOnVector(displacementVector, this._countVector(pointB, pointC))
+                    projectedRight = this._projectVectorOnVector(displacementVector, this._countVector(pointD, pointC));
+                    [g2[2], g2[3]] = this._movePoint(pointB, projectedRight);
+                    [g2[4], g2[5]] = this._movePoint(pointC, displacementVector);
+                    [g2[6], g2[7]] = this._movePoint(pointD, projectedLeft)
                     break
                 }
               }
@@ -870,6 +870,27 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
   getFeatures() {
     return this.selection_;
   }
+  /**
+   * @private
+   */
+  _projectVectorOnVector(displacement_vector, base) {
+    var k = (displacement_vector[0] * base[0] + displacement_vector[1] * base[1]) / (base[0] * base[0] + base[1] * base[1]);
+    return [base[0] * k, base[1] * k];
+  }
+  /**
+   * @private
+   */
+  _countVector(start, end) {
+    return [end[0] - start[0], end[1] - start[1]];
+  }
+  /**
+   * @private
+   */
+  _movePoint(point, displacementVector) {
+    return [point[0]+displacementVector[0], point[1]+displacementVector[1]];
+  }
+  
+  
 }
 
 /** Cursors for transform
@@ -889,20 +910,5 @@ ol_interaction_Transform.prototype.Cursors = {
   'scalev2': 'ew-resize',
   'scaleh3': 'ns-resize'
 };
-
-
-function projectVectorOnVector(displacement_vector, base) {
-  var k = (displacement_vector[0] * base[0] + displacement_vector[1] * base[1]) / (base[0] * base[0] + base[1] * base[1]);
-  return [base[0] * k, base[1] * k];
-}
-
-function countVector(start, end) {
-  return [end[0] - start[0], end[1] - start[1]];
-}
-
-function movePoint(point, displacementVector) {
-  return [point[0]+displacementVector[0], point[1]+displacementVector[1]];
-}
-
 
 export default ol_interaction_Transform
