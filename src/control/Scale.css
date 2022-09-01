@@ -6,6 +6,7 @@
 	-webkit-transform-origin: 0 0;
 	transform: scaleX(.8);
 	transform-origin: 0 0;
+	background-color: rgba(255, 255, 255, 0.75);
 }
 .ol-viewport .ol-scale input {
 	background: none;

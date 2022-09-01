@@ -1,124 +1,122 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: Control button</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2015 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Control button</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="ol.control.Button is a simple control with a button." />
-	<meta name="keywords" content="ol3, control, button" />
+  <meta name="description" content="ol.control.Button is a simple control with a button." />
+  <meta name="keywords" content="ol3, control, button" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-	
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<style>
-		.ol-button i
-		{	color: inherit;
-		}
-		.hello
-		{	right: 50%;
-			top: 0.5em;
-		}
-		.save
-		{	left: 50%;
-			top: 0.5em;
-		}
-		.text
-		{	left: 50%;
-			top: 2.5em;
-		}
-	</style>
+  <style>
+    .ol-button i {
+      color: inherit;
+    }
+    .hello {
+      right: 50%;
+      top: 0.5em;
+    }
+    .save {
+      left: 50%;
+      top: 0.5em;
+    }
+    .text {
+      left: 50%;
+      top: 2.5em;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: control bar</h1>
-	</a>
-	<div class="info">
-		<i>ol.control.Button</i> is a simple push button control.
-		<ul>
-			<li>
-				<i>handleClick</i> options set a function to handle an action when the button is clicked.
-			</li>
-			<li>
-				use <i>className</i> to customize 
-			</li>
-		</ul>
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: control bar</h1>
+  </a>
+  <div class="info">
+    <i>ol.control.Button</i> is a simple push button control.
+    <ul>
+      <li>
+        <i>handleClick</i> options set a function to handle an action when the button is clicked.
+      </li>
+      <li>
+        use <i>className</i> to customize 
+      </li>
+    </ul>
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options" >
-		Info:<br/>
-		<textarea id="info" style="width:28em; height:10em"></textarea>
-	</div>
+  <div class="options" >
+    Info:<br/>
+    <textarea id="info" style="width:28em; height:10em"></textarea>
+  </div>
 
-	<script type="text/javascript">
+  <script type="text/javascript">
 
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 14,
-					center: [270701, 6247637]
-				}),
-				layers: 
-					[	new ol.layer.Tile({ source: new ol.source.OSM() }),
-					]
-			});
+    // The map
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 14,
+        center: [270701, 6247637]
+      }),
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() }),
+      ]
+    });
 
-		console.log("ok")
-		// Add a custom push button with onToggle function
-		var hello = new ol.control.Button (
-				{	html: '<i class="fa fa-smile-o"></i>',
-					className: "hello",
-					title: "Hello world!",
-					handleClick: function()
-						{	info ("hello World!");
-						}
-				});
-		map.addControl(hello);
-				
-		// Add a save button with on active event
-		var save = new ol.control.Button (
-				{	html: '<i class="fa fa-download"></i>',
-					className: "save",
-					title: "Save",
-					handleClick: function()
-					{	info("Center: "+map.getView().getCenter()+" - zoom: "+map.getView().getZoom());
-					}
-				});
-		map.addControl ( save );
+    console.log("ok")
+    // Add a custom push button with onToggle function
+    var hello = new ol.control.Button ({
+      html: '<i class="fa fa-smile-o"></i>',
+      className: "hello",
+      title: "Hello world!",
+      handleClick: function() {
+        info ("hello World!");
+      }
+    });
+    map.addControl(hello);
+        
+    // Add a save button with on active event
+    var save = new ol.control.Button ({
+      html: '<i class="fa fa-download"></i>',
+      className: "save",
+      title: "Save",
+      handleClick: function() {
+        info("Center: "+map.getView().getCenter()+" - zoom: "+map.getView().getZoom());
+      }
+    });
+    map.addControl ( save );
 
-		// Show info
-		function info(i)
-		{	$("#info").html(i||"");
-		}
+    // Show info
+    function info(i) {
+      $("#info").html(i||"");
+    }
 
-	</script>
+  </script>
 
 </body>
 </html>

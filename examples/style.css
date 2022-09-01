@@ -128,11 +128,9 @@ a, i, b {
 button i {
   color: #fff;
 }
-.ol-control button i {
-  color: rgb(102,102,102);
-}
+.ol-control button i,
 .ol-control.ol-bar .ol-control button i {
-  color: #fff;
+  color: inherit;
 }
 a:hover {
   text-decoration: underline;

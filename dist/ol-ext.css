@@ -138,14 +138,13 @@
 }
 
 /* Active buttons */
-.ol-control.ol-bar .ol-toggle.ol-active > button {
-  background-color: rgba(60, 136, 0, 0.7)
-}
+.ol-control.ol-bar .ol-toggle.ol-active > button,
 .ol-control.ol-bar .ol-toggle.ol-active button:hover {
-  background-color: rgba(60, 136, 0, 0.7)
+  background-color: #00AAFF;
+  color: #fff;
 }
 .ol-control.ol-toggle button:disabled {
-  background-color: rgba(0,60,136,.3);
+  background-color: #ccc;
 }
 
 /* Subbar toolbar */
@@ -3491,6 +3490,7 @@ ul.ol-legend li div {
 	-webkit-transform-origin: 0 0;
 	transform: scaleX(.8);
 	transform-origin: 0 0;
+	background-color: rgba(255, 255, 255, 0.75);
 }
 .ol-viewport .ol-scale input {
 	background: none;
