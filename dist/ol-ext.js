@@ -6921,8 +6921,9 @@ ol.control.CanvasScaleLine = class olcontrolCanvasScaleLine extends ol.control.S
  * @constructor
  * @extends {ol.control.CanvasBase}
  * @param {Object=} options extend the ol.control options. 
- *  @param {string} options.title the title, default 'Title'
- *  @param {ol.style.Style} options.style style used to draw the title.
+ *  @param {string} [options.title] the title, default 'Title'
+ *  @param {boolean} [options.visible=true]
+ *  @param {ol.style.Style} [options.style] style used to draw the title (with a text).
  */
 ol.control.CanvasTitle = class olcontrolCanvasTitle extends ol.control.CanvasBase {
   constructor(options) {
@@ -6939,7 +6940,7 @@ ol.control.CanvasTitle = class olcontrolCanvasTitle extends ol.control.CanvasBas
       style: options.style
     });
     this.setTitle(options.title || '');
-    this.setVisible(options.visible);
+    this.setVisible(options.visible !== false);
     this.element.style.font = this.getTextFont();
   }
   /**
@@ -6947,14 +6948,13 @@ ol.control.CanvasTitle = class olcontrolCanvasTitle extends ol.control.CanvasBas
    * @param {ol.style.Style} style
    */
   setStyle(style) {
-    ol.control.CanvasBase.prototype.setStyle.call(this, style);
+    super.setStyle(style);
     // Element style
     if (this.element) {
       this.element.style.font = this.getTextFont();
     }
     // refresh
-    if (this.getMap())
-      this.getMap().render();
+    if (this.getMap()) this.getMap().render();
   }
   /**
    * Set the map title
@@ -7055,104 +7055,111 @@ ol.control.CanvasTitle = class olcontrolCanvasTitle extends ol.control.CanvasBas
  *  @param {ol.coordinate.CoordinateFormat} options.coordinateFormat A function that takes a ol.Coordinate and transforms it into a string.
  *  @param {boolean} options.canvas true to draw in the canvas
  */
-ol.control.CenterPosition = function(options) {
-  if (!options) options = {};
-  var elt = ol.ext.element.create('DIV', {
-    className: (options.className || '') + ' ol-center-position ol-unselectable',
-    style: {
-      display: 'block',
-      visibility: 'hidden'
+ol.control.CenterPosition = class olcontrolCenterPosition extends ol.control.CanvasBase {
+  constructor(options) {
+    options = options || {}
+    var elt = ol.ext.element.create('DIV', {
+      className: (options.className || '') + ' ol-center-position ol-unselectable',
+      style: {
+        display: 'block',
+        visibility: 'hidden'
+      }
+    })
+    super({
+      element: elt,
+      style: options.style
+    })
+    this.element.style.font = this.getTextFont()
+    this.set('projection', options.projection)
+    this.setCanvas(options.canvas)
+    this._format = (typeof options.coordinateFormat === 'function') ? options.coordinateFormat : ol.coordinate.toStringXY
+  }
+  /**
+   * Change the control style
+   * @param {ol.style.Style} style
+   */
+  setStyle(style) {
+    ol.control.CanvasBase.prototype.setStyle.call(this, style)
+    // Element style
+    if (this.element) {
+      this.element.style.font = this.getTextFont()
     }
-  });
-  ol.control.CanvasBase.call(this, {
-    element: elt,
-    style: options.style
-  });
-  this.element.style.font = this.getTextFont();
-  this.set('projection', options.projection);
-  this.setCanvas(options.canvas);
-  this._format = (typeof options.coordinateFormat === 'function') ? options.coordinateFormat : ol.coordinate.toStringXY; 
-};
-ol.ext.inherits(ol.control.CenterPosition, ol.control.CanvasBase);
-/**
- * Change the control style
- * @param {ol.style.Style} style
- */
-ol.control.CenterPosition.prototype.setStyle = function (style) {
-  ol.control.CanvasBase.prototype.setStyle.call(this, style);
-  // Element style
-  if (this.element) {
-    this.element.style.font = this.getTextFont();
+    // refresh
+    if (this.getMap())
+      this.getMap().render()
   }
-  // refresh
-  if (this.getMap()) this.getMap().render();
-};
-/**
- * Draw on canvas
- * @param {boolean} b draw the attribution on canvas.
- */
-ol.control.CenterPosition.prototype.setCanvas = function (b) {
-  this.set('canvas', b);
-	this.element.style.visibility = b ? "hidden":"visible";
-	if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  /**
+   * Draw on canvas
+   * @param {boolean} b draw the attribution on canvas.
+   */
+  setCanvas(b) {
+    this.set('canvas', b)
+    this.element.style.visibility = b ? "hidden" : "visible"
+    if (this.getMap()) {
+      try { this.getMap().renderSync()}  catch (e) { /* ok */ }
+    }
   }
-};
-/**
- * Set control visibility
- * @param {bool} b
- * @api stable
- */
-ol.control.CenterPosition.prototype.setVisible = function (b) {
-  this.element.style.display = (b ? '' : 'none');
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  /**
+   * Set control visibility
+   * @param {bool} b
+   * @api stable
+   */
+  setVisible(b) {
+    this.element.style.display = (b ? '' : 'none')
+    if (this.getMap()) {
+      try { this.getMap().renderSync()}  catch (e) { /* ok */ }
+    }
   }
-};
-/**
- * Get control visibility
- * @return {bool} 
- * @api stable
- */
-ol.control.CenterPosition.prototype.getVisible = function () {
-  return this.element.style.display !== 'none';
-};
-/** Draw position in the final canvas
- * @private
-*/
-ol.control.CenterPosition.prototype._draw = function(e) {
-  if (!this.getVisible() || !this.getMap()) return;
-  // Coordinate
-  var coord = this.getMap().getView().getCenter();
-  if (this.get('projection')) coord = ol.proj.transform (coord, this.getMap().getView().getProjection(), this.get('projection'));
-  coord  = this._format(coord);
-  this.element.textContent = coord;
-  if (!this.get('canvas')) return;
-  var ctx = this.getContext(e);
-	if (!ctx) return;
-  // Retina device
-  var ratio = e.frameState.pixelRatio;
-  ctx.save();
-  ctx.scale(ratio,ratio);
-  // Position
-  var eltRect = this.element.getBoundingClientRect();
-  var mapRect = this.getMap().getViewport().getBoundingClientRect();
-  var sc = this.getMap().getSize()[0] / mapRect.width;
-  ctx.translate((eltRect.left-mapRect.left)*sc, (eltRect.top-mapRect.top)*sc);
-  var h = this.element.clientHeight;
-  var w = this.element.clientWidth;
-  ctx.beginPath();
-  ctx.fillStyle = ol.color.asString(this.getTextFill().getColor());
-  ctx.strokeStyle = ol.color.asString(this.getTextStroke().getColor());
-  ctx.lineWidth = this.getTextStroke().getWidth();
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = this.getTextFont();
-  if (ctx.lineWidth) ctx.strokeText(coord, w/2, h/2);
-  ctx.fillText(coord, w/2, h/2);
-  ctx.closePath();
-  ctx.restore();
-};
+  /**
+   * Get control visibility
+   * @return {bool}
+   * @api stable
+   */
+  getVisible() {
+    return this.element.style.display !== 'none'
+  }
+  /** Draw position in the final canvas
+   * @private
+  */
+  _draw(e) {
+    if (!this.getVisible() || !this.getMap())
+      return
+    // Coordinate
+    var coord = this.getMap().getView().getCenter()
+    if (this.get('projection'))
+      coord = ol.proj.transform(coord, this.getMap().getView().getProjection(), this.get('projection'))
+    coord = this._format(coord)
+    this.element.textContent = coord
+    if (!this.get('canvas'))
+      return
+    var ctx = this.getContext(e)
+    if (!ctx)
+      return
+    // Retina device
+    var ratio = e.frameState.pixelRatio
+    ctx.save()
+    ctx.scale(ratio, ratio)
+    // Position
+    var eltRect = this.element.getBoundingClientRect()
+    var mapRect = this.getMap().getViewport().getBoundingClientRect()
+    var sc = this.getMap().getSize()[0] / mapRect.width
+    ctx.translate((eltRect.left - mapRect.left) * sc, (eltRect.top - mapRect.top) * sc)
+    var h = this.element.clientHeight
+    var w = this.element.clientWidth
+    ctx.beginPath()
+    ctx.fillStyle = ol.color.asString(this.getTextFill().getColor())
+    ctx.strokeStyle = ol.color.asString(this.getTextStroke().getColor())
+    ctx.lineWidth = this.getTextStroke().getWidth()
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.font = this.getTextFont()
+    if (ctx.lineWidth)
+      ctx.strokeText(coord, w / 2, h / 2)
+    ctx.fillText(coord, w / 2, h / 2)
+    ctx.closePath()
+    ctx.restore()
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -8797,246 +8804,263 @@ ol.control.Globe = class olcontrolGlobe extends ol.control.Control {
  *  @param {number} options.margin margin of the border (in px), default 0px 
  *  @param {number} options.formatCoord a function that takes a coordinate and a position and return the formated coordinate
  */
-ol.control.Graticule = function(options) {
-  if (!options) options = {};
-  // Initialize parent
-  var elt = document.createElement("div");
-  elt.className = "ol-graticule ol-unselectable ol-hidden";
-  ol.control.CanvasBase.call(this, { element: elt });
-  this.set('projection', options.projection || 'EPSG:4326');
-  // Use to limit calculation 
-  var p = new ol.proj.Projection({code:this.get('projection')});
-  var m = p.getMetersPerUnit();
-  this.fac = 1;
-  while (m/this.fac>10) {
-    this.fac *= 10;
-  }
-  this.fac = 10000/this.fac;
-  this.set('maxResolution', options.maxResolution || Infinity);
-  this.set('step', options.step || 0.1);
-  this.set('stepCoord', options.stepCoord || 1);
-  this.set('spacing', options.spacing || 40);
-  this.set('intervals', options.intervals);
-  this.set('precision', options.precision);
-  this.set('margin', options.margin || 0);
-  this.set('borderWidth', options.borderWidth || 5);
-  this.set('stroke', options.stroke!==false);
-  this.formatCoord = options.formatCoord || function(c){return c;};
-  if (options.style instanceof ol.style.Style) {
-    this.setStyle(options.style);
-  }
-  else {
-    this.setStyle(new ol.style.Style({
-      stroke: new ol.style.Stroke({ color:"#000", width:1 }),
-      fill: new ol.style.Fill({ color: "#fff" }),
-      text: new ol.style.Text({
-        stroke: new ol.style.Stroke({ color:"#fff", width:2 }),
-        fill: new ol.style.Fill({ color:"#000" }),
-      }) 
-    }));
-  }
-};
-ol.ext.inherits(ol.control.Graticule, ol.control.CanvasBase);
-ol.control.Graticule.prototype.setStyle = function (style) {
-  this._style = style;
-};
-ol.control.Graticule.prototype._draw = function (e) {
-  if (this.get('maxResolution')<e.frameState.viewState.resolution) return;
-  var ctx = this.getContext(e);
-  var canvas = ctx.canvas;
-  var ratio = e.frameState.pixelRatio;
-  var w = canvas.width/ratio;
-  var h = canvas.height/ratio;
-  var proj = this.get('projection');
-  var map = this.getMap();
-  var bbox = 
-  [	map.getCoordinateFromPixel([0,0]),
-    map.getCoordinateFromPixel([w,0]),
-    map.getCoordinateFromPixel([w,h]),
-    map.getCoordinateFromPixel([0,h])
-  ];
-  var xmax = -Infinity;
-  var xmin = Infinity;
-  var ymax = -Infinity;
-  var ymin = Infinity;
-  for (var i=0, c; c=bbox[i]; i++)
-  {	bbox[i] = ol.proj.transform (c, map.getView().getProjection(), proj);
-    xmax = Math.max (xmax, bbox[i][0]);
-    xmin = Math.min (xmin, bbox[i][0]);
-    ymax = Math.max (ymax, bbox[i][1]);
-    ymin = Math.min (ymin, bbox[i][1]);
-  }
-  var spacing = this.get('spacing');
-  var step = this.get('step');
-  var step2 = this.get('stepCoord');
-  var borderWidth = this.get('borderWidth');
-  var margin = this.get('margin');
-  // Limit max line draw
-  var ds = (xmax-xmin)/step*spacing;
-  if (ds>w) 
-  {	var dt = Math.round((xmax-xmin)/w*spacing /step);
-    step *= dt;
-    if (step>this.fac) step = Math.round(step/this.fac)*this.fac;
-  }
-  var intervals = this.get('intervals');
-  if (Array.isArray(intervals)) {
-    var interval = intervals[0];
-    for (var i = 0, ii = intervals.length; i < ii; ++i) {
-      if (step >= intervals[i]) {
-        break;
-      }
-      interval = intervals[i];
+ol.control.Graticule = class olcontrolGraticule extends ol.control.CanvasBase {
+  constructor(options) {
+    options = options || {}
+    // Initialize parent
+    var elt = document.createElement("div")
+    elt.className = "ol-graticule ol-unselectable ol-hidden"
+    super({ element: elt })
+    this.set('projection', options.projection || 'EPSG:4326')
+    // Use to limit calculation 
+    var p = new ol.proj.Projection({ code: this.get('projection') })
+    var m = p.getMetersPerUnit()
+    this.fac = 1
+    while (m / this.fac > 10) {
+      this.fac *= 10
     }
-    step = interval;
-  }
-  var precision = this.get('precision');
-  var calcStep = step;
-  if (precision > 0 && step > precision) {
-    calcStep = step / Math.ceil(step / precision);
-  }
-  xmin = (Math.floor(xmin/step))*step -step;
-  ymin = (Math.floor(ymin/step))*step -step;
-  xmax = (Math.floor(xmax/step))*step +2*step;
-  ymax = (Math.floor(ymax/step))*step +2*step;
-  var extent = ol.proj.get(proj).getExtent();
-  if (extent)
-  {	if (xmin < extent[0]) xmin = extent[0];
-    if (ymin < extent[1]) ymin = extent[1];
-    if (xmax > extent[2]) xmax = extent[2]+step;
-    if (ymax > extent[3]) ymax = extent[3]+step;
-  }
-  var hasLines = this.getStyle().getStroke() && this.get("stroke");
-  var hasText = this.getStyle().getText();
-  var hasBorder = this.getStyle().getFill();
-  ctx.save();
-    ctx.scale(ratio,ratio);
-    ctx.beginPath();
-    ctx.rect(margin, margin, w-2*margin, h-2*margin);
-    ctx.clip();
-    ctx.beginPath();
-    var txt = {top:[],left:[],bottom:[], right:[]};
-    var x, y, p, p0, p1;
-    for (x=xmin; x<xmax; x += step)
-    {	p0 = ol.proj.transform ([x, ymin], proj, map.getView().getProjection());
-      p0 = map.getPixelFromCoordinate(p0);
-      if (hasLines) ctx.moveTo(p0[0], p0[1]);
-      p = p0;
-      for (y=ymin+calcStep; y<=ymax; y+=calcStep)
-      {	p1 = ol.proj.transform ([x, y], proj, map.getView().getProjection());
-        p1 = map.getPixelFromCoordinate(p1);
-        if (hasLines) ctx.lineTo(p1[0], p1[1]);
-        if (p[1]>0 && p1[1]<0) txt.top.push([x, p]);
-        if (p[1]>h && p1[1]<h) txt.bottom.push([x,p]);
-        p = p1;
-      }
+    this.fac = 10000 / this.fac
+    this.set('maxResolution', options.maxResolution || Infinity)
+    this.set('step', options.step || 0.1)
+    this.set('stepCoord', options.stepCoord || 1)
+    this.set('spacing', options.spacing || 40)
+    this.set('intervals', options.intervals)
+    this.set('precision', options.precision)
+    this.set('margin', options.margin || 0)
+    this.set('borderWidth', options.borderWidth || 5)
+    this.set('stroke', options.stroke !== false)
+    this.formatCoord = options.formatCoord || function (c) { return c }
+    if (options.style instanceof ol.style.Style) {
+      this.setStyle(options.style)
     }
-    for (y=ymin; y<ymax; y += step)
-    {	p0 = ol.proj.transform ([xmin, y], proj, map.getView().getProjection());
-      p0 = map.getPixelFromCoordinate(p0);
-      if (hasLines) ctx.moveTo(p0[0], p0[1]);
-      p = p0;
-      for (x=xmin+calcStep; x<=xmax; x+=calcStep)
-      {	p1 = ol.proj.transform ([x, y], proj, map.getView().getProjection());
-        p1 = map.getPixelFromCoordinate(p1);
-        if (hasLines) ctx.lineTo(p1[0], p1[1]);
-        if (p[0]<0 && p1[0]>0) txt.left.push([y,p]);
-        if (p[0]<w && p1[0]>w) txt.right.push([y,p]);
-        p = p1;
+    else {
+      this.setStyle(new ol.style.Style({
+        stroke: new ol.style.Stroke({ color: "#000", width: 1 }),
+        fill: new ol.style.Fill({ color: "#fff" }),
+        text: new ol.style.Text({
+          stroke: new ol.style.Stroke({ color: "#fff", width: 2 }),
+          fill: new ol.style.Fill({ color: "#000" }),
+        })
+      }))
+    }
+  }
+  setStyle(style) {
+    this._style = style
+  }
+  _draw(e) {
+    if (this.get('maxResolution') < e.frameState.viewState.resolution)
+      return
+    var ctx = this.getContext(e)
+    var canvas = ctx.canvas
+    var ratio = e.frameState.pixelRatio
+    var w = canvas.width / ratio
+    var h = canvas.height / ratio
+    var proj = this.get('projection')
+    var map = this.getMap()
+    var bbox = [map.getCoordinateFromPixel([0, 0]),
+    map.getCoordinateFromPixel([w, 0]),
+    map.getCoordinateFromPixel([w, h]),
+    map.getCoordinateFromPixel([0, h])
+    ]
+    var xmax = -Infinity
+    var xmin = Infinity
+    var ymax = -Infinity
+    var ymin = Infinity
+    for (var i = 0, c; c = bbox[i]; i++) {
+      bbox[i] = ol.proj.transform(c, map.getView().getProjection(), proj)
+      xmax = Math.max(xmax, bbox[i][0])
+      xmin = Math.min(xmin, bbox[i][0])
+      ymax = Math.max(ymax, bbox[i][1])
+      ymin = Math.min(ymin, bbox[i][1])
+    }
+    var spacing = this.get('spacing')
+    var step = this.get('step')
+    var step2 = this.get('stepCoord')
+    var borderWidth = this.get('borderWidth')
+    var margin = this.get('margin')
+    // Limit max line draw
+    var ds = (xmax - xmin) / step * spacing
+    if (ds > w) {
+      var dt = Math.round((xmax - xmin) / w * spacing / step)
+      step *= dt
+      if (step > this.fac)
+        step = Math.round(step / this.fac) * this.fac
+    }
+    var intervals = this.get('intervals')
+    if (Array.isArray(intervals)) {
+      var interval = intervals[0]
+      for (var i = 0, ii = intervals.length; i < ii; ++i) {
+        if (step >= intervals[i]) {
+          break
+        }
+        interval = intervals[i]
+      }
+      step = interval
+    }
+    var precision = this.get('precision')
+    var calcStep = step
+    if (precision > 0 && step > precision) {
+      calcStep = step / Math.ceil(step / precision)
+    }
+    xmin = (Math.floor(xmin / step)) * step - step
+    ymin = (Math.floor(ymin / step)) * step - step
+    xmax = (Math.floor(xmax / step)) * step + 2 * step
+    ymax = (Math.floor(ymax / step)) * step + 2 * step
+    var extent = ol.proj.get(proj).getExtent()
+    if (extent) {
+      if (xmin < extent[0])
+        xmin = extent[0]
+      if (ymin < extent[1])
+        ymin = extent[1]
+      if (xmax > extent[2])
+        xmax = extent[2] + step
+      if (ymax > extent[3])
+        ymax = extent[3] + step
+    }
+    var hasLines = this.getStyle().getStroke() && this.get("stroke")
+    var hasText = this.getStyle().getText()
+    var hasBorder = this.getStyle().getFill()
+    ctx.save()
+    ctx.scale(ratio, ratio)
+    ctx.beginPath()
+    ctx.rect(margin, margin, w - 2 * margin, h - 2 * margin)
+    ctx.clip()
+    ctx.beginPath()
+    var txt = { top: [], left: [], bottom: [], right: [] }
+    var x, y, p, p0, p1
+    for (x = xmin; x < xmax; x += step) {
+      p0 = ol.proj.transform([x, ymin], proj, map.getView().getProjection())
+      p0 = map.getPixelFromCoordinate(p0)
+      if (hasLines)
+        ctx.moveTo(p0[0], p0[1])
+      p = p0
+      for (y = ymin + calcStep; y <= ymax; y += calcStep) {
+        p1 = ol.proj.transform([x, y], proj, map.getView().getProjection())
+        p1 = map.getPixelFromCoordinate(p1)
+        if (hasLines)
+          ctx.lineTo(p1[0], p1[1])
+        if (p[1] > 0 && p1[1] < 0)
+          txt.top.push([x, p])
+        if (p[1] > h && p1[1] < h)
+          txt.bottom.push([x, p])
+        p = p1
       }
     }
-    if (hasLines)
-    {	ctx.strokeStyle = this.getStyle().getStroke().getColor();
-      ctx.lineWidth = this.getStyle().getStroke().getWidth();
-      ctx.stroke();
+    for (y = ymin; y < ymax; y += step) {
+      p0 = ol.proj.transform([xmin, y], proj, map.getView().getProjection())
+      p0 = map.getPixelFromCoordinate(p0)
+      if (hasLines)
+        ctx.moveTo(p0[0], p0[1])
+      p = p0
+      for (x = xmin + calcStep; x <= xmax; x += calcStep) {
+        p1 = ol.proj.transform([x, y], proj, map.getView().getProjection())
+        p1 = map.getPixelFromCoordinate(p1)
+        if (hasLines)
+          ctx.lineTo(p1[0], p1[1])
+        if (p[0] < 0 && p1[0] > 0)
+          txt.left.push([y, p])
+        if (p[0] < w && p1[0] > w)
+          txt.right.push([y, p])
+        p = p1
+      }
+    }
+    if (hasLines) {
+      ctx.strokeStyle = this.getStyle().getStroke().getColor()
+      ctx.lineWidth = this.getStyle().getStroke().getWidth()
+      ctx.stroke()
     }
     // Draw text
-    if (hasText)
-    {
-      ctx.fillStyle = this.getStyle().getText().getFill().getColor();
-      ctx.strokeStyle = this.getStyle().getText().getStroke().getColor();
-      ctx.lineWidth = this.getStyle().getText().getStroke().getWidth();
-      ctx.font = this.getStyle().getText().getFont();
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'hanging';
-      var t, tf;
-      var offset = (hasBorder ? borderWidth : 0) + margin + 2;
-      for (i=0; t = txt.top[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0], 'top');
-        ctx.strokeText(tf, t[1][0], offset);
-        ctx.fillText(tf, t[1][0], offset);
-      }
-      ctx.textBaseline = 'alphabetic';
-      for (i=0; t = txt.bottom[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0], 'bottom');
-        ctx.strokeText(tf, t[1][0], h-offset);
-        ctx.fillText(tf, t[1][0], h-offset);
-      }
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'left';
-      for (i=0; t = txt.left[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0], 'left');
-        ctx.strokeText(tf, offset, t[1][1]);
-        ctx.fillText(tf, offset, t[1][1]);
-      }
-      ctx.textAlign = 'right';
-      for (i=0; t = txt.right[i]; i++) if (!(Math.round(t[0]/this.get('step'))%step2))
-      {	tf = this.formatCoord(t[0], 'right');
-        ctx.strokeText(tf, w-offset, t[1][1]);
-        ctx.fillText(tf, w-offset, t[1][1]);
-      }
+    if (hasText) {
+      ctx.fillStyle = this.getStyle().getText().getFill().getColor()
+      ctx.strokeStyle = this.getStyle().getText().getStroke().getColor()
+      ctx.lineWidth = this.getStyle().getText().getStroke().getWidth()
+      ctx.font = this.getStyle().getText().getFont()
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'hanging'
+      var t, tf
+      var offset = (hasBorder ? borderWidth : 0) + margin + 2
+      for (i = 0; t = txt.top[i]; i++)
+        if (!(Math.round(t[0] / this.get('step')) % step2)) {
+          tf = this.formatCoord(t[0], 'top')
+          ctx.strokeText(tf, t[1][0], offset)
+          ctx.fillText(tf, t[1][0], offset)
+        }
+      ctx.textBaseline = 'alphabetic'
+      for (i = 0; t = txt.bottom[i]; i++)
+        if (!(Math.round(t[0] / this.get('step')) % step2)) {
+          tf = this.formatCoord(t[0], 'bottom')
+          ctx.strokeText(tf, t[1][0], h - offset)
+          ctx.fillText(tf, t[1][0], h - offset)
+        }
+      ctx.textBaseline = 'middle'
+      ctx.textAlign = 'left'
+      for (i = 0; t = txt.left[i]; i++)
+        if (!(Math.round(t[0] / this.get('step')) % step2)) {
+          tf = this.formatCoord(t[0], 'left')
+          ctx.strokeText(tf, offset, t[1][1])
+          ctx.fillText(tf, offset, t[1][1])
+        }
+      ctx.textAlign = 'right'
+      for (i = 0; t = txt.right[i]; i++)
+        if (!(Math.round(t[0] / this.get('step')) % step2)) {
+          tf = this.formatCoord(t[0], 'right')
+          ctx.strokeText(tf, w - offset, t[1][1])
+          ctx.fillText(tf, w - offset, t[1][1])
+        }
     }
     // Draw border
-    if (hasBorder)
-    {	var fillColor = this.getStyle().getFill().getColor();
-      var color, stroke;
-      if (stroke = this.getStyle().getStroke())
-      {	color = this.getStyle().getStroke().getColor();
+    if (hasBorder) {
+      var fillColor = this.getStyle().getFill().getColor()
+      var color, stroke
+      if (stroke = this.getStyle().getStroke()) {
+        color = this.getStyle().getStroke().getColor()
       }
-      else
-      {	color = fillColor;
-        fillColor = "#fff";
+      else {
+        color = fillColor
+        fillColor = "#fff"
       }
-      ctx.strokeStyle = color;
-      ctx.lineWidth = stroke ? stroke.getWidth() : 1;
+      ctx.strokeStyle = color
+      ctx.lineWidth = stroke ? stroke.getWidth() : 1
       // 
-      for (i=1; i<txt.top.length; i++)
-      {	ctx.beginPath();
-        ctx.rect(txt.top[i-1][1][0], margin, txt.top[i][1][0]-txt.top[i-1][1][0], borderWidth);
-        ctx.fillStyle = Math.round(txt.top[i][0]/step)%2 ? color: fillColor;
-        ctx.fill(); 
-        ctx.stroke(); 
+      for (i = 1; i < txt.top.length; i++) {
+        ctx.beginPath()
+        ctx.rect(txt.top[i - 1][1][0], margin, txt.top[i][1][0] - txt.top[i - 1][1][0], borderWidth)
+        ctx.fillStyle = Math.round(txt.top[i][0] / step) % 2 ? color : fillColor
+        ctx.fill()
+        ctx.stroke()
       }
-      for (i=1; i<txt.bottom.length; i++)
-      {	ctx.beginPath();
-        ctx.rect(txt.bottom[i-1][1][0], h-borderWidth-margin, txt.bottom[i][1][0]-txt.bottom[i-1][1][0], borderWidth);
-        ctx.fillStyle = Math.round(txt.bottom[i][0]/step)%2 ? color: fillColor;
-        ctx.fill(); 
-        ctx.stroke(); 
+      for (i = 1; i < txt.bottom.length; i++) {
+        ctx.beginPath()
+        ctx.rect(txt.bottom[i - 1][1][0], h - borderWidth - margin, txt.bottom[i][1][0] - txt.bottom[i - 1][1][0], borderWidth)
+        ctx.fillStyle = Math.round(txt.bottom[i][0] / step) % 2 ? color : fillColor
+        ctx.fill()
+        ctx.stroke()
       }
-      for (i=1; i<txt.left.length; i++)
-      {	ctx.beginPath();
-        ctx.rect(margin, txt.left[i-1][1][1], borderWidth, txt.left[i][1][1]-txt.left[i-1][1][1]);
-        ctx.fillStyle = Math.round(txt.left[i][0]/step)%2 ? color: fillColor;
-        ctx.fill(); 
-        ctx.stroke(); 
+      for (i = 1; i < txt.left.length; i++) {
+        ctx.beginPath()
+        ctx.rect(margin, txt.left[i - 1][1][1], borderWidth, txt.left[i][1][1] - txt.left[i - 1][1][1])
+        ctx.fillStyle = Math.round(txt.left[i][0] / step) % 2 ? color : fillColor
+        ctx.fill()
+        ctx.stroke()
       }
-      for (i=1; i<txt.right.length; i++)
-      {	ctx.beginPath();
-        ctx.rect(w-borderWidth-margin, txt.right[i-1][1][1], borderWidth, txt.right[i][1][1]-txt.right[i-1][1][1]);
-        ctx.fillStyle = Math.round(txt.right[i][0]/step)%2 ? color: fillColor;
-        ctx.fill(); 
-        ctx.stroke(); 
+      for (i = 1; i < txt.right.length; i++) {
+        ctx.beginPath()
+        ctx.rect(w - borderWidth - margin, txt.right[i - 1][1][1], borderWidth, txt.right[i][1][1] - txt.right[i - 1][1][1])
+        ctx.fillStyle = Math.round(txt.right[i][0] / step) % 2 ? color : fillColor
+        ctx.fill()
+        ctx.stroke()
       }
-      ctx.beginPath();
-      ctx.fillStyle = color;
-      ctx.rect(margin,margin, borderWidth, borderWidth);
-      ctx.rect(margin,h-borderWidth-margin, borderWidth,borderWidth);
-      ctx.rect(w-borderWidth-margin,margin, borderWidth, borderWidth);
-      ctx.rect(w-borderWidth-margin,h-borderWidth-margin, borderWidth,borderWidth);
-      ctx.fill(); 
+      ctx.beginPath()
+      ctx.fillStyle = color
+      ctx.rect(margin, margin, borderWidth, borderWidth)
+      ctx.rect(margin, h - borderWidth - margin, borderWidth, borderWidth)
+      ctx.rect(w - borderWidth - margin, margin, borderWidth, borderWidth)
+      ctx.rect(w - borderWidth - margin, h - borderWidth - margin, borderWidth, borderWidth)
+      ctx.fill()
     }
-  ctx.restore();
-};
+    ctx.restore()
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -14175,83 +14199,87 @@ ol.control.SearchDFCI.prototype.autocomplete = function (s) {
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property 
  *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
  */
-ol.control.SearchFeature = function(options) {
-  if (!options) options = {};
-  options.className = options.className || 'feature';
-  ol.control.Search.call(this, options);
-  if (typeof(options.getSearchString)=="function") this.getSearchString = options.getSearchString;
-  this.set('property', options.property || 'name');
-  this.source_ = options.source;
-};
-ol.ext.inherits(ol.control.SearchFeature, ol.control.Search);
-/** No history avaliable on features
- */
-ol.control.SearchFeature.prototype.restoreHistory = function () {
-  this.set('history', []);
-};
-/** No history avaliable on features
- */
-ol.control.SearchFeature.prototype.saveHistory = function () {
-  try {
-    localStorage.removeItem("ol@search-"+this._classname);
-  } catch(e) { console.warn('Failed to access localStorage...'); }
-}
-/** Returns the text to be displayed in the menu
-*	@param {ol.Feature} f the feature
-*	@return {string} the text to be displayed in the index
-*	@api
-*/
-ol.control.SearchFeature.prototype.getTitle = function (f) {
-  return f.get(this.get('property')||'name');
-};
-/** Return the string to search in
-*	@param {ol.Feature} f the feature
-*	@return {string} the text to be used as search string
-*	@api
-*/
-ol.control.SearchFeature.prototype.getSearchString = function (f) {
-  return this.getTitle(f);
-};
-/** Get the source
-*	@return {ol.source.Vector}
-*	@api
-*/
-ol.control.SearchFeature.prototype.getSource = function () {
-  return this.source_;
-}
-/** Get the source
-*	@param {ol.source.Vector} source
-*	@api
-*/
-ol.control.SearchFeature.prototype.setSource = function (source) {
-  this.source_ =  source;
-};
-/** Autocomplete function
-* @param {string} s search string
-* @param {int} max max 
-* @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
-* @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
-* @api
-*/
-ol.control.SearchFeature.prototype.autocomplete = function (s) {
-  var result = [];
-  if (this.source_) {
-    // regexp
-    s = s.replace(/^\*/,'');
-    var rex = new RegExp(s, 'i');
-    // The source
-    var features = this.source_.getFeatures();
-    var max = this.get('maxItems')
-    for (var i=0, f; f=features[i]; i++) {
-      var att = this.getSearchString(f);
-      if (att !== undefined && rex.test(att)) {
-        result.push(f);
-        if ((--max)<=0) break;
+ol.control.SearchFeature = class olcontrolSearchFeature extends ol.control.Search {
+  constructor(options) {
+    options = options || {};
+    options.className = options.className || 'feature';
+    super(options);
+    if (typeof (options.getSearchString) == "function") {
+      this.getSearchString = options.getSearchString;
+    }
+    this.set('property', options.property || 'name');
+    this.source_ = options.source;
+  }
+  /** No history avaliable on features
+   */
+  restoreHistory() {
+    this.set('history', []);
+  }
+  /** No history avaliable on features
+   */
+  saveHistory() {
+    try {
+      localStorage.removeItem("ol@search-" + this._classname);
+    } catch (e) { console.warn('Failed to access localStorage...'); }
+  }
+  /** Returns the text to be displayed in the menu
+  *	@param {ol.Feature} f the feature
+  *	@return {string} the text to be displayed in the index
+  *	@api
+  */
+  getTitle(f) {
+    return f.get(this.get('property') || 'name');
+  }
+  /** Return the string to search in
+  *	@param {ol.Feature} f the feature
+  *	@return {string} the text to be used as search string
+  *	@api
+  */
+  getSearchString(f) {
+    return this.getTitle(f);
+  }
+  /** Get the source
+  *	@return {ol.source.Vector}
+  *	@api
+  */
+  getSource() {
+    return this.source_;
+  }
+  /** Get the source
+  *	@param {ol.source.Vector} source
+  *	@api
+  */
+  setSource(source) {
+    this.source_ = source;
+  }
+  /** Autocomplete function
+  * @param {string} s search string
+  * @param {int} max max
+  * @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
+  * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
+  * @api
+  */
+  autocomplete(s) {
+    var result = [];
+    if (this.source_) {
+      // regexp
+      s = s.replace(/^\*/, '');
+      var rex = new RegExp(s, 'i');
+      // The source
+      var features = this.source_.getFeatures();
+      var max = this.get('maxItems');
+      for (var i = 0, f; f = features[i]; i++) {
+        var att = this.getSearchString(f);
+        if (att !== undefined && rex.test(att)) {
+          result.push(f);
+          if ((--max) <= 0)
+            break;
+        }
       }
     }
+    return result;
   }
-  return result;
-};
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)

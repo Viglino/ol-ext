@@ -14,8 +14,8 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
@@ -160,20 +160,20 @@
     // The map
     var map = new ol.Map
       ({	target: 'map',
-        view: new ol.View
-        ({	zoom: 6,
+        view: new ol.View({
+          zoom: 6,
           center: [-20094, 6234453]
         }),
-        controls: ol.control.defaults({ "attribution": false }),
-        layers: [new ol.layer.Tile(
-          {	name: "OSM",
-            source: new ol.source.OSM(),
-            visible: true
-          })]
+        // controls: ol.control.defaults({ "attribution": false }),
+        layers: [new ol.layer.Tile({
+          name: "OSM",
+          source: new ol.source.OSM(),
+          visible: true
+        })]
       });
 
-    var grat=
-    {	'4326': new ol.control.Graticule({ step: 0.1, stepCoord: 5, margin:5, projection: 'EPSG:4326', formatCoord:function(c){ return c.toFixed(1)+"°" } }),
+    var grat = {
+      '4326': new ol.control.Graticule({ step: 0.1, stepCoord: 5, margin:5, projection: 'EPSG:4326', formatCoord:function(c){ return c.toFixed(1)+"°" } }),
       //'32662': new ol.control.Graticule({ step: 1000, stepCoord: 1, projection: 'EPSG:32662' }),
       '5479': new ol.control.Graticule({ step: 1000, stepCoord: 1, projection: 'EPSG:5479' }),
       '23032': new ol.control.Graticule({ step: 1000, stepCoord: 1, projection: 'EPSG:23032' }),
@@ -186,7 +186,7 @@
     };
 
     var g;
-    function setGraticule (proj){
+    function setGraticule(proj) {
       if (g) map.removeControl(g);
       g = grat[$("#grat").val()];
       var c = $("#color").val();

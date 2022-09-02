@@ -1,143 +1,140 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Search feature control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	Copyright (c) 2017-2018 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  <meta name="description" content="Control to add a grid reference to a map." />
+  <meta name="keywords" content="ol3, control, search, vector, feature" />
 
------------------------------------------------------------->
-	<title>ol-ext: Search feature control</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-	<meta name="description" content="Control to add a grid reference to a map." />
-	<meta name="keywords" content="ol3, control, search, vector, feature" />
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<link rel="stylesheet" href="../style.css"/>
+  <link rel="stylesheet" href="../style.css"/>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Search feature control</h1>
-	</a>
+  <a href="../../index.html">
+    <h1>ol-ext: Search feature control</h1>
+  </a>
 
-	<div class="info">
-		<i>ol.control.SearchFeature</i> is a control to search features in a source.
-		<ul>
-			<li>
-				You have to define a <i>ol.source.Vector</i> to search in.
-			</li>
-			<li>
-				You can define a <i>property</i> that will be used to search in or define a getTitle/getSearchString function.
-			</li>
-			<li>
-				You can define a <i>getTitle</i> to get the string that will be displayed in the menu
-			</li>
-			<li>
-				You can define a <i>getSearchString</i> function that will take a feature and
-				return a string to search in.
-			</li>
-		</ul>
-		<br/>
-		<i>ol.control.SearchFeature</i> use the <a href="map.control.search.html">ol.control.Search</a> control.
-	</div>
+  <div class="info">
+    <i>ol.control.SearchFeature</i> is a control to search features in a source.
+    <ul>
+      <li>
+        You have to define a <i>ol.source.Vector</i> to search in.
+      </li>
+      <li>
+        You can define a <i>property</i> that will be used to search in or define a getTitle/getSearchString function.
+      </li>
+      <li>
+        You can define a <i>getTitle</i> to get the string that will be displayed in the menu
+      </li>
+      <li>
+        You can define a <i>getSearchString</i> function that will take a feature and
+        return a string to search in.
+      </li>
+    </ul>
+    <br/>
+    <i>ol.control.SearchFeature</i> use the <a href="map.control.search.html">ol.control.Search</a> control.
+  </div>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<h2>Options:</h2>
-		<ul>
-			<li>
-				maxInputs: <input type="number" onchange="search.set('maxItems', Number(this.value));" style="width:3em;" value="10" />
-			</li>
-			<li>
-				search property:
-				<select onchange="search.set('property',this.value); search.search();">
-					<option value="commune">commune</option>
-					<option value="region">region</option>
-					<option value="text">text</option>
-				</select>
-			</li>
-		</ul>
-		<i>Use the search control to start a new search.</i>
-	</div>
-	
-	<script type="text/javascript">
-	// Layers
-	var layers = [
-		new ol.layer.Tile({
-			title:'terrain-background',
-			source: new ol.source.Stamen({ layer: 'terrain' })
-		})
-	]
+  <div class="options">
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        maxInputs: <input type="number" onchange="search.set('maxItems', Number(this.value));" style="width:3em;" value="10" />
+      </li>
+      <li>
+        search property:
+        <select onchange="search.set('property',this.value); search.search();">
+          <option value="commune">commune</option>
+          <option value="region">region</option>
+          <option value="text">text</option>
+        </select>
+      </li>
+    </ul>
+    <i>Use the search control to start a new search.</i>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      title:'terrain-background',
+      source: new ol.source.Stamen({ layer: 'terrain' })
+    })
+  ]
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 5,
-				center: [166326, 5992663]
-			}),
-			interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
-			layers: layers
-		});
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers
+  });
 
-	// GeoJSON layer
-	var vectorSource = new ol.source.Vector(
-	{	url: '../data/fond_guerre.geojson',
-		projection: 'EPSG:3857',
-		format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
-	});
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
 
-	map.addLayer(new ol.layer.Vector(
-	{	name: 'Fonds de guerre 14-18',
-		source: vectorSource,
-		style: new ol.style.Style({ image: new ol.style.Icon({ src:"../data/camera.png", scale: 0.8 }) })
-	}));
+  map.addLayer(new ol.layer.Vector({
+    name: 'Fonds de guerre 14-18',
+    source: vectorSource,
+    style: new ol.style.Style({ image: new ol.style.Icon({ src:"../data/camera.png", scale: 0.8 }) })
+  }));
 
-	// Control Select 
-	var select = new ol.interaction.Select({});
-	map.addInteraction(select);
+  // Control Select 
+  var select = new ol.interaction.Select({});
+  map.addInteraction(select);
 
-	// Set the control grid reference
-	var search = new ol.control.SearchFeature(
-		{	//target: $(".options").get(0),
-			source: vectorSource,
-			property: $(".options select").val()
-		});
-	map.addControl (search);
+  // Set the control grid reference
+  var search = new ol.control.SearchFeature({
+    //target: $(".options").get(0),
+    source: vectorSource,
+    property: $(".options select").val()
+  });
+  map.addControl (search);
 
-	// Select feature when click on the reference index
-	search.on('select', function(e)
-		{	select.getFeatures().clear();
-			select.getFeatures().push (e.search);
-			var p = e.search.getGeometry().getFirstCoordinate();
-			map.getView().animate({ center:p });
-		});
+  // Select feature when click on the reference index
+  search.on('select', function(e) {
+    select.getFeatures().clear();
+    select.getFeatures().push (e.search);
+    var p = e.search.getGeometry().getFirstCoordinate();
+    map.getView().animate({ center:p });
+  });
 
-	</script>
-	
+  </script>
+  
 </body>
 </html>

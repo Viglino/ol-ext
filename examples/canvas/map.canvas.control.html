@@ -17,8 +17,8 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 
   <!-- ol-ext -->
@@ -71,7 +71,7 @@
   <div class="options">
     <h2>Options:</h2>
     <ul><li>
-      Title of the map : <input id="title" value ="Title" />
+      Title of the map : <input id="title" value="" placeholder="Title" />
     </li><li>
       Font: <select id="font" onchange="setControlStyle()">
         <option value="sans-serif">sans-serif</option>
@@ -112,17 +112,17 @@
 
     // The map
     var map = new ol.Map({
-        target: 'map',
-        view: new ol.View ({
-          zoom: 14,
-          center: [270148, 6247782]
-        }),
-        controls: ol.control.defaults({ "attribution": false }),
-        layers: [
-          new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }),
-          new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'toner-labels' }) })
-        ]
-      });
+      target: 'map',
+      view: new ol.View ({
+        zoom: 14,
+        center: [270148, 6247782]
+      }),
+      controls: ol.control.defaults.defaults({ "attribution": false }),
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }),
+        new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'toner-labels' }) })
+      ]
+    });
 
     // Print control
     var printControl = new ol.control.Print();

@@ -15,8 +15,9 @@ import ol_ext_element from '../util/element'
  * @constructor
  * @extends {ol_control_CanvasBase}
  * @param {Object=} options extend the ol.control options. 
- *  @param {string} options.title the title, default 'Title'
- *  @param {ol_style_Style} options.style style used to draw the title.
+ *  @param {string} [options.title] the title, default 'Title'
+ *  @param {boolean} [options.visible=true]
+ *  @param {ol_style_Style} [options.style] style used to draw the title (with a text).
  */
 var ol_control_CanvasTitle = class olcontrolCanvasTitle extends ol_control_CanvasBase {
   constructor(options) {
@@ -36,7 +37,7 @@ var ol_control_CanvasTitle = class olcontrolCanvasTitle extends ol_control_Canva
     });
 
     this.setTitle(options.title || '');
-    this.setVisible(options.visible);
+    this.setVisible(options.visible !== false);
     this.element.style.font = this.getTextFont();
   }
   /**
@@ -44,14 +45,13 @@ var ol_control_CanvasTitle = class olcontrolCanvasTitle extends ol_control_Canva
    * @param {ol_style_Style} style
    */
   setStyle(style) {
-    ol_control_CanvasBase.prototype.setStyle.call(this, style);
+    super.setStyle(style);
     // Element style
     if (this.element) {
       this.element.style.font = this.getTextFont();
     }
     // refresh
-    if (this.getMap())
-      this.getMap().render();
+    if (this.getMap()) this.getMap().render();
   }
   /**
    * Set the map title
