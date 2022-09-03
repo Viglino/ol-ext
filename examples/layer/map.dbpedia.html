@@ -1,54 +1,52 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: DBPedia layer</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: DBPedia layer</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="DBPedia layer for OL3" />
-	<meta name="keywords" content="ol3, layer, source, vector, wikipedia, dbpedia" />
+  <meta name="description" content="DBPedia layer for OL3" />
+  <meta name="keywords" content="ol3, layer, source, vector, wikipedia, dbpedia" />
 
-	<!-- SparQL server only works on http -->
-	<script>
-		if (location.protocol == 'https:')
-		{	location.href = window.location.href.replace(/^https:/,"http:");
-		}
-	</script>
+  <!-- SparQL server only works on http -->
+  <script>
+    if (location.protocol == 'https:') {
+      location.href = window.location.href.replace(/^https:/,"http:");
+    }
+  </script>
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
-	<script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
+  <!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
+  <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
 
-	<!-- filesaver-js -->
-	<script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	<style>
-		#select img
-		{	max-height: 300px;
-		}
-		#map {
-		width: 600px;
-		height: 400px;
-		}
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    #select img {
+      max-height: 300px;
+    }
+    #map {
+      width: 600px;
+      height: 400px;
+    }
     .fullscreen #map {
       position: fixed;
       top: 0;
@@ -56,128 +54,127 @@
       right: 0;
       bottom: 0;
       width: 100%;
-	  height: 100%;
-	  z-index: 10;
+      height: 100%;
+      z-index: 10;
     }
     .fullscreen .options.top {
       position: fixed;
       top: 0;
-	  right: 0;
-	  z-index:10000;
+      right: 0;
+      z-index:10000;
     }
 
-	</style>
+  </style>
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: DBPedia layer</h1>
-	</a>
-	<p class="info">
-		<i>ol.layer.DBPedia</i> is a tile vector layer that use RDF of the <a href="http://fr.dbpedia.org/">french DBpedia project</a>.
-		<br />
-		Symbolisation use Fontawesome with an <a href="../style/map.style.font.html">ol.style.Font</a>.
-	</p>
+  <a href="../../index.html">
+    <h1>ol-ext: DBPedia layer</h1>
+  </a>
+  <p class="info">
+    <i>ol.layer.DBPedia</i> is a tile vector layer that use RDF of the <a href="http://fr.dbpedia.org/">french DBpedia project</a>.
+    <br />
+    Symbolisation use Fontawesome with an <a href="../style/map.style.font.html">ol.style.Font</a>.
+  </p>
 
-	<!-- DIV pour la carte -->
-	<div id="map"></div>
-	<div class="options top">
-		<button onclick="$('body').toggleClass('fullscreen'); map.updateSize();">fullscreen</button>
-	</div>
-	<div id ="select" class="options" >Select an item.</div>
-	
-	<script type="text/javascript">
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 15,
-				center: [261204.43490751847, 6250258.191535994]
-			}),
-			interactions: ol.interaction.defaults(),
-			layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
-		});
+  <!-- DIV pour la carte -->
+  <div id="map"></div>
+  <div class="options top">
+    <button onclick="$('body').toggleClass('fullscreen'); map.updateSize();">fullscreen</button>
+  </div>
+  <div id ="select" class="options" >Select an item.</div>
+  
+  <script type="text/javascript">
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 15,
+      center: [261204.43490751847, 6250258.191535994]
+    }),
+    layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
+  });
 
-	// DBPedia layer source
-	var vectorSource = new ol.source.DBPedia(
-	{	// Tile strategy load at zoom 14
-        strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: 14, maxZoom: 14, tileSize:512  })),
-		// Bbox strategy : reload at each move
-		//strategy: ol.loadingstrategy.bbox,
-		// Language
-		lang:"fr"
-	});
+  // DBPedia layer source
+  var vectorSource = new ol.source.DBPedia({
+    // Tile strategy load at zoom 14
+    strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: 14, maxZoom: 14, tileSize:512  })),
+    // Bbox strategy : reload at each move
+    //strategy: ol.loadingstrategy.bbox,
+    // Language
+    lang:"fr"
+  });
 
-	// Force layer reload on resolution change 
-	map.getView().on('change:resolution', function(evt)
-	{	//vectorSource.clear();
-		if (map.getView().getZoom() < 14) $(".options").first().text("Zoom to load data...");
-		else $(".options").first().text("");
-	});
+  // Force layer reload on resolution change 
+  map.getView().on('change:resolution', function(evt){
+    //vectorSource.clear();
+    if (map.getView().getZoom() < 14) $(".options").first().text("Zoom to load data...");
+    else $(".options").first().text("");
+  });
 
-	var vector = new ol.layer.Vector(
-	{	name: 'DBPedia',
-		source: vectorSource,
-		// Limit resolution to avoid large area request
-		maxResolution: 10, // > zoom 14
-		// y ordering
-		renderOrder: ol.ordering.yOrdering(),
-		// default dbPedia style function
-		style: ol.style.dbPediaStyleFunction()
-	});
+  var vector = new ol.layer.Vector({
+    name: 'DBPedia',
+    source: vectorSource,
+    // Limit resolution to avoid large area request
+    maxResolution: 10, // > zoom 14
+    // y ordering
+    renderOrder: ol.ordering.yOrdering(),
+    // default dbPedia style function
+    style: ol.style.dbPediaStyleFunction()
+  });
 
-	map.addLayer(vector);
+  map.addLayer(vector);
 
-	// Control Select 
-	var select = new ol.interaction.Select(
-		{	// select dbPedia style function
-			style: ol.style.dbPediaStyleFunction({ prefix:"sel", radius:12, fill: new ol.style.Fill({ color:"red"}) })
-        })
-	map.addInteraction(select);
-	// On selected
-	select.getFeatures().on(['add','remove'], function(e)
-	{	var info = $("#select").html("");
-		if (e.type=="add") 
-		{	var el = e.element;
-			$("<h2>").text(el.get("label")).appendTo(info);
-			if (el.get("thumbnail")) $("<img>").attr('src',el.get("thumbnail")).appendTo(info);
-			$("<p>").text(el.get("abstract")).appendTo(info);
-		}
-	});
+  // Control Select 
+  var select = new ol.interaction.Select({
+    // select dbPedia style function
+    style: ol.style.dbPediaStyleFunction({ prefix:"sel", radius:12, fill: new ol.style.Fill({ color:"red"}) })
+  })
+  map.addInteraction(select);
+  // On selected
+  select.getFeatures().on(['add','remove'], function(e) {
+    var info = $("#select").html("");
+    if (e.type=="add") {
+      var el = e.element;
+      $("<h2>").text(el.get("label")).appendTo(info);
+      if (el.get("thumbnail")) $("<img>").attr('src',el.get("thumbnail")).appendTo(info);
+      $("<p>").text(el.get("abstract")).appendTo(info);
+    }
+  });
 
-	</script>
+  </script>
 
-	<!-- Script to test webfont loading -->
-	<!-- @see https://github.com/zachleat/fontfaceonload -->
-	<!-- @use https://github.com/typekit/webfontloader -->
-	<script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js"></script>
-	<script type="text/javascript">
-	WebFont.load(
-	{	custom: {
-			families: ['FontAwesome'],
-			urls: ['https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'],
-			testStrings: { 'FontAwesome': '\uf240' }
-		},
-		classes: false,
-		// Clear the cache and force redraw when fonts are loaded
-		active: function() 
-		{	ol.style.clearDBPediaStyleCache(); 
-			vector.changed(); 
-			console.log("FontAwesome is loaded!");
-		}
-	});
+  <!-- Script to test webfont loading -->
+  <!-- @see https://github.com/zachleat/fontfaceonload -->
+  <!-- @use https://github.com/typekit/webfontloader -->
+  <script src="https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js"></script>
+  <script type="text/javascript">
+  WebFont.load({
+    custom: {
+      families: ['FontAwesome'],
+      urls: ['https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'],
+      testStrings: { 'FontAwesome': '\uf240' }
+    },
+    classes: false,
+    // Clear the cache and force redraw when fonts are loaded
+    active: function() {
+      ol.style.clearDBPediaStyleCache(); 
+      vector.changed(); 
+      console.log("FontAwesome is loaded!");
+    }
+  });
 
-	function save() {
-		var format = new ol.format.GeoJSON();
-		var data = format.writeFeatures(vectorSource.getFeatures(), {
-			dataProjection: 'EPSG:4326',
-			featureProjection: map.getView().getProjection()
-		});
-		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-		saveAs(blob, "wiki.geojson");
-	}
-	</script>
-	<!-- -->
+  function save() {
+    var format = new ol.format.GeoJSON();
+    var data = format.writeFeatures(vectorSource.getFeatures(), {
+      dataProjection: 'EPSG:4326',
+      featureProjection: map.getView().getProjection()
+    });
+    var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, "wiki.geojson");
+  }
+  </script>
+  <!-- -->
 </body>
 </html>

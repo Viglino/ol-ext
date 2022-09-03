@@ -5279,204 +5279,208 @@ ol.control.SearchPhoton = class olcontrolSearchPhoton extends ol.control.SearchJ
  *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
  * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
  */
-ol.control.SearchGeoportail = function(options) {
-  options = options || {};
-  options.className = options.className || 'IGNF';
-  options.typing = options.typing || 500;
-  options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
-  options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
-  ol.control.SearchJSON.call(this, options);
-  this.set('type', options.type || 'StreetAddress,PositionOfInterest');
-  this.set('timeout', options.timeout || 2000);
-  // Authentication
-  // this._auth = options.authentication;
-};
-ol.ext.inherits(ol.control.SearchGeoportail, ol.control.SearchJSON);
-/** Reverse geocode
- * @param {ol.coordinate} coord
- * @param {function|*} options callback function called when revers located or options passed to the select event
- * @api
- */
-ol.control.SearchGeoportail.prototype.reverseGeocode = function (coord, options) {
-  var lonlat = ol.proj.transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
-  this._handleSelect({ 
-    x: lonlat[0], 
-    y: lonlat[1], 
-    fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
-  }, true, options);
-  // Search type
-  var type = this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
-  if (/,/.test(type)) type = 'StreetAddress';
-  // request
-  var request = '<?xml version="1.0" encoding="UTF-8"?>'
-    +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
-    +' <Request requestID="1" version="1.2" methodName="ReverseGeocodeRequest" maximumResponses="1" >'
-    +'  <ReverseGeocodeRequest>'
-    +'   <ReverseGeocodePreference>'+type+'</ReverseGeocodePreference>'
-    +'   <Position>'
-    +'    <gml:Point><gml:pos>'+lonlat[1]+' '+lonlat[0]+'</gml:pos></gml:Point>'
-    +'   </Position>'
-    +'  </ReverseGeocodeRequest>'
-    +' </Request>'
-    +'</XLS>';
-  this.ajax (this.get('url').replace('ols/apis/completion','geoportail/ols'), 
-    { xls: request },
-    function(xml) {
-      var f = {};
-      if (!xml) {
-        f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) }
-      } else {
-        xml = xml.replace(/\n|\r/g,'');
-        var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-        if (!Number(p[1]) && !Number(p[0])) {
-          f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) }
+ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control.SearchJSON {
+  constructor(options) {
+    options = options || {};
+    options.className = options.className || 'IGNF';
+    options.typing = options.typing || 500;
+    options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
+    options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
+    super(options);
+    this.set('type', options.type || 'StreetAddress,PositionOfInterest');
+    this.set('timeout', options.timeout || 2000);
+    // Authentication
+    // this._auth = options.authentication;
+  }
+  /** Reverse geocode
+   * @param {ol.coordinate} coord
+   * @param {function|*} options callback function called when revers located or options passed to the select event
+   * @api
+   */
+  reverseGeocode(coord, options) {
+    var lonlat = ol.proj.transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326');
+    this._handleSelect({
+      x: lonlat[0],
+      y: lonlat[1],
+      fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6)
+    }, true, options);
+    // Search type
+    var type = this.get('type') === 'Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
+    if (/,/.test(type))
+      type = 'StreetAddress';
+    // request
+    var request = '<?xml version="1.0" encoding="UTF-8"?>'
+      + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+      + ' <Request requestID="1" version="1.2" methodName="ReverseGeocodeRequest" maximumResponses="1" >'
+      + '  <ReverseGeocodeRequest>'
+      + '   <ReverseGeocodePreference>' + type + '</ReverseGeocodePreference>'
+      + '   <Position>'
+      + '    <gml:Point><gml:pos>' + lonlat[1] + ' ' + lonlat[0] + '</gml:pos></gml:Point>'
+      + '   </Position>'
+      + '  </ReverseGeocodeRequest>'
+      + ' </Request>'
+      + '</XLS>';
+    this.ajax(this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
+      { xls: request },
+      function (xml) {
+        var f = {};
+        if (!xml) {
+          f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) };
         } else {
-          f.x = lonlat[0];
-          f.y = lonlat[1];
-          f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
-          f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
-          f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
-          if (/<Street>/.test(xml)) {
-            f.kind = '';
-            f.country = 'StreetAddress';
-            f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
-            var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
-            f.fulltext = number+' '+f.street+', '+f.zipcode+' '+f.city;
+          xml = xml.replace(/\n|\r/g, '');
+          var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+          if (!Number(p[1]) && !Number(p[0])) {
+            f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) };
           } else {
-            f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
-            f.country = 'PositionOfInterest';
-            f.street = '';
-            f.fulltext = f.zipcode+' '+f.city;
+            f.x = lonlat[0];
+            f.y = lonlat[1];
+            f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
+            f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+            f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
+            if (/<Street>/.test(xml)) {
+              f.kind = '';
+              f.country = 'StreetAddress';
+              f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
+              var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
+              f.fulltext = number + ' ' + f.street + ', ' + f.zipcode + ' ' + f.city;
+            } else {
+              f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+              f.country = 'PositionOfInterest';
+              f.street = '';
+              f.fulltext = f.zipcode + ' ' + f.city;
+            }
           }
         }
-      }
-      if (typeof(options)==='function') {
-        options.call(this, [f]);
-      } else {
-        this.getHistory().shift();
-        this._handleSelect(f, true, options);
-        // this.setInput('', true);
-        // this.drawList_();
-      }
-    }.bind(this), {
+        if (typeof (options) === 'function') {
+          options.call(this, [f]);
+        } else {
+          this.getHistory().shift();
+          this._handleSelect(f, true, options);
+          // this.setInput('', true);
+          // this.drawList_();
+        }
+      }.bind(this), {
       timeout: this.get('timeout'),
       dataType: 'XML'
     }
-  );
-};
-/** Returns the text to be displayed in the menu
- *	@param {ol.Feature} f the feature
- *	@return {string} the text to be displayed in the index
- *	@api
- */
-ol.control.SearchGeoportail.prototype.getTitle = function (f) {
-  return (f.fulltext);
-};
-/** 
- * @param {string} s the search string
- * @return {Object} request data (as key:value)
- * @api
- */
-ol.control.SearchGeoportail.prototype.requestData = function (s) {
-	return { 
-    text: s, 
-    type: this.get('type')==='Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest', 
-    maximumResponses: this.get('maxItems')
-  };
-};
-/**
- * Handle server response to pass the features array to the display list
- * @param {any} response server response
- * @return {Array<any>} an array of feature
- * @api
- */
-ol.control.SearchGeoportail.prototype.handleResponse = function (response) {
-  var features = response.results;
-  if (this.get('type') === 'Commune') {
-    for (var i=features.length-1; i>=0; i--) {
-      if ( features[i].kind 
-        && (features[i].classification>5 || features[i].kind=="Département") ) {
-          features.splice(i,1);
+    );
+  }
+  /** Returns the text to be displayed in the menu
+   *	@param {ol.Feature} f the feature
+   *	@return {string} the text to be displayed in the index
+   *	@api
+   */
+  getTitle(f) {
+    return (f.fulltext);
+  }
+  /**
+   * @param {string} s the search string
+   * @return {Object} request data (as key:value)
+   * @api
+   */
+  requestData(s) {
+    return {
+      text: s,
+      type: this.get('type') === 'Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest',
+      maximumResponses: this.get('maxItems')
+    };
+  }
+  /**
+   * Handle server response to pass the features array to the display list
+   * @param {any} response server response
+   * @return {Array<any>} an array of feature
+   * @api
+   */
+  handleResponse(response) {
+    var features = response.results;
+    if (this.get('type') === 'Commune') {
+      for (var i = features.length - 1; i >= 0; i--) {
+        if (features[i].kind
+          && (features[i].classification > 5 || features[i].kind == "Département")) {
+          features.splice(i, 1);
+        }
       }
     }
-	}
-	return features;
-};
-/** A ligne has been clicked in the menu > dispatch event
- * @param {any} f the feature, as passed in the autocomplete
- * @param {boolean} reverse true if reverse geocode
- * @param {ol.coordinate} coord
- * @param {*} options options passed to the event
- *	@api
- */
-ol.control.SearchGeoportail.prototype.select = function (f, reverse, coord, options){
-  if (f.x || f.y) {
-    var c = [Number(f.x), Number(f.y)];
-    // Add coordinate to the event
-    try {
-        c = ol.proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
-    } catch(e) { /* ok */}
-    // Get insee commune ?
-    if (this.get('type')==='Commune') {
-      this.searchCommune(f, function () {
-        ol.control.Search.prototype.select.call(this, f, reverse, c, options);
-        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
-      });
-    } else {
-        ol.control.Search.prototype.select.call(this, f, reverse, c, options);
-        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
-    }
-  } else {
-    this.searchCommune(f);
+    return features;
   }
-};
-/** Search if no position and get the INSEE code
- * @param {string} s le nom de la commune
- */
-ol.control.SearchGeoportail.prototype.searchCommune = function (f, cback) {
-  var request = '<?xml version="1.0" encoding="UTF-8"?>'
-	+'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
-		+'<RequestHeader/>'
-		+'<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
-			+'<GeocodeRequest returnFreeForm="false">'
-				+'<Address countryCode="PositionOfInterest">'
-				+'<freeFormAddress>'+f.zipcode+' '+f.city+'+</freeFormAddress>'
-				+'</Address>'
-			+'</GeocodeRequest>'
-		+'</Request>'
-	+'</XLS>'
-  // Search 
-  this.ajax (this.get('url').replace('ols/apis/completion','geoportail/ols'),
-    { 'xls': request }, 
-    function(xml) {
-      if (xml) {
-        // XML to JSON
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(xml,"text/xml");
-        var com = xmlDoc.getElementsByTagName('GeocodedAddress')[0];
-        var coord = com.getElementsByTagName('gml:Point')[0].textContent.trim().split(' ');
-        f.x = Number(coord[1]);
-        f.y = Number(coord[0]);
-        var place = com.getElementsByTagName('Place');
-        for (var i=0; i<place.length; i++) {
-          switch (place[i].attributes.type.value) {
-            case 'Nature': 
-              f.kind = place[i].textContent;
-              break;
-            case 'INSEE': 
-              f.insee = place[i].textContent;
-              break;
+  /** A ligne has been clicked in the menu > dispatch event
+   * @param {any} f the feature, as passed in the autocomplete
+   * @param {boolean} reverse true if reverse geocode
+   * @param {ol.coordinate} coord
+   * @param {*} options options passed to the event
+   *	@api
+   */
+  select(f, reverse, coord, options) {
+    if (f.x || f.y) {
+      var c = [Number(f.x), Number(f.y)];
+      // Add coordinate to the event
+      try {
+        c = ol.proj.transform(c, 'EPSG:4326', this.getMap().getView().getProjection());
+      } catch (e) { /* ok */ }
+      // Get insee commune ?
+      if (this.get('type') === 'Commune') {
+        this.searchCommune(f, function () {
+          ol.control.Search.prototype.select.call(this, f, reverse, c, options);
+          //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
+        });
+      } else {
+        ol.control.Search.prototype.select.call(this, f, reverse, c, options);
+        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
+      }
+    } else {
+      this.searchCommune(f);
+    }
+  }
+  /** Search if no position and get the INSEE code
+   * @param {string} s le nom de la commune
+   */
+  searchCommune(f, cback) {
+    var request = '<?xml version="1.0" encoding="UTF-8"?>'
+      + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+      + '<RequestHeader/>'
+      + '<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
+      + '<GeocodeRequest returnFreeForm="false">'
+      + '<Address countryCode="PositionOfInterest">'
+      + '<freeFormAddress>' + f.zipcode + ' ' + f.city + '+</freeFormAddress>'
+      + '</Address>'
+      + '</GeocodeRequest>'
+      + '</Request>'
+      + '</XLS>';
+    // Search 
+    this.ajax(this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
+      { 'xls': request },
+      function (xml) {
+        if (xml) {
+          // XML to JSON
+          var parser = new DOMParser();
+          var xmlDoc = parser.parseFromString(xml, "text/xml");
+          var com = xmlDoc.getElementsByTagName('GeocodedAddress')[0];
+          var coord = com.getElementsByTagName('gml:Point')[0].textContent.trim().split(' ');
+          f.x = Number(coord[1]);
+          f.y = Number(coord[0]);
+          var place = com.getElementsByTagName('Place');
+          for (var i = 0; i < place.length; i++) {
+            switch (place[i].attributes.type.value) {
+              case 'Nature':
+                f.kind = place[i].textContent;
+                break;
+              case 'INSEE':
+                f.insee = place[i].textContent;
+                break;
+            }
+          }
+          if (f.x || f.y) {
+            if (cback)
+              cback.call(this, [f]);
+            else
+              this._handleSelect(f);
           }
         }
-        if (f.x || f.y) {
-          if (cback) cback.call(this, [f]);
-          else this._handleSelect(f);
-        }
-      }
-    }.bind(this),
-    { dataType: 'XML' }
-  );
-};
+      }.bind(this),
+      { dataType: 'XML' }
+    );
+  }
+}
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -14323,159 +14327,163 @@ ol.control.SearchFeature = class olcontrolSearchFeature extends ol.control.Searc
  *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
  *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
  */
-ol.control.SearchGPS = function(options) {
-  if (!options) options = {};
-  options.className = (options.className || '') + ' ol-searchgps';
-  options.placeholder = options.placeholder || 'lon,lat';
-  ol.control.Search.call(this, options);
-  // Geolocation
-  this.geolocation = new ol.Geolocation({
-    projection: "EPSG:4326",
-    trackingOptions: {
-      maximumAge: 10000,
-      enableHighAccuracy: true,
-      timeout: 600000
-    }
-  });
-  ol.ext.element.create ('BUTTON', {
-    className: 'ol-geoloc',
-    title: 'Locate with GPS',
-    parent: this.element,
-    click: function(){
-      this.geolocation.setTracking(true);
-    }.bind(this)
-  })
-  // DMS switcher
-  ol.ext.element.createSwitch({
-    html: 'decimal',
-    after: 'DMS',
-    change: function(e) {
-      if (e.target.checked) this.element.classList.add('ol-dms');
-      else this.element.classList.remove('ol-dms');
-    }.bind(this),
-    parent: this.element
-  });
-  this._createForm();
-  // Move list to the end
-  var ul = this.element.querySelector("ul.autocomplete");
-  this.element.appendChild(ul);
-};
-ol.ext.inherits(ol.control.SearchGPS, ol.control.Search);
-/** Create input form
- * @private
- */
-ol.control.SearchGPS.prototype._createForm = function () {
-  // Value has change
-  var onchange = function(e) {
-    if (e.target.classList.contains('ol-dms')) {
-      lon.value = (lond.value<0 ? -1:1) * Number(lond.value) + Number(lonm.value)/60 + Number(lons.value)/3600;
-      lon.value = (lond.value<0 ? -1:1) * Math.round(lon.value*10000000)/10000000;
-      lat.value = (latd.value<0 ? -1:1) * Number(latd.value) + Number(latm.value)/60 + Number(lats.value)/3600;
-      lat.value = (latd.value<0 ? -1:1) * Math.round(lat.value*10000000)/10000000;
-    }
-    if (lon.value||lat.value) {
-      this._input.value = lon.value+','+lat.value;
-    } else {
-      this._input.value = '';
-    }
-    if (!e.target.classList.contains('ol-dms')) {
-      var s = ol.coordinate.toStringHDMS([Number(lon.value), Number(lat.value)]);
-      var c = s.replace(/(N|S|E|W)/g,'').split('″');
-      c[1] = c[1].trim().split(' ');
-      lond.value = (/W/.test(s) ? -1 : 1) * parseInt(c[1][0]);
-      lonm.value = parseInt(c[1][1]);
-      lons.value = parseInt(c[1][2]);
-      c[0] = c[0].trim().split(' ');
-      latd.value = (/W/.test(s) ? -1 : 1) * parseInt(c[0][0]);
-      latm.value = parseInt(c[0][1]);
-      lats.value = parseInt(c[0][2]);
-    }
-    this.search();
-  }.bind(this);
-  function createInput(className, unit) {
-    var input = ol.ext.element.create('INPUT', {
-      className: className,
-      type:'number',
-      step:'any',
-      lang: 'en',
-      parent: div,
-      on: {
-        'change keyup': onchange
+ol.control.SearchGPS = class olcontrolSearchGPS extends ol.control.Search {
+  constructor(options) {
+    options = options || {};
+    options.className = (options.className || '') + ' ol-searchgps';
+    options.placeholder = options.placeholder || 'lon,lat';
+    super(options);
+    // Geolocation
+    this.geolocation = new ol.Geolocation({
+      projection: "EPSG:4326",
+      trackingOptions: {
+        maximumAge: 10000,
+        enableHighAccuracy: true,
+        timeout: 600000
       }
     });
-    if (unit) {
-      ol.ext.element.create('SPAN', {
-        className: 'ol-dms',
-        html: unit,
+    ol.ext.element.create('BUTTON', {
+      className: 'ol-geoloc',
+      title: 'Locate with GPS',
+      parent: this.element,
+      click: function () {
+        this.geolocation.setTracking(true);
+      }.bind(this)
+    });
+    // DMS switcher
+    ol.ext.element.createSwitch({
+      html: 'decimal',
+      after: 'DMS',
+      change: function (e) {
+        if (e.target.checked)
+          this.element.classList.add('ol-dms');
+        else
+          this.element.classList.remove('ol-dms');
+      }.bind(this),
+      parent: this.element
+    });
+    this._createForm();
+    // Move list to the end
+    var ul = this.element.querySelector("ul.autocomplete");
+    this.element.appendChild(ul);
+  }
+  /** Create input form
+   * @private
+   */
+  _createForm() {
+    // Value has change
+    var onchange = function (e) {
+      if (e.target.classList.contains('ol-dms')) {
+        lon.value = (lond.value < 0 ? -1 : 1) * Number(lond.value) + Number(lonm.value) / 60 + Number(lons.value) / 3600;
+        lon.value = (lond.value < 0 ? -1 : 1) * Math.round(lon.value * 10000000) / 10000000;
+        lat.value = (latd.value < 0 ? -1 : 1) * Number(latd.value) + Number(latm.value) / 60 + Number(lats.value) / 3600;
+        lat.value = (latd.value < 0 ? -1 : 1) * Math.round(lat.value * 10000000) / 10000000;
+      }
+      if (lon.value || lat.value) {
+        this._input.value = lon.value + ',' + lat.value;
+      } else {
+        this._input.value = '';
+      }
+      if (!e.target.classList.contains('ol-dms')) {
+        var s = ol.coordinate.toStringHDMS([Number(lon.value), Number(lat.value)]);
+        var c = s.replace(/(N|S|E|W)/g, '').split('″');
+        c[1] = c[1].trim().split(' ');
+        lond.value = (/W/.test(s) ? -1 : 1) * parseInt(c[1][0]);
+        lonm.value = parseInt(c[1][1]);
+        lons.value = parseInt(c[1][2]);
+        c[0] = c[0].trim().split(' ');
+        latd.value = (/W/.test(s) ? -1 : 1) * parseInt(c[0][0]);
+        latm.value = parseInt(c[0][1]);
+        lats.value = parseInt(c[0][2]);
+      }
+      this.search();
+    }.bind(this);
+    function createInput(className, unit) {
+      var input = ol.ext.element.create('INPUT', {
+        className: className,
+        type: 'number',
+        step: 'any',
+        lang: 'en',
         parent: div,
+        on: {
+          'change keyup': onchange
+        }
+      });
+      if (unit) {
+        ol.ext.element.create('SPAN', {
+          className: 'ol-dms',
+          html: unit,
+          parent: div,
+        });
+      }
+      return input;
+    }
+    // Longitude
+    var div = ol.ext.element.create('DIV', {
+      className: 'ol-longitude',
+      parent: this.element
+    });
+    ol.ext.element.create('LABEL', {
+      html: 'Longitude',
+      parent: div
+    });
+    var lon = createInput('ol-decimal');
+    var lond = createInput('ol-dms', '°');
+    var lonm = createInput('ol-dms', '\'');
+    var lons = createInput('ol-dms', '"');
+    // Latitude
+    div = ol.ext.element.create('DIV', {
+      className: 'ol-latitude',
+      parent: this.element
+    });
+    ol.ext.element.create('LABEL', {
+      html: 'Latitude',
+      parent: div
+    });
+    var lat = createInput('ol-decimal');
+    var latd = createInput('ol-dms', '°');
+    var latm = createInput('ol-dms', '\'');
+    var lats = createInput('ol-dms', '"');
+    // Focus on open
+    if (this.button) {
+      this.button.addEventListener("click", function () {
+        lon.focus();
       });
     }
-    return input;
+    // Change value on click
+    this.on('select', function (e) {
+      lon.value = e.search.gps[0];
+      lat.value = e.search.gps[1];
+    }.bind(this));
+    // Change value on geolocation
+    this.geolocation.on('change', function () {
+      this.geolocation.setTracking(false);
+      var coord = this.geolocation.getPosition();
+      lon.value = coord[0];
+      lat.value = coord[1];
+      this._triggerCustomEvent('keyup', lon);
+    }.bind(this));
   }
-  // Longitude
-  var div = ol.ext.element.create('DIV', {
-    className: 'ol-longitude',
-    parent: this.element
-  });
-  ol.ext.element.create('LABEL', {
-    html: 'Longitude',
-    parent: div
-  });
-  var lon = createInput('ol-decimal');
-  var lond = createInput('ol-dms','°');
-  var lonm = createInput('ol-dms','\'');
-  var lons = createInput('ol-dms','"');
-  // Latitude
-  div = ol.ext.element.create('DIV', {
-    className: 'ol-latitude',
-    parent: this.element
-  })
-  ol.ext.element.create('LABEL', {
-    html: 'Latitude',
-    parent: div
-  });
-  var lat = createInput('ol-decimal');
-  var latd = createInput('ol-dms','°');
-  var latm = createInput('ol-dms','\'');
-  var lats = createInput('ol-dms','"');
-  // Focus on open
-  if (this.button) {
-    this.button.addEventListener("click", function() {
-      lon.focus();
-    });
+  /** Autocomplete function
+  * @param {string} s search string
+  * @return {Array<any>|false} an array of search solutions
+  * @api
+  */
+  autocomplete(s) {
+    var result = [];
+    var c = s.split(',');
+    c[0] = Number(c[0]);
+    c[1] = Number(c[1]);
+    // Name
+    s = ol.coordinate.toStringHDMS(c);
+    if (s)
+      s = s.replace(/(°|′|″) /g, '$1');
+    // 
+    var coord = ol.proj.transform([c[0], c[1]], 'EPSG:4326', this.getMap().getView().getProjection());
+    result.push({ gps: c, coordinate: coord, name: s });
+    return result;
   }
-  // Change value on click
-  this.on('select', function(e){
-    lon.value = e.search.gps[0];
-    lat.value = e.search.gps[1];
-  }.bind(this));
-  // Change value on geolocation
-  this.geolocation.on('change', function(){
-    this.geolocation.setTracking(false);
-    var coord = this.geolocation.getPosition();
-    lon.value = coord[0];
-    lat.value = coord[1];
-    this._triggerCustomEvent('keyup', lon);
-  }.bind(this));
-};
-/** Autocomplete function
-* @param {string} s search string
-* @return {Array<any>|false} an array of search solutions
-* @api
-*/
-ol.control.SearchGPS.prototype.autocomplete = function (s) {
-  var result = [];
-  var c = s.split(',');
-  c[0] = Number(c[0]);
-  c[1] = Number(c[1]);
-  // Name
-  s = ol.coordinate.toStringHDMS(c)
-  if (s) s= s.replace(/(°|′|″) /g,'$1');
-  // 
-  var coord = ol.proj.transform ([c[0], c[1]], 'EPSG:4326', this.getMap().getView().getProjection());
-  result.push({ gps: c, coordinate: coord, name: s });
-  return result;
-};
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -14501,268 +14509,274 @@ ol.control.SearchGPS.prototype.autocomplete = function (s) {
  *	@param {Number} options.pageSize item per page for parcelle list paging, use -1 for no paging, default 5
  * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
  */
-ol.control.SearchGeoportailParcelle = function(options) {
-  var self = this;
-  options.type = "Commune";
-  options.className = (options.className ? options.className:"")+" IGNF-parcelle ol-collapsed-list ol-collapsed-num";
-  options.inputLabel = "Commune";
-  options.noCollapse = true;
-  options.placeholder = options.placeholder || "Choisissez une commune...";
-  ol.control.SearchGeoportail.call(this, options);
-  this.set('copy', null);
-  var element = this.element;
-  // Add parcel form
-  var div = document.createElement("DIV");
-  element.appendChild(div);
-  var label = document.createElement("LABEL");
-  label.innerText = 'Préfixe'
-  div.appendChild(label);
-  label = document.createElement("LABEL");
-  label.innerText = 'Section'
-  div.appendChild(label);
-  label = document.createElement("LABEL");
-  label.innerText = 'Numéro'
-  div.appendChild(label);
-  div.appendChild(document.createElement("BR"));
-  // Input
-  this._inputParcelle = {
-    prefix: document.createElement("INPUT"),
-    section: document.createElement("INPUT"),
-    numero: document.createElement("INPUT")
-  };
-  this._inputParcelle.prefix.setAttribute('maxlength',3);
-  this._inputParcelle.section.setAttribute('maxlength',2);
-  this._inputParcelle.numero.setAttribute('maxlength',4);
-  // Delay search
-  var tout;
-  var doSearch = function() {
-    if (tout) clearTimeout(tout);
-    tout = setTimeout(function() {
+ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle extends ol.control.SearchGeoportail {
+  constructor(options) {
+    options.type = "Commune";
+    options.className = (options.className ? options.className : "") + " IGNF-parcelle ol-collapsed-list ol-collapsed-num";
+    options.inputLabel = "Commune";
+    options.noCollapse = true;
+    options.placeholder = options.placeholder || "Choisissez une commune...";
+    super(options);
+    this.set('copy', null);
+    var element = this.element;
+    var self = this;
+    // Add parcel form
+    var div = document.createElement("DIV");
+    element.appendChild(div);
+    var label = document.createElement("LABEL");
+    label.innerText = 'Préfixe';
+    div.appendChild(label);
+    label = document.createElement("LABEL");
+    label.innerText = 'Section';
+    div.appendChild(label);
+    label = document.createElement("LABEL");
+    label.innerText = 'Numéro';
+    div.appendChild(label);
+    div.appendChild(document.createElement("BR"));
+    // Input
+    this._inputParcelle = {
+      prefix: document.createElement("INPUT"),
+      section: document.createElement("INPUT"),
+      numero: document.createElement("INPUT")
+    };
+    this._inputParcelle.prefix.setAttribute('maxlength', 3);
+    this._inputParcelle.section.setAttribute('maxlength', 2);
+    this._inputParcelle.numero.setAttribute('maxlength', 4);
+    // Delay search
+    var tout;
+    var doSearch = function () {
+      if (tout) clearTimeout(tout);
+      tout = setTimeout(function () {
         self.autocompleteParcelle();
-    }, options.typing || 0);
-  }
-  // Add inputs
-  for (var i in this._inputParcelle) {
-    div.appendChild(this._inputParcelle[i]);
-    this._inputParcelle[i].addEventListener("keyup", doSearch);
-    this._inputParcelle[i].addEventListener('blur', function() {
-      tout = setTimeout(function(){ element.classList.add('ol-collapsed-num'); }, 200);
-    });
-    this._inputParcelle[i].addEventListener('focus', function() {
-      clearTimeout(tout);
-      element.classList.remove('ol-collapsed-num');
-    });
-  }
-  this.activateParcelle(false);
-  // Autocomplete list
-  var auto = document.createElement('DIV');
-  auto.className = 'autocomplete-parcelle';
-  element.appendChild(auto);
-  var ul = document.createElement('UL');
-  ul.classList.add('autocomplete-parcelle');
-  auto.appendChild(ul);
-  ul = document.createElement('UL');
-  ul.classList.add('autocomplete-page');
-  auto.appendChild(ul);
-  // Show/hide list on fcus/blur	
-  this._input.addEventListener('blur', function() {
-    setTimeout(function(){ element.classList.add('ol-collapsed-list') }, 200);
-  });
-  this._input.addEventListener('focus', function() {
-    element.classList.remove('ol-collapsed-list');
-    self._listParcelle([]);
-    if (self._commune) {
-      self._commune = null;
-      self._input.value = '';
-      self.drawList_();
-    }
-    self.activateParcelle(false);
-  });
-  this.on('select', this.selectCommune.bind(this));
-  this.set('pageSize', options.pageSize || 5);
-};
-ol.ext.inherits(ol.control.SearchGeoportailParcelle, ol.control.SearchGeoportail);
-/** Select a commune => start searching parcelle  
- * @param {any} e 
- * @private
- */
-ol.control.SearchGeoportailParcelle.prototype.selectCommune = function(e) {
-  this._commune = e.search.insee;
-  this._input.value = e.search.insee + ' - ' + e.search.fulltext;
-  this.activateParcelle(true);
-  this._inputParcelle.numero.focus();
-  this.autocompleteParcelle();
-};
-/** Set the input parcelle
- * @param {*} p parcel
- * 	@param {string} p.Commune
- * 	@param {string} p.CommuneAbsorbee
- * 	@param {string} p.Section
- * 	@param {string} p.Numero
- * @param {boolean} search start a search
- */
-ol.control.SearchGeoportailParcelle.prototype.setParcelle = function(p, search) {
-  this._inputParcelle.prefix.value = (p.Commune||'') + (p.CommuneAbsorbee||'');
-  this._inputParcelle.section.value = p.Section||'';
-  this._inputParcelle.numero.value = p.Numero||'';
-  if (search) this._triggerCustomEvent("keyup", this._inputParcelle.prefix);
-};
-/** Activate parcelle inputs
- * @param {bolean} b
- */
-ol.control.SearchGeoportailParcelle.prototype.activateParcelle = function(b) {
-  for (var i in this._inputParcelle) {
-    this._inputParcelle[i].readOnly = !b;
-  }
-  if (b) {
-    this._inputParcelle.section.parentElement.classList.add('ol-active');
-  } else {
-    this._inputParcelle.section.parentElement.classList.remove('ol-active');		
-  }
-};
-/** Send search request for the parcelle  
- * @private
- */
-ol.control.SearchGeoportailParcelle.prototype.autocompleteParcelle = function() {
-  // Add 0 to fit the format
-  function complete (s, n, c) {
-    if (!s) return s;
-    c = c || "0";
-    while (s.length < n) s = c+s;
-    return s.replace(/\*/g,'_');
-  }
-  // The selected commune
-  var commune = this._commune;
-  var prefix = complete (this._inputParcelle.prefix.value, 3);
-  if (prefix === '000') {
-    prefix = '___';
-  }
-  // Get parcelle number
-  var section = complete (this._inputParcelle.section.value, 2);
-  var numero = complete (this._inputParcelle.numero.value, 4, "0");
-  var search = commune + (prefix||'___') + (section||"__") + (numero ?  numero : section ? "____":"0001");
-  this.searchParcelle(search, 
-    function(jsonResp) {
-      this._listParcelle(jsonResp);
-    }.bind(this),
-    function() {
-      console.log('oops')
-    })
-};
-/** Send search request for a parcelle number
- * @param {string} search search parcelle number
- * @param {function} success callback function called on success
- * @param {function} error callback function called on error
- */
-ol.control.SearchGeoportailParcelle.prototype.searchParcelle = function(search, success /*, error */) {
-  // Request
-  var request = '<?xml version="1.0" encoding="UTF-8"?>'
-  +'<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
-    +'<RequestHeader/>'
-    +'<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
-      +'<GeocodeRequest returnFreeForm="false">'
-        +'<Address countryCode="CadastralParcel">'
-        +'<freeFormAddress>'+search+'+</freeFormAddress>'
-        +'</Address>'
-      +'</GeocodeRequest>'
-    +'</Request>'
-  +'</XLS>'
-  // Geocode
-  this.ajax(
-    this.get('url').replace('ols/apis/completion','geoportail/ols'), 
-    { xls: request },
-    function(xml) {
-      // XML to JSON
-      var parser = new DOMParser();
-      var xmlDoc = parser.parseFromString(xml,"text/xml");
-      var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
-      var jsonResp = []
-      for (var i=0, parc; parc= parcelles[i]; i++) {
-        var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
-        var p = node.childNodes[0].nodeValue.split(' ');
-        var att = parc.getElementsByTagName('Place');
-        var json = { 
-          lon: Number(p[1]), 
-          lat: Number(p[0])
-        };
-        for (var k=0, a; a=att[k]; k++) {
-          json[a.attributes.type.value] = a.childNodes[0].nodeValue;
-        }
-        jsonResp.push(json);
-      }
-      success(jsonResp);
-    }, 
-    { dataType: 'XML' }
-  );
-};
-/**
- * Draw the autocomplete list
- * @param {*} resp 
- * @private
- */
-ol.control.SearchGeoportailParcelle.prototype._listParcelle = function(resp) {
-  var self = this;
-  var ul = this.element.querySelector("ul.autocomplete-parcelle");
-  ul.innerHTML='';
-  var page = this.element.querySelector("ul.autocomplete-page");
-  page.innerHTML='';
-  this._listParc = [];
-  // Show page i
-  function showPage(i) {
-    var l = ul.children;
-    var visible = "ol-list-"+i;
-    var k;
-    for (k=0; k<l.length; k++) {
-      l[k].style.display = (l[k].className===visible) ? '' : 'none';
-    }
-    l = page.children;
-    for (k=0; k<l.length; k++) {
-      l[k].className = (l[k].innerText==i) ? 'selected' : '';
-    }
-    page.style.display = l.length>1 ? '' : 'none';
-  }
-  // Sort table
-  resp.sort(function(a,b) {
-    var na = a.INSEE+a.CommuneAbsorbee+a.Section+a.Numero;
-    var nb = b.INSEE+b.CommuneAbsorbee+b.Section+b.Numero;
-    return na===nb ? 0 : na<nb ? -1 : 1;
-  });
-  // Show list
-  var n = this.get('pageSize');
-  for (var i=0, r; r = resp[i]; i++) {
-    var li = document.createElement("LI");
-    li.setAttribute("data-search", i);
-    if (n>0) li.classList.add("ol-list-"+Math.floor(i/n));
-    this._listParc.push(r);
-    li.addEventListener("click", function(e) {
-      self._handleParcelle(self._listParc[e.currentTarget.getAttribute("data-search")]);
-    });
-    li.innerHTML = r.INSEE+r.CommuneAbsorbee+r.Section+r.Numero;
-    ul.appendChild(li);
-    //
-    if (n>0 && !(i%n)) {
-      li = document.createElement("LI");
-      li.innerText = Math.floor(i/n);
-      li.addEventListener("click", function(e) {
-        showPage(e.currentTarget.innerText);
+      }, options.typing || 0);
+    };
+    // Add inputs
+    for (var i in this._inputParcelle) {
+      div.appendChild(this._inputParcelle[i]);
+      this._inputParcelle[i].addEventListener('keyup', doSearch);
+      this._inputParcelle[i].addEventListener('blur', function () {
+        tout = setTimeout(function () { element.classList.add('ol-collapsed-num'); }, 200);
       });
-      page.appendChild(li);
+      this._inputParcelle[i].addEventListener('focus', function () {
+        clearTimeout(tout);
+        element.classList.remove('ol-collapsed-num');
+      });
+    }
+    this.activateParcelle(false);
+    // Autocomplete list
+    var auto = document.createElement('DIV');
+    auto.className = 'autocomplete-parcelle';
+    element.appendChild(auto);
+    var ul = document.createElement('UL');
+    ul.classList.add('autocomplete-parcelle');
+    auto.appendChild(ul);
+    ul = document.createElement('UL');
+    ul.classList.add('autocomplete-page');
+    auto.appendChild(ul);
+    // Show/hide list on fcus/blur	
+    this._input.addEventListener('blur', function () {
+      setTimeout(function () { element.classList.add('ol-collapsed-list'); }, 200);
+    });
+    this._input.addEventListener('focus', function () {
+      element.classList.remove('ol-collapsed-list');
+      self._listParcelle([]);
+      if (self._commune) {
+        self._commune = null;
+        self._input.value = '';
+        self.drawList_();
+      }
+      self.activateParcelle(false);
+    });
+    this.on('select', this.selectCommune.bind(this));
+    this.set('pageSize', options.pageSize || 5);
+  }
+  /** Select a commune => start searching parcelle
+   * @param {any} e
+   * @private
+   */
+  selectCommune(e) {
+    this._commune = e.search.insee;
+    this._input.value = e.search.insee + ' - ' + e.search.fulltext;
+    this.activateParcelle(true);
+    this._inputParcelle.numero.focus();
+    this.autocompleteParcelle();
+  }
+  /** Set the input parcelle
+   * @param {*} p parcel
+   * 	@param {string} p.Commune
+   * 	@param {string} p.CommuneAbsorbee
+   * 	@param {string} p.Section
+   * 	@param {string} p.Numero
+   * @param {boolean} search start a search
+   */
+  setParcelle(p, search) {
+    this._inputParcelle.prefix.value = (p.Commune || '') + (p.CommuneAbsorbee || '');
+    this._inputParcelle.section.value = p.Section || '';
+    this._inputParcelle.numero.value = p.Numero || '';
+    if (search)
+      this._triggerCustomEvent("keyup", this._inputParcelle.prefix);
+  }
+  /** Activate parcelle inputs
+   * @param {bolean} b
+   */
+  activateParcelle(b) {
+    for (var i in this._inputParcelle) {
+      this._inputParcelle[i].readOnly = !b;
+    }
+    if (b) {
+      this._inputParcelle.section.parentElement.classList.add('ol-active');
+    } else {
+      this._inputParcelle.section.parentElement.classList.remove('ol-active');
     }
   }
-  if (n>0) showPage(0);
-};
-/**
- * Handle parcelle section
- * @param {*} parc 
- * @private
- */
-ol.control.SearchGeoportailParcelle.prototype._handleParcelle = function(parc) {
-  this.dispatchEvent({ 
-    type:"parcelle", 
-    search: parc, 
-    coordinate: ol.proj.fromLonLat([parc.lon, parc.lat], this.getMap().getView().getProjection())
-  });
-};
+  /** Send search request for the parcelle
+   * @private
+   */
+  autocompleteParcelle() {
+    // Add 0 to fit the format
+    function complete(s, n, c) {
+      if (!s)
+        return s;
+      c = c || "0";
+      while (s.length < n)
+        s = c + s;
+      return s.replace(/\*/g, '_');
+    }
+    // The selected commune
+    var commune = this._commune;
+    var prefix = complete(this._inputParcelle.prefix.value, 3);
+    if (prefix === '000') {
+      prefix = '___';
+    }
+    // Get parcelle number
+    var section = complete(this._inputParcelle.section.value, 2);
+    var numero = complete(this._inputParcelle.numero.value, 4, "0");
+    var search = commune + (prefix || '___') + (section || "__") + (numero ? numero : section ? "____" : "0001");
+    this.searchParcelle(search,
+      function (jsonResp) {
+        this._listParcelle(jsonResp);
+      }.bind(this),
+      function () {
+        console.log('oops');
+      });
+  }
+  /** Send search request for a parcelle number
+   * @param {string} search search parcelle number
+   * @param {function} success callback function called on success
+   * @param {function} error callback function called on error
+   */
+  searchParcelle(search, success /*, error */) {
+    // Request
+    var request = '<?xml version="1.0" encoding="UTF-8"?>'
+      + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+      + '<RequestHeader/>'
+      + '<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
+      + '<GeocodeRequest returnFreeForm="false">'
+      + '<Address countryCode="CadastralParcel">'
+      + '<freeFormAddress>' + search + '+</freeFormAddress>'
+      + '</Address>'
+      + '</GeocodeRequest>'
+      + '</Request>'
+      + '</XLS>';
+    // Geocode
+    this.ajax(
+      this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
+      { xls: request },
+      function (xml) {
+        // XML to JSON
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(xml, "text/xml");
+        var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
+        var jsonResp = [];
+        for (var i = 0, parc; parc = parcelles[i]; i++) {
+          var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
+          var p = node.childNodes[0].nodeValue.split(' ');
+          var att = parc.getElementsByTagName('Place');
+          var json = {
+            lon: Number(p[1]),
+            lat: Number(p[0])
+          };
+          for (var k = 0, a; a = att[k]; k++) {
+            json[a.attributes.type.value] = a.childNodes[0].nodeValue;
+          }
+          jsonResp.push(json);
+        }
+        success(jsonResp);
+      },
+      { dataType: 'XML' }
+    );
+  }
+  /**
+   * Draw the autocomplete list
+   * @param {*} resp
+   * @private
+   */
+  _listParcelle(resp) {
+    var self = this;
+    var ul = this.element.querySelector("ul.autocomplete-parcelle");
+    ul.innerHTML = '';
+    var page = this.element.querySelector("ul.autocomplete-page");
+    page.innerHTML = '';
+    this._listParc = [];
+    // Show page i
+    function showPage(i) {
+      var l = ul.children;
+      var visible = "ol-list-" + i;
+      var k;
+      for (k = 0; k < l.length; k++) {
+        l[k].style.display = (l[k].className === visible) ? '' : 'none';
+      }
+      l = page.children;
+      for (k = 0; k < l.length; k++) {
+        l[k].className = (l[k].innerText == i) ? 'selected' : '';
+      }
+      page.style.display = l.length > 1 ? '' : 'none';
+    }
+    // Sort table
+    resp.sort(function (a, b) {
+      var na = a.INSEE + a.CommuneAbsorbee + a.Section + a.Numero;
+      var nb = b.INSEE + b.CommuneAbsorbee + b.Section + b.Numero;
+      return na === nb ? 0 : na < nb ? -1 : 1;
+    });
+    // Show list
+    var n = this.get('pageSize');
+    for (var i = 0, r; r = resp[i]; i++) {
+      var li = document.createElement("LI");
+      li.setAttribute("data-search", i);
+      if (n > 0)
+        li.classList.add("ol-list-" + Math.floor(i / n));
+      this._listParc.push(r);
+      li.addEventListener("click", function (e) {
+        self._handleParcelle(self._listParc[e.currentTarget.getAttribute("data-search")]);
+      });
+      li.innerHTML = r.INSEE + r.CommuneAbsorbee + r.Section + r.Numero;
+      ul.appendChild(li);
+      //
+      if (n > 0 && !(i % n)) {
+        li = document.createElement("LI");
+        li.innerText = Math.floor(i / n);
+        li.addEventListener("click", function (e) {
+          showPage(e.currentTarget.innerText);
+        });
+        page.appendChild(li);
+      }
+    }
+    if (n > 0)
+      showPage(0);
+  }
+  /**
+   * Handle parcelle section
+   * @param {*} parc
+   * @private
+   */
+  _handleParcelle(parc) {
+    this.dispatchEvent({
+      type: "parcelle",
+      search: parc,
+      coordinate: ol.proj.fromLonLat([parc.lon, parc.lat], this.getMap().getView().getProjection())
+    });
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -14904,113 +14918,113 @@ ol.control.SearchNominatim = class olcontrolSearchNominatim extends ol.control.S
  * 
  *  @param {string|undefined} options.lang API language, default none
  */
-ol.control.SearchWikipedia = function(options){
-  options = options || {};
-  options.lang = options.lang||'en';
-  options.className = options.className || 'ol-search-wikipedia';
-  options.url = 'https://'+options.lang+'.wikipedia.org/w/api.php';
-  options.placeholder = options.placeholder || 'search string, File:filename';
-  options.copy = '<a href="https://'+options.lang+'.wikipedia.org/" target="new">Wikipedia&reg; - CC-By-SA</a>';
-  ol.control.SearchJSON.call(this, options);
-  this.set('lang', options.lang);
-};
-ol.ext.inherits(ol.control.SearchWikipedia, ol.control.SearchJSON);
-/** Returns the text to be displayed in the menu
-*	@param {ol.Feature} f the feature
-*	@return {string} the text to be displayed in the index
-*	@api
-*/
-ol.control.SearchWikipedia.prototype.getTitle = function (f){
-  return ol.ext.element.create('DIV', {
-    html: f.title,
-    title: f.desc
-  });
-  //return f.desc;
-};
-/** Set the current language
- * @param {string} lang the current language as ISO string (en, fr, de, es, it, ja, ...)
- */
-ol.control.SearchWikipedia.prototype.setLang = function (lang){
-  this.set('lang', lang)
-  this.set('url', 'https://'+lang+'.wikipedia.org/w/api.php');
-};
-/** 
- * @param {string} s the search string
- * @return {Object} request data (as key:value)
- * @api
- */
-ol.control.SearchWikipedia.prototype.requestData = function (s) {
-  var data = {
-    action: 'opensearch',
-    search: s,
-    lang: this.get('lang'),
-    format: 'json',
-    origin: '*',
-    limit: this.get('maxItems')
+ol.control.SearchWikipedia = class olcontrolSearchWikipedia extends ol.control.SearchJSON {
+  constructor(options) {
+    options = options || {};
+    options.lang = options.lang || 'en';
+    options.className = options.className || 'ol-search-wikipedia';
+    options.url = 'https://' + options.lang + '.wikipedia.org/w/api.php';
+    options.placeholder = options.placeholder || 'search string, File:filename';
+    options.copy = '<a href="https://' + options.lang + '.wikipedia.org/" target="new">Wikipedia&reg; - CC-By-SA</a>';
+    super(options);
+    this.set('lang', options.lang);
   }
-  return data;
-};
-/**
- * Handle server response to pass the features array to the list
- * @param {any} response server response
- * @return {Array<any>} an array of feature
- */
-ol.control.SearchWikipedia.prototype.handleResponse = function (response) {
-  var features = [];
-  for (var i=0; i<response[1].length; i++) {
-    features.push({
-      title: response[1][i],
-      desc: response[2][i],
-      uri: response[3][i]
-    })
+  /** Returns the text to be displayed in the menu
+  *	@param {ol.Feature} f the feature
+  *	@return {string} the text to be displayed in the index
+  *	@api
+  */
+  getTitle(f) {
+    return ol.ext.element.create('DIV', {
+      html: f.title,
+      title: f.desc
+    });
+    //return f.desc;
   }
-  return features;
-};
-/** A ligne has been clicked in the menu query for more info and disatch event
-*	@param {any} f the feature, as passed in the autocomplete
-*	@api
-*/
-ol.control.SearchWikipedia.prototype.select = function (f){
-  var title = decodeURIComponent(f.uri.split('/').pop()).replace(/'/,'%27');
-  // Search for coords
-  ol.ext.Ajax.get({
-    url: f.uri.split('wiki/')[0]+'w/api.php',
-    data: {
-      action: 'query',
-      prop: 'pageimages|coordinates|extracts',
-      exintro: 1,
-      explaintext: 1,
-      piprop: 'original',
-      origin: '*',
+  /** Set the current language
+   * @param {string} lang the current language as ISO string (en, fr, de, es, it, ja, ...)
+   */
+  setLang(lang) {
+    this.set('lang', lang);
+    this.set('url', 'https://' + lang + '.wikipedia.org/w/api.php');
+  }
+  /**
+   * @param {string} s the search string
+   * @return {Object} request data (as key:value)
+   * @api
+   */
+  requestData(s) {
+    var data = {
+      action: 'opensearch',
+      search: s,
+      lang: this.get('lang'),
       format: 'json',
-      redirects: 1,
-      titles: title
-    },
-    options: {
-      encode: false
-    },
-    success: function (e) {
-      var page = e.query.pages[Object.keys(e.query.pages).pop()];
-      console.log(page);
-      var feature = {
-        title: f.title,
-        desc: page.extract || f.desc,
-        url: f.uri,
-        img: page.original ? page.original.source : undefined,
-        pageid: page.pageid
-      }
-      var c;
-      if (page.coordinates) {
-        feature.lon = page.coordinates[0].lon;
-        feature.lat = page.coordinates[0].lat;
-        c = [feature.lon, feature.lat];
-        c = ol.proj.transform (c, 'EPSG:4326', this.getMap().getView().getProjection());
-      }
-      this.dispatchEvent({ type:"select", search:feature, coordinate: c });
-    }.bind(this)
-  })
-};
-/** */
+      origin: '*',
+      limit: this.get('maxItems')
+    };
+    return data;
+  }
+  /**
+   * Handle server response to pass the features array to the list
+   * @param {any} response server response
+   * @return {Array<any>} an array of feature
+   */
+  handleResponse(response) {
+    var features = [];
+    for (var i = 0; i < response[1].length; i++) {
+      features.push({
+        title: response[1][i],
+        desc: response[2][i],
+        uri: response[3][i]
+      });
+    }
+    return features;
+  }
+  /** A ligne has been clicked in the menu query for more info and disatch event
+  *	@param {any} f the feature, as passed in the autocomplete
+  *	@api
+  */
+  select(f) {
+    var title = decodeURIComponent(f.uri.split('/').pop()).replace(/'/, '%27');
+    // Search for coords
+    ol.ext.Ajax.get({
+      url: f.uri.split('wiki/')[0] + 'w/api.php',
+      data: {
+        action: 'query',
+        prop: 'pageimages|coordinates|extracts',
+        exintro: 1,
+        explaintext: 1,
+        piprop: 'original',
+        origin: '*',
+        format: 'json',
+        redirects: 1,
+        titles: title
+      },
+      options: {
+        encode: false
+      },
+      success: function (e) {
+        var page = e.query.pages[Object.keys(e.query.pages).pop()];
+        console.log(page);
+        var feature = {
+          title: f.title,
+          desc: page.extract || f.desc,
+          url: f.uri,
+          img: page.original ? page.original.source : undefined,
+          pageid: page.pageid
+        };
+        var c;
+        if (page.coordinates) {
+          feature.lon = page.coordinates[0].lon;
+          feature.lat = page.coordinates[0].lat;
+          c = [feature.lon, feature.lat];
+          c = ol.proj.transform(c, 'EPSG:4326', this.getMap().getView().getProjection());
+        }
+        this.dispatchEvent({ type: "select", search: feature, coordinate: c });
+      }.bind(this)
+    });
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -23318,142 +23332,145 @@ ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.Dra
  *  @param {boolean|string} options.cursor interaction cursor if false use default, default use a paint bucket cursor
  * @param {*} properties The properties as key/value
  */
-ol.interaction.FillAttribute = function(options, properties) {
-  options = options || {};
-  if (!options.condition) options.condition = ol.events.condition.click;
-  ol.interaction.Select.call(this, options);
-  this.setActive(options.active!==false)
-  this.set('name', options.name);
-  this._attributes = properties;
-  this.on('select', function(e) {
-    this.getFeatures().clear();
-    this.fill(e.selected, this._attributes);
-  }.bind(this));
-  if (options.cursor === undefined) {
-    var canvas = document.createElement('CANVAS');
-    canvas.width = canvas.height = 32;
-    var ctx = canvas.getContext("2d");
-    ctx.beginPath();
-      ctx.moveTo(9,3);
-      ctx.lineTo(2,9);
-      ctx.lineTo(10,17);
-      ctx.lineTo(17,11);
-    ctx.closePath();
-    ctx.fillStyle = "#fff";
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-      ctx.moveTo(6,4);
-      ctx.lineTo(0,8);
-      ctx.lineTo(0,13);
-      ctx.lineTo(3,17);
-      ctx.lineTo(3,8);
-    ctx.closePath();
-    ctx.fillStyle = "#000";
-    ctx.fill();
-    ctx.stroke();
-    ctx.moveTo(8,8);
-    ctx.lineTo(10,0);
-    ctx.lineTo(11,0);
-    ctx.lineTo(13,3);
-    ctx.lineTo(13,7);
-    ctx.stroke();
-    this._cursor = 'url('+canvas.toDataURL()+') 0 13, auto';
-  }
-  if (options.cursor) {
-    this._cursor = options.cursor;
-  }
-};
-ol.ext.inherits(ol.interaction.FillAttribute, ol.interaction.Select);
-/** Define the interaction cursor
- * @param {string} cursor CSS cursor
- */
-ol.interaction.FillAttribute.prototype.setCursor = function(cursor) {
-  this._cursor = cursor;
-};
-/** Get the interaction cursor
- * @return {string} cursor
- */
-ol.interaction.FillAttribute.prototype.getCursor = function() {
-  return this._cursor;
-};
-/** Activate the interaction
- * @param {boolean} active
- */
-ol.interaction.FillAttribute.prototype.setActive = function(active) {
-  if(active === this.getActive()) return;
-  ol.interaction.Select.prototype.setActive.call(this, active);
-  if (this.getMap() && this._cursor) {
-    if (active) {
-      this._previousCursor = this.getMap().getTargetElement().style.cursor;
-      this.getMap().getTargetElement().style.cursor = this._cursor;
-//      console.log('setCursor',this._cursor)
-    } else {
-      this.getMap().getTargetElement().style.cursor = this._previousCursor;
-      this._previousCursor = undefined;
+ol.interaction.FillAttribute = class olinteractionFillAttribute extends ol.interaction.Select {
+  constructor(options, properties) {
+    options = options || {};
+    if (!options.condition) options.condition = ol.events.condition.click;
+    super(options);
+    this.setActive(options.active !== false);
+    this.set('name', options.name);
+    this._attributes = properties;
+    this.on('select', function (e) {
+      this.getFeatures().clear();
+      this.fill(e.selected, this._attributes);
+    }.bind(this));
+    if (options.cursor === undefined) {
+      var canvas = document.createElement('CANVAS');
+      canvas.width = canvas.height = 32;
+      var ctx = canvas.getContext("2d");
+      ctx.beginPath();
+      ctx.moveTo(9, 3);
+      ctx.lineTo(2, 9);
+      ctx.lineTo(10, 17);
+      ctx.lineTo(17, 11);
+      ctx.closePath();
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(6, 4);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(0, 13);
+      ctx.lineTo(3, 17);
+      ctx.lineTo(3, 8);
+      ctx.closePath();
+      ctx.fillStyle = "#000";
+      ctx.fill();
+      ctx.stroke();
+      ctx.moveTo(8, 8);
+      ctx.lineTo(10, 0);
+      ctx.lineTo(11, 0);
+      ctx.lineTo(13, 3);
+      ctx.lineTo(13, 7);
+      ctx.stroke();
+      this._cursor = 'url(' + canvas.toDataURL() + ') 0 13, auto';
+    }
+    if (options.cursor) {
+      this._cursor = options.cursor;
     }
   }
-};
-/** Set attributes
- * @param {*} properties The properties as key/value
- */
-ol.interaction.FillAttribute.prototype.setAttributes = function(properties) {
-  this._attributes = properties;
-};
-/** Set an attribute
- * @param {string} key 
- * @param {*} val 
- */
-ol.interaction.FillAttribute.prototype.setAttribute = function(key, val) {
-  this._attributes[key] = val;
-};
-/** get attributes
- * @return {*} The properties as key/value
- */
-ol.interaction.FillAttribute.prototype.getAttributes = function() {
-  return this._attributes;
-};
-/** Get an attribute
- * @param {string} key 
- * @return {*} val 
- */
-ol.interaction.FillAttribute.prototype.getAttribute = function(key) {
-  return this._attributes[key];
-};
-/** Fill feature attributes
- * @param {Array<ol.Feature>} features The features to modify
- * @param {*} properties The properties as key/value
- */
-ol.interaction.FillAttribute.prototype.fill = function(features, properties) {
-  if (features.length && properties) {
-    // Test changes
-    var changes = false;
-    for (var i=0, f; f = features[i]; i++) {
-      for (var p in properties) {
-        if (f.get(p) !== properties[p]) changes = true;
+  /** Define the interaction cursor
+   * @param {string} cursor CSS cursor
+   */
+  setCursor(cursor) {
+    this._cursor = cursor;
+  }
+  /** Get the interaction cursor
+   * @return {string} cursor
+   */
+  getCursor() {
+    return this._cursor;
+  }
+  /** Activate the interaction
+   * @param {boolean} active
+   */
+  setActive(active) {
+    if (active === this.getActive()) return;
+    super.setActive(active);
+    if (this.getMap() && this._cursor) {
+      if (active) {
+        this._previousCursor = this.getMap().getTargetElement().style.cursor;
+        this.getMap().getTargetElement().style.cursor = this._cursor;
+        //      console.log('setCursor',this._cursor)
+      } else {
+        this.getMap().getTargetElement().style.cursor = this._previousCursor;
+        this._previousCursor = undefined;
       }
-      if (changes) break;
-    }
-    // Set Attributes
-    if (changes) {
-      this.dispatchEvent({ 
-        type: 'setattributestart', 
-        features: features, 
-        properties: properties 
-      });
-      features.forEach(function(f) {
-        for (var p in properties) {
-          f.set(p, properties[p]);
-        }
-      });
-      this.dispatchEvent({ 
-        type: 'setattributeend', 
-        features: features, 
-        properties: properties 
-      });
     }
   }
-};
+  /** Set attributes
+   * @param {*} properties The properties as key/value
+   */
+  setAttributes(properties) {
+    this._attributes = properties;
+  }
+  /** Set an attribute
+   * @param {string} key
+   * @param {*} val
+   */
+  setAttribute(key, val) {
+    this._attributes[key] = val;
+  }
+  /** get attributes
+   * @return {*} The properties as key/value
+   */
+  getAttributes() {
+    return this._attributes;
+  }
+  /** Get an attribute
+   * @param {string} key
+   * @return {*} val
+   */
+  getAttribute(key) {
+    return this._attributes[key];
+  }
+  /** Fill feature attributes
+   * @param {Array<ol.Feature>} features The features to modify
+   * @param {*} properties The properties as key/value
+   */
+  fill(features, properties) {
+    if (features.length && properties) {
+      // Test changes
+      var changes = false;
+      for (var i = 0, f; f = features[i]; i++) {
+        for (var p in properties) {
+          if (f.get(p) !== properties[p])
+            changes = true;
+        }
+        if (changes)
+          break;
+      }
+      // Set Attributes
+      if (changes) {
+        this.dispatchEvent({
+          type: 'setattributestart',
+          features: features,
+          properties: properties
+        });
+        features.forEach(function (f) {
+          for (var p in properties) {
+            f.set(p, properties[p]);
+          }
+        });
+        this.dispatchEvent({
+          type: 'setattributeend',
+          features: features,
+          properties: properties
+        });
+      }
+    }
+  }
+}
 
 /**
  * @constructor
@@ -28715,281 +28732,437 @@ ol.interaction.Transform.prototype.Cursors = {
  *  @param {number=} options.maxLength max undo stack length (0=Infinity), default Infinity
  *  @param {Array<ol.Layer>} options.layers array of layers to undo/redo
  */
-ol.interaction.UndoRedo = function(options) {
-  if (!options) options = {};
-	ol.interaction.Interaction.call(this, {	
-    handleEvent: function() { 
-      return true; 
-    }
-  });
-  //array of layers to undo/redo
-  this._layers = options.layers
-  this._undoStack = new ol.Collection();
-  this._redoStack = new ol.Collection();
-  // Zero level stack
-  this._undo = [];
-  this._redo = [];
-  this._undoStack.on('add', function(e) {
-    if (e.element.level === undefined) {
-      e.element.level = this._level;
+ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Interaction {
+  constructor(options) {
+    options = options || {}
+    super({
+      handleEvent: function () {
+        return true
+      }
+    })
+    //array of layers to undo/redo
+    this._layers = options.layers
+    this._undoStack = new ol.Collection()
+    this._redoStack = new ol.Collection()
+    // Zero level stack
+    this._undo = []
+    this._redo = []
+    this._undoStack.on('add', function (e) {
+      if (e.element.level === undefined) {
+        e.element.level = this._level
+        if (!e.element.level) {
+          e.element.view = {
+            center: this.getMap().getView().getCenter(),
+            zoom: this.getMap().getView().getZoom()
+          }
+          this._undo.push(e.element)
+        }
+      } else {
+        if (!e.element.level)
+          this._undo.push(this._redo.shift())
+      }
       if (!e.element.level) {
-        e.element.view = {
-          center: this.getMap().getView().getCenter(),
-          zoom: this.getMap().getView().getZoom()
-        };
-        this._undo.push(e.element);
+        this.dispatchEvent({
+          type: 'stack:add',
+          action: e.element
+        })
+      }
+      this._reduce()
+    }.bind(this))
+    this._undoStack.on('remove', function (e) {
+      if (!e.element.level) {
+        if (this._doShift) {
+          this._undo.shift()
+        } else {
+          if (this._undo.length)
+            this._redo.push(this._undo.pop())
+        }
+        if (!this._doClear) {
+          this.dispatchEvent({
+            type: 'stack:remove',
+            action: e.element,
+            shift: this._doShift
+          })
+        }
+      }
+    }.bind(this))
+    // Block counter
+    this._block = 0
+    this._level = 0
+    // Shift an undo action ?
+    this._doShift = false
+    // Start recording
+    this._record = true
+    // Custom definitions
+    this._defs = {}
+  }
+  /** Add a custom undo/redo
+   * @param {string} action the action key name
+   * @param {function} undoFn function called when undoing
+   * @param {function} redoFn function called when redoing
+   * @api
+   */
+  define(action, undoFn, redoFn) {
+    this._defs[action] = { undo: undoFn, redo: redoFn }
+  }
+  /** Get first level undo / redo length
+   * @param {string} [type] get redo stack length, default get undo
+   * @return {number}
+   */
+  length(type) {
+    return (type === 'redo') ? this._redo.length : this._undo.length
+  }
+  /** Set undo stack max length
+   * @param {number} length
+   */
+  setMaxLength(length) {
+    length = parseInt(length)
+    if (length && length < 0)
+      length = 0
+    this.set('maxLength', length)
+    this._reduce()
+  }
+  /** Get undo / redo size (includes all block levels)
+   * @param {string} [type] get redo stack length, default get undo
+   * @return {number}
+   */
+  size(type) {
+    return (type === 'redo') ? this._redoStack.getLength() : this._undoStack.getLength()
+  }
+  /** Set undo stack max size
+   * @param {number} size
+   */
+  setMaxSize(size) {
+    size = parseInt(size)
+    if (size && size < 0)
+      size = 0
+    this.set('maxSize', size)
+    this._reduce()
+  }
+  /** Reduce stack: shift undo to set size
+   * @private
+   */
+  _reduce() {
+    if (this.get('maxLength')) {
+      while (this.length() > this.get('maxLength')) {
+        this.shift()
+      }
+    }
+    if (this.get('maxSize')) {
+      while (this.length() > 1 && this.size() > this.get('maxSize')) {
+        this.shift()
+      }
+    }
+  }
+  /** Get first level undo / redo first level stack
+   * @param {string} [type] get redo stack, default get undo
+   * @return {Array<*>}
+   */
+  getStack(type) {
+    return (type === 'redo') ? this._redo : this._undo
+  }
+  /** Add a new custom undo/redo
+   * @param {string} action the action key name
+   * @param {any} prop an object that will be passed in the undo/redo functions of the action
+   * @param {string} name action name
+   * @return {boolean} true if the action is defined
+   */
+  push(action, prop, name) {
+    if (this._defs[action]) {
+      this._undoStack.push({
+        type: action,
+        name: name,
+        custom: true,
+        prop: prop
+      })
+      return true
+    } else {
+      console.warn('[UndoRedoInteraction]: "' + action + '" is not defined.')
+      return false
+    }
+  }
+  /** Remove undo action from the beginning of the stack.
+   * The action is not returned.
+   */
+  shift() {
+    this._doShift = true
+    var a = this._undoStack.removeAt(0)
+    this._doShift = false
+    // Remove all block
+    if (a.type === 'blockstart') {
+      a = this._undoStack.item(0)
+      while (this._undoStack.getLength() && a.level > 0) {
+        this._undoStack.removeAt(0)
+        a = this._undoStack.item(0)
+      }
+    }
+  }
+  /** Activate or deactivate the interaction, ie. records or not events on the map.
+   * @param {boolean} active
+   * @api stable
+   */
+  setActive(active) {
+    super.setActive(active)
+    this._record = active
+  }
+  /**
+   * Remove the interaction from its current map, if any, and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this._mapListener) {
+      this._mapListener.forEach(function (l) { ol.Observable.unByKey(l) })
+    }
+    this._mapListener = []
+    super.setMap(map)
+    // Watch blocks
+    if (map) {
+      this._mapListener.push(map.on('undoblockstart', this.blockStart.bind(this)))
+      this._mapListener.push(map.on('undoblockend', this.blockEnd.bind(this)))
+    }
+    // Watch sources
+    this._watchSources()
+    this._watchInteractions()
+  }
+  /** Watch for changes in the map sources
+   * @private
+   */
+  _watchSources() {
+    var map = this.getMap()
+    // Clear listeners
+    if (this._sourceListener) {
+      this._sourceListener.forEach(function (l) { ol.Observable.unByKey(l) })
+    }
+    this._sourceListener = []
+    var self = this
+    // Ges vector layers 
+    function getVectorLayers(layers, init) {
+      if (!init)
+        init = []
+      layers.forEach(function (l) {
+        if (l instanceof ol.layer.Vector) {
+          if (!self._layers || self._layers.indexOf(l) >= 0) {
+            init.push(l)
+          }
+        } else if (l.getLayers) {
+          getVectorLayers(l.getLayers(), init)
+        }
+      })
+      return init
+    }
+    if (map) {
+      // Watch the vector sources in the map 
+      var vectors = getVectorLayers(map.getLayers())
+      vectors.forEach((function (l) {
+        var s = l.getSource()
+        this._sourceListener.push(s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)))
+        this._sourceListener.push(s.on('clearstart', function () {
+          this.blockStart('clear')
+        }.bind(this)))
+        this._sourceListener.push(s.on('clearend', this.blockEnd.bind(this)))
+      }).bind(this))
+      // Watch new inserted/removed
+      this._sourceListener.push(map.getLayers().on(['add', 'remove'], this._watchSources.bind(this)))
+    }
+  }
+  /** Watch for interactions
+   * @private
+   */
+  _watchInteractions() {
+    var map = this.getMap()
+    // Clear listeners
+    if (this._interactionListener) {
+      this._interactionListener.forEach(function (l) { ol.Observable.unByKey(l) })
+    }
+    this._interactionListener = []
+    if (map) {
+      // Watch the interactions in the map 
+      map.getInteractions().forEach((function (i) {
+        this._interactionListener.push(i.on(
+          ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
+          this._onInteraction.bind(this)
+        ))
+      }).bind(this))
+      // Watch new inserted / unwatch removed
+      this._interactionListener.push(map.getInteractions().on(
+        ['add', 'remove'],
+        this._watchInteractions.bind(this)
+      ))
+    }
+  }
+  /** A feature is added / removed
+   */
+  _onAddRemove(e) {
+    if (this._record) {
+      this._redoStack.clear()
+      this._redo.length = 0
+      this._undoStack.push({
+        type: e.type,
+        source: e.target,
+        feature: e.feature
+      })
+    }
+  }
+  /** Perform an interaction
+   * @private
+   */
+  _onInteraction(e) {
+    var fn = this._onInteraction[e.type]
+    if (fn)
+      fn.call(this, e)
+  }
+  /** Start an undo block
+   * @param {string} [name] name f the action
+   * @api
+   */
+  blockStart(name) {
+    this._redoStack.clear()
+    this._redo.length = 0
+    this._undoStack.push({
+      type: 'blockstart',
+      name: name
+    })
+    this._level++
+  }
+  /** End an undo block
+   * @api
+   */
+  blockEnd() {
+    this._undoStack.push({ type: 'blockend' })
+    this._level--
+  }
+  /** handle undo/redo
+   * @private
+   */
+  _handleDo(e, undo) {
+    // Not active
+    if (!this.getActive())
+      return
+    // Stop recording while undoing
+    this._record = false
+    if (e.custom) {
+      if (this._defs[e.type]) {
+        if (undo)
+          this._defs[e.type].undo(e.prop)
+        else
+          this._defs[e.type].redo(e.prop)
+      } else {
+        console.warn('[UndoRedoInteraction]: "' + e.type + '" is not defined.')
       }
     } else {
-      if (!e.element.level) this._undo.push(this._redo.shift());
-    }
-    if (!e.element.level) {
-      this.dispatchEvent({ 
-        type: 'stack:add', 
-        action: e.element
-      });
-    }
-    this._reduce();
-  }.bind(this));
-  this._undoStack.on('remove', function(e) {
-    if (!e.element.level) {
-      if (this._doShift) {
-        this._undo.shift();
-      } else {
-        if (this._undo.length) this._redo.push(this._undo.pop());
-      }
-      if (!this._doClear) {
-        this.dispatchEvent({ 
-          type: 'stack:remove', 
-          action: e.element,
-          shift: this._doShift
-        });
-      }
-    }
-  }.bind(this));
-  // Block counter
-  this._block = 0;
-  this._level = 0;
-  // Shift an undo action ?
-  this._doShift = false;
-  // Start recording
-  this._record = true;
-  // Custom definitions
-  this._defs = {};
-};
-ol.ext.inherits(ol.interaction.UndoRedo, ol.interaction.Interaction);
-/** Add a custom undo/redo
- * @param {string} action the action key name
- * @param {function} undoFn function called when undoing
- * @param {function} redoFn function called when redoing
- * @api
- */
-ol.interaction.UndoRedo.prototype.define = function(action, undoFn, redoFn) {
-  this._defs[action] = { undo: undoFn, redo: redoFn };
-};
-/** Get first level undo / redo length
- * @param {string} [type] get redo stack length, default get undo
- * @return {number}
- */
-ol.interaction.UndoRedo.prototype.length = function(type) {
-  return (type==='redo') ? this._redo.length : this._undo.length;
-};
-/** Set undo stack max length
- * @param {number} length
- */
-ol.interaction.UndoRedo.prototype.setMaxLength = function(length) {
-  length = parseInt(length);
-  if (length && length<0) length = 0;
-  this.set('maxLength', length);
-  this._reduce();
-};
-/** Get undo / redo size (includes all block levels)
- * @param {string} [type] get redo stack length, default get undo
- * @return {number}
- */
-ol.interaction.UndoRedo.prototype.size = function(type) {
-  return (type==='redo') ? this._redoStack.getLength() : this._undoStack.getLength();
-};
-/** Set undo stack max size
- * @param {number} size
- */
-ol.interaction.UndoRedo.prototype.setMaxSize = function(size) {
-  size = parseInt(size);
-  if (size && size<0) size = 0;
-  this.set('maxSize', size);
-  this._reduce();
-};
-/** Reduce stack: shift undo to set size
- * @private
- */
-ol.interaction.UndoRedo.prototype._reduce = function() {
-  if (this.get('maxLength')) {
-    while (this.length() > this.get('maxLength')) {
-      this.shift();
-    }
-  }
-  if (this.get('maxSize')) {
-    while (this.length() > 1 && this.size() > this.get('maxSize')) {
-      this.shift();
-    }
-  }
-};
-/** Get first level undo / redo first level stack
- * @param {string} [type] get redo stack, default get undo
- * @return {Array<*>}
- */
-ol.interaction.UndoRedo.prototype.getStack = function(type) {
-  return (type==='redo') ? this._redo : this._undo;
-};
-/** Add a new custom undo/redo
- * @param {string} action the action key name
- * @param {any} prop an object that will be passed in the undo/redo functions of the action
- * @param {string} name action name
- * @return {boolean} true if the action is defined
- */
-ol.interaction.UndoRedo.prototype.push = function(action, prop, name) {
-  if (this._defs[action]) {
-    this._undoStack.push({ 
-      type: action,
-      name: name,
-      custom: true,
-      prop: prop 
-    });
-    return true;
-  } else {
-    console.warn('[UndoRedoInteraction]: "'+action+'" is not defined.');
-    return false;
-  }
-};
-/** Remove undo action from the beginning of the stack. 
- * The action is not returned.
- */
-ol.interaction.UndoRedo.prototype.shift = function() {
-  this._doShift = true;
-  var a = this._undoStack.removeAt(0);
-  this._doShift = false;
-  // Remove all block
-  if (a.type==='blockstart') {
-    a = this._undoStack.item(0);
-    while (this._undoStack.getLength() && a.level>0) {
-      this._undoStack.removeAt(0);
-      a = this._undoStack.item(0);
-    }
-  }
-};
-/** Activate or deactivate the interaction, ie. records or not events on the map.
- * @param {boolean} active
- * @api stable
- */
-ol.interaction.UndoRedo.prototype.setActive = function(active) {
-  ol.interaction.Interaction.prototype.setActive.call (this, active);
-  this._record = active;
-};
-/**
- * Remove the interaction from its current map, if any, and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.UndoRedo.prototype.setMap = function(map) {
-  if (this._mapListener) {
-    this._mapListener.forEach(function(l) { ol.Observable.unByKey(l); })
-  }
-  this._mapListener = [];
-  ol.interaction.Interaction.prototype.setMap.call (this, map);
-  // Watch blocks
-  if (map) {
-    this._mapListener.push(map.on('undoblockstart', this.blockStart.bind(this)));
-    this._mapListener.push(map.on('undoblockend', this.blockEnd.bind(this)));
-  }
-  // Watch sources
-  this._watchSources();
-  this._watchInteractions();
-};
-/** Watch for changes in the map sources
- * @private
- */
-ol.interaction.UndoRedo.prototype._watchSources = function() {
-  var map = this.getMap();
-  // Clear listeners
-  if (this._sourceListener) {
-    this._sourceListener.forEach(function(l) { ol.Observable.unByKey(l); })
-  }
-  this._sourceListener = [];
-  var self = this;
-  // Ges vector layers 
-  function getVectorLayers(layers, init) {
-    if (!init) init = [];
-    layers.forEach(function(l) {
-      if (l instanceof ol.layer.Vector) {
-        if (!self._layers || self._layers.indexOf(l) >= 0) {
-          init.push(l);
+      switch (e.type) {
+        case 'addfeature': {
+          if (undo)
+            e.source.removeFeature(e.feature)
+          else
+            e.source.addFeature(e.feature)
+          break
         }
-      } else if (l.getLayers) {
-        getVectorLayers(l.getLayers(), init);
+        case 'removefeature': {
+          if (undo)
+            e.source.addFeature(e.feature)
+          else
+            e.source.removeFeature(e.feature)
+          break
+        }
+        case 'changegeometry': {
+          var geom = e.feature.getGeometry()
+          e.feature.setGeometry(e.oldGeom)
+          e.oldGeom = geom
+          break
+        }
+        case 'changeattribute': {
+          var newp = e.newProperties
+          var oldp = e.oldProperties
+          for (var p in oldp) {
+            if (oldp === undefined)
+              e.feature.unset(p)
+            else
+              e.feature.set(p, oldp[p])
+          }
+          e.oldProperties = newp
+          e.newProperties = oldp
+          break
+        }
+        case 'blockstart': {
+          this._block += undo ? -1 : 1
+          break
+        }
+        case 'blockend': {
+          this._block += undo ? 1 : -1
+          break
+        }
+        default: {
+          console.warn('[UndoRedoInteraction]: "' + e.type + '" is not defined.')
+        }
       }
-    });
-    return init;
+    }
+    // Handle block
+    if (this._block < 0)
+      this._block = 0
+    if (this._block) {
+      if (undo)
+        this.undo()
+      else
+        this.redo()
+    }
+    this._record = true
+    // Dispatch event
+    this.dispatchEvent({
+      type: undo ? 'undo' : 'redo',
+      action: e
+    })
   }
-  if (map) {
-    // Watch the vector sources in the map 
-    var vectors = getVectorLayers(map.getLayers());
-    vectors.forEach((function(l) {
-      var s = l.getSource();
-      this._sourceListener.push( s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)) );
-      this._sourceListener.push( s.on('clearstart', function() {
-        this.blockStart('clear')
-      }.bind(this)));
-      this._sourceListener.push( s.on('clearend', this.blockEnd.bind(this)) );
-    }).bind(this));
-    // Watch new inserted/removed
-    this._sourceListener.push( map.getLayers().on(['add', 'remove'], this._watchSources.bind(this) ) );
+  /** Undo last operation
+   * @api
+   */
+  undo() {
+    var e = this._undoStack.item(this._undoStack.getLength() - 1)
+    if (!e)
+      return
+    this._redoStack.push(e)
+    this._undoStack.pop()
+    this._handleDo(e, true)
   }
-};
-/** Watch for interactions
- * @private
- */
-ol.interaction.UndoRedo.prototype._watchInteractions = function() {
-  var map = this.getMap();
-  // Clear listeners
-  if (this._interactionListener) {
-    this._interactionListener.forEach(function(l) { ol.Observable.unByKey(l); })
+  /** Redo last operation
+   * @api
+   */
+  redo() {
+    var e = this._redoStack.item(this._redoStack.getLength() - 1)
+    if (!e)
+      return
+    this._undoStack.push(e)
+    this._redoStack.pop()
+    this._handleDo(e, false)
   }
-  this._interactionListener = [];
-  if (map) {
-    // Watch the interactions in the map 
-    map.getInteractions().forEach((function(i) {
-      this._interactionListener.push(i.on(
-        ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'], 
-        this._onInteraction.bind(this)
-      ));
-    }).bind(this));
-    // Watch new inserted / unwatch removed
-    this._interactionListener.push( map.getInteractions().on(
-      ['add', 'remove'], 
-      this._watchInteractions.bind(this)
-    ));
+  /** Clear undo stack
+   * @api
+   */
+  clear() {
+    this._doClear = true
+    this._undo.length = this._redo.length = 0
+    this._undoStack.clear()
+    this._redoStack.clear()
+    this._doClear = false
+    this.dispatchEvent({ type: 'stack:clear' })
   }
-};
-/** A feature is added / removed
- */
-ol.interaction.UndoRedo.prototype._onAddRemove = function(e) {
-  if (this._record) {
-    this._redoStack.clear();
-    this._redo.length = 0;
-    this._undoStack.push({
-      type: e.type, 
-      source: e.target, 
-      feature: e.feature
-    });
+  /** Check if undo is avaliable
+   * @return {number} the number of undo
+   * @api
+   */
+  hasUndo() {
+    return this._undoStack.getLength()
   }
-};
-/** Perform an interaction
- * @private
- */
-ol.interaction.UndoRedo.prototype._onInteraction = function(e) {
-  var fn = this._onInteraction[e.type];
-  if (fn) fn.call(this,e);
-};
+  /** Check if redo is avaliable
+   * @return {number} the number of redo
+   * @api
+   */
+  hasRedo() {
+    return this._redoStack.getLength()
+  }
+}
 /** Set attribute
  * @private
  */
@@ -29024,19 +29197,6 @@ ol.interaction.UndoRedo.prototype._onInteraction.modifystart = function (e) {
   }.bind(this));
   this.blockEnd();
 };
-/** Start an undo block
- * @param {string} [name] name f the action
- * @api
- */
-ol.interaction.UndoRedo.prototype.blockStart = function (name) {
-  this._redoStack.clear();
-  this._redo.length = 0;
-  this._undoStack.push({ 
-    type: 'blockstart', 
-    name: name
-  });
-  this._level++;
-};
 /** @private
  */
 ol.interaction.UndoRedo.prototype._onInteraction.beforesplit = function() {
@@ -29053,133 +29213,11 @@ ol.interaction.UndoRedo.prototype._onInteraction.beforesplit = function() {
 ol.interaction.UndoRedo.prototype._onInteraction.deletestart = function() {
   this.blockStart('delete');
 }
-/** End an undo block
- * @api
- */
-ol.interaction.UndoRedo.prototype.blockEnd = function () {
-  this._undoStack.push({ type: 'blockend' });
-  this._level--;
-};
 /** @private
  */
 ol.interaction.UndoRedo.prototype._onInteraction.aftersplit =
 ol.interaction.UndoRedo.prototype._onInteraction.deleteend =
 ol.interaction.UndoRedo.prototype.blockEnd;
-/** handle undo/redo
- * @private
- */
-ol.interaction.UndoRedo.prototype._handleDo = function(e, undo) {
-  // Not active
-  if (!this.getActive()) return;
-  // Stop recording while undoing
-  this._record = false;
-  if (e.custom) {
-    if (this._defs[e.type]) {
-      if (undo) this._defs[e.type].undo(e.prop);
-      else this._defs[e.type].redo(e.prop);
-    } else {
-      console.warn('[UndoRedoInteraction]: "'+e.type+'" is not defined.');
-    }
-  } else {
-    switch (e.type) {
-      case 'addfeature': {
-        if (undo) e.source.removeFeature(e.feature);
-        else e.source.addFeature(e.feature);
-        break;
-      }
-      case 'removefeature': {
-        if (undo) e.source.addFeature(e.feature);
-        else e.source.removeFeature(e.feature);
-        break;
-      }
-      case 'changegeometry': {
-        var geom = e.feature.getGeometry();
-        e.feature.setGeometry(e.oldGeom);
-        e.oldGeom = geom;
-        break;
-      }
-      case 'changeattribute': {
-        var newp = e.newProperties;
-        var oldp = e.oldProperties;
-        for (var p in oldp) {
-          if (oldp === undefined) e.feature.unset(p);
-          else e.feature.set(p, oldp[p]);
-        }
-        e.oldProperties = newp;
-        e.newProperties = oldp;
-        break;
-      }
-      case 'blockstart': {
-        this._block += undo ? -1 : 1;
-        break;
-      }
-      case 'blockend': {
-        this._block += undo ? 1 : -1;
-        break;
-      }
-      default: {
-        console.warn('[UndoRedoInteraction]: "'+e.type+'" is not defined.');
-      }
-    }
-  }
-  // Handle block
-  if (this._block<0) this._block = 0;
-  if (this._block) {
-    if (undo) this.undo();
-    else this.redo();
-  }
-  this._record = true;
-  // Dispatch event
-  this.dispatchEvent( { 
-    type: undo ? 'undo' : 'redo',
-    action: e
-  });
-};
-/** Undo last operation
- * @api
- */
-ol.interaction.UndoRedo.prototype.undo = function() {
-  var e = this._undoStack.item(this._undoStack.getLength() - 1);
-  if (!e) return;
-  this._redoStack.push(e);
-  this._undoStack.pop();
-  this._handleDo(e, true);
-};
-/** Redo last operation
- * @api
- */
-ol.interaction.UndoRedo.prototype.redo = function() {
-  var e = this._redoStack.item(this._redoStack.getLength() - 1);
-  if (!e) return;
-  this._undoStack.push(e);
-  this._redoStack.pop();
-  this._handleDo(e, false);
-};
-/** Clear undo stack
- * @api
- */
-ol.interaction.UndoRedo.prototype.clear = function() {
-  this._doClear = true;
-  this._undo.length = this._redo.length = 0;
-  this._undoStack.clear();
-  this._redoStack.clear();
-  this._doClear = false;
-  this.dispatchEvent({ type: 'stack:clear' });
-};
-/** Check if undo is avaliable
- * @return {number} the number of undo 
- * @api
- */
-ol.interaction.UndoRedo.prototype.hasUndo = function() {
-  return this._undoStack.getLength();
-};
-/** Check if redo is avaliable
- * @return {number} the number of redo
- * @api
- */
-ol.interaction.UndoRedo.prototype.hasRedo = function() {
-  return this._redoStack.getLength();
-};
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -29399,105 +29437,108 @@ ol.source.BinBase.prototype.getSource = function () {
 * @extends {ol.source.Vector}
 * @param {olx.source.DBPedia=} opt_options
 */
-ol.source.DBPedia = function(opt_options) {
-  var options = opt_options || {};
-  options.loader = this._loaderFn;
-  /** Url for DBPedia SPARQL */
-  this._url = options.url || "http://fr.dbpedia.org/sparql";
-  /** Max resolution to load features  */
-  this._maxResolution = options.maxResolution || 100;
-  /** Result language */
-  this._lang = options.lang || "fr";
-  /** Query limit */
-  this._limit = options.limit || 1000;
-  /** Default attribution */
-  if (!options.attributions) options.attributions = [ "&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA" ];
-  // Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
-  ol.source.Vector.call (this, options);
-};
-ol.ext.inherits(ol.source.DBPedia, ol.source.Vector);
-/** Decode RDF attributes and choose to add feature to the layer
-* @param {feature} the feature
-* @param {attributes} RDF attributes
-* @param {lastfeature} last feature added (null if none)
-* @return {boolean} true: add the feature to the layer
-* @API stable
-*/
-ol.source.DBPedia.prototype.readFeature = function (feature, attributes, lastfeature) {
-  // Copy RDF attributes values
-  for (var i in attributes) {
-    if (attributes[i].type==='uri') attributes[i].value = encodeURI(attributes[i].value);
-    feature.set (i, attributes[i].value);
+ol.source.DBPedia = class olsourceDBPedia extends ol.source.Vector {
+  constructor(opt_options) {
+    var options = opt_options || {}
+    /** Default attribution */
+    if (!options.attributions) options.attributions = ["&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA"]
+    // Bbox strategy : reload at each move
+    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox
+    super(options)
+    this.setLoader(this._loaderFn)
+    /** Url for DBPedia SPARQL */
+    this._url = options.url || "http://fr.dbpedia.org/sparql"
+    /** Max resolution to load features  */
+    this._maxResolution = options.maxResolution || 100
+    /** Result language */
+    this._lang = options.lang || "fr"
+    /** Query limit */
+    this._limit = options.limit || 1000
   }
-  // Prevent same feature with different type duplication
-  if (lastfeature && lastfeature.get("subject") == attributes.subject.value) {
-    // Kepp dbpedia.org type ?
-    // if (bindings[i].type.match ("dbpedia.org") lastfeature.get("type") = bindings[i].type.value;
-    // Concat types
-    lastfeature.set("type", lastfeature.get("type") +"\n"+ attributes.type.value);
-    return false;
-  } else {
-    return true;
+  /** Decode RDF attributes and choose to add feature to the layer
+  * @param {feature} the feature
+  * @param {attributes} RDF attributes
+  * @param {lastfeature} last feature added (null if none)
+  * @return {boolean} true: add the feature to the layer
+  * @API stable
+  */
+  readFeature(feature, attributes, lastfeature) {
+    // Copy RDF attributes values
+    for (var i in attributes) {
+      if (attributes[i].type === 'uri')
+        attributes[i].value = encodeURI(attributes[i].value)
+      feature.set(i, attributes[i].value)
+    }
+    // Prevent same feature with different type duplication
+    if (lastfeature && lastfeature.get("subject") == attributes.subject.value) {
+      // Kepp dbpedia.org type ?
+      // if (bindings[i].type.match ("dbpedia.org") lastfeature.get("type") = bindings[i].type.value;
+      // Concat types
+      lastfeature.set("type", lastfeature.get("type") + "\n" + attributes.type.value)
+      return false
+    } else {
+      return true
+    }
   }
-};
-/** Set RDF query subject, default: select label, thumbnail, abstract and type
-* @API stable
-*/
-ol.source.DBPedia.prototype.querySubject = function () {
-  return "?subject rdfs:label ?label. "
-    + "OPTIONAL {?subject dbpedia-owl:thumbnail ?thumbnail}."
-    + "OPTIONAL {?subject dbpedia-owl:abstract ?abstract} . "
-    + "OPTIONAL {?subject rdf:type ?type}";
-}
-/** Set RDF query filter, default: select language
-* @API stable
-*/
-ol.source.DBPedia.prototype.queryFilter = function () {
-  return	 "lang(?label) = '"+this._lang+"' "
-    + "&& lang(?abstract) = '"+this._lang+"'"
-  // Filter on type 
-  //+ "&& regex (?type, 'Monument|Sculpture|Museum', 'i')"
-}
-/** Loader function used to load features.
-* @private
-*/
-ol.source.DBPedia.prototype._loaderFn = function(extent, resolution, projection) {
-  if (resolution > this._maxResolution) return;
-  var self = this;
-  var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
-  // SPARQL request: for more info @see http://fr.dbpedia.org/
-  var query =	"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> "
-        + "SELECT DISTINCT * WHERE { "
-        + "?subject geo:lat ?lat . "
-        + "?subject geo:long ?long . "
-        + this.querySubject()+" . "
-        + "FILTER("+this.queryFilter()+") . "
-        // Filter bbox
-        + "FILTER(xsd:float(?lat) <= " + bbox[3] + " && " + bbox[1] + " <= xsd:float(?lat) "
-        + "&& xsd:float(?long) <= " + bbox[2] + " && " + bbox[0] + " <= xsd:float(?long) "
-        + ") . "
-        + "} LIMIT "+this._limit;
-  // Ajax request to get the tile
-  ol.ext.Ajax.get({
-    url: this._url,
-    data: { query: query, format:"json" },
-    success: function(data) {
-      var bindings = data.results.bindings;
-      var features = [];
-      var att, pt, feature, lastfeature = null;
-      for ( var i in bindings ) {
-        att = bindings[i];
-        pt = [Number(bindings[i].long.value), Number(bindings[i].lat.value)];
-        feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
-        if (self.readFeature(feature, att, lastfeature)) {
-          features.push(feature);
-          lastfeature = feature;
+  /** Set RDF query subject, default: select label, thumbnail, abstract and type
+  * @API stable
+  */
+  querySubject() {
+    return "?subject rdfs:label ?label. "
+      + "OPTIONAL {?subject dbpedia-owl:thumbnail ?thumbnail}."
+      + "OPTIONAL {?subject dbpedia-owl:abstract ?abstract} . "
+      + "OPTIONAL {?subject rdf:type ?type}"
+  }
+  /** Set RDF query filter, default: select language
+  * @API stable
+  */
+  queryFilter() {
+    return "lang(?label) = '" + this._lang + "' "
+      + "&& lang(?abstract) = '" + this._lang + "'"
+    // Filter on type 
+    //+ "&& regex (?type, 'Monument|Sculpture|Museum', 'i')"
+  }
+  /** Loader function used to load features.
+  * @private
+  */
+  _loaderFn(extent, resolution, projection) {
+    if (resolution > this._maxResolution) return
+    var self = this
+    var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326")
+    // SPARQL request: for more info @see http://fr.dbpedia.org/
+    var query = "PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> "
+      + "SELECT DISTINCT * WHERE { "
+      + "?subject geo:lat ?lat . "
+      + "?subject geo:long ?long . "
+      + this.querySubject() + " . "
+      + "FILTER(" + this.queryFilter() + ") . "
+      // Filter bbox
+      + "FILTER(xsd:float(?lat) <= " + bbox[3] + " && " + bbox[1] + " <= xsd:float(?lat) "
+      + "&& xsd:float(?long) <= " + bbox[2] + " && " + bbox[0] + " <= xsd:float(?long) "
+      + ") . "
+      + "} LIMIT " + this._limit
+    // Ajax request to get the tile
+    ol.ext.Ajax.get({
+      url: this._url,
+      data: { query: query, format: "json" },
+      success: function (data) {
+        var bindings = data.results.bindings
+        var features = []
+        var att, pt, feature, lastfeature = null
+        for (var i in bindings) {
+          att = bindings[i]
+          pt = [Number(bindings[i].long.value), Number(bindings[i].lat.value)]
+          feature = new ol.Feature(new ol.geom.Point(ol.proj.transform(pt, "EPSG:4326", projection)))
+          if (self.readFeature(feature, att, lastfeature)) {
+            features.push(feature)
+            lastfeature = feature
+          }
         }
+        self.addFeatures(features)
       }
-      self.addFeatures(features);
-    }});
-};
+    })
+  }
+}
 ol.style.clearDBPediaStyleCache;
 ol.style.dbPediaStyleFunction; 
 (function(){

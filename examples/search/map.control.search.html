@@ -1,161 +1,158 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Search control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	Copyright (c) 2017-2018 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  <meta name="description" content="Control to add a grid reference to a map." />
+  <meta name="keywords" content="ol3, control, search, bar" />
 
------------------------------------------------------------->
-	<title>ol-ext: Search control</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-	<meta name="description" content="Control to add a grid reference to a map." />
-	<meta name="keywords" content="ol3, control, search, bar" />
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
-	
-	<link rel="stylesheet" href="../style.css"/>
+  
+  <link rel="stylesheet" href="../style.css"/>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Search control</h1>
-	</a>
+  <a href="../../index.html">
+    <h1>ol-ext: Search control</h1>
+  </a>
 
-	<div class="info">
-		<i>ol.control.Search</i> is the base class for search controls.
-		You can use it for simple custom search or as base to new class.
-		<ul>
-			<li>
-				the <i>getTitle</i> function return the string that will be display in the autocompletion menu
-			</li>
-			<li>
-				<i>autocomplete</i> is a function called on each tipping to search a string. The result can be returned directly or in a callback for asynchronous puposes.
-			</li>
-			<li>
-				<i>typing</i> is a is a delay (in ms) on each typing to start a new search. Use -1 to prevent autocompletion (search will be trigger when Enter key is pressed).
-			</li>
-			<li>
-				<i>minLength</i> is the minimum caracters for autocompletion.
-			</li>
-			<li>
-				<i>maxItems</i> is the maximum lines displayed in the menu.
-			</li>
-			<li>
-				use <i>placeholder</i> as placeholder for the input.
-			</li>
-		</ul>
-		<br/>
-		Derived search controls:
-		<ul>
-			<li>
-				<a href="map.control.searchfeature.html">ol.control.SearchFeature</a> to search features in a layer.
-			</li>
-			<li>
-				<a href="map.control.searchphoton.html">ol.control.SearchPhoton</a> to search places on the map.
-			</li>
-			<li>
-				<a href="map.control.searchban.html">ol.control.SearchBAN</a> to search French places on the map.
-			</li>
-			<li>
-				<a href="map.control.searchnominatim.html">ol.control.SearchNominatim</a> to search places with OSM.
-			</li>
-		</ul>
-	</div>
+  <div class="info">
+    <i>ol.control.Search</i> is the base class for search controls.
+    You can use it for simple custom search or as base to new class.
+    <ul>
+      <li>
+        the <i>getTitle</i> function return the string that will be display in the autocompletion menu
+      </li>
+      <li>
+        <i>autocomplete</i> is a function called on each tipping to search a string. The result can be returned directly or in a callback for asynchronous puposes.
+      </li>
+      <li>
+        <i>typing</i> is a is a delay (in ms) on each typing to start a new search. Use -1 to prevent autocompletion (search will be trigger when Enter key is pressed).
+      </li>
+      <li>
+        <i>minLength</i> is the minimum caracters for autocompletion.
+      </li>
+      <li>
+        <i>maxItems</i> is the maximum lines displayed in the menu.
+      </li>
+      <li>
+        use <i>placeholder</i> as placeholder for the input.
+      </li>
+    </ul>
+    <br/>
+    Derived search controls:
+    <ul>
+      <li>
+        <a href="map.control.searchfeature.html">ol.control.SearchFeature</a> to search features in a layer.
+      </li>
+      <li>
+        <a href="map.control.searchphoton.html">ol.control.SearchPhoton</a> to search places on the map.
+      </li>
+      <li>
+        <a href="map.control.searchban.html">ol.control.SearchBAN</a> to search French places on the map.
+      </li>
+      <li>
+        <a href="map.control.searchnominatim.html">ol.control.SearchNominatim</a> to search places with OSM.
+      </li>
+    </ul>
+  </div>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<i>
-			Type a letter in the search bar to search for a position
-			<br/>
-			(Paris, London, Geneve, Bruxelles, Berlin, Madrid, Roma).
-		</i>
-	</div>
-	
-	<script type="text/javascript">
-	// Layers
-	var layers = [
-		new ol.layer.Tile({
-			title:'terrain-background',
-			source: new ol.source.Stamen({ layer: 'terrain' })
-		})
-	];
+  <div class="options">
+    <i>
+      Type a letter in the search bar to search for a position
+      <br/>
+      (Paris, London, Geneve, Bruxelles, Berlin, Madrid, Roma).
+    </i>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+      title:'terrain-background',
+      source: new ol.source.Stamen({ layer: 'terrain' })
+    })
+  ];
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 5,
-				center: [166326, 5992663]
-			}),
-			interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
-			layers: layers
-		});
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers
+  });
 
-	// A list of positions to search in
-	var positions = 
-		[	{ name:"Paris", pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11 },
-			{ name:"London", pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:11 },
-			{ name:"Geneve", pos:ol.proj.transform([6.149985,46.200013], 'EPSG:4326', 'EPSG:3857'), zoom:13 },
-			{ name:"Bruxelles", pos:ol.proj.transform([4.35,50.83], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
-			{ name:"Berlin", pos:ol.proj.transform([13.383333,52.516667], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
-			{ name:"Madrid", pos:ol.proj.transform([-3.683333,40.433333], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
-			{ name:"Roma", pos:ol.proj.transform([12.48657,41.888732], 'EPSG:4326', 'EPSG:3857'), zoom:12 }
-		]
+  // A list of positions to search in
+  var positions = [
+    { name:"Paris", pos:ol.proj.transform([2.351828, 48.856578], 'EPSG:4326', 'EPSG:3857'), zoom:11 },
+    { name:"London", pos:ol.proj.transform([-0.1275,51.507222], 'EPSG:4326', 'EPSG:3857'), zoom:11 },
+    { name:"Geneve", pos:ol.proj.transform([6.149985,46.200013], 'EPSG:4326', 'EPSG:3857'), zoom:13 },
+    { name:"Bruxelles", pos:ol.proj.transform([4.35,50.83], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
+    { name:"Berlin", pos:ol.proj.transform([13.383333,52.516667], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
+    { name:"Madrid", pos:ol.proj.transform([-3.683333,40.433333], 'EPSG:4326', 'EPSG:3857'), zoom:12 },
+    { name:"Roma", pos:ol.proj.transform([12.48657,41.888732], 'EPSG:4326', 'EPSG:3857'), zoom:12 }
+  ]
 
-	// The search control
-	var search = new ol.control.Search(
-		{	//target: $(".options").get(0),
-			// Title to use in the list
-			getTitle: function(f) { return f.name; },
-			// Search result
-			autocomplete: function (s, cback)
-			{	var result = [];
-				// New search RegExp
-				var	rex = new RegExp(s.replace("*","")||"\.*", "i");
-				for (var i=0; i<positions.length; i++)
-				{	if (rex.test(positions[i].name)) result.push (positions[i]);
-				}
-				/* Return result directly... */
-				return result;
-				/* ...or use the callback function
-				cback(result);
-				return false;
-				*/
-			}
-		});
-	map.addControl (search);
+  // The search control
+  var search = new ol.control.Search({
+    //target: $(".options").get(0),
+    // Title to use in the list
+    getTitle: function(f) { return f.name; },
+    // Search result
+    autocomplete: function (s, cback) {
+      var result = [];
+      // New search RegExp
+      var	rex = new RegExp(s.replace("*","")||"\.*", "i");
+      for (var i=0; i<positions.length; i++) {
+        if (rex.test(positions[i].name)) result.push (positions[i]);
+      }
+      /* Return result directly... */
+      return result;
+      /* ...or use the callback function
+      cback(result);
+      return false;
+      */
+    }
+  });
+  map.addControl (search);
 
-	// Center when click on the reference index
-	search.on('select', function(e)
-		{	map.getView().animate({
-				center: e.search.pos,
-				zoom: 6,
-				easing: ol.easing.easeOut
-			})
-		});
+  // Center when click on the reference index
+  search.on('select', function(e) {
+    map.getView().animate({
+      center: e.search.pos,
+      zoom: 6,
+      easing: ol.easing.easeOut
+    })
+  });
 
-	</script>
-	
+  </script>
+  
 </body>
 </html>
