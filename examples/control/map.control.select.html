@@ -18,8 +18,8 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
@@ -74,7 +74,6 @@
       zoom: 5,
       center: [166326, 5992663]
     }),
-    interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
     layers: layers
   });
 

@@ -4054,66 +4054,213 @@ ol.control.CanvasBase = class olcontrolCanvasBase extends ol.control.Control {
  *  @param {ol.source.Vector | Array<ol.source.Vector>} options.source the source to search in if no features set
  *  @param {string} options.btInfo ok button label
  */
-ol.control.SelectBase = function(options) {
-  if (!options) options = {};
-  this._features = this.setFeatures(options.features);
-  var element;
-  if (options.target) {
-    element = document.createElement("div");
-  } else {
-    element = document.createElement("div");
-    element.className = 'ol-select ol-unselectable ol-control ol-collapsed';
-    ol.ext.element.create('BUTTON', {
-      type: 'button',
-      on: {
-        'click touchstart': function(e) {
-          element.classList.toggle('ol-collapsed');
-          e.preventDefault();
-        }
-      },
-      parent: element
+ol.control.SelectBase = class olcontrolSelectBase extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    var element = document.createElement('div');
+    super({
+      element: element,
+      target: options.target
     });
+    this._features = this.setFeatures(options.features);
+    if (!options.target) {
+      element.className = 'ol-select ol-unselectable ol-control ol-collapsed';
+      ol.ext.element.create('BUTTON', {
+        type: 'button',
+        on: {
+          'click touchstart': function (e) {
+            element.classList.toggle('ol-collapsed');
+            e.preventDefault();
+          }
+        },
+        parent: element
+      });
+    }
+    if (options.className)
+      element.classList.add(options.className);
+    var content = options.content || ol.ext.element.create('DIV');
+    element.appendChild(content);
+    // OK button
+    ol.ext.element.create('BUTTON', {
+      html: options.btInfo || 'OK',
+      className: 'ol-ok',
+      on: { 'click': this.doSelect.bind(this) },
+      parent: content
+    });
+    this.setSources(options.source);
   }
-  if (options.className) element.classList.add(options.className);
-  var content = options.content || ol.ext.element.create('DIV');
-  element.appendChild(content);
-  // OK button
-  ol.ext.element.create('BUTTON', {
-    html: options.btInfo || 'OK',
-    className: 'ol-ok',
-    on: { 'click': this.doSelect.bind(this) },
-    parent: content
-  });
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.setSources(options.source);
-};
-ol.ext.inherits(ol.control.SelectBase, ol.control.Control);
-/** Set the current sources
- * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
- */
-ol.control.SelectBase.prototype.setSources = function (source) {
-  if (source) {
-    this.set ('source', (source instanceof Array) ? source : [source]);
-  } else {
-    this.unset('source');
-  }  
-};
-/** Set feature collection to search in
- * @param {ol.Collection<ol.Feature>} features
- */
-ol.control.SelectBase.prototype.setFeatures = function (features) {
-  if (features instanceof ol.Collection) this._features = features;
-  else this._features = null;
-};
-/** Get feature collection to search in
- * @return {ol.Collection<ol.Feature>}
- */
-ol.control.SelectBase.prototype.getFeatures = function () {
-  return this._features;
-};
+  /** Set the current sources
+   * @param {ol.source.Vector|Array<ol.source.Vector>|undefined} source
+   */
+  setSources(source) {
+    if (source) {
+      this.set('source', (source instanceof Array) ? source : [source]);
+    } else {
+      this.unset('source');
+    }
+  }
+  /** Set feature collection to search in
+   * @param {ol.Collection<ol.Feature>} features
+   */
+  setFeatures(features) {
+    if (features instanceof ol.Collection)
+      this._features = features;
+    else
+      this._features = null;
+  }
+  /** Get feature collection to search in
+   * @return {ol.Collection<ol.Feature>}
+   */
+  getFeatures() {
+    return this._features;
+  }
+  /** Escape string for regexp
+   * @param {string} search
+   * @return {string}
+   */
+  _escape(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+  }
+  /**
+   * Test if a feature check aconditino
+   * @param {ol.Feature} f the feature to check condition
+   * @param {Object} condition an object to use for test
+   *  @param {string} condition.attr attribute name
+   *  @param {string} condition.op operator
+   *  @param {any} condition.val value to test
+   * @param {boolean} usecase use case or not when testing strings
+   * @return {boolean}
+   * @private
+   */
+  _checkCondition(f, condition, usecase) {
+    if (!condition.attr)
+      return true;
+    var val = f.get(condition.attr);
+    // Try to test numeric values
+    var isNumber = (Number(val) == val && Number(condition.val) == condition.val);
+    if (isNumber)
+      val = Number(val);
+    // Check
+    var rex;
+    switch (condition.op) {
+      case '=':
+        if (isNumber) {
+          return val == condition.val;
+        } else {
+          rex = new RegExp('^' + this._escape(condition.val) + '$', usecase ? '' : 'i');
+          return rex.test(val);
+        }
+      case '!=':
+        if (isNumber) {
+          return val != condition.val;
+        } else {
+          rex = new RegExp('^' + this._escape(condition.val) + '$', usecase ? '' : 'i');
+          return !rex.test(val);
+        }
+      case '<':
+        return val < condition.val;
+      case '<=':
+        return val <= condition.val;
+      case '>':
+        return val > condition.val;
+      case '>=':
+        return val >= condition.val;
+      case 'contain':
+        rex = new RegExp(this._escape(condition.val), usecase ? '' : 'i');
+        return rex.test(val);
+      case '!contain':
+        rex = new RegExp(this._escape(condition.val), usecase ? '' : 'i');
+        return !rex.test(val);
+      case 'regexp':
+        rex = new RegExp(condition.val, usecase ? '' : 'i');
+        return rex.test(val);
+      case '!regexp':
+        rex = new RegExp(condition.val, usecase ? '' : 'i');
+        return !rex.test(val);
+      default:
+        return false;
+    }
+  }
+  /** Selection features in a list of features
+   * @param {Array<ol.Feature>} result the current list of features
+   * @param {Array<ol.Feature>} features to test in
+   * @param {Object} condition
+   *  @param {string} condition.attr attribute name
+   *  @param {string} condition.op operator
+   *  @param {any} condition.val value to test
+   * @param {boolean} all all conditions must be valid
+   * @param {boolean} usecase use case or not when testing strings
+   */
+  _selectFeatures(result, features, conditions, all, usecase) {
+    conditions = conditions || [];
+    var f;
+    for (var i = features.length - 1; f = features[i]; i--) {
+      var isok = all;
+      for (var k = 0, c; c = conditions[k]; k++) {
+        if (c.attr) {
+          if (all) {
+            isok = isok && this._checkCondition(f, c, usecase);
+          }
+          else {
+            isok = isok || this._checkCondition(f, c, usecase);
+          }
+        }
+      }
+      if (isok) {
+        result.push(f);
+      } else if (this._features) {
+        this._features.removeAt(i);
+      }
+    }
+    return result;
+  }
+  /** Get vector source
+   * @return {Array<ol.source.Vector>}
+   */
+  getSources() {
+    if (this.get('source'))
+      return this.get('source');
+    var sources = [];
+    function getSources(layers) {
+      layers.forEach(function (l) {
+        if (l.getLayers) {
+          getSources(l.getLayers());
+        } else if (l.getSource && l.getSource() instanceof ol.source.Vector) {
+          sources.push(l.getSource());
+        }
+      });
+    }
+    if (this.getMap()) {
+      getSources(this.getMap().getLayers());
+    }
+    return sources;
+  }
+  /** Select features by attributes
+   * @param {*} options
+   *  @param {Array<ol.source.Vector>|undefined} options.sources source to apply rules, default the select sources
+   *  @param {bool} options.useCase case sensitive, default false
+   *  @param {bool} options.matchAll match all conditions, default false
+   *  @param {Array<conditions>} options.conditions array of conditions
+   * @return {Array<ol.Feature>}
+   * @fires select
+   */
+  doSelect(options) {
+    options = options || {};
+    var features = [];
+    if (options.features) {
+      this._selectFeatures(features, options.features, options.conditions, options.matchAll, options.useCase);
+    } else if (this._features) {
+      this._selectFeatures(features, this._features.getArray(), options.conditions, options.matchAll, options.useCase);
+    } else {
+      var sources = options.sources || this.getSources();
+      sources.forEach(function (s) {
+        this._selectFeatures(features, s.getFeatures(), options.conditions, options.matchAll, options.useCase);
+      }.bind(this));
+    }
+    this.dispatchEvent({ type: "select", features: features });
+    return features;
+  }
+}
 /** List of operators / translation
  * @api
  */
@@ -4128,149 +4275,6 @@ ol.control.SelectBase.prototype.operationsList = {
   '!contain': '⊄',	// ∉
   'regexp': '≃',
   '!regexp': '≄'
-};
-/** Escape string for regexp
- * @param {string} search
- * @return {string}
- */
-ol.control.SelectBase.prototype._escape = function (s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-};
-/**
- * Test if a feature check aconditino
- * @param {ol.Feature} f the feature to check condition
- * @param {Object} condition an object to use for test
- *  @param {string} condition.attr attribute name
- *  @param {string} condition.op operator
- *  @param {any} condition.val value to test
- * @param {boolean} usecase use case or not when testing strings
- * @return {boolean}
- * @private
- */
-ol.control.SelectBase.prototype._checkCondition = function (f, condition, usecase) {
-  if (!condition.attr) return true;
-  var val = f.get(condition.attr);
-  // Try to test numeric values
-  var isNumber = (Number(val) == val && Number(condition.val) == condition.val);
-  if (isNumber) val = Number(val);
-  // Check
-  var rex;
-  switch (condition.op) {
-    case '=':
-      if (isNumber) {
-        return val == condition.val;
-      } else {
-        rex = new RegExp('^'+this._escape(condition.val)+'$', usecase ? '' : 'i');
-        return rex.test(val);
-      }
-    case '!=':
-      if (isNumber) {
-        return val != condition.val;
-      } else {
-        rex = new RegExp('^'+this._escape(condition.val)+'$', usecase ? '' : 'i');
-        return !rex.test(val);
-      }
-    case '<':
-      return val < condition.val;
-    case '<=':
-      return val <= condition.val;
-    case '>':
-      return val > condition.val;
-    case '>=':
-      return val >= condition.val;
-    case 'contain':
-      rex = new RegExp(this._escape(condition.val), usecase ? '' : 'i');
-      return rex.test(val);
-    case '!contain':
-      rex = new RegExp(this._escape(condition.val), usecase ? '' : 'i');
-      return !rex.test(val);
-    case 'regexp':
-      rex = new RegExp(condition.val, usecase ? '' : 'i');
-      return rex.test(val);
-    case '!regexp':
-      rex = new RegExp(condition.val, usecase ? '' : 'i');
-      return !rex.test(val);
-    default:
-      return false;
-  }
-};
-/** Selection features in a list of features
- * @param {Array<ol.Feature>} result the current list of features
- * @param {Array<ol.Feature>} features to test in
- * @param {Object} condition 
- *  @param {string} condition.attr attribute name
- *  @param {string} condition.op operator
- *  @param {any} condition.val value to test
- * @param {boolean} all all conditions must be valid
- * @param {boolean} usecase use case or not when testing strings
- */
-ol.control.SelectBase.prototype._selectFeatures = function (result, features, conditions, all, usecase) {
-  conditions = conditions || [];
-  var f;
-  for (var i=features.length-1; f=features[i]; i--) {
-    var isok = all;
-    for (var k=0, c; c=conditions[k]; k++) {
-      if (c.attr) {
-        if (all) {
-          isok = isok && this._checkCondition(f,c,usecase);
-        }
-        else {
-          isok = isok || this._checkCondition(f,c,usecase);
-        }
-      }
-    }
-    if (isok) {
-      result.push(f);
-    } else if (this._features) {
-      this._features.removeAt(i);
-    }
-  }
-  return result;
-};
-/** Get vector source
- * @return {Array<ol.source.Vector>}
- */
-ol.control.SelectBase.prototype.getSources = function () {
-  if (this.get('source')) return this.get('source');
-  var sources = [];
-  function getSources(layers) {
-    layers.forEach(function(l){
-      if (l.getLayers) {
-        getSources(l.getLayers());
-      } else if (l.getSource && l.getSource() instanceof ol.source.Vector) {
-        sources.push(l.getSource());
-      }
-    });
-  }
-  if (this.getMap()) {
-    getSources(this.getMap().getLayers());
-  }
-  return sources;
-};
-/** Select features by attributes
- * @param {*} options
- *  @param {Array<ol.source.Vector>|undefined} options.sources source to apply rules, default the select sources
- *  @param {bool} options.useCase case sensitive, default false
- *  @param {bool} options.matchAll match all conditions, default false
- *  @param {Array<conditions>} options.conditions array of conditions
- * @return {Array<ol.Feature>}
- * @fires select
- */
-ol.control.SelectBase.prototype.doSelect = function (options) {
-  options = options || {};
-  var features = [];
-  if (options.features) {
-    this._selectFeatures(features, options.features, options.conditions, options.matchAll, options.useCase);
-  } else if (this._features) {
-    this._selectFeatures(features, this._features.getArray(), options.conditions, options.matchAll, options.useCase);
-  } else {
-    var sources = options.sources || this.getSources();
-    sources.forEach(function(s) {
-      this._selectFeatures(features, s.getFeatures(), options.conditions, options.matchAll, options.useCase);
-    }.bind(this));
-  }
-  this.dispatchEvent({ type:"select", features: features });
-  return features;
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
@@ -15048,232 +15052,237 @@ ol.control.SearchWikipedia = class olcontrolSearchWikipedia extends ol.control.S
  *  @param {string} [options.attrPlaceHolder=attribute]
  *  @param {string} [options.valuePlaceHolder=value]
  */
-ol.control.Select = function(options) {
-  var self = this;
-  if (!options) options = {};
-  // Container
-  var div = options.content = document.createElement("div");
-  // Autocompletion list
-  this._ul = ol.ext.element.create('UL', {
-    parent: div
-  });
-  // All conditions
-  this._all = ol.ext.element.create('INPUT', {
-    type: 'checkbox',
-    checked: true
-  });
-  var label_match_all = ol.ext.element.create('LABEL',{
-    html: this._all,
-    parent: div
-  });
-  ol.ext.element.appendText(label_match_all, options.allLabel || 'match all');
-  // Use case
-  this._useCase = ol.ext.element.create('INPUT', {
-    type: 'checkbox'
-  });
-  var label_case_sensitive = ol.ext.element.create('LABEL',{
-    html: this._useCase,
-    parent: div
-  });
-  ol.ext.element.appendText(label_case_sensitive, options.caseLabel || 'case sensitive');
-  ol.control.SelectBase.call(this, options);
-  // Add button
-  ol.ext.element.create('BUTTON', {
-    className: 'ol-append',
-    html: options.addLabel	|| 'add rule',
-    click: function(){
-      self.addCondition();
-    },
-    parent: div
-  });
-  this._conditions = [];
-  this.set('attrPlaceHolder', options.attrPlaceHolder || 'attribute');
-  this.set('valuePlaceHolder', options.valuePlaceHolder || 'value');
-  this.addCondition();
-};
-ol.ext.inherits(ol.control.Select, ol.control.SelectBase);
-/** Add a new condition
- * @param {*} options
- * 	@param {string} options.attr attribute name
- * 	@param {string} options.op	operator
- * 	@param {string} options.val attribute value
- */
-ol.control.Select.prototype.addCondition = function (options) {
-  options = options || {};
-  this._conditions.push({
-    attr: options.attr || '',
-    op: options.op || '=',
-    val: options.val || ''
-  });
-  this._drawlist();
-};
-/** Get the condition list
- */
-ol.control.Select.prototype.getConditions = function () {
-  return {
-    usecase: this._useCase.checked,
-    all: this._all.checked,
-    conditions: this._conditions
+ol.control.Select = class olcontrolSelect extends ol.control.SelectBase {
+  constructor(options) {
+    options = options || {};
+    // Container
+    var div = options.content = document.createElement('div');
+    super(options);
+    var bt = div.querySelector('button');
+    // Autocompletion list
+    this._ul = ol.ext.element.create('UL', {
+      parent: div
+    });
+    // All conditions
+    this._all = ol.ext.element.create('INPUT', {
+      type: 'checkbox',
+      checked: true
+    });
+    var label_match_all = ol.ext.element.create('LABEL', {
+      html: this._all,
+      parent: div
+    });
+    ol.ext.element.appendText(label_match_all, options.allLabel || 'match all');
+    // Use case
+    this._useCase = ol.ext.element.create('INPUT', {
+      type: 'checkbox'
+    });
+    var label_case_sensitive = ol.ext.element.create('LABEL', {
+      html: this._useCase,
+      parent: div
+    });
+    ol.ext.element.appendText(label_case_sensitive, options.caseLabel || 'case sensitive');
+    // Add ok button at the end
+    div.appendChild(bt);
+    // Add button
+    ol.ext.element.create('BUTTON', {
+      className: 'ol-append',
+      html: options.addLabel || 'add rule',
+      click: function () {
+        this.addCondition();
+      }.bind(this),
+      parent: div
+    });
+    this._conditions = [];
+    this.set('attrPlaceHolder', options.attrPlaceHolder || 'attribute');
+    this.set('valuePlaceHolder', options.valuePlaceHolder || 'value');
+    this.addCondition();
   }
-};
-/** Set the condition list
- */
-ol.control.Select.prototype.setConditions = function (cond) {
-  this._useCase.checked = cond.usecase;
-  this._all.checked = cond.all;
-  this._conditions = cond.conditions;
-  this._drawlist();
-};
-/** Get the conditions as string
- */
-ol.control.Select.prototype.getConditionsString = function (cond) {
-  var st = '';
-  for (var i=0,c; c=cond.conditions[i]; i++) {
-    if (c.attr) {
-      st += (st ? (cond.all ? ' AND ' : ' OR ') : '')
-        + c.attr
-        + this.operationsList[c.op]
-        + c.val;
+  /** Add a new condition
+   * @param {*} options
+   * 	@param {string} options.attr attribute name
+   * 	@param {string} options.op	operator
+   * 	@param {string} options.val attribute value
+   */
+  addCondition(options) {
+    options = options || {};
+    this._conditions.push({
+      attr: options.attr || '',
+      op: options.op || '=',
+      val: options.val || ''
+    });
+    this._drawlist();
+  }
+  /** Get the condition list
+   */
+  getConditions() {
+    return {
+      usecase: this._useCase.checked,
+      all: this._all.checked,
+      conditions: this._conditions
+    };
+  }
+  /** Set the condition list
+   */
+  setConditions(cond) {
+    this._useCase.checked = cond.usecase;
+    this._all.checked = cond.all;
+    this._conditions = cond.conditions;
+    this._drawlist();
+  }
+  /** Get the conditions as string
+   */
+  getConditionsString(cond) {
+    var st = '';
+    for (var i = 0, c; c = cond.conditions[i]; i++) {
+      if (c.attr) {
+        st += (st ? (cond.all ? ' AND ' : ' OR ') : '')
+          + c.attr
+          + this.operationsList[c.op]
+          + c.val;
+      }
+    }
+    return st;
+  }
+  /** Draw the liste
+   * @private
+   */
+  _drawlist() {
+    this._ul.innerHTML = '';
+    for (var i = 0; i < this._conditions.length; i++) {
+      this._ul.appendChild(this._getLiCondition(i));
     }
   }
-  return st
-};
-/** Draw the liste
- * @private
- */
-ol.control.Select.prototype._drawlist = function () {
-  this._ul.innerHTML = '';
-  for (var i=0; i < this._conditions.length; i++) {
-    this._ul.appendChild(this._getLiCondition(i));
-  }
-};
-/** Get a line
- * @return {*}
- * @private
- */
-ol.control.Select.prototype._autocomplete = function (val, ul) {
-  ul.classList.remove('ol-hidden');
-  ul.innerHTML = '';
-  var attributes = {};
-  var sources = this.get('source');
-  for (var i=0, s; s=sources[i]; i++) {
-    var features = s.getFeatures();
-    for (var j=0, f; f=features[j]; j++) {
-      Object.assign(attributes, f.getProperties());
-      if (j>100) break;
+  /** Get a line
+   * @return {*}
+   * @private
+   */
+  _autocomplete(val, ul) {
+    ul.classList.remove('ol-hidden');
+    ul.innerHTML = '';
+    var attributes = {};
+    var sources = this.get('source');
+    for (var i = 0, s; s = sources[i]; i++) {
+      var features = s.getFeatures();
+      for (var j = 0, f; f = features[j]; j++) {
+        Object.assign(attributes, f.getProperties());
+        if (j > 100)
+          break;
+      }
+    }
+    var rex = new RegExp(val, 'i');
+    for (var a in attributes) {
+      if (a === 'geometry')
+        continue;
+      if (rex.test(a)) {
+        var li = document.createElement('li');
+        li.textContent = a;
+        li.addEventListener("click", function () {
+          ul.previousElementSibling.value = this.textContent;
+          var event = document.createEvent('HTMLEvents');
+          event.initEvent('change', true, false);
+          ul.previousElementSibling.dispatchEvent(event);
+          ul.classList.add('ol-hidden');
+        });
+        ul.appendChild(li);
+      }
     }
   }
-  var rex = new RegExp(val, 'i');
-  for (var a in attributes) {
-    if (a==='geometry') continue;
-    if (rex.test(a)) {
-      var li = document.createElement('li');
-      li.textContent = a;
-      li.addEventListener("click", function() {
-        ul.previousElementSibling.value = this.textContent;
-        var event = document.createEvent('HTMLEvents');
-        event.initEvent('change', true, false);
-        ul.previousElementSibling.dispatchEvent(event);
-        ul.classList.add('ol-hidden');
-      });
-      ul.appendChild(li);
+  /** Get a line
+   * @return {*}
+   * @private
+   */
+  _getLiCondition(i) {
+    var self = this;
+    var li = document.createElement('li');
+    // Attribut
+    var autocomplete = document.createElement('div');
+    autocomplete.classList.add('ol-autocomplete');
+    autocomplete.addEventListener("mouseleave", function () {
+      this.querySelector('ul').classList.add('ol-hidden');
+    });
+    li.appendChild(autocomplete);
+    var input_attr = document.createElement('input');
+    input_attr.classList.add('ol-attr');
+    input_attr.setAttribute('type', 'search');
+    input_attr.setAttribute('placeholder', this.get('attrPlaceHolder'));
+    input_attr.addEventListener('keyup', function () {
+      self._autocomplete(this.value, this.nextElementSibling);
+    });
+    input_attr.addEventListener('focusout', function () {
+      setTimeout(function () {
+        autocomplete.querySelector('ul').classList.add('ol-hidden');
+      }, 300);
+    });
+    input_attr.addEventListener('click', function () {
+      setTimeout(function () {
+        self._autocomplete(this.value, this.nextElementSibling);
+        this.nextElementSibling.classList.remove('ol-hidden');
+      }.bind(this));
+    });
+    input_attr.addEventListener('change', function () {
+      self._conditions[i].attr = this.value;
+    });
+    input_attr.value = self._conditions[i].attr;
+    autocomplete.appendChild(input_attr);
+    // Autocomplete list
+    var ul_autocomplete = document.createElement('ul');
+    ul_autocomplete.classList.add('ol-hidden');
+    autocomplete.appendChild(ul_autocomplete);
+    // Operation
+    var select = document.createElement('select');
+    li.appendChild(select);
+    for (var k in this.operationsList) {
+      var option = document.createElement('option');
+      option.value = k;
+      option.textContent = this.operationsList[k];
+      select.appendChild(option);
     }
-  }
-};
-/** Get a line
- * @return {*}
- * @private
- */
-ol.control.Select.prototype._getLiCondition = function (i) {
-  var self = this;
-  var li = document.createElement('li');
-  // Attribut
-  var autocomplete = document.createElement('div');
-      autocomplete.classList.add('ol-autocomplete');
-      autocomplete.addEventListener("mouseleave", function() {
-        this.querySelector('ul'). classList.add('ol-hidden');
-      });
-      li.appendChild(autocomplete);
-  var input_attr = document.createElement('input');
-      input_attr.classList.add('ol-attr');
-      input_attr.setAttribute('type', 'search');
-      input_attr.setAttribute('placeholder', this.get('attrPlaceHolder'));
-      input_attr.addEventListener('keyup', function () {
-        self._autocomplete( this.value, this.nextElementSibling );
-      })
-      input_attr.addEventListener('focusout', function() {
-        setTimeout(function() {
-          autocomplete.querySelector('ul'). classList.add('ol-hidden');
-        }, 300);
-      });
-      input_attr.addEventListener('click', function(){
-        setTimeout(function() {
-          self._autocomplete( this.value, this.nextElementSibling );
-          this.nextElementSibling.classList.remove('ol-hidden');
-        }.bind(this));
-      })
-      input_attr.addEventListener('change', function() {
-        self._conditions[i].attr = this.value;
-      })
-      input_attr.value = self._conditions[i].attr;
-      autocomplete.appendChild(input_attr);
-  // Autocomplete list
-  var ul_autocomplete = document.createElement('ul');
-      ul_autocomplete.classList.add('ol-hidden')
-      autocomplete.appendChild(ul_autocomplete);
-  // Operation
-  var select = document.createElement('select');
-  li.appendChild(select);
-  for (var k in this.operationsList) {
-    var option = document.createElement('option');
-        option.value = k;
-        option.textContent = this.operationsList[k];
-        select.appendChild(option);
-  }
-  select.value = self._conditions[i].op;
-  select.addEventListener('change', function() {
-    self._conditions[i].op = this.value;
-  });
-  // Value
-  var input_value = document.createElement('input');
-  input_value.setAttribute('type', 'text');
-      input_value.setAttribute('placeholder', this.get('valuePlaceHolder'));
-    input_value.addEventListener('change', function() {
+    select.value = self._conditions[i].op;
+    select.addEventListener('change', function () {
+      self._conditions[i].op = this.value;
+    });
+    // Value
+    var input_value = document.createElement('input');
+    input_value.setAttribute('type', 'text');
+    input_value.setAttribute('placeholder', this.get('valuePlaceHolder'));
+    input_value.addEventListener('change', function () {
       self._conditions[i].val = this.value;
-    })
+    });
     input_value.value = self._conditions[i].val;
     li.appendChild(input_value);
-  if (this._conditions.length > 1) {
-    var div_delete = document.createElement('div');
-    div_delete.classList.add('ol-delete');
-      div_delete.addEventListener("click", function(){ self.removeCondition(i); })
+    if (this._conditions.length > 1) {
+      var div_delete = document.createElement('div');
+      div_delete.classList.add('ol-delete');
+      div_delete.addEventListener("click", function () { self.removeCondition(i); });
       li.appendChild(div_delete);
+    }
+    //
+    return li;
   }
-  //
-  return li;
-};
-/** Remove the ith condition
- * @param {int} i condition index
- */
-ol.control.Select.prototype.removeCondition = function (i) {
-  this._conditions.splice(i,1);
-  this._drawlist();
-};
-/** Select features by attributes
- * @param {*} options
- *  @param {Array<ol.source.Vector>|undefined} options.sources source to apply rules, default the select sources
- *  @param {bool} options.useCase case sensitive, default checkbox state
- *  @param {bool} options.matchAll match all conditions, , default checkbox state
- *  @param {Array<conditions>} options.conditions array of conditions
- * @fires select
- */
-ol.control.Select.prototype.doSelect = function (options) {
-  options = options || {};
-  options.useCase = options.useCase || this._useCase.checked;
-  options.matchAll = options.matchAll || this._all.checked;
-  options.conditions = options.conditions || this._conditions
-  return ol.control.SelectBase.prototype.doSelect.call(this, options);
-};
+  /** Remove the ith condition
+   * @param {int} i condition index
+   */
+  removeCondition(i) {
+    this._conditions.splice(i, 1);
+    this._drawlist();
+  }
+  /** Select features by attributes
+   * @param {*} options
+   *  @param {Array<ol.source.Vector>|undefined} options.sources source to apply rules, default the select sources
+   *  @param {bool} options.useCase case sensitive, default checkbox state
+   *  @param {bool} options.matchAll match all conditions, , default checkbox state
+   *  @param {Array<conditions>} options.conditions array of conditions
+   * @fires select
+   */
+  doSelect(options) {
+    options = options || {};
+    options.useCase = options.useCase || this._useCase.checked;
+    options.matchAll = options.matchAll || this._all.checked;
+    options.conditions = options.conditions || this._conditions;
+    return super.doSelect(options);
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -15297,130 +15306,139 @@ ol.control.Select.prototype.doSelect = function (options) {
  *  @param {number} options.defaultLabel label for the default radio button
  *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
  */
-ol.control.SelectCheck = function(options) {
-  if (!options) options = {};
-  // Container
-  var div = options.content = ol.ext.element.create('DIV');
-  if (options.label) {
-    ol.ext.element.create('LABEL', {
-      html: options.label,
+ol.control.SelectCheck = class olcontrolSelectCheck extends ol.control.SelectBase {
+  constructor(options) {
+    options = options || {};
+    // Container
+    var div = options.content = ol.ext.element.create('DIV');
+    if (options.label) {
+      ol.ext.element.create('LABEL', {
+        html: options.label,
+        parent: div
+      });
+    }
+    options.className = options.className || 'ol-select-check';
+    super(options);
+    var bt = div.querySelector('button');
+    // Input div
+    this._input = ol.ext.element.create('DIV', {
       parent: div
     });
+    // Add ok button at the end
+    div.appendChild(bt);
+    this.set('property', options.property || 'name');
+    this.set('max', options.max || 10000);
+    this.set('defaultLabel', options.defaultLabel);
+    this.set('type', options.type);
+    this._selectAll = options.selectAll;
+    this._onchoice = options.onchoice;
+    // Set select options
+    if (options.values) {
+      this.setValues({ values: options.values, sort: true });
+    } else {
+      this.setValues();
+    }
   }
-  // Input div
-  this._input = ol.ext.element.create('DIV', {
-    parent: div
-  });
-  options.className = options.className || 'ol-select-check';
-  ol.control.SelectBase.call(this, options);
-  this.set('property', options.property || 'name');
-  this.set('max', options.max || 10000);
-  this.set('defaultLabel', options.defaultLabel);
-  this.set('type', options.type);
-  this._selectAll = options.selectAll;
-  this._onchoice = options.onchoice;
-  // Set select options
-  if (options.values) {
-    this.setValues({ values: options.values, sort: true });
-  } else {
+  /**
+  * Set the map instance the control associated with.
+  * @param {o.Map} map The map instance.
+  */
+  setMap(map) {
+    super.setMap(map);
     this.setValues();
   }
-};
-ol.ext.inherits(ol.control.SelectCheck, ol.control.SelectBase);
-/**
-* Set the map instance the control associated with.
-* @param {o.Map} map The map instance.
-*/
-ol.control.SelectCheck.prototype.setMap = function(map) {
-  ol.control.SelectBase.prototype.setMap.call(this, map);
-  this.setValues();
-};
-/** Select features by attributes
- */
-ol.control.SelectCheck.prototype.doSelect = function(options) {
-  console.log('select')
-  options = options || {};
-  var conditions = [];
-  this._checks.forEach(function(c) {
-    if (c.checked) {
-      if (c.value) {
-        conditions.push({
-          attr: this.get('property'),
-          op: '=',
-          val: c.value
-        });
-      }
-    }
-  }.bind(this));
-  if (!conditions.length) {
-    return ol.control.SelectBase.prototype.doSelect.call(this, { 
-      features: options.features, 
-      matchAll: this._selectAll 
-    });
-  } else {
-    return ol.control.SelectBase.prototype.doSelect.call(this, {
-      features: options.features, 
-      conditions: conditions
-    })
-  }
-};
-/** Set the popup values
- * @param {Object} options
- *  @param {Object} options.values a key/value list with key = property value, value = title shown in the popup, default search values in the sources
- *  @param {boolean} options.sort sort values
- */
-ol.control.SelectCheck.prototype.setValues = function(options) {
-  options = options || {};
-  var values, vals;
-  if (options.values) {
-    if (options.values instanceof Array) {
-      vals = {};
-      options.values.forEach(function(v) { vals[v] = v; });
-    } else {
-      vals = options.values;
-    }
-  } else {
-    vals = {};
-    var prop = this.get('property');
-    this.getSources().forEach(function(s){
-      var features = s.getFeatures();
-      var max = Math.min(features.length, this.get('max'))
-      for (var i=0; i<max; i++) {
-        var p = features[i].get(prop);
-        if (p) vals[p] = p;
+  /** Select features by attributes
+   */
+  doSelect(options) {
+    console.log('select');
+    options = options || {};
+    var conditions = [];
+    this._checks.forEach(function (c) {
+      if (c.checked) {
+        if (c.value) {
+          conditions.push({
+            attr: this.get('property'),
+            op: '=',
+            val: c.value
+          });
+        }
       }
     }.bind(this));
+    if (!conditions.length) {
+      return super.doSelect({
+        features: options.features,
+        matchAll: this._selectAll
+      });
+    } else {
+      return super.doSelect({
+        features: options.features,
+        conditions: conditions
+      });
+    }
   }
-  if (!Object.keys(vals).length) return;
-  if (options.sort) {
-    values = {};
-    Object.keys(vals).sort().forEach(function(key) {
-      values[key] = vals[key];
-    });
-  } else {
-    values = vals;
+  /** Set the popup values
+   * @param {Object} options
+   *  @param {Object} options.values a key/value list with key = property value, value = title shown in the popup, default search values in the sources
+   *  @param {boolean} options.sort sort values
+   */
+  setValues(options) {
+    options = options || {};
+    var values, vals;
+    if (options.values) {
+      if (options.values instanceof Array) {
+        vals = {};
+        options.values.forEach(function (v) { vals[v] = v; });
+      } else {
+        vals = options.values;
+      }
+    } else {
+      vals = {};
+      var prop = this.get('property');
+      this.getSources().forEach(function (s) {
+        var features = s.getFeatures();
+        var max = Math.min(features.length, this.get('max'));
+        for (var i = 0; i < max; i++) {
+          var p = features[i].get(prop);
+          if (p)
+            vals[p] = p;
+        }
+      }.bind(this));
+    }
+    if (!Object.keys(vals).length)
+      return;
+    if (options.sort) {
+      values = {};
+      Object.keys(vals).sort().forEach(function (key) {
+        values[key] = vals[key];
+      });
+    } else {
+      values = vals;
+    }
+    ol.ext.element.setHTML(this._input, '');
+    this._checks = [];
+    var id = 'radio_' + (new Date().getTime());
+    var addCheck = function (val, info) {
+      this._checks.push(ol.ext.element.createCheck({
+        after: info,
+        name: id,
+        val: val,
+        type: this.get('type'),
+        change: function () {
+          if (this._onchoice)
+            this._onchoice();
+          else
+            this.doSelect();
+        }.bind(this),
+        parent: this._input
+      }));
+    }.bind(this);
+    if (this.get('defaultLabel') && this.get('type') === 'radio') {
+      addCheck('', this.get('defaultLabel'));
+    }
+    for (var k in values)
+      addCheck(k, values[k]);
   }
-  ol.ext.element.setHTML(this._input, '');
-  this._checks = [];
-  var id = 'radio_'+(new Date().getTime());
-  var addCheck = function(val, info) {
-    this._checks.push( ol.ext.element.createCheck({
-      after: info,
-      name: id,
-      val: val,
-      type: this.get('type'),
-      change: function () { 
-        if (this._onchoice) this._onchoice()
-        else this.doSelect();
-      }.bind(this),
-      parent: this._input
-    }));
-  }.bind(this);
-  if (this.get('defaultLabel') && this.get('type')==='radio') {
-    addCheck('', this.get('defaultLabel'));
-  }
-  for (var k in values) addCheck(k, values[k]);
-};
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -15441,62 +15459,70 @@ ol.control.SelectCheck.prototype.setValues = function(options) {
  *  @param {condition|Array<condition>} options.condition conditions 
  *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
  */
-ol.control.SelectCondition = function(options) {
-  if (!options) options = {};
-  // Container
-  var div = options.content = ol.ext.element.create('DIV');
-  this._check = ol.ext.element.createSwitch({
-    after: options.label || 'condition',
-    change: function () { 
-      if (this._onchoice) this._onchoice()
-      else this.doSelect();
-    }.bind(this),
-    parent: div
-  })
-  // Input div
-  this._input = ol.ext.element.create('DIV', {
-    parent: div
-  });
-  options.className = options.className || 'ol-select-condition';
-  ol.control.SelectBase.call(this, options);
-  this.setCondition(options.condition);
-  this._selectAll = options.selectAll;
-  this._onchoice = options.onchoice;
-};
-ol.ext.inherits(ol.control.SelectCondition, ol.control.SelectBase);
-/** Set condition to select on
- * @param {condition | Array<condition>} condition
- *  @param {string} attr property to select on
- *  @param {string} op operator (=, !=, <; <=, >, >=, contain, !contain, regecp)
- *  @param {*} val value to select on
- */
-ol.control.SelectCondition.prototype.setCondition = function(condition) {
-  if (!condition) this._conditions = [];
-  else this._conditions = (condition instanceof Array ?  condition : [condition]);
-};
-/** Add a condition to select on
- * @param {condition} condition
- *  @param {string} attr property to select on
- *  @param {string} op operator (=, !=, <; <=, >, >=, contain, !contain, regecp)
- *  @param {*} val value to select on
- */
-ol.control.SelectCondition.prototype.addCondition = function(condition) {
-  this._conditions.push(condition);
-};
-/** Select features by condition
- */
-ol.control.SelectCondition.prototype.doSelect = function(options) {
-  options = options || {};
-  var conditions = this._conditions;
-  if (!this._check.checked) {
-    return ol.control.SelectBase.prototype.doSelect.call(this, { features: options.features, matchAll: this._selectAll });
-  } else {
-    return ol.control.SelectBase.prototype.doSelect.call(this, {
-      features: options.features,
-      conditions: conditions
-    })
+ol.control.SelectCondition = class olcontrolSelectCondition extends ol.control.SelectBase {
+  constructor(options) {
+    options = options || {};
+    // Container
+    var div = options.content = ol.ext.element.create('DIV');
+    options.className = options.className || 'ol-select-condition';
+    super(options);
+    var bt = div.querySelector('button');
+    this._check = ol.ext.element.createSwitch({
+      after: options.label || 'condition',
+      change: function () {
+        if (this._onchoice)
+          this._onchoice();
+        else
+          this.doSelect();
+      }.bind(this),
+      parent: div
+    });
+    // Input div
+    this._input = ol.ext.element.create('DIV', {
+      parent: div
+    });
+    // Add ok button at the end
+    div.appendChild(bt);
+    this.setCondition(options.condition);
+    this._selectAll = options.selectAll;
+    this._onchoice = options.onchoice;
   }
-};
+  /** Set condition to select on
+   * @param {condition | Array<condition>} condition
+   *  @param {string} attr property to select on
+   *  @param {string} op operator (=, !=, <; <=, >, >=, contain, !contain, regecp)
+   *  @param {*} val value to select on
+   */
+  setCondition(condition) {
+    if (!condition)
+      this._conditions = [];
+    else
+      this._conditions = (condition instanceof Array ? condition : [condition]);
+  }
+  /** Add a condition to select on
+   * @param {condition} condition
+   *  @param {string} attr property to select on
+   *  @param {string} op operator (=, !=, <; <=, >, >=, contain, !contain, regecp)
+   *  @param {*} val value to select on
+   */
+  addCondition(condition) {
+    this._conditions.push(condition);
+  }
+  /** Select features by condition
+   */
+  doSelect(options) {
+    options = options || {};
+    var conditions = this._conditions;
+    if (!this._check.checked) {
+      return super.doSelect({ features: options.features, matchAll: this._selectAll });
+    } else {
+      return super.doSelect({
+        features: options.features,
+        conditions: conditions
+      });
+    }
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -15515,41 +15541,46 @@ ol.control.SelectCondition.prototype.doSelect = function(options) {
  *  @param {string} options.property property to select on
  *  @param {function|undefined} options.onchoice function triggered the text change, default nothing
  */
-ol.control.SelectFulltext = function(options) {
-  if (!options) options = {};
-  // Container
-  var div = options.content =ol.ext.element.create('DIV');
-  if (options.label) {
-    ol.ext.element.create('LABEL', {
-      html: options.label,
+ol.control.SelectFulltext = class olcontrolSelectFulltext extends ol.control.SelectBase {
+  constructor(options) {
+    options = options || {};
+    // Container
+    var div = options.content = ol.ext.element.create('DIV');
+    if (options.label) {
+      ol.ext.element.create('LABEL', {
+        html: options.label,
+        parent: div
+      });
+    }
+    super(options);
+    var bt = div.querySelector('button');
+    this._input = ol.ext.element.create('INPUT', {
+      placeHolder: options.placeHolder || 'search...',
+      change: function () {
+        if (this._onchoice)
+          this._onchoice();
+      }.bind(this),
       parent: div
     });
+    // Add ok button at the end
+    div.appendChild(bt);
+    this._onchoice = options.onchoice;
+    this.set('property', options.property || 'name');
   }
-  this._input = ol.ext.element.create('INPUT', {
-    placeHolder: options.placeHolder || 'search...',
-    change: function() {
-      if (this._onchoice) this._onchoice();
-    }.bind(this),
-    parent: div
-  });
-  ol.control.SelectBase.call(this, options);
-  this._onchoice = options.onchoice;
-  this.set('property', options.property || 'name');
-};
-ol.ext.inherits(ol.control.SelectFulltext, ol.control.SelectBase);
-/** Select features by condition
- */
-ol.control.SelectFulltext.prototype.doSelect= function(options) {
-  options = options || {};
-  return ol.control.SelectBase.prototype.doSelect.call(this, {
-    features: options.features,
-    useCase: false,
-    conditions: [{
-      attr: this.get('property'),
-      op: 'contain',
-      val: this._input.value
-    }]
-  });
+  /** Select features by condition
+   */
+  doSelect(options) {
+    options = options || {};
+    return super.doSelect({
+      features: options.features,
+      useCase: false,
+      conditions: [{
+        attr: this.get('property'),
+        op: 'contain',
+        val: this._input.value
+      }]
+    });
+  }
 }
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
@@ -15569,71 +15600,73 @@ ol.control.SelectFulltext.prototype.doSelect= function(options) {
  *  @param {ol/source/Vector | Array<ol/source/Vector>} options.source the source to search in
  *  @param {Array<ol.control.SelectBase>} options.controls an array of controls
  */
-ol.control.SelectMulti = function(options) {
-  if (!options) options = {};
-  // Container
-  options.content = ol.ext.element.create('DIV');
-  this._container = ol.ext.element.create('UL', {
-    parent: options.content
-  });
-  options.className = options.className || 'ol-select-multi';
-  ol.control.SelectBase.call(this, options);
-  this._controls = [];
-  options.controls.forEach(this.addControl.bind(this));
-};
-ol.ext.inherits(ol.control.SelectMulti, ol.control.SelectBase);
-/**
-* Set the map instance the control associated with.
-* @param {o.Map} map The map instance.
-*/
-ol.control.SelectMulti.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    this._controls.forEach(function(c) {
-      this.getMap().remveControl(c);
-    }.bind(this));
+ol.control.SelectMulti = class olcontrolSelectMulti extends ol.control.SelectBase {
+  constructor(options) {
+    options = options || {};
+    // Container
+    options.content = ol.ext.element.create('DIV');
+    var container = ol.ext.element.create('UL', {
+      parent: options.content
+    });
+    options.className = options.className || 'ol-select-multi';
+    super(options);
+    this._container = container;
+    this._controls = [];
+    options.controls.forEach(this.addControl.bind(this));
   }
-  ol.control.SelectBase.prototype.setMap.call(this, map);
-  if (this.getMap()) {
-    this._controls.forEach(function(c) {
-      this.getMap().addControl(c);
-    }.bind(this));
-  }
-};
-/** Add a new control
- * @param {ol.control.SelectBase} c
- */
-ol.control.SelectMulti.prototype.addControl = function(c) {
-  if (c instanceof ol.control.SelectBase) {
-    this._controls.push(c);
-    c.setTarget(ol.ext.element.create('LI', {
-      parent: this._container
-    }));
-    c._selectAll = true;
-    c._onchoice = this.doSelect.bind(this);
+  /**
+  * Set the map instance the control associated with.
+  * @param {o.Map} map The map instance.
+  */
+  setMap(map) {
     if (this.getMap()) {
-      this.getMap().addControl(c);
+      this._controls.forEach(function (c) {
+        this.getMap().remveControl(c);
+      }.bind(this));
+    }
+    super.setMap(map);
+    if (this.getMap()) {
+      this._controls.forEach(function (c) {
+        this.getMap().addControl(c);
+      }.bind(this));
     }
   }
-};
-/** Get select controls
- * @return {Aray<ol.control.SelectBase>}
- */
-ol.control.SelectMulti.prototype.getControls = function() {
-  return this._controls;
-};
-/** Select features by condition
- */
-ol.control.SelectMulti.prototype.doSelect = function() {
-  var features = [];
-  this.getSources().forEach(function(s) {
-    features = features.concat(s.getFeatures());
-  });
-  this._controls.forEach(function(c) {
-    features = c.doSelect({ features: features });
-  });
-  this.dispatchEvent({ type:"select", features: features });
-  return features;
-};
+  /** Add a new control
+   * @param {ol.control.SelectBase} c
+   */
+  addControl(c) {
+    if (c instanceof ol.control.SelectBase) {
+      this._controls.push(c);
+      c.setTarget(ol.ext.element.create('LI', {
+        parent: this._container
+      }));
+      c._selectAll = true;
+      c._onchoice = this.doSelect.bind(this);
+      if (this.getMap()) {
+        this.getMap().addControl(c);
+      }
+    }
+  }
+  /** Get select controls
+   * @return {Aray<ol.control.SelectBase>}
+   */
+  getControls() {
+    return this._controls;
+  }
+  /** Select features by condition
+   */
+  doSelect() {
+    var features = [];
+    this.getSources().forEach(function (s) {
+      features = features.concat(s.getFeatures());
+    });
+    this._controls.forEach(function (c) {
+      features = c.doSelect({ features: features });
+    });
+    this.dispatchEvent({ type: "select", features: features });
+    return features;
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -15655,107 +15688,116 @@ ol.control.SelectMulti.prototype.doSelect = function() {
  *  @param {string} options.defaultLabel label for the default selection
  *  @param {function|undefined} options.onchoice function triggered when an option is clicked, default doSelect
  */
-ol.control.SelectPopup = function(options) {
-  if (!options) options = {};
-  // Container
-  var div = options.content = ol.ext.element.create('DIV');
-  if (options.label) {
-    ol.ext.element.create('LABEL', {
-      html: options.label,
+ol.control.SelectPopup = class olcontrolSelectPopup extends ol.control.SelectBase {
+  constructor(options) {
+    options = options || {};
+    options.className = options.className || 'ol-select-popup';
+    // Container
+    var div = options.content = ol.ext.element.create('DIV');
+    super(options);
+    var bt = div.querySelector('button');
+    if (options.label) {
+      ol.ext.element.create('LABEL', {
+        html: options.label,
+        parent: div
+      });
+    }
+    this._input = ol.ext.element.create('SELECT', {
+      on: {
+        change: function () {
+          if (this._onchoice)
+            this._onchoice();
+          else
+            this.doSelect();
+        }.bind(this)
+      },
       parent: div
     });
+    // Add ok button at the end
+    div.appendChild(bt);
+    this.set('property', options.property || 'name');
+    this.set('max', options.max || 10000);
+    this.set('defaultLabel', options.defaultLabel);
+    this._selectAll = options.selectAll;
+    this._onchoice = options.onchoice;
+    // Set select options
+    this.setValues();
   }
-  this._input = ol.ext.element.create('SELECT', {
-    on: { change: function () { 
-      if (this._onchoice) this._onchoice();
-      else this.doSelect();
-    }.bind(this) },
-    parent: div
-  });
-  options.className = options.className || 'ol-select-popup';
-  ol.control.SelectBase.call(this, options);
-  this.set('property', options.property || 'name');
-  this.set('max', options.max || 10000);
-  this.set('defaultLabel', options.defaultLabel);
-  this._selectAll = options.selectAll;
-  this._onchoice = options.onchoice;
-  // Set select options
-  this.setValues();
-};
-ol.ext.inherits(ol.control.SelectPopup, ol.control.SelectBase);
-/**
-* Set the map instance the control associated with.
-* @param {o.Map} map The map instance.
-*/
-ol.control.SelectPopup.prototype.setMap = function(map) {
-  ol.control.SelectBase.prototype.setMap.call(this, map);
-  this.setValues();
-};
-/** Select features by attributes
- */
-ol.control.SelectPopup.prototype.doSelect = function(options) {
-  options = options || {};
-  if (!this._input.value) {
-    return ol.control.SelectBase.prototype.doSelect.call(this, { features: options.features, matchAll: this._selectAll });
-  } else {
-    return ol.control.SelectBase.prototype.doSelect.call(this, {
-      features: options.features, 
-      conditions: [{
-        attr: this.get('property'),
-        op: '=',
-        val: this._input.value
-      }]
-    })
+  /**
+  * Set the map instance the control associated with.
+  * @param {o.Map} map The map instance.
+  */
+  setMap(map) {
+    super.setMap(map);
+    this.setValues();
   }
-};
-/** Set the popup values
- * @param {Object} values a key/value list with key = property value, value = title shown in the popup, default search values in the sources
- */
-ol.control.SelectPopup.prototype.setValues = function(options) {
-  options = options || {};
-  var values, vals;
-  if (options.values) {
-    if (options.values instanceof Array) {
-      vals = {};
-      options.values.forEach(function(v) { vals[v] = v; });
+  /** Select features by attributes
+   */
+  doSelect(options) {
+    options = options || {};
+    if (!this._input.value) {
+      return super.doSelect({ features: options.features, matchAll: this._selectAll });
     } else {
-      vals = options.values;
+      return super.doSelect({
+        features: options.features,
+        conditions: [{
+          attr: this.get('property'),
+          op: '=',
+          val: this._input.value
+        }]
+      });
     }
-  } else {
-    vals = {};
-    var prop = this.get('property');
-    this.getSources().forEach(function(s){
-      var features = s.getFeatures();
-      var max = Math.min(features.length, this.get('max'))
-      for (var i=0; i<max; i++) {
-        var p = features[i].get(prop);
-        if (p) vals[p] = p;
+  }
+  /** Set the popup values
+   * @param {Object} values a key/value list with key = property value, value = title shown in the popup, default search values in the sources
+   */
+  setValues(options) {
+    options = options || {};
+    var values, vals;
+    if (options.values) {
+      if (options.values instanceof Array) {
+        vals = {};
+        options.values.forEach(function (v) { vals[v] = v; });
+      } else {
+        vals = options.values;
       }
-    }.bind(this));
-  }
-  if (options.sort) {
-    values = {};
-    Object.keys(vals).sort().forEach(function(key) {
-      values[key] = vals[key];
-    });
-  } else {
-    values = vals;
-  }
-  ol.ext.element.setHTML(this._input, '');
-  ol.ext.element.create('OPTION', {
-    className: 'ol-default',
-    html: this.get('defaultLabel') || '',
-    value: '',
-    parent: this._input
-  });
-  for (var k in values) {
+    } else {
+      vals = {};
+      var prop = this.get('property');
+      this.getSources().forEach(function (s) {
+        var features = s.getFeatures();
+        var max = Math.min(features.length, this.get('max'));
+        for (var i = 0; i < max; i++) {
+          var p = features[i].get(prop);
+          if (p)
+            vals[p] = p;
+        }
+      }.bind(this));
+    }
+    if (options.sort) {
+      values = {};
+      Object.keys(vals).sort().forEach(function (key) {
+        values[key] = vals[key];
+      });
+    } else {
+      values = vals;
+    }
+    ol.ext.element.setHTML(this._input, '');
     ol.ext.element.create('OPTION', {
-      html: values[k],
-      value: k,
+      className: 'ol-default',
+      html: this.get('defaultLabel') || '',
+      value: '',
       parent: this._input
     });
+    for (var k in values) {
+      ol.ext.element.create('OPTION', {
+        html: values[k],
+        value: k,
+        parent: this._input
+      });
+    }
   }
-};
+}
 
 /** A control to display status information on top of the map
  * @constructor
@@ -20995,34 +21037,379 @@ ol.filter.Texture = class olfilterTexture extends ol.filter.Base {
  *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
  *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
  */
-ol.format.GeoJSONX = function(options) {
-  options = options || {};
-  ol.format.GeoJSON.call (this, options);
-  this._hash = {};
-  this._count = 0;
-  this._extended = options.extended;
-  if (typeof(options.whiteList)==='function') {
-    this._whiteList = options.whiteList;
-  } else if (options.whiteList && options.whiteList.indexOf) {
-    this._whiteList = function (k) { return options.whiteList.indexOf(k) > -1 };
-  } else {
-    this._whiteList = function() { return true };
-  } 
-  if (typeof(options.blackList)==='function') {
-    this._blackList = options.blackList;
-  } else if (options.blackList && options.blackList.indexOf) {
-    this._blackList = function (k) { return options.blackList.indexOf(k) > -1 };
-  } else {
-    this._blackList = function() { return false };
-  } 
-  this._deleteNull = options.deleteNullProperties===false ? false : [null,undefined,""];
-  var decimals = 2;
-  if (!options.dataProjection || options.dataProjection === 'EPSG:4326') decimals = 7;
-  if (!isNaN(parseInt(options.decimals))) decimals = parseInt(options.decimals);
-  this._decimals = decimals;
-  this.setLayout(options.layout || 'XY');
-};
-ol.ext.inherits(ol.format.GeoJSONX, ol.format.GeoJSON);
+ol.format.GeoJSONX = class olformatGeoJSONX extends ol.format.GeoJSON {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this._hash = {};
+    this._count = 0;
+    this._extended = options.extended;
+    if (typeof (options.whiteList) === 'function') {
+      this._whiteList = options.whiteList;
+    } else if (options.whiteList && options.whiteList.indexOf) {
+      this._whiteList = function (k) { return options.whiteList.indexOf(k) > -1; };
+    } else {
+      this._whiteList = function () { return true; };
+    }
+    if (typeof (options.blackList) === 'function') {
+      this._blackList = options.blackList;
+    } else if (options.blackList && options.blackList.indexOf) {
+      this._blackList = function (k) { return options.blackList.indexOf(k) > -1; };
+    } else {
+      this._blackList = function () { return false; };
+    }
+    this._deleteNull = options.deleteNullProperties === false ? false : [null, undefined, ""];
+    var decimals = 2;
+    if (!options.dataProjection || options.dataProjection === 'EPSG:4326')
+      decimals = 7;
+    if (!isNaN(parseInt(options.decimals)))
+      decimals = parseInt(options.decimals);
+    this._decimals = decimals;
+    this.setLayout(options.layout || 'XY');
+  }
+  /** Set geometry layout
+   * @param {string} layout the geometry layout (XY or XYZ or XYZM)
+   */
+  setLayout(layout) {
+    switch (layout) {
+      case 'XYZ':
+      case 'XYZM': {
+        this._layout = layout;
+        break;
+      }
+      default: {
+        this._layout = 'XY';
+        break;
+      }
+    }
+  }
+  /** Get geometry layout
+   * @return {string} layout
+   */
+  getLayout() {
+    return this._layout;
+  }
+  /** Encode a number
+   * @param {number} number Number to encode
+   * @param {number} decimals Number of decimals
+   * @param {string}
+   */
+  encodeNumber(number, decimals) {
+    if (isNaN(Number(number)) || number === null || !isFinite(number)) {
+      number = 0;
+    }
+    if (!decimals && decimals !== 0)
+      decimals = this._decimals;
+    // Round number
+    number = Math.round(number * Math.pow(10, decimals));
+    // Zigzag encoding (get positive number)
+    if (number < 0)
+      number = -2 * number - 1;
+    else
+      number = 2 * number;
+    // Encode
+    var result = '';
+    var modulo, residual = number;
+    while (true) {
+      modulo = residual % this._size;
+      result = this._radix.charAt(modulo) + result;
+      residual = Math.floor(residual / this._size);
+      if (residual == 0)
+        break;
+    }
+    return result;
+  }
+  /** Decode a number
+   * @param {string} s
+   * @param {number} decimals Number of decimals
+   * @return {number}
+   */
+  decodeNumber(s, decimals) {
+    if (!decimals && decimals !== 0)
+      decimals = this._decimals;
+    var decode = 0;
+    s.split('').forEach(function (c) {
+      decode = (decode * this._size) + this._radix.indexOf(c);
+    }.bind(this));
+    // Zigzag encoding
+    var result = Math.floor(decode / 2);
+    if (result !== decode / 2)
+      result = -1 - result;
+    return result / Math.pow(10, decimals);
+  }
+  /** Encode coordinates
+   * @param {ol.coordinate|Array<ol.coordinate>} v
+   * @param {number} decimal
+   * @return {string|Array<string>}
+   * @api
+   */
+  encodeCoordinates(v, decimal) {
+    var i, p, tp;
+    if (typeof (v[0]) === 'number') {
+      p = this.encodeNumber(v[0], decimal) + ',' + this.encodeNumber(v[1], decimal);
+      if (this._layout[2] == 'Z' && v.length > 2)
+        p += ',' + this.encodeNumber(v[i][2], 2);
+      if (this._layout[3] == 'M' && v.length > 3)
+        p += ',' + this.encodeNumber(v[i][3], 0);
+      return p;
+    } else if (v.length && v[0]) {
+      if (typeof (v[0][0]) === 'number') {
+        var dxy = [0, 0, 0, 0];
+        var xy = [];
+        var hasZ = (this._layout[2] == 'Z' && v[0].length > 2);
+        var hasM = (this._layout[3] == 'M' && v[0].length > 3);
+        for (i = 0; i < v.length; i++) {
+          tp = [
+            Math.round(v[i][0] * Math.pow(10, decimal)),
+            Math.round(v[i][1] * Math.pow(10, decimal))
+          ];
+          if (hasZ)
+            tp[2] = v[i][2];
+          if (hasM)
+            tp[3] = v[i][3];
+          v[i] = tp;
+          var dx = v[i][0] - dxy[0];
+          var dy = v[i][1] - dxy[1];
+          if (i == 0 || (dx !== 0 || dy !== 0)) {
+            p = this.encodeNumber(dx, 0) + ','
+              + this.encodeNumber(dy, 0)
+              + (hasZ ? ',' + this.encodeNumber(v[i][2] - dxy[2], 2) : '')
+              + (hasM ? ',' + this.encodeNumber(v[i][3] - dxy[3], 0) : '');
+            xy.push(p);
+            dxy = v[i];
+          }
+        }
+        // Almost 2 points...
+        // if (xy.length<2) xy.push('A,A');
+        return xy.join(';');
+      } else {
+        for (i = 0; i < v.length; i++) {
+          v[i] = this.encodeCoordinates(v[i], decimal);
+        }
+        return v;
+      }
+    } else {
+      return this.encodeCoordinates([0, 0], decimal);
+    }
+  }
+  /** Decode coordinates
+   * @param {string|Array<string>}
+   * @param {number} decimal Number of decimals
+   * @return {ol.coordinate|Array<ol.coordinate>} v
+   * @api
+   */
+  decodeCoordinates(v, decimals) {
+    var i, p;
+    if (typeof (v) === 'string') {
+      v = v.split(';');
+      if (v.length > 1) {
+        var pow = Math.pow(10, decimals);
+        var dxy = [0, 0, 0, 0];
+        v.forEach(function (vi, i) {
+          v[i] = vi.split(',');
+          v[i][0] = Math.round((this.decodeNumber(v[i][0], decimals) + dxy[0]) * pow) / pow;
+          v[i][1] = Math.round((this.decodeNumber(v[i][1], decimals) + dxy[1]) * pow) / pow;
+          if (v[i].length > 2)
+            v[i][2] = Math.round((this.decodeNumber(v[i][2], 2) + dxy[2]) * pow) / pow;
+          if (v[i].length > 3)
+            v[i][3] = Math.round((this.decodeNumber(v[i][3], 0) + dxy[3]) * pow) / pow;
+          dxy = v[i];
+        }.bind(this));
+        return v;
+      } else {
+        v = v[0].split(',');
+        p = [this.decodeNumber(v[0], decimals), this.decodeNumber(v[1], decimals)];
+        if (v.length > 2)
+          p[2] = this.decodeNumber(v[2], 2);
+        if (v.length > 3)
+          p[3] = this.decodeNumber(v[3], 0);
+        return p;
+      }
+    } else if (v.length) {
+      var r = [];
+      for (i = 0; i < v.length; i++) {
+        r[i] = this.decodeCoordinates(v[i], decimals);
+      }
+      return r;
+    } else {
+      return [0, 0];
+    }
+  }
+  /** Encode an array of features as a GeoJSONX object.
+   * @param {Array<ol.Feature>} features Features.
+   * @param {*} options Write options.
+   * @return {*} GeoJSONX Object.
+   * @override
+   * @api
+   */
+  writeFeaturesObject(features, options) {
+    options = options || {};
+    this._count = 0;
+    this._hash = {};
+    var geojson = ol.format.GeoJSON.prototype.writeFeaturesObject.call(this, features, options);
+    geojson.decimals = this._decimals;
+    geojson.hashProperties = [];
+    Object.keys(this._hash).forEach(function (k) {
+      geojson.hashProperties.push(k);
+    }.bind(this));
+    this._count = 0;
+    this._hash = {};
+    // Push features at the end of the object
+    var temp = geojson.features;
+    delete geojson.features;
+    geojson.features = temp;
+    return geojson;
+  }
+  /** Encode a set of features as a GeoJSONX object.
+   * @param {ol.Feature} feature Feature
+   * @param {*} options Write options.
+   * @return {*} GeoJSONX Object.
+   * @override
+   * @api
+   */
+  writeFeatureObject(source, options) {
+    var f0 = ol.format.GeoJSON.prototype.writeFeatureObject.call(this, source, options);
+    // Only features supported yet
+    if (f0.type !== 'Feature')
+      throw 'GeoJSONX doesn\'t support ' + f0.type + '.';
+    var f = [];
+    // Encode geometry
+    if (f0.geometry.type === 'Point') {
+      f.push(this.encodeCoordinates(f0.geometry.coordinates, this._decimals));
+    } else if (f0.geometry.type === 'MultiPoint') {
+      var pts = [];
+      f0.geometry.coordinates.forEach(function (p) {
+        pts.push(this.encodeCoordinates(p, this._decimals));
+      }.bind(this));
+      f.push([
+        this._type[f0.geometry.type],
+        pts.join(';')
+      ]);
+    } else {
+      if (!this._type[f0.geometry.type]) {
+        throw 'GeoJSONX doesn\'t support ' + f0.geometry.type + '.';
+      }
+      f.push([
+        this._type[f0.geometry.type],
+        this.encodeCoordinates(f0.geometry.coordinates, this._decimals)
+      ]);
+    }
+    // Encode properties
+    var k;
+    var prop = [];
+    for (k in f0.properties) {
+      if (!this._whiteList(k) || this._blackList(k))
+        continue;
+      if (!this._hash.hasOwnProperty(k)) {
+        this._hash[k] = this._count;
+        this._count++;
+      }
+      if (!this._deleteNull || this._deleteNull.indexOf(f0.properties[k]) < 0) {
+        prop.push(this._hash[k], f0.properties[k]);
+      }
+    }
+    // Create prop table
+    if (prop.length || this._extended) {
+      f.push(prop);
+    }
+    // Other properties (id, title, bbox, centerline...
+    if (this._extended) {
+      var found = false;
+      prop = {};
+      for (k in f0) {
+        if (!/^type$|^geometry$|^properties$/.test(k)) {
+          prop[k] = f0[k];
+          found = true;
+        }
+      }
+      if (found)
+        f.push(prop);
+    }
+    return f;
+  }
+  /** Encode a geometry as a GeoJSONX object.
+   * @param {ol.geom.Geometry} geometry Geometry.
+   * @param {*} options Write options.
+   * @return {*} Object.
+   * @override
+   * @api
+   */
+  writeGeometryObject(source, options) {
+    var g = ol.format.GeoJSON.prototype.writeGeometryObject.call(this, source, options);
+    // Encode geometry
+    if (g.type === 'Point') {
+      return this.encodeCoordinates(g.coordinates, this._decimals);
+    } else {
+      return [
+        this._type[g.type],
+        this.encodeCoordinates(g.coordinates, this._decimals)
+      ];
+    }
+  }
+  /** Decode a GeoJSONX object.
+   * @param {*} object GeoJSONX
+   * @param {*} options Read options.
+   * @return {Array<ol.Feature>}
+   * @override
+   * @api
+   */
+  readFeaturesFromObject(object, options) {
+    this._hashProperties = object.hashProperties || [];
+    options = options || {};
+    options.decimals = parseInt(object.decimals);
+    if (!options.decimals && options.decimals !== 0)
+      throw 'Bad file format...';
+    var features = ol.format.GeoJSON.prototype.readFeaturesFromObject.call(this, object, options);
+    return features;
+  }
+  /** Decode GeoJSONX Feature object.
+   * @param {*} object GeoJSONX
+   * @param {*} options Read options.
+   * @return {ol.Feature}
+   */
+  readFeatureFromObject(f0, options) {
+    var f = {
+      type: 'Feature'
+    };
+    if (typeof (f0[0]) === 'string') {
+      f.geometry = {
+        type: 'Point',
+        coordinates: this.decodeCoordinates(f0[0], typeof (options.decimals) === 'number' ? options.decimals : this.decimals)
+      };
+    } else {
+      f.geometry = {
+        type: this._toType[f0[0][0]]
+      };
+      if (f.geometry.type === 'MultiPoint') {
+        var g = f.geometry.coordinates = [];
+        var coords = f0[0][1].split(';');
+        coords.forEach(function (c) {
+          c = c.split(',');
+          g.push([this.decodeNumber(c[0], options.decimals), this.decodeNumber(c[1], options.decimals)]);
+        }.bind(this));
+      } else {
+        f.geometry.coordinates = this.decodeCoordinates(f0[0][1], typeof (options.decimals) === 'number' ? options.decimals : this.decimals);
+      }
+    }
+    if (this._hashProperties && f0[1]) {
+      f.properties = {};
+      var t = f0[1];
+      for (var i = 0; i < t.length; i += 2) {
+        f.properties[this._hashProperties[t[i]]] = t[i + 1];
+      }
+    } else {
+      f.properties = f0[1];
+    }
+    // Extended properties
+    if (f0[2]) {
+      for (var k in f0[2]) {
+        f[k] = f0[2][k];
+      }
+    }
+    var feature = ol.format.GeoJSON.prototype.readFeatureFromObject.call(this, f, options);
+    return feature;
+  }
+}
 /** Radix */
 ol.format.GeoJSONX.prototype._radix = 
 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ !#$%&\'()*-.:<=>?@[]^_`{|}~';
@@ -21047,330 +21434,6 @@ ol.format.GeoJSONX.prototype._toType = [
   "MultiLineString",
   "MultiPolygon"
 ];
-/** Set geometry layout
- * @param {string} layout the geometry layout (XY or XYZ or XYZM)
- */
-ol.format.GeoJSONX.prototype.setLayout = function(layout) {
-  switch(layout) {
-    case 'XYZ': 
-    case 'XYZM': {
-      this._layout = layout;
-      break;
-    }
-    default:  {
-      this._layout = 'XY';
-      break;
-    }
-  }
-};
-/** Get geometry layout
- * @return {string} layout 
- */
-ol.format.GeoJSONX.prototype.getLayout = function() {
-  return this._layout;
-};
-/** Encode a number
- * @param {number} number Number to encode
- * @param {number} decimals Number of decimals
- * @param {string}
- */
-ol.format.GeoJSONX.prototype.encodeNumber = function(number, decimals) {
-  if (isNaN(Number(number)) || number === null || !isFinite(number)) {
-    number = 0;
-  }
-  if (!decimals && decimals!==0) decimals = this._decimals;
-  // Round number
-  number = Math.round(number * Math.pow(10, decimals));
-  // Zigzag encoding (get positive number)
-  if (number<0) number = -2*number - 1;
-  else number = 2*number;
-  // Encode
-  var result = '';
-  var modulo, residual = number;
-  while (true) {
-    modulo = residual % this._size
-    result = this._radix.charAt(modulo) + result;
-    residual = Math.floor(residual / this._size);
-    if (residual == 0) break;
-  }
-  return result;
-};
-/** Decode a number
- * @param {string} s 
- * @param {number} decimals Number of decimals
- * @return {number}
- */
-ol.format.GeoJSONX.prototype.decodeNumber = function(s, decimals) {
-  if (!decimals && decimals!==0) decimals = this._decimals;
-  var decode = 0;
-  s.split('').forEach(function (c) {
-    decode = (decode * this._size) + this._radix.indexOf(c);
-  }.bind(this));
-  // Zigzag encoding
-  var result = Math.floor(decode/2)
-  if (result !== decode/2) result = -1-result;
-  return result / Math.pow(10, decimals);
-};
-/** Encode coordinates
- * @param {ol.coordinate|Array<ol.coordinate>} v
- * @param {number} decimal
- * @return {string|Array<string>}
- * @api
- */
-ol.format.GeoJSONX.prototype.encodeCoordinates = function(v, decimal) {
-  var i, p, tp;
-  if (typeof(v[0]) === 'number') {
-    p = this.encodeNumber(v[0], decimal) +','+ this.encodeNumber(v[1], decimal);
-    if (this._layout[2]=='Z' && v.length > 2) p += ',' + this.encodeNumber(v[i][2], 2);
-    if (this._layout[3]=='M' && v.length > 3) p += ',' + this.encodeNumber(v[i][3], 0);
-    return p;
-  } else if (v.length && v[0]) {
-    if (typeof(v[0][0]) === 'number') {
-      var dxy = [0,0,0,0];
-      var xy = [];
-      var hasZ = (this._layout[2]=='Z' && v[0].length > 2);
-      var hasM = (this._layout[3]=='M' && v[0].length > 3);
-      for (i=0; i<v.length; i++) {
-        tp = [
-          Math.round( v[i][0] * Math.pow(10, decimal)),
-          Math.round( v[i][1] * Math.pow(10, decimal))
-        ];
-        if (hasZ) tp[2] = v[i][2];
-        if (hasM) tp[3] = v[i][3];
-        v[i] = tp;
-        var dx = v[i][0] - dxy[0];
-        var dy = v[i][1] - dxy[1];
-        if (i==0 || (dx!==0 || dy!==0)) {
-          p = this.encodeNumber(dx, 0) +','
-            + this.encodeNumber(dy, 0)
-            + (hasZ ? ',' + this.encodeNumber(v[i][2] - dxy[2], 2) : '')
-            + (hasM ? ',' + this.encodeNumber(v[i][3] - dxy[3], 0) : '');
-          xy.push(p);
-          dxy = v[i];
-        }
-      }
-      // Almost 2 points...
-      // if (xy.length<2) xy.push('A,A');
-      return xy.join(';');
-    } else {
-      for (i=0; i<v.length; i++) {
-        v[i] = this.encodeCoordinates(v[i], decimal);
-      }
-      return v;
-    }
-  } else {
-    return this.encodeCoordinates([0,0], decimal);
-  }
-};
-/** Decode coordinates
- * @param {string|Array<string>}
- * @param {number} decimal Number of decimals
- * @return {ol.coordinate|Array<ol.coordinate>} v
- * @api
- */
-ol.format.GeoJSONX.prototype.decodeCoordinates = function(v, decimals) {
-  var i, p;
-  if (typeof(v) === 'string') {
-    v = v.split(';');
-    if (v.length>1) {
-      var pow = Math.pow(10,decimals);
-      var dxy = [0,0,0,0];
-      v.forEach(function(vi, i) {
-        v[i] = vi.split(',');
-        v[i][0] = Math.round((this.decodeNumber(v[i][0], decimals) + dxy[0]) * pow) / pow;
-        v[i][1] = Math.round((this.decodeNumber(v[i][1], decimals) + dxy[1]) * pow) / pow;
-        if (v[i].length > 2) v[i][2] = Math.round((this.decodeNumber(v[i][2], 2) + dxy[2]) * pow) / pow;
-        if (v[i].length > 3) v[i][3] = Math.round((this.decodeNumber(v[i][3], 0) + dxy[3]) * pow) / pow;
-        dxy = v[i];
-      }.bind(this));
-      return v;
-    } else {
-      v = v[0].split(',');
-      p = [ this.decodeNumber(v[0], decimals), this.decodeNumber(v[1], decimals) ];
-      if (v.length > 2) p[2] = this.decodeNumber(v[2], 2);
-      if (v.length > 3) p[3] = this.decodeNumber(v[3], 0);
-      return p;
-    }
-  } else if (v.length) {
-    var r = [];
-    for (i=0; i<v.length; i++) {
-      r[i] = this.decodeCoordinates(v[i], decimals);
-    }
-    return r;
-  } else {
-    return [0,0];
-  }
-};
-/** Encode an array of features as a GeoJSONX object.
- * @param {Array<ol.Feature>} features Features.
- * @param {*} options Write options.
- * @return {*} GeoJSONX Object.
- * @override
- * @api
- */
-ol.format.GeoJSONX.prototype.writeFeaturesObject = function (features, options) {
-  options = options || {};
-  this._count = 0;
-  this._hash = {};
-  var geojson = ol.format.GeoJSON.prototype.writeFeaturesObject.call(this, features, options);
-  geojson.decimals = this._decimals;
-  geojson.hashProperties = [];
-  Object.keys(this._hash).forEach(function(k) {
-    geojson.hashProperties.push(k);
-  }.bind(this));
-  this._count = 0;
-  this._hash = {};
-  // Push features at the end of the object
-  var temp = geojson.features;
-  delete geojson.features;
-  geojson.features = temp;
-  return geojson;
-};
-/** Encode a set of features as a GeoJSONX object.
- * @param {ol.Feature} feature Feature
- * @param {*} options Write options.
- * @return {*} GeoJSONX Object.
- * @override
- * @api
- */
-ol.format.GeoJSONX.prototype.writeFeatureObject = function(source, options) {
-  var f0 = ol.format.GeoJSON.prototype.writeFeatureObject.call(this, source, options);
-  // Only features supported yet
-  if (f0.type !== 'Feature') throw 'GeoJSONX doesn\'t support '+f0.type+'.';
-  var f = [];
-  // Encode geometry
-  if (f0.geometry.type==='Point') {
-    f.push(this.encodeCoordinates(f0.geometry.coordinates, this._decimals));
-  } else if (f0.geometry.type==='MultiPoint') {
-    var pts = [];
-    f0.geometry.coordinates.forEach(function(p) {
-      pts.push(this.encodeCoordinates(p, this._decimals));
-    }.bind(this));
-    f.push ([
-      this._type[f0.geometry.type],
-      pts.join(';')
-    ]);
-  } else {
-    if (!this._type[f0.geometry.type]) {
-      throw 'GeoJSONX doesn\'t support '+f0.geometry.type+'.';
-    }
-    f.push ([
-      this._type[f0.geometry.type],
-      this.encodeCoordinates(f0.geometry.coordinates, this._decimals)
-    ]);
-  }
-  // Encode properties
-  var k;
-  var prop = [];
-  for (k in f0.properties) {
-    if (!this._whiteList(k) || this._blackList(k)) continue;
-    if (!this._hash.hasOwnProperty(k)) {
-      this._hash[k] = this._count;
-      this._count++;
-    }
-    if (!this._deleteNull || this._deleteNull.indexOf(f0.properties[k])<0) {
-      prop.push (this._hash[k], f0.properties[k]);
-    }
-  }
-  // Create prop table
-  if (prop.length || this._extended) {
-    f.push(prop);
-  }
-  // Other properties (id, title, bbox, centerline...
-  if (this._extended) {
-    var found = false;
-    prop = {};
-    for (k in f0) {
-      if (!/^type$|^geometry$|^properties$/.test(k)) {
-        prop[k] = f0[k];
-        found = true;
-      }
-    }
-    if (found) f.push(prop);
-  }
-  return f;
-};
-/** Encode a geometry as a GeoJSONX object.
- * @param {ol.geom.Geometry} geometry Geometry.
- * @param {*} options Write options.
- * @return {*} Object.
- * @override
- * @api
- */
-ol.format.GeoJSONX.prototype.writeGeometryObject = function(source, options) {
-  var g = ol.format.GeoJSON.prototype.writeGeometryObject.call(this, source, options);
-  // Encode geometry
-  if (g.type==='Point') {
-    return this.encodeCoordinates(g.coordinates, this._decimals)
-  } else {
-    return [
-      this._type[g.type],
-      this.encodeCoordinates(g.coordinates, this._decimals)
-    ];
-  }
-};
-/** Decode a GeoJSONX object.
- * @param {*} object GeoJSONX
- * @param {*} options Read options.
- * @return {Array<ol.Feature>}
- * @override
- * @api
- */
-ol.format.GeoJSONX.prototype.readFeaturesFromObject = function (object, options) {
-  this._hashProperties = object.hashProperties || [];
-  options = options || {};
-  options.decimals = parseInt(object.decimals);
-  if (!options.decimals && options.decimals!==0) throw 'Bad file format...';
-  var features = ol.format.GeoJSON.prototype.readFeaturesFromObject.call(this, object, options);
-  return features;
-};
-/** Decode GeoJSONX Feature object.
- * @param {*} object GeoJSONX
- * @param {*} options Read options.
- * @return {ol.Feature}
- */
-ol.format.GeoJSONX.prototype.readFeatureFromObject = function (f0, options) {
-  var f = {
-    type: 'Feature'
-  }
-  if (typeof(f0[0]) === 'string') {
-    f.geometry = {
-      type: 'Point',
-      coordinates: this.decodeCoordinates(f0[0], typeof(options.decimals) === 'number' ? options.decimals : this.decimals)
-    }  
-  } else {
-    f.geometry = {
-      type: this._toType[f0[0][0]]
-    }
-    if (f.geometry.type === 'MultiPoint') {
-      var g = f.geometry.coordinates = [];
-      var coords = f0[0][1].split(';');
-      coords.forEach(function(c) {
-        c = c.split(',');
-        g.push([this.decodeNumber(c[0], options.decimals), this.decodeNumber(c[1], options.decimals)])
-      }.bind(this));
-    } else {
-      f.geometry.coordinates = this.decodeCoordinates(f0[0][1], typeof(options.decimals) === 'number' ? options.decimals : this.decimals);
-    }
-  }
-  if (this._hashProperties && f0[1]) {
-    f.properties = {};
-    var t = f0[1];
-    for (var i=0; i<t.length; i+=2) {
-      f.properties[this._hashProperties[t[i]]] = t[i+1];
-    }
-  } else {
-    f.properties = f0[1];
-  }
-  // Extended properties
-  if (f0[2]) {
-    for (var k in f0[2]) {
-      f[k] = f0[2][k];
-    }
-  }
-  var feature = ol.format.GeoJSON.prototype.readFeatureFromObject.call(this, f, options);
-  return feature;
-};
 
 /** Feature format for reading and writing data in the GeoJSONP format,
  * using Polyline Algorithm to encode geometry.
