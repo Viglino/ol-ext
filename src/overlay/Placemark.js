@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_inherits from '../util/ext'
 import ol_Overlay_Popup from './Popup'
 
 /**
@@ -29,77 +28,74 @@ popup.hide();
 *	@param {function|undefined} options.onshow callback function when popup is shown
 * @api stable
 */
-var ol_Overlay_Placemark = function (options) {
-  options = options || {};
-  options.popupClass = (options.popupClass || '') + ' placemark anim'
-  options.positioning = 'bottom-center',
-  
-  ol_Overlay_Popup.call(this, options);
-  this.setPositioning = function(){};
+var ol_Overlay_Placemark = class olOverlayPlacemark extends ol_Overlay_Popup {
+  constructor(options) {
+    options = options || {};
+    options.popupClass = (options.popupClass || '') + ' placemark anim';
+    options.positioning = 'bottom-center',
 
-  if (options.color) this.element.style.color = options.color;
-  if (options.backgroundColor ) this.element.style.backgroundColor  = options.backgroundColor ;
-  if (options.contentColor ) this.setContentColor(options.contentColor);
-  if (options.size) this.setRadius(options.size);
-};
-ol_ext_inherits(ol_Overlay_Placemark, ol_Overlay_Popup);
+    super(options);
 
-/**
- * Set the position and the content of the placemark (hide it before to enable animation).
- * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
- * @param {string|undefined} html the HTML content (undefined = previous content).
- */
-ol_Overlay_Placemark.prototype.show = function(coordinate, html) {
-  if (coordinate===true) {
-    coordinate = this.getPosition();
+    this.setPositioning = function () { };
+
+    if (options.color) le.color = options.color;
+    if (options.backgroundColor) undColor = options.backgroundColor;
+    if (options.contentColor) this.setContentColor(options.contentColor);
+    if (options.size) this.setRadius(options.size);
   }
-  this.hide();
-  ol_Overlay_Popup.prototype.show.apply(this, [coordinate, html]);
-};
-
-/**
- * Set the placemark color.
- * @param {string} color
- */
-ol_Overlay_Placemark.prototype.setColor = function(color) {
-  this.element.style.color = color;
-};
-
-/**
- * Set the placemark background color.
- * @param {string} color
- */
-ol_Overlay_Placemark.prototype.setBackgroundColor = function(color) {
-  this._elt.style.backgroundColor = color;
-};
-
-/**
- * Set the placemark content color.
- * @param {string} color
- */
-ol_Overlay_Placemark.prototype.setContentColor = function(color) {
-  var c = this.element.getElementsByClassName('ol-popup-content')[0];
-  if (c) c.style.color = color;
-};
-
-/**
- * Set the placemark class.
- * @param {string} name
- */
-ol_Overlay_Placemark.prototype.setClassName = function(name) {
-  var oldclass = this.element.className;
-  this.element.className = 'ol-popup placemark ol-popup-bottom ol-popup-center ' 
-    + (/visible/.test(oldclass) ? 'visible ' : '')
-    + (/anim/.test(oldclass) ? 'anim ' : '')
-    + name;
-};
-
-/**
- * Set the placemark radius.
- * @param {number} size size in pixel
- */
-ol_Overlay_Placemark.prototype.setRadius = function(size) {
-  this.element.style.fontSize = size + 'px';
-};
+  /**
+   * Set the position and the content of the placemark (hide it before to enable animation).
+   * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
+   * @param {string|undefined} html the HTML content (undefined = previous content).
+   */
+  show(coordinate, html) {
+    if (coordinate === true) {
+      coordinate = this.getPosition();
+    }
+    this.hide();
+    super.show([coordinate, html]);
+  }
+  /**
+   * Set the placemark color.
+   * @param {string} color
+   */
+  setColor(color) {
+    this.element.style.color = color;
+  }
+  /**
+   * Set the placemark background color.
+   * @param {string} color
+   */
+  setBackgroundColor(color) {
+    this._elt.style.backgroundColor = color;
+  }
+  /**
+   * Set the placemark content color.
+   * @param {string} color
+   */
+  setContentColor(color) {
+    var c = this.element.getElementsByClassName('ol-popup-content')[0];
+    if (c)
+      c.style.color = color;
+  }
+  /**
+   * Set the placemark class.
+   * @param {string} name
+   */
+  setClassName(name) {
+    var oldclass = this.element.className;
+    this.element.className = 'ol-popup placemark ol-popup-bottom ol-popup-center '
+      + (/visible/.test(oldclass) ? 'visible ' : '')
+      + (/anim/.test(oldclass) ? 'anim ' : '')
+      + name;
+  }
+  /**
+   * Set the placemark radius.
+   * @param {number} size size in pixel
+   */
+  setRadius(size) {
+    this.element.style.fontSize = size + 'px';
+  }
+}
 
 export  default ol_Overlay_Placemark

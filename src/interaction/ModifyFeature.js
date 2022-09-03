@@ -47,7 +47,7 @@ import '../geom/LineStringSplitAt'
  *  @param {ol.EventsConditionType | undefined} options.insertVertexCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether a new vertex can be added to the sketch features. Default is ol.events.condition.always
  *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
  */
-var ol_interaction_ModifyFeature = class olinteractionModifyFeature extends ol_interaction_Pointer {
+var ol_interaction_ModifyFeature = class olinteractionModifyFeature extends ol_interaction_Interaction {
   constructor(options) {
     options = options || {}
 
@@ -71,10 +71,11 @@ var ol_interaction_ModifyFeature = class olinteractionModifyFeature extends ol_i
               return true
           }
           case 'pointermove': {
-            if (!dragging)
+            if (!dragging){
               return this.handleMoveEvent(e)
-            else
-              return true
+            } else {
+              return false
+            }
           }
           case 'singleclick':
           case 'click': {
@@ -149,7 +150,7 @@ var ol_interaction_ModifyFeature = class olinteractionModifyFeature extends ol_i
    */
   setMap(map) {
     if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_)
-    ol_interaction_Interaction.prototype.setMap.call(this, map)
+    super.setMap(map)
     this.overlayLayer_.setMap(map)
   }
   /**
@@ -158,9 +159,8 @@ var ol_interaction_ModifyFeature = class olinteractionModifyFeature extends ol_i
    * @api stable
    */
   setActive(active) {
-    ol_interaction_Interaction.prototype.setActive.call(this, active)
-    if (this.overlayLayer_)
-      this.overlayLayer_.getSource().clear()
+    super.setActive(active)
+    if (this.overlayLayer_) this.overlayLayer_.getSource().clear()
   }
   /** Change the filter function
    * @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
@@ -730,10 +730,8 @@ var ol_interaction_ModifyFeature = class olinteractionModifyFeature extends ol_i
    * @private
    */
   handleDragEvent(e) {
-    if (!this.getActive())
-      return false
-    if (!this.arcs)
-      return true
+    if (!this.getActive()) return false
+    if (!this.arcs) return true
 
     // Show sketch
     this.overlayLayer_.getSource().clear()
@@ -741,14 +739,12 @@ var ol_interaction_ModifyFeature = class olinteractionModifyFeature extends ol_i
     this.overlayLayer_.getSource().addFeature(p)
 
     // Nothing to do
-    if (!this.arcs.length)
-      return true
+    if (!this.arcs.length) return true
 
     // Move arcs
     this.arcs.forEach(function (a) {
       var coords = a.coord1.concat([e.coordinate], a.coord2)
-      if (a.closed)
-        coords.push(e.coordinate)
+      if (a.closed) coords.push(e.coordinate)
       this.setArcCoordinates(a, coords)
     }.bind(this))
 
@@ -766,8 +762,7 @@ var ol_interaction_ModifyFeature = class olinteractionModifyFeature extends ol_i
    * @private
    */
   handleMoveEvent(e) {
-    if (!this.getActive())
-      return false
+    if (!this.getActive()) return true
 
     this.overlayLayer_.getSource().clear()
     var current = this.getClosestFeature(e)
@@ -791,6 +786,7 @@ var ol_interaction_ModifyFeature = class olinteractionModifyFeature extends ol_i
         this.previousCursor_ = undefined
       }
     }
+    return true
   }
   /** Get the current feature to modify
    * @return {ol.Feature}

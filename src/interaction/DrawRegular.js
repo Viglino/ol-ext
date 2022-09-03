@@ -85,9 +85,8 @@ var ol_interaction_DrawRegular = class olinteractionDrawRegular extends ol_inter
    * @api stable
    */
   setMap(map) {
-    if (this.getMap())
-      this.getMap().removeLayer(this.overlayLayer_)
-    ol_interaction_Interaction.prototype.setMap.call(this, map)
+    if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_)
+    super.setMap(map)
     this.overlayLayer_.setMap(map)
   }
   /**

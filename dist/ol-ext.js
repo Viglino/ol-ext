@@ -9084,276 +9084,299 @@ ol.control.Graticule = class olcontrolGraticule extends ol.control.CanvasBase {
  *  @param {function|undefined} options.indexTitle a function that takes a feature and return the title to display in the index, default the first letter of property option
  *  @param {string} options.filterLabel label to display in the search bar, default 'filter'
  */
-ol.control.GridReference = function(options) {
-  if (!options) options = {};
-  // Initialize parent
-  var elt = document.createElement("div");
-  elt.className = (!options.target ? "ol-control ":"") +"ol-gridreference ol-unselectable "+(options.className||"");
-  options.style = options.style || new ol.style.Style({
-    stroke: new ol.style.Stroke({ color:"#000", width:1 }),
-    text: new ol.style.Text({
-      font: "bold 14px Arial",
-      stroke: new ol.style.Stroke({ color:"#fff", width:2 }),
-      fill: new ol.style.Fill({ color:"#000" }),
+ol.control.GridReference = class olcontrolGridReference extends ol.control.CanvasBase {
+  constructor(options) {
+    options = options || {}
+    // Initialize parent
+    var elt = document.createElement("div")
+    elt.className = (!options.target ? "ol-control " : "") + "ol-gridreference ol-unselectable " + (options.className || "")
+    options.style = options.style || new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: "#000", width: 1 }),
+      text: new ol.style.Text({
+        font: "bold 14px Arial",
+        stroke: new ol.style.Stroke({ color: "#fff", width: 2 }),
+        fill: new ol.style.Fill({ color: "#000" }),
+      })
     })
-  });
-  ol.control.CanvasBase.call(this, {
-    element: elt,
-    target: options.target,
-    style: options.style
-  });
-  if (typeof (options.property)=='function') this.getFeatureName = options.property;
-  if (typeof (options.sortFeatures)=='function') this.sortFeatures = options.sortFeatures;
-  if (typeof (options.indexTitle)=='function') this.indexTitle = options.indexTitle;
-  // Set index using the source
-  this.source_ = options.source;
-  if (options.source) {
-    this.setIndex(options.source.getFeatures(), options);
-    // reload on ready
-    options.source.once('change',function() {
-      if (options.source.getState() === 'ready') {
-        this.setIndex(options.source.getFeatures(), options);
-      }
-    }.bind(this));
-  }
-  // Options
-  this.set('maxResolution', options.maxResolution || Infinity);
-  this.set('extent', options.extent);
-  this.set('size', options.size);
-  this.set('margin', options.margin || 0);
-  this.set('property', options.property || 'name');
-  this.set('filterLabel', options.filterLabel || 'filter');
-};
-ol.ext.inherits(ol.control.GridReference, ol.control.CanvasBase);
-/**
- * Set the map instance the control is associated with.
- * @param {ol.Map} map The map instance.
- */
- ol.control.GridReference.prototype.setMap = function(map) {
-  ol.control.CanvasBase.prototype.setMap.call(this, map);
-  this.setIndex(this.source_.getFeatures());
- };
-/** Returns the text to be displayed in the index
- * @param {ol.Feature} f the feature
- * @return {string} the text to be displayed in the index
- * @api
- */
-ol.control.GridReference.prototype.getFeatureName = function (f) {
-  return f.get(this.get('property')||'name');
-};
-/** Sort function
- * @param {ol.Feature} a first feature
- * @param {ol.Feature} b second feature
- * @return {Number} 0 if a==b, -1 if a<b, 1 if a>b
- * @api
- */
-ol.control.GridReference.prototype.sortFeatures = function (a,b) {
-  return (this.getFeatureName(a) == this.getFeatureName(b)) ? 0 : (this.getFeatureName(a) < this.getFeatureName(b)) ? -1 : 1; 
-};
-/** Get the feature title
- * @param {ol.Feature} f
- * @return the first letter of the eature name (getFeatureName)
- * @api
- */
-ol.control.GridReference.prototype.indexTitle = function (f) {
-  return this.getFeatureName(f).charAt(0);
-};
-/** Display features in the index
- * @param { Array<ol.Feature> | ol.Collection<ol.Feature> } features
- */
-ol.control.GridReference.prototype.setIndex = function (features) {
-  if (!this.getMap()) return;
-  var self = this;
-  if (features.getArray) features = features.getArray();
-  features.sort ( function(a,b) { return self.sortFeatures(a,b); } );
-  this.element.innerHTML = "";
-  var elt = this.element;
-  var search = document.createElement("input");
-  search.setAttribute('type', 'search');
-  search.setAttribute('placeholder', this.get('filterLabel') || 'filter');
-  var searchKeyupFunction = function() {
-    var v = this.value.replace(/^\*/,'');
-    // console.log(v)
-    var r = new RegExp (v, 'i');
-    var list = ul.querySelectorAll('li');
-    Array.prototype.forEach.call(list, function(li) {
-      if (li.classList.contains('ol-title')) {
-        li.style.display = '';
-      } else {
-        if (r.test(li.querySelector('.ol-name').textContent)) li.style.display = '';
-        else li.style.display = 'none';
-      }
-    });
-    Array.prototype.forEach.call(ul.querySelectorAll("li.ol-title"), function(li) {
-      var nextVisible;
-      var start = false;
-      for (var i=0; i<list.length; i++) {
-        if (start) {
-          if (list[i].classList.contains('ol-title')) break;
-          if (!list[i].style.display) {
-            nextVisible = list[i];
-            break;
-          }
+    super({
+      element: elt,
+      target: options.target,
+      style: options.style
+    })
+    if (typeof (options.property) == 'function'){
+      this.getFeatureName = options.property
+    }
+    if (typeof (options.sortFeatures) == 'function') {
+      this.sortFeatures = options.sortFeatures
+    }
+    if (typeof (options.indexTitle) == 'function') {
+      this.indexTitle = options.indexTitle
+    }
+    // Set index using the source
+    this.source_ = options.source
+    if (options.source) {
+      this.setIndex(options.source.getFeatures(), options)
+      // reload on ready
+      options.source.once('change', function () {
+        if (options.source.getState() === 'ready') {
+          this.setIndex(options.source.getFeatures(), options)
         }
-        if (list[i] === li) start = true;
-      }
-      if (nextVisible) li.style.display = '';
-      else li.style.display = 'none';
-    });
-  };
-  search.addEventListener('search', searchKeyupFunction);
-  search.addEventListener('keyup', searchKeyupFunction);
-  elt.appendChild(search);
-  var ul = document.createElement("ul");
-  elt.appendChild(ul);
-  var r, title;
-  features.forEach(function(feat) {
-    r = this.getReference(feat.getGeometry().getFirstCoordinate());
-    if (r) {
-      var name = this.getFeatureName(feat);
-      var c = this.indexTitle(feat);
-      if (c != title) {
-        var li_title = document.createElement("li");
-        li_title.classList.add('ol-title');
-        li_title.textContent = c;
-        ul.appendChild(li_title);
-      }
-      title = c;
-      var li_ref_name = document.createElement("li");
-      var span_name = document.createElement("span");
-          span_name.classList.add("ol-name");
-          span_name.textContent = name;
-      li_ref_name.appendChild(span_name);
-      var span_ref = document.createElement("span");
-          span_ref.classList.add("ol-ref");
-          span_ref.textContent = r;
-      li_ref_name.appendChild(span_ref);
-      var feature = feat;
-      li_ref_name.addEventListener("click", function() {
-        this.dispatchEvent({ type:"select", feature: feature });
-      }.bind(this));
-      ul.appendChild(li_ref_name);
+      }.bind(this))
     }
-  }.bind(this));
-};
-/** Get reference for a coord
-*	@param {ol.coordinate} coords
-*	@return {string} the reference
-*/
-ol.control.GridReference.prototype.getReference = function (coords) {
-  if (!this.getMap()) return;
-  var extent = this.get('extent');
-  var size = this.get('size');
-  var dx = Math.floor ( (coords[0] - extent[0]) / (extent[2]- extent[0]) * size[0] );
-  if (dx<0 || dx>=size[0]) return "";
-  var dy = Math.floor ( (extent[3] - coords[1]) / (extent[3]- extent[1]) * size[1] );
-  if (dy<0 || dy>=size[1]) return "";
-  return this.getHIndex(dx)+this.getVIndex(dy);
-};
-/** Get vertical index (0,1,2,3...)
- * @param {number} index
- * @returns {string}
- * @api
- */
- ol.control.GridReference.prototype.getVIndex = function (index) {
-  return index;
-};
-/** Get horizontal index (A,B,C...)
- * @param {number} index
- * @returns {string}
- * @api
- */
- ol.control.GridReference.prototype.getHIndex = function (index) {
-  return String.fromCharCode(65 + index);
-};
-/** Draw the grid
-* @param {ol.event} e postcompose event
-* @private
-*/
-ol.control.GridReference.prototype._draw = function (e) {
-  if (this.get('maxResolution')<e.frameState.viewState.resolution) return;
-  var ctx = this.getContext(e);
-  var canvas = ctx.canvas;
-  var ratio = e.frameState.pixelRatio;
-  var w = canvas.width/ratio;
-  var h = canvas.height/ratio;
-  var extent = this.get('extent');
-  var size = this.get('size');
-  var map = this.getMap();
-  var ex = ol.extent.boundingExtent([map.getPixelFromCoordinate([extent[0],extent[1]]), map.getPixelFromCoordinate([extent[2],extent[3]])]);
-  var p0 = [ex[0],ex[1]];
-  var p1 = [ex[2],ex[3]];
-  var dx = (p1[0]-p0[0])/size[0];
-  var dy = (p1[1]-p0[1])/size[1];
-  ctx.save();
-    var margin = this.get('margin');
-    ctx.scale(ratio,ratio);
-    ctx.strokeStyle = this.getStroke().getColor();
-    ctx.lineWidth = this.getStroke().getWidth();
+    // Options
+    this.set('maxResolution', options.maxResolution || Infinity)
+    this.set('extent', options.extent)
+    this.set('size', options.size)
+    this.set('margin', options.margin || 0)
+    this.set('property', options.property || 'name')
+    this.set('filterLabel', options.filterLabel || 'filter')
+  }
+  /**
+   * Set the map instance the control is associated with.
+   * @param {ol.Map} map The map instance.
+   */
+  setMap(map) {
+    ol.control.CanvasBase.prototype.setMap.call(this, map)
+    this.setIndex(this.source_.getFeatures())
+  }
+  /** Returns the text to be displayed in the index
+   * @param {ol.Feature} f the feature
+   * @return {string} the text to be displayed in the index
+   * @api
+   */
+  getFeatureName(f) {
+    return f.get(this.get('property') || 'name')
+  }
+  /** Sort function
+   * @param {ol.Feature} a first feature
+   * @param {ol.Feature} b second feature
+   * @return {Number} 0 if a==b, -1 if a<b, 1 if a>b
+   * @api
+   */
+  sortFeatures(a, b) {
+    return (this.getFeatureName(a) == this.getFeatureName(b)) ? 0 : (this.getFeatureName(a) < this.getFeatureName(b)) ? -1 : 1
+  }
+  /** Get the feature title
+   * @param {ol.Feature} f
+   * @return the first letter of the eature name (getFeatureName)
+   * @api
+   */
+  indexTitle(f) {
+    return this.getFeatureName(f).charAt(0)
+  }
+  /** Display features in the index
+   * @param { Array<ol.Feature> | ol.Collection<ol.Feature> } features
+   */
+  setIndex(features) {
+    if (!this.getMap())
+      return
+    var self = this
+    if (features.getArray)
+      features = features.getArray()
+    features.sort(function (a, b) { return self.sortFeatures(a, b) })
+    this.element.innerHTML = ""
+    var elt = this.element
+    var search = document.createElement("input")
+    search.setAttribute('type', 'search')
+    search.setAttribute('placeholder', this.get('filterLabel') || 'filter')
+    var searchKeyupFunction = function () {
+      var v = this.value.replace(/^\*/, '')
+      // console.log(v)
+      var r = new RegExp(v, 'i')
+      var list = ul.querySelectorAll('li')
+      Array.prototype.forEach.call(list, function (li) {
+        if (li.classList.contains('ol-title')) {
+          li.style.display = ''
+        } else {
+          if (r.test(li.querySelector('.ol-name').textContent))
+            li.style.display = ''
+          else
+            li.style.display = 'none'
+        }
+      })
+      Array.prototype.forEach.call(ul.querySelectorAll("li.ol-title"), function (li) {
+        var nextVisible
+        var start = false
+        for (var i = 0; i < list.length; i++) {
+          if (start) {
+            if (list[i].classList.contains('ol-title'))
+              break
+            if (!list[i].style.display) {
+              nextVisible = list[i]
+              break
+            }
+          }
+          if (list[i] === li)
+            start = true
+        }
+        if (nextVisible)
+          li.style.display = ''
+        else
+          li.style.display = 'none'
+      })
+    }
+    search.addEventListener('search', searchKeyupFunction)
+    search.addEventListener('keyup', searchKeyupFunction)
+    elt.appendChild(search)
+    var ul = document.createElement("ul")
+    elt.appendChild(ul)
+    var r, title
+    features.forEach(function (feat) {
+      r = this.getReference(feat.getGeometry().getFirstCoordinate())
+      if (r) {
+        var name = this.getFeatureName(feat)
+        var c = this.indexTitle(feat)
+        if (c != title) {
+          var li_title = document.createElement("li")
+          li_title.classList.add('ol-title')
+          li_title.textContent = c
+          ul.appendChild(li_title)
+        }
+        title = c
+        var li_ref_name = document.createElement("li")
+        var span_name = document.createElement("span")
+        span_name.classList.add("ol-name")
+        span_name.textContent = name
+        li_ref_name.appendChild(span_name)
+        var span_ref = document.createElement("span")
+        span_ref.classList.add("ol-ref")
+        span_ref.textContent = r
+        li_ref_name.appendChild(span_ref)
+        var feature = feat
+        li_ref_name.addEventListener("click", function () {
+          this.dispatchEvent({ type: "select", feature: feature })
+        }.bind(this))
+        ul.appendChild(li_ref_name)
+      }
+    }.bind(this))
+  }
+  /** Get reference for a coord
+  *	@param {ol.coordinate} coords
+  *	@return {string} the reference
+  */
+  getReference(coords) {
+    if (!this.getMap())
+      return
+    var extent = this.get('extent')
+    var size = this.get('size')
+    var dx = Math.floor((coords[0] - extent[0]) / (extent[2] - extent[0]) * size[0])
+    if (dx < 0 || dx >= size[0])
+      return ""
+    var dy = Math.floor((extent[3] - coords[1]) / (extent[3] - extent[1]) * size[1])
+    if (dy < 0 || dy >= size[1])
+      return ""
+    return this.getHIndex(dx) + this.getVIndex(dy)
+  }
+  /** Get vertical index (0,1,2,3...)
+   * @param {number} index
+   * @returns {string}
+   * @api
+   */
+  getVIndex(index) {
+    return index
+  }
+  /** Get horizontal index (A,B,C...)
+   * @param {number} index
+   * @returns {string}
+   * @api
+   */
+  getHIndex(index) {
+    return String.fromCharCode(65 + index)
+  }
+  /** Draw the grid
+  * @param {ol.event} e postcompose event
+  * @private
+  */
+  _draw(e) {
+    if (this.get('maxResolution') < e.frameState.viewState.resolution)
+      return
+    var ctx = this.getContext(e)
+    var canvas = ctx.canvas
+    var ratio = e.frameState.pixelRatio
+    var w = canvas.width / ratio
+    var h = canvas.height / ratio
+    var extent = this.get('extent')
+    var size = this.get('size')
+    var map = this.getMap()
+    var ex = ol.extent.boundingExtent([map.getPixelFromCoordinate([extent[0], extent[1]]), map.getPixelFromCoordinate([extent[2], extent[3]])])
+    var p0 = [ex[0], ex[1]]
+    var p1 = [ex[2], ex[3]]
+    var dx = (p1[0] - p0[0]) / size[0]
+    var dy = (p1[1] - p0[1]) / size[1]
+    ctx.save()
+    var margin = this.get('margin')
+    ctx.scale(ratio, ratio)
+    ctx.strokeStyle = this.getStroke().getColor()
+    ctx.lineWidth = this.getStroke().getWidth()
     // Draw grid
-    ctx.beginPath();
-    var i;
-    for (i=0; i<=size[0]; i++) {
-      ctx.moveTo(p0[0]+i*dx, p0[1]);
-      ctx.lineTo(p0[0]+i*dx, p1[1]);
+    ctx.beginPath()
+    var i
+    for (i = 0; i <= size[0]; i++) {
+      ctx.moveTo(p0[0] + i * dx, p0[1])
+      ctx.lineTo(p0[0] + i * dx, p1[1])
     }
-    for (i=0; i<=size[1]; i++) {
-      ctx.moveTo(p0[0], p0[1]+i*dy);
-      ctx.lineTo(p1[0], p0[1]+i*dy);
+    for (i = 0; i <= size[1]; i++) {
+      ctx.moveTo(p0[0], p0[1] + i * dy)
+      ctx.lineTo(p1[0], p0[1] + i * dy)
     }
-    ctx.stroke();
+    ctx.stroke()
     // Draw text
-    ctx.font = this.getTextFont();
-    ctx.fillStyle = this.getTextFill().getColor();
-    ctx.strokeStyle = this.getTextStroke().getColor();
-    var lw = ctx.lineWidth = this.getTextStroke().getWidth();
-    var spacing = margin +lw;
-    ctx.textAlign = 'center';
-    var letter, x, y;
-    for (i=0; i<size[0]; i++) {
-      letter = this.getHIndex(i);
-      x = p0[0]+i*dx+dx/2;
-      y = p0[1]-spacing;
-      if (y<0) {
-        y = spacing;
-        ctx.textBaseline = 'hanging';
+    ctx.font = this.getTextFont()
+    ctx.fillStyle = this.getTextFill().getColor()
+    ctx.strokeStyle = this.getTextStroke().getColor()
+    var lw = ctx.lineWidth = this.getTextStroke().getWidth()
+    var spacing = margin + lw
+    ctx.textAlign = 'center'
+    var letter, x, y
+    for (i = 0; i < size[0]; i++) {
+      letter = this.getHIndex(i)
+      x = p0[0] + i * dx + dx / 2
+      y = p0[1] - spacing
+      if (y < 0) {
+        y = spacing
+        ctx.textBaseline = 'hanging'
       }
-      else ctx.textBaseline = 'alphabetic';
-      ctx.strokeText(letter, x, y);
-      ctx.fillText(letter, x, y);
-      y = p1[1]+spacing;
-      if (y>h) {
-        y = h-spacing;
-        ctx.textBaseline = 'alphabetic';
+      else
+        ctx.textBaseline = 'alphabetic'
+      ctx.strokeText(letter, x, y)
+      ctx.fillText(letter, x, y)
+      y = p1[1] + spacing
+      if (y > h) {
+        y = h - spacing
+        ctx.textBaseline = 'alphabetic'
       }
-      else ctx.textBaseline = 'hanging';
-      ctx.strokeText(letter, x, y);
-      ctx.fillText(letter, x, y);
+      else
+        ctx.textBaseline = 'hanging'
+      ctx.strokeText(letter, x, y)
+      ctx.fillText(letter, x, y)
     }
-    ctx.textBaseline = 'middle';
-    for (i=0; i<size[1]; i++) {
-      letter = this.getVIndex(i);
-      y = p0[1]+i*dy+dy/2;
-      ctx.textAlign = 'right';
-      x = p0[0] - spacing;
-      if (x<0) {
-        x = spacing;
-        ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle'
+    for (i = 0; i < size[1]; i++) {
+      letter = this.getVIndex(i)
+      y = p0[1] + i * dy + dy / 2
+      ctx.textAlign = 'right'
+      x = p0[0] - spacing
+      if (x < 0) {
+        x = spacing
+        ctx.textAlign = 'left'
       }
-      else ctx.textAlign = 'right';
-      ctx.strokeText(letter, x, y);
-      ctx.fillText(letter, x, y);
-      x = p1[0] + spacing;
-      if (x>w) {
-        x = w-spacing;
-        ctx.textAlign = 'right';
+      else
+        ctx.textAlign = 'right'
+      ctx.strokeText(letter, x, y)
+      ctx.fillText(letter, x, y)
+      x = p1[0] + spacing
+      if (x > w) {
+        x = w - spacing
+        ctx.textAlign = 'right'
       }
-      else ctx.textAlign = 'left';
-      ctx.strokeText(letter, x, y);
-      ctx.fillText(letter, x, y);
+      else
+        ctx.textAlign = 'left'
+      ctx.strokeText(letter, x, y)
+      ctx.fillText(letter, x, y)
     }
-  ctx.restore();
-};
+    ctx.restore()
+  }
+}
 
 /** Image line control
  *
@@ -16550,58 +16573,66 @@ ol.control.SwipeMap.prototype.move = function(e) {
  *  @param {ol.style.Style|Array<ol.style.Style>} options.style
  *  @param {string} options.composite composite operation = difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
-ol.control.Target = function(options) {
-  options = options || {};
-	this.style = options.style || [
-    new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#fff", width:3 }) }) }),
-    new ol.style.Style({ image: new ol.style.RegularShape ({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel:true, stroke: new ol.style.Stroke({ color: "#000", width:1 }) }) })
-  ];
-	if (!(this.style instanceof Array)) this.style = [this.style];
-	this.composite = options.composite || '';
-	var div = document.createElement('div');
-	div.className = "ol-target ol-unselectable ol-control";
-	ol.control.CanvasBase.call(this, {
-    element: div,
-		target: options.target
-	});
-	this.setVisible(options.visible!==false);
-};
-ol.ext.inherits(ol.control.Target, ol.control.CanvasBase);
-/** Set the control visibility
- * @paraam {boolean} b 
- */
-ol.control.Target.prototype.setVisible = function (b) {
-  this.set("visible",b);
-	if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+ol.control.Target = class olcontrolTarget extends ol.control.CanvasBase {
+  constructor(options) {
+    options = options || {};
+    var style = options.style || [
+      new ol.style.Style({ image: new ol.style.RegularShape({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel: true, stroke: new ol.style.Stroke({ color: "#fff", width: 3 }) }) }),
+      new ol.style.Style({ image: new ol.style.RegularShape({ points: 4, radius: 11, radius1: 0, radius2: 0, snapToPixel: true, stroke: new ol.style.Stroke({ color: "#000", width: 1 }) }) })
+    ];
+    if (!(style instanceof Array)) style = [style];
+    var div = document.createElement('div');
+    div.className = "ol-target ol-unselectable ol-control";
+    super({
+      element: div,
+      style: style,
+      target: options.target
+    });
+    this.composite = options.composite || '';
+    this.setVisible(options.visible !== false);
   }
-};
-/** Get the control visibility
- * @return {boolean} b 
- */
-ol.control.Target.prototype.getVisible = function () {
-  return this.get("visible");
-};
-/** Draw the target
- * @private
- */
-ol.control.Target.prototype._draw = function (e) {
-  var ctx = this.getContext(e);
-  if (!ctx || !this.getMap() || !this.getVisible()) return;
-	var ratio = e.frameState.pixelRatio;
-	ctx.save();
-		ctx.scale(ratio,ratio);
-		var cx = ctx.canvas.width/(2*ratio);
-		var cy = ctx.canvas.height/(2*ratio);
-		var geom = new ol.geom.Point (this.getMap().getCoordinateFromPixel([cx,cy]));
-		if (this.composite) ctx.globalCompositeOperation = this.composite;
-    for (var i=0; i<this.style.length; i++) {
-      var style = this.style[i];
+  /** Set Style
+   * @api
+   */
+  setStyle(style) {
+    if (!(style instanceof Array)) style = [style];
+    super.setStyle(style)
+  }
+  /** Set the control visibility
+   * @paraam {boolean} b
+   */
+  setVisible(b) {
+    this.set('visible', b);
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
+  }
+  /** Get the control visibility
+   * @return {boolean} b
+   */
+  getVisible() {
+    return this.get('visible');
+  }
+  /** Draw the target
+   * @private
+   */
+  _draw(e) {
+    var ctx = this.getContext(e);
+    if (!ctx || !this.getMap() || !this.getVisible()) return;
+    var ratio = e.frameState.pixelRatio;
+    ctx.save();
+    ctx.scale(ratio, ratio);
+    var cx = ctx.canvas.width / 2 / ratio;
+    var cy = ctx.canvas.height / 2 / ratio;
+    var geom = new ol.geom.Point(this.getMap().getCoordinateFromPixel([cx, cy]));
+    if (this.composite) ctx.globalCompositeOperation = this.composite;
+    for (var i = 0; i < this._style.length; i++) {
+      var style = this._style[i];
       if (style instanceof ol.style.Style) {
         var vectorContext = e.vectorContext;
         if (!vectorContext) {
           var event = {
-            inversePixelTransform: [ratio,0,0,ratio,0,0],
+            inversePixelTransform: [1, 0, 0, 1, 0, 0],
             context: ctx,
             frameState: {
               pixelRatio: ratio,
@@ -16609,15 +16640,16 @@ ol.control.Target.prototype._draw = function (e) {
               coordinateToPixelTransform: e.frameState.coordinateToPixelTransform,
               viewState: e.frameState.viewState
             }
-          }
+          };
           vectorContext = ol.render.getVectorContext(event);
-        } 
+        }
         vectorContext.setStyle(style);
         vectorContext.drawGeometry(geom);
       }
     }
-	ctx.restore();
-};
+    ctx.restore();
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
 released under the CeCILL-B license (French BSD license)
@@ -21520,199 +21552,212 @@ ol.format.GeoRSS.prototype.getDocumentItemsTagName = function(xmlDoc) {
  *  @param {number} options.radius radius of the clip, default 100
  *	@param {ol.layer|Array<ol.layer>} options.layers layers to clip
  */
-ol.interaction.Clip = function(options) {
-  this.layers_ = [];
-  ol.interaction.Pointer.call(this, {
-    handleDownEvent: this._setPosition,
-    handleMoveEvent: this._setPosition
-  });
-  this.precomposeBind_ = this.precompose_.bind(this);
-  this.postcomposeBind_ = this.postcompose_.bind(this);
-  // Default options
-  options = options || {};
-  this.pos = false;
-  this.radius = (options.radius||100);
-  if (options.layers) this.addLayer(options.layers);
-};
-ol.ext.inherits(ol.interaction.Clip, ol.interaction.Pointer);
-/** Set the map > start postcompose
-*/
-ol.interaction.Clip.prototype.setMap = function(map) {
-  var i;
-  if (this.getMap()) {
-    for (i=0; i<this.layers_.length; i++) {
-      this.layers_[i].un(['precompose','prerender'], this.precomposeBind_);
-      this.layers_[i].un(['postcompose','postrender'], this.postcomposeBind_);
-    }
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+ol.interaction.Clip = class olinteractionClip extends ol.interaction.Pointer {
+  constructor(options) {
+    super({
+      handleDownEvent: function(e) { return this._setPosition(e) },
+      handleMoveEvent: function(e) { return this._setPosition(e) },
+    });
+    this.layers_ = [];
+    this.precomposeBind_ = this.precompose_.bind(this);
+    this.postcomposeBind_ = this.postcompose_.bind(this);
+    // Default options
+    options = options || {};
+    this.pos = false;
+    this.radius = (options.radius || 100);
+    if (options.layers) this.addLayer(options.layers);
+    this.setActive(true);
   }
-  ol.interaction.Pointer.prototype.setMap.call(this, map);
-  if (map) {
-    for (i=0; i<this.layers_.length; i++) {
-      this.layers_[i].on(['precompose','prerender'], this.precomposeBind_);
-      this.layers_[i].on(['postcompose','postrender'], this.postcomposeBind_);
-    }
-    try { map.renderSync(); } catch(e) { /* ok */ }
-  }
-};
-/** Set clip radius
- *	@param {integer} radius
- */
-ol.interaction.Clip.prototype.setRadius = function(radius) {
-  this.radius = radius;
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
-};
-/** Get clip radius
- *	@returns {integer} radius
- */
-ol.interaction.Clip.prototype.getRadius = function() {
-  return this.radius;
-};
-/** Add a layer to clip
- *	@param {ol.layer|Array<ol.layer>} layer to clip
-*/
-ol.interaction.Clip.prototype.addLayer = function(layers)  {
-  if (!(layers instanceof Array)) layers = [layers];
-  for (var i=0; i<layers.length; i++) {
+  /** Set the map > start postcompose
+  */
+  setMap(map) {
+    var i;
     if (this.getMap()) {
-      layers[i].on(['precompose','prerender'], this.precomposeBind_);
-      layers[i].on(['postcompose','postrender'], this.postcomposeBind_);
-      try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+      for (i = 0; i < this.layers_.length; i++) {
+        this.layers_[i].un(['precompose', 'prerender'], this.precomposeBind_);
+        this.layers_[i].un(['postcompose', 'postrender'], this.postcomposeBind_);
+      }
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
     }
-    this.layers_.push(layers[i]);
+    ol.interaction.Pointer.prototype.setMap.call(this, map);
+    if (map) {
+      for (i = 0; i < this.layers_.length; i++) {
+        this.layers_[i].on(['precompose', 'prerender'], this.precomposeBind_);
+        this.layers_[i].on(['postcompose', 'postrender'], this.postcomposeBind_);
+      }
+      try { map.renderSync(); } catch (e) { /* ok */ }
+    }
   }
-};
-/** Remove all layers
- */
-ol.interaction.Clip.prototype.removeLayers = function() {
-  this.removeLayer(this.layers_);
-};
-/** Remove a layer to clip
- *	@param {ol.layer|Array<ol.layer>} layer to clip
-*/
-ol.interaction.Clip.prototype.removeLayer = function(layers) {
-  if (!(layers instanceof Array)) layers = [layers];
-  for (var i=0; i<layers.length; i++) {
-    var k;
-    for (k=0; k<this.layers_.length; k++) {
-      if (this.layers_[k]===layers[i]) {
-        break;
+  /** Set clip radius
+   *	@param {integer} radius
+   */
+  setRadius(radius) {
+    this.radius = radius;
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
+  }
+  /** Get clip radius
+   *	@returns {integer} radius
+   */
+  getRadius() {
+    return this.radius;
+  }
+  /** Add a layer to clip
+   *	@param {ol.layer|Array<ol.layer>} layer to clip
+  */
+  addLayer(layers) {
+    if (!(layers instanceof Array))
+      layers = [layers];
+    for (var i = 0; i < layers.length; i++) {
+      if (this.getMap()) {
+        layers[i].on(['precompose', 'prerender'], this.precomposeBind_);
+        layers[i].on(['postcompose', 'postrender'], this.postcomposeBind_);
+        try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+      }
+      this.layers_.push(layers[i]);
+    }
+  }
+  /** Remove all layers
+   */
+  removeLayers() {
+    this.removeLayer(this.layers_);
+  }
+  /** Remove a layer to clip
+   *	@param {ol.layer|Array<ol.layer>} layer to clip
+  */
+  removeLayer(layers) {
+    if (!(layers instanceof Array))
+      layers = [layers];
+    for (var i = 0; i < layers.length; i++) {
+      var k;
+      for (k = 0; k < this.layers_.length; k++) {
+        if (this.layers_[k] === layers[i]) {
+          break;
+        }
+      }
+      if (k != this.layers_.length && this.getMap()) {
+        this.layers_[k].un(['precompose', 'prerender'], this.precomposeBind_);
+        this.layers_[k].un(['postcompose', 'postrender'], this.postcomposeBind_);
+        this.layers_.splice(k, 1);
       }
     }
-    if (k!=this.layers_.length && this.getMap()) {
-      this.layers_[k].un(['precompose','prerender'], this.precomposeBind_);
-      this.layers_[k].un(['postcompose','postrender'], this.postcomposeBind_);
-      this.layers_.splice(k,1);
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
     }
   }
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
-};
-/** Set position of the clip
- * @param {ol.coordinate} coord
- */
-ol.interaction.Clip.prototype.setPosition = function(coord) {
-  if (this.getMap()) {
-    this.pos = this.getMap().getPixelFromCoordinate(coord);
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
-};
-/** Get position of the clip
- * @returns {ol.coordinate}
- */
-ol.interaction.Clip.prototype.getPosition = function() {
-  if (this.pos) return this.getMap().getCoordinateFromPixel(this.pos);
-  return null;
-};
-/** Set position of the clip
- * @param {ol.Pixel} pixel
- */
- ol.interaction.Clip.prototype.setPixelPosition = function(pixel) {
-  this.pos = pixel;
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
-};
-/** Get position of the clip
- * @returns {ol.Pixel} pixel
- */
- ol.interaction.Clip.prototype.getPixelPosition = function() {
-  return this.pos;
-};
-/** Set position of the clip
- * @param {ol.MapBrowserEvent} e
- * @privata
- */
-ol.interaction.Clip.prototype._setPosition = function(e) {
-  if (e.type==='pointermove' && this.get('action')==='onclick') return;
-  if (e.pixel) {
-    this.pos = e.pixel;
-  }
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
-};
-/* @private
-*/
-ol.interaction.Clip.prototype.precompose_ = function(e) {
-  if (!this.getActive()) return;
-  var ctx = e.context;
-  var ratio = e.frameState.pixelRatio;
-  ctx.save();
-  ctx.beginPath();
-  var pt = [ this.pos[0], this.pos[1] ];
-  var radius = this.radius;
-  var tr = e.inversePixelTransform;
-  if (tr) {
-    // Transform pt
-    pt = [
-      (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
-      (-pt[0]*tr[2] + pt[1]*tr[3] + tr[5])
-    ];
-    // Get radius / transform
-    radius = pt[0] - ((this.pos[0]-radius)*tr[0] - this.pos[1]*tr[1] + tr[4]);
-  } else {
-    pt[0] *= ratio;
-    pt[1] *= ratio;
-    radius *= ratio;
-  }
-  ctx.arc (pt[0], pt[1], radius, 0, 2*Math.PI);
-  ctx.clip();
-};
-/* @private
-*/
-ol.interaction.Clip.prototype.postcompose_ = function(e) {
-  if (!this.getActive()) return;
-  e.context.restore();
-};
-/**
- * Activate or deactivate the interaction.
- * @param {boolean} active Active.
- * @observable
- * @api
- */
-ol.interaction.Clip.prototype.setActive = function(b) {
-  if (b===this.getActive()) return;
-  ol.interaction.Pointer.prototype.setActive.call (this, b);
-  var i;
-  if (b) {
-    for(i=0; i<this.layers_.length; i++) {
-      this.layers_[i].on(['precompose','prerender'], this.precomposeBind_);
-      this.layers_[i].on(['postcompose','postrender'], this.postcomposeBind_);
-    }
-  } else {
-    for(i=0; i<this.layers_.length; i++) {
-      this.layers_[i].un(['precompose','prerender'], this.precomposeBind_);
-      this.layers_[i].un(['postcompose','postrender'], this.postcomposeBind_);
+  /** Set position of the clip
+   * @param {ol.coordinate} coord
+   */
+  setPosition(coord) {
+    if (this.getMap()) {
+      this.pos = this.getMap().getPixelFromCoordinate(coord);
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
     }
   }
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  /** Get position of the clip
+   * @returns {ol.coordinate}
+   */
+  getPosition() {
+    if (this.pos)
+      return this.getMap().getCoordinateFromPixel(this.pos);
+    return null;
   }
-};
+  /** Set position of the clip
+   * @param {ol.Pixel} pixel
+   */
+  setPixelPosition(pixel) {
+    this.pos = pixel;
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
+  }
+  /** Get position of the clip
+   * @returns {ol.Pixel} pixel
+   */
+  getPixelPosition() {
+    return this.pos;
+  }
+  /** Set position of the clip
+   * @param {ol.MapBrowserEvent} e
+   * @privata
+   */
+  _setPosition(e) {
+    if (e.type === 'pointermove' && this.get('action') === 'onclick'){
+      return;
+    }
+    if (e.pixel) {
+      this.pos = e.pixel;
+    }
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
+  }
+  /* @private
+  */
+  precompose_(e) {
+    if (!this.getActive())
+      return;
+    var ctx = e.context;
+    var ratio = e.frameState.pixelRatio;
+    ctx.save();
+    ctx.beginPath();
+    var pt = [this.pos[0], this.pos[1]];
+    var radius = this.radius;
+    var tr = e.inversePixelTransform;
+    if (tr) {
+      // Transform pt
+      pt = [
+        (pt[0] * tr[0] - pt[1] * tr[1] + tr[4]),
+        (-pt[0] * tr[2] + pt[1] * tr[3] + tr[5])
+      ];
+      // Get radius / transform
+      radius = pt[0] - ((this.pos[0] - radius) * tr[0] - this.pos[1] * tr[1] + tr[4]);
+    } else {
+      pt[0] *= ratio;
+      pt[1] *= ratio;
+      radius *= ratio;
+    }
+    ctx.arc(pt[0], pt[1], radius, 0, 2 * Math.PI);
+    ctx.clip();
+  }
+  /* @private
+  */
+  postcompose_(e) {
+    if (!this.getActive())
+      return;
+    e.context.restore();
+  }
+  /**
+   * Activate or deactivate the interaction.
+   * @param {boolean} active Active.
+   * @observable
+   * @api
+   */
+  setActive(b) {
+    if (b === this.getActive()) {
+      return;
+    }
+    super.setActive(b);
+    if (!this.layers_) return;
+    var i;
+    if (b) {
+      for (i = 0; i < this.layers_.length; i++) {
+        this.layers_[i].on(['precompose', 'prerender'], this.precomposeBind_);
+        this.layers_[i].on(['postcompose', 'postrender'], this.postcomposeBind_);
+      }
+    } else {
+      for (i = 0; i < this.layers_.length; i++) {
+        this.layers_[i].un(['precompose', 'prerender'], this.precomposeBind_);
+        this.layers_[i].un(['postcompose', 'postrender'], this.postcomposeBind_);
+      }
+    }
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
+  }
+}
+ol.ext.inherits(ol.interaction.Clip, ol.interaction.Pointer);
 
 /** An interaction to check the current map and add key events listeners.
  * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
@@ -21725,68 +21770,69 @@ ol.interaction.Clip.prototype.setActive = function(b) {
  *  @param {function} onKeyUp a function that takes a keyup event is fired on the active map
  * @extends {ol.interaction.Interaction}
  */
-ol.interaction.CurrentMap = function(options) {
-  options = options || {};
-  var condition = options.condition || function() {
-    return true;
-  }
-  // Check events on the map
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      if (condition(e)) {
-        if (!this.isCurrentMap()) {
-          this.setCurrentMap(this.getMap());
-          this.dispatchEvent({ type: 'focus', map: this.getMap() });
-          this.getMap().dispatchEvent({ type: 'focus', map: this.getMap() });
-        }
-      }
+ol.interaction.CurrentMap = class olinteractionCurrentMap extends ol.interaction.Interaction {
+  constructor(options) {
+    options = options || {};
+    var condition = options.condition || function () {
       return true;
-    }.bind(this)
-  });
-  // Add a key listener
-  if (options.onKeyDown) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyDown ({ type: e.type, map: this.getMap(), originalEvent: e });
+    };
+    // Check events on the map
+    super({
+      handleEvent: function (e) {
+        if (condition(e)) {
+          if (!this.isCurrentMap()) {
+            this.setCurrentMap(this.getMap());
+            this.dispatchEvent({ type: 'focus', map: this.getMap() });
+            this.getMap().dispatchEvent({ type: 'focus', map: this.getMap() });
+          }
+        }
+        return true;
       }
-    }.bind(this));
+    });
+    // Add a key listener
+    if (options.onKeyDown) {
+      document.addEventListener('keydown', function (e) {
+        if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+          options.onKeyDown({ type: e.type, map: this.getMap(), originalEvent: e });
+        }
+      }.bind(this));
+    }
+    if (options.onKeyPress) {
+      document.addEventListener('keydown', function (e) {
+        if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+          options.onKeyPress({ type: e.type, map: this.getMap(), originalEvent: e });
+        }
+      }.bind(this));
+    }
+    if (options.onKeyUp) {
+      document.addEventListener('keydown', function (e) {
+        if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+          options.onKeyUp({ type: e.type, map: this.getMap(), originalEvent: e });
+        }
+      }.bind(this));
+    }
   }
-  if (options.onKeyPress) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyPress ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
+  /** Check if is the current map
+   * @return {boolean}
+   */
+  isCurrentMap() {
+    return this.getMap() === ol.interaction.CurrentMap.prototype._currentMap;
   }
-  if (options.onKeyUp) { 
-    document.addEventListener('keydown', function(e) {
-      if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-        options.onKeyUp ({ type: e.type, map: this.getMap(), originalEvent: e });
-      }
-    }.bind(this));
+  /** Get the current map
+   * @return {ol.Map}
+   */
+  getCurrentMap() {
+    return ol.interaction.CurrentMap.prototype._currentMap;
   }
-};
-ol.ext.inherits(ol.interaction.CurrentMap, ol.interaction.Interaction);
+  /** Set the current map
+   * @param {ol.Map} map
+   */
+  setCurrentMap(map) {
+    ol.interaction.CurrentMap.prototype._currentMap = map;
+  }
+}
 /** The current map */
 ol.interaction.CurrentMap.prototype._currentMap = undefined;
-/** Check if is the current map 
- * @return {boolean}
- */
-ol.interaction.CurrentMap.prototype.isCurrentMap = function() {
-  return this.getMap() === ol.interaction.CurrentMap.prototype._currentMap;
-};
-/** Get the current map
- * @return {ol.Map}
- */
-ol.interaction.CurrentMap.prototype.getCurrentMap = function() {
-  return ol.interaction.CurrentMap.prototype._currentMap;
-};
-/** Set the current map
- * @param {ol.Map} map
- */
-ol.interaction.CurrentMap.prototype.setCurrentMap = function(map) {
-  ol.interaction.CurrentMap.prototype._currentMap = map;
-};
 
 /** Blob interaction to clip layers in a blob
  * @constructor
@@ -22130,134 +22176,142 @@ ol.interaction.ClipMap.prototype._setPosition = function(e) {
  *  @param {ol.source.Vector | Array<ol.source.Vector>} options.sources the source to copy from (used for cut), if not defined, it will use the destination
  *  @param {ol.source.Vector} options.destination the source to copy to
  */
-ol.interaction.CopyPaste = function(options) {
-  options = options || {};
-  // Features to copy
-  this.features = [];
-  this._cloneFeature = true;
-  var condition = options.condition;
-  if (typeof (condition) !== 'function') {
-    condition = function (e) {
-      if (e.originalEvent.ctrlKey) {
-        if (/^c$/i.test(e.originalEvent.key)) return 'copy';
-        if (/^x$/i.test(e.originalEvent.key)) return 'cut';
-        if (/^v$/i.test(e.originalEvent.key)) return 'paste';
-      }
-      return false;
+ol.interaction.CopyPaste = class olinteractionCopyPaste extends ol.interaction.CurrentMap {
+  constructor(options) {
+    options = options || {};
+    var condition = options.condition;
+    if (typeof (condition) !== 'function') {
+      condition = function (e) {
+        if (e.originalEvent.ctrlKey) {
+          if (/^c$/i.test(e.originalEvent.key))
+            return 'copy';
+          if (/^x$/i.test(e.originalEvent.key))
+            return 'cut';
+          if (/^v$/i.test(e.originalEvent.key))
+            return 'paste';
+        }
+        return false;
+      };
     }
-  }
-  this._featuresSource = options.features || new ol.Collection();
-  this.setSources(options.sources);
-  this.setDestination(options.destination);
-  // Create intreaction
-  ol.interaction.CurrentMap.call(this, {
-    condition: options.mapCondition,
-    onKeyDown: function (e) {
-      switch (condition(e)) {
-        case 'copy': {
-          this.copy({ silent: false });
-          break;
+    // Create interaction
+    super({
+      condition: options.mapCondition,
+      onKeyDown: function (e) {
+        switch (condition(e)) {
+          case 'copy': {
+            self.copy({ silent: false });
+            break;
+          }
+          case 'cut': {
+            self.copy({ cut: true, silent: false });
+            break;
+          }
+          case 'paste': {
+            self.paste({ silent: false });
+            break;
+          }
+          default: break;
         }
-        case 'cut': {
-          this.copy({ cut: true, silent: false });
-          break;
-        }
-        case 'paste': {
-          this.paste({ silent: false });
-          break;
-        }
-        default: break;
       }
-    }.bind(this)
-  });
-};
-ol.ext.inherits(ol.interaction.CopyPaste, ol.interaction.CurrentMap);
-/** Sources to cut feature from
- * @param { ol.source.Vector | Array<ol.source.Vector> } sources
- */
-ol.interaction.CopyPaste.prototype.setSources = function (sources) {
-  if (sources) {
-    this._source = [];
-    this._source = sources instanceof Array ? sources : [sources];
-  } else {
-    this._source = null;
-  }
-};
-/** Get sources to cut feature from
- * @return { Array<ol.source.Vector> } 
- */
-ol.interaction.CopyPaste.prototype.getSources = function () {
-  return this._source;
-};
-/** Source to paste features
- * @param { ol.source.Vector } source
- */
-ol.interaction.CopyPaste.prototype.setDestination = function (destination) {
-  this._destination = destination;
-};
-/** Get source to paste features
- * @param { ol.source.Vector } 
- */
-ol.interaction.CopyPaste.prototype.getDestination = function () {
-  return this._destination;
-};
-/** Get current feature to copy
- * @return {Array<ol.Feature>}
- */
-ol.interaction.CopyPaste.prototype.getFeatures = function() {
-  return this.features;
-};
-/** Set current feature to copy
- * @param {Object} options
- *  @param {Array<ol.Feature> | ol.Collection<ol.Feature>} options.features feature to copy, default get in the provided collection
- *  @param {boolean} options.cut try to cut feature from the sources, default false
- *  @param {boolean} options.silent true to send an event, default true
- */
-ol.interaction.CopyPaste.prototype.copy = function (options) {
-  options = options || {};
-  var features = options.features || this._featuresSource.getArray();
-  // Try to remove feature from sources
-  if (options.cut) {
-    var sources = this._source || [this._destination];
-    // Remove feature from sources
-    features.forEach(function(f) {
-      sources.forEach(function(source) {
-        try {
-          source.removeFeature(f);
-        } catch(e) {/*ok*/}
-      });
     });
-  }
-  if (this._cloneFeature) {
+    var self = this;
+    // Features to copy
     this.features = [];
-    features.forEach(function(f) {
-      this.features.push(f.clone());
-    }.bind(this));
-  } else {
-    this.features = features;
+    this._cloneFeature = true;
+    this._featuresSource = options.features || new ol.Collection();
+    this.setSources(options.sources);
+    this.setDestination(options.destination);
   }
-  // Send an event
-  if (options.silent===false) this.dispatchEvent({ type: options.cut ? 'cut' : 'copy', time: (new Date).getTime() });
-};
-/** Paste features
- * @param {Object} options
- *  @param {Array<ol.Feature> | ol.Collection<ol.Feature>} features feature to copy, default get current features
- *  @param {ol.source.Vector} options.destination Source to paste to, default the current source
- *  @param {boolean} options.silent true to send an event, default true
- */
-ol.interaction.CopyPaste.prototype.paste = function(options) {
-  options = options || {};
-  var features = options.features || this.features;
-  if (features) {
-    var destination = options.destination || this._destination;
-    if (destination) {
-      destination.addFeatures(this.features);
-      if (this._cloneFeature) this.copy({ features: this.features });
+  /** Sources to cut feature from
+   * @param { ol.source.Vector | Array<ol.source.Vector> } sources
+   */
+  setSources(sources) {
+    if (sources) {
+      this._source = [];
+      this._source = sources instanceof Array ? sources : [sources];
+    } else {
+      this._source = null;
     }
   }
-  // Send an event
-  if (options.silent===false) this.dispatchEvent({ type:'paste', features: features, time: (new Date).getTime() });
-};
+  /** Get sources to cut feature from
+   * @return { Array<ol.source.Vector> }
+   */
+  getSources() {
+    return this._source;
+  }
+  /** Source to paste features
+   * @param { ol.source.Vector } source
+   */
+  setDestination(destination) {
+    this._destination = destination;
+  }
+  /** Get source to paste features
+   * @param { ol.source.Vector }
+   */
+  getDestination() {
+    return this._destination;
+  }
+  /** Get current feature to copy
+   * @return {Array<ol.Feature>}
+   */
+  getFeatures() {
+    return this.features;
+  }
+  /** Set current feature to copy
+   * @param {Object} options
+   *  @param {Array<ol.Feature> | ol.Collection<ol.Feature>} options.features feature to copy, default get in the provided collection
+   *  @param {boolean} options.cut try to cut feature from the sources, default false
+   *  @param {boolean} options.silent true to send an event, default true
+   */
+  copy(options) {
+    options = options || {};
+    var features = options.features || this._featuresSource.getArray();
+    // Try to remove feature from sources
+    if (options.cut) {
+      var sources = this._source || [this._destination];
+      // Remove feature from sources
+      features.forEach(function (f) {
+        sources.forEach(function (source) {
+          try {
+            source.removeFeature(f);
+          } catch (e) { /*ok*/ }
+        });
+      });
+    }
+    if (this._cloneFeature) {
+      this.features = [];
+      features.forEach(function (f) {
+        this.features.push(f.clone());
+      }.bind(this));
+    } else {
+      this.features = features;
+    }
+    // Send an event
+    if (options.silent === false)
+      this.dispatchEvent({ type: options.cut ? 'cut' : 'copy', time: (new Date).getTime() });
+  }
+  /** Paste features
+   * @param {Object} options
+   *  @param {Array<ol.Feature> | ol.Collection<ol.Feature>} features feature to copy, default get current features
+   *  @param {ol.source.Vector} options.destination Source to paste to, default the current source
+   *  @param {boolean} options.silent true to send an event, default true
+   */
+  paste(options) {
+    options = options || {};
+    var features = options.features || this.features;
+    if (features) {
+      var destination = options.destination || this._destination;
+      if (destination) {
+        destination.addFeatures(this.features);
+        if (this._cloneFeature)
+          this.copy({ features: this.features });
+      }
+    }
+    // Send an event
+    if (options.silent === false)
+      this.dispatchEvent({ type: 'paste', features: features, time: (new Date).getTime() });
+  }
+}
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -22332,111 +22386,114 @@ ol.interaction.Delete = class olinteractionDelete extends ol.interaction.Select 
  *  @param {ol.Overlay|Array<ol.Overlay>} options.overlays the overlays to drag
  *  @param {ol.Size} options.offset overlay offset, default [0,0]
  */
-ol.interaction.DragOverlay = function(options) {
-  if (!options) options = {};
-  var offset = options.offset || [0,0];
-  // Extend pointer
-  ol.interaction.Pointer.call(this, {
-    // start draging on an overlay
-    handleDownEvent: function(evt) {
-      var res = evt.frameState.viewState.resolution
-      var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
-      // Click on a button (closeBox) or on a link: don't drag!
-      if (/^(BUTTON|A)$/.test(evt.originalEvent.target.tagName)) {
-        this._dragging = false;
-        return true;
-      }
-      // Start dragging
-      if (this._dragging) {
-        if (options.centerOnClick !== false) {
-          this._dragging.setPosition(coordinate, true);
-        } else {
-          coordinate = this._dragging.getPosition();
+ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interaction.Pointer {
+  constructor(options) {
+    options = options || {};
+    var offset = options.offset || [0, 0];
+    // Extend pointer
+    super({
+      // start draging on an overlay
+      handleDownEvent: function (evt) {
+        var res = evt.frameState.viewState.resolution;
+        var coordinate = [evt.coordinate[0] + offset[0] * res, evt.coordinate[1] - offset[1] * res];
+        // Click on a button (closeBox) or on a link: don't drag!
+        if (/^(BUTTON|A)$/.test(evt.originalEvent.target.tagName)) {
+          this._dragging = false;
+          return true;
         }
-        this.dispatchEvent({ 
-          type: 'dragstart',
-          overlay: this._dragging,
-          originalEvent: evt.originalEvent,
-          frameState: evt.frameState,
-          coordinate: coordinate
-        });
-        return true;
+        // Start dragging
+        if (this._dragging) {
+          if (options.centerOnClick !== false) {
+            this._dragging.setPosition(coordinate, true);
+          } else {
+            coordinate = this._dragging.getPosition();
+          }
+          this.dispatchEvent({
+            type: 'dragstart',
+            overlay: this._dragging,
+            originalEvent: evt.originalEvent,
+            frameState: evt.frameState,
+            coordinate: coordinate
+          });
+          return true;
+        }
+        return false;
+      },
+      // Drag
+      handleDragEvent: function (evt) {
+        var res = evt.frameState.viewState.resolution;
+        var coordinate = [evt.coordinate[0] + offset[0] * res, evt.coordinate[1] - offset[1] * res];
+        if (this._dragging) {
+          this._dragging.setPosition(coordinate, true);
+          this.dispatchEvent({
+            type: 'dragging',
+            overlay: this._dragging,
+            originalEvent: evt.originalEvent,
+            frameState: evt.frameState,
+            coordinate: coordinate
+          });
+        }
+      },
+      // Stop dragging
+      handleUpEvent: function (evt) {
+        var res = evt.frameState.viewState.resolution;
+        var coordinate = [evt.coordinate[0] + offset[0] * res, evt.coordinate[1] - offset[1] * res];
+        if (this._dragging) {
+          this.dispatchEvent({
+            type: 'dragend',
+            overlay: this._dragging,
+            originalEvent: evt.originalEvent,
+            frameState: evt.frameState,
+            coordinate: coordinate
+          });
+          this._dragging = false;
+          return true;
+        }
+        return false;
       }
-      return false;
-    },
-    // Drag
-    handleDragEvent: function(evt) {
-      var res = evt.frameState.viewState.resolution
-      var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
-      if (this._dragging) {
-        this._dragging.setPosition(coordinate, true);
-        this.dispatchEvent({ 
-          type: 'dragging',
-          overlay: this._dragging,
-          originalEvent: evt.originalEvent,
-          frameState: evt.frameState,
-          coordinate: coordinate
-        });
-      }
-    },
-    // Stop dragging
-    handleUpEvent: function(evt) {
-      var res = evt.frameState.viewState.resolution
-      var coordinate = [evt.coordinate[0] + offset[0]*res, evt.coordinate[1] - offset[1]*res];
-      if (this._dragging) {
-        this.dispatchEvent({ 
-          type: 'dragend',
-          overlay: this._dragging,
-          originalEvent: evt.originalEvent,
-          frameState: evt.frameState,
-          coordinate: coordinate
-        });
-        this._dragging = false;
-        return true;
-      }
-      return false;
+    });
+    // List of overlays / listeners
+    this._overlays = [];
+    if (!(options.overlays instanceof Array)) options.overlays = [options.overlays];
+    options.overlays.forEach(this.addOverlay.bind(this));
+  }
+  /** Add an overlay to the interacton
+   * @param {ol.Overlay} ov
+   */
+  addOverlay(ov) {
+    for (var i = 0, o; o = this._overlays[i]; i++) {
+      if (o === ov)
+        return;
     }
-  });
-  // List of overlays / listeners
-  this._overlays = [];
-  if (!(options.overlays instanceof Array)) options.overlays = [options.overlays];
-  options.overlays.forEach(this.addOverlay.bind(this));
-};
-ol.ext.inherits(ol.interaction.DragOverlay, ol.interaction.Pointer);
-/** Add an overlay to the interacton
- * @param {ol.Overlay} ov
- */
-ol.interaction.DragOverlay.prototype.addOverlay = function (ov) {
-  for (var i=0, o; o=this._overlays[i]; i++) {
-    if (o===ov) return;
+    // Stop event overlay
+    if (ov.element.parentElement && ov.element.parentElement.classList.contains('ol-overlaycontainer-stopevent')) {
+      console.warn('[DragOverlay.addOverlay] overlay must be created with stopEvent set to false!');
+      return;
+    }
+    // Add listener on overlay of the same map
+    var handler = function () {
+      if (this.getMap() === ov.getMap())
+        this._dragging = ov;
+    }.bind(this);
+    this._overlays.push({
+      overlay: ov,
+      listener: handler
+    });
+    ov.element.addEventListener('pointerdown', handler);
   }
-  // Stop event overlay
-  if (ov.element.parentElement && ov.element.parentElement.classList.contains('ol-overlaycontainer-stopevent')) {
-    console.warn('[DragOverlay.addOverlay] overlay must be created with stopEvent set to false!');
-    return;
-  }
-  // Add listener on overlay of the same map
-  var handler = function() {
-    if (this.getMap()===ov.getMap()) this._dragging = ov;
-  }.bind(this);
-  this._overlays.push({
-    overlay: ov,
-    listener: handler
-  });
-  ov.element.addEventListener('pointerdown', handler);
-};
-/** Remove an overlay from the interacton
- * @param {ol.Overlay} ov
- */
-ol.interaction.DragOverlay.prototype.removeOverlay = function (ov) {
-  for (var i=0, o; o=this._overlays[i]; i++) {
-    if (o.overlay===ov) {
-      var l = this._overlays.splice(i,1)[0];
-      ov.element.removeEventListener('pointerdown', l.listener);
-      break;
+  /** Remove an overlay from the interacton
+   * @param {ol.Overlay} ov
+   */
+  removeOverlay(ov) {
+    for (var i = 0, o; o = this._overlays[i]; i++) {
+      if (o.overlay === ov) {
+        var l = this._overlays.splice(i, 1)[0];
+        ov.element.removeEventListener('pointerdown', l.listener);
+        break;
+      }
     }
   }
-};
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -22727,9 +22784,8 @@ ol.interaction.DrawRegular = class olinteractionDrawRegular extends ol.interacti
    * @api stable
    */
   setMap(map) {
-    if (this.getMap())
-      this.getMap().removeLayer(this.overlayLayer_)
-    ol.interaction.Interaction.prototype.setMap.call(this, map)
+    if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_)
+    super.setMap(map)
     this.overlayLayer_.setMap(map)
   }
   /**
@@ -23174,80 +23230,82 @@ ol.interaction.DrawTouch.prototype.setActive = function(b) {
  *  @param {Array<function(new:ol.format.Feature)>|undefined} options.formatConstructors Format constructors, default [ ol.format.GPX, ol.format.GeoJSONX, ol.format.GeoJSONP, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ]
  *  @param {Array<string>|undefined} options.accept list of accepted format, default ["gpx","json","geojsonx","geojsonp","geojson","igc","kml","topojson"]
  */
-ol.interaction.DropFile = function(options) {
-  options = options||{};
-  ol.interaction.DragAndDrop.call(this, {});
-  var zone = options.zone || document;
-  zone.addEventListener('dragenter', this.onstop );
-  zone.addEventListener('dragover', this.onstop );
-  zone.addEventListener('dragleave', this.onstop );
-  // Options
-  this.formatConstructors_ = options.formatConstructors || [ ol.format.GPX, ol.format.GeoJSONX, ol.format.GeoJSONP, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ];
-  this.projection_ = options.projection;
-  this.accept_ = options.accept || ["gpx","json","geojsonx","geojsonp","geojson","igc","kml","topojson"];
-  var self = this;
-  zone.addEventListener('drop', function(e){ return self.ondrop(e);});
-};
-ol.ext.inherits(ol.interaction.DropFile, ol.interaction.DragAndDrop);
-/** Set the map
-*/
-ol.interaction.DropFile.prototype.setMap = function(map) {
-  ol.interaction.Interaction.prototype.setMap.call(this, map);
-};
-/** Do something when over
-*/
-ol.interaction.DropFile.prototype.onstop = function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  return false;
-}
-/** Do something when over
-*/
-ol.interaction.DropFile.prototype.ondrop = function(e) {
-  e.preventDefault();
-  if (e.dataTransfer && e.dataTransfer.files.length) {
-    var self = this;
-    var projection = this.projection_ || (this.getMap() ? this.getMap().getView().getProjection() : null);
-    // fetch FileList object
-    var files = e.dataTransfer.files; // e.originalEvent.target.files ?
-    // process all File objects
-    var file;
-    var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/;
-    for (var i=0; file=files[i]; i++) {
-      var ex = file.name.match(pat)[0];
-      var isok = (this.accept_.indexOf(ex.toLocaleLowerCase()) >= 0);
-      self.dispatchEvent({ type:'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, isok: isok });
-      // Don't load file
-      if (!this.formatConstructors_.length) continue;
-      // Load file
-      var reader = new FileReader();
-      var formatConstructors = this.formatConstructors_
-      var theFile = file;
-      reader.onload = function(e) {
-        var result = e.target.result;
-        var features = [];
-        var i, ii;
-        for (i = 0, ii = formatConstructors.length; i < ii; ++i) {
-          var formatConstructor = formatConstructors[i];
-          try {
-            var format = new formatConstructor();
-            features = format.readFeatures(result, { featureProjection: projection });
-            if (features && features.length > 0) {
-              self.dispatchEvent({ type:'addfeatures', features: features, file: theFile, projection: projection });
-              self.dispatchEvent({ type:'loadend', features: features, file: theFile, projection: projection });
-              return;
-            }
-          } catch(e) { /* ok */ }
-        }
-        // Nothing match, try to load by yourself
-        self.dispatchEvent({ type:'loadend', file: theFile, result: result });
-      };
-      // Start loading
-      reader.readAsText(file);
-    }
+ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.DragAndDrop {
+  constructor(options) {
+    options = options || {}
+    super({})
+    var zone = options.zone || document
+    zone.addEventListener('dragenter', this.onstop)
+    zone.addEventListener('dragover', this.onstop)
+    zone.addEventListener('dragleave', this.onstop)
+    // Options
+    this.formatConstructors_ = options.formatConstructors || [ol.format.GPX, ol.format.GeoJSONX, ol.format.GeoJSONP, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON]
+    this.projection_ = options.projection
+    this.accept_ = options.accept || ["gpx", "json", "geojsonx", "geojsonp", "geojson", "igc", "kml", "topojson"]
+    var self = this
+    zone.addEventListener('drop', function (e) { return self.ondrop(e) })
   }
-  return false;
-};
+  /** Set the map
+  */
+  setMap(map) {
+    ol.interaction.Interaction.prototype.setMap.call(this, map)
+  }
+  /** Do something when over
+  */
+  onstop(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    return false
+  }
+  /** Do something when over
+  */
+  ondrop(e) {
+    e.preventDefault()
+    if (e.dataTransfer && e.dataTransfer.files.length) {
+      var self = this
+      var projection = this.projection_ || (this.getMap() ? this.getMap().getView().getProjection() : null)
+      // fetch FileList object
+      var files = e.dataTransfer.files // e.originalEvent.target.files ?
+      // process all File objects
+      var file
+      var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/
+      for (var i = 0; file = files[i]; i++) {
+        var ex = file.name.match(pat)[0]
+        var isok = (this.accept_.indexOf(ex.toLocaleLowerCase()) >= 0)
+        self.dispatchEvent({ type: 'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, isok: isok })
+        // Don't load file
+        if (!this.formatConstructors_.length)
+          continue
+        // Load file
+        var reader = new FileReader()
+        var formatConstructors = this.formatConstructors_
+        var theFile = file
+        reader.onload = function (e) {
+          var result = e.target.result
+          var features = []
+          var i, ii
+          for (i = 0, ii = formatConstructors.length; i < ii; ++i) {
+            var formatConstructor = formatConstructors[i]
+            try {
+              var format = new formatConstructor()
+              features = format.readFeatures(result, { featureProjection: projection })
+              if (features && features.length > 0) {
+                self.dispatchEvent({ type: 'addfeatures', features: features, file: theFile, projection: projection })
+                self.dispatchEvent({ type: 'loadend', features: features, file: theFile, projection: projection })
+                return
+              }
+            } catch (e) { /* ok */ }
+          }
+          // Nothing match, try to load by yourself
+          self.dispatchEvent({ type: 'loadend', file: theFile, result: result })
+        }
+        // Start loading
+        reader.readAsText(file)
+      }
+    }
+    return false
+  }
+}
 
 /** A Select interaction to fill feature's properties on click.
  * @constructor
@@ -24299,7 +24357,7 @@ ol.interaction.Modify.prototype.getModifiedFeatures = function() {
  *  @param {ol.EventsConditionType | undefined} options.insertVertexCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether a new vertex can be added to the sketch features. Default is ol.events.condition.always
  *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
  */
-ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.interaction.Pointer {
+ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.interaction.Interaction {
   constructor(options) {
     options = options || {}
     var dragging, modifying
@@ -24322,10 +24380,11 @@ ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.inter
               return true
           }
           case 'pointermove': {
-            if (!dragging)
+            if (!dragging){
               return this.handleMoveEvent(e)
-            else
-              return true
+            } else {
+              return false
+            }
           }
           case 'singleclick':
           case 'click': {
@@ -24393,7 +24452,7 @@ ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.inter
    */
   setMap(map) {
     if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_)
-    ol.interaction.Interaction.prototype.setMap.call(this, map)
+    super.setMap(map)
     this.overlayLayer_.setMap(map)
   }
   /**
@@ -24402,9 +24461,8 @@ ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.inter
    * @api stable
    */
   setActive(active) {
-    ol.interaction.Interaction.prototype.setActive.call(this, active)
-    if (this.overlayLayer_)
-      this.overlayLayer_.getSource().clear()
+    super.setActive(active)
+    if (this.overlayLayer_) this.overlayLayer_.getSource().clear()
   }
   /** Change the filter function
    * @param {function|undefined} options.filter a filter that takes a feature and return true if it can be modified, default always true.
@@ -24963,22 +25021,18 @@ ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.inter
    * @private
    */
   handleDragEvent(e) {
-    if (!this.getActive())
-      return false
-    if (!this.arcs)
-      return true
+    if (!this.getActive()) return false
+    if (!this.arcs) return true
     // Show sketch
     this.overlayLayer_.getSource().clear()
     var p = new ol.Feature(new ol.geom.Point(e.coordinate))
     this.overlayLayer_.getSource().addFeature(p)
     // Nothing to do
-    if (!this.arcs.length)
-      return true
+    if (!this.arcs.length) return true
     // Move arcs
     this.arcs.forEach(function (a) {
       var coords = a.coord1.concat([e.coordinate], a.coord2)
-      if (a.closed)
-        coords.push(e.coordinate)
+      if (a.closed) coords.push(e.coordinate)
       this.setArcCoordinates(a, coords)
     }.bind(this))
     this.dispatchEvent({
@@ -24994,8 +25048,7 @@ ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.inter
    * @private
    */
   handleMoveEvent(e) {
-    if (!this.getActive())
-      return false
+    if (!this.getActive()) return true
     this.overlayLayer_.getSource().clear()
     var current = this.getClosestFeature(e)
     // Draw sketch
@@ -25016,6 +25069,7 @@ ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.inter
         this.previousCursor_ = undefined
       }
     }
+    return true
   }
   /** Get the current feature to modify
    * @return {ol.Feature}
@@ -25846,280 +25900,298 @@ ol.interaction.SelectCluster = class olinteractionSelectCluster extends ol.inter
  *  @param {ol.style.Style | Array<ol.style.Style> | undefined} options.style Style for the sektch features.
  *  @param {*} options.vectorClass a vector layer class to create the guides with ol6, use ol/layer/VectorImage using ol6
  */
-ol.interaction.SnapGuides = function(options) {
-  if (!options) options = {};
-  // Intersect 2 guides
-  function getIntersectionPoint (d1, d2) {
-    var d1x = d1[1][0] - d1[0][0];
-    var d1y = d1[1][1] - d1[0][1];
-    var d2x = d2[1][0] - d2[0][0];
-    var d2y = d2[1][1] - d2[0][1];
-    var det = d1x * d2y - d1y * d2x;
-    if (det != 0) {
-      var k = (d1x * d1[0][1] - d1x * d2[0][1] - d1y * d1[0][0] + d1y * d2[0][0]) / det;
-      return [d2[0][0] + k*d2x, d2[0][1] + k*d2y];
+ol.interaction.SnapGuides = class olinteractionSnapGuides extends ol.interaction.Interaction {
+  constructor(options) {
+    options = options || {}
+    // Intersect 2 guides
+    function getIntersectionPoint(d1, d2) {
+      var d1x = d1[1][0] - d1[0][0]
+      var d1y = d1[1][1] - d1[0][1]
+      var d2x = d2[1][0] - d2[0][0]
+      var d2y = d2[1][1] - d2[0][1]
+      var det = d1x * d2y - d1y * d2x
+      if (det != 0) {
+        var k = (d1x * d1[0][1] - d1x * d2[0][1] - d1y * d1[0][0] + d1y * d2[0][0]) / det
+        return [d2[0][0] + k * d2x, d2[0][1] + k * d2y]
+      }
+      else
+        return false
     }
-    else return false;
-  }
-  function dist2D (p1,p2) {
-    var dx = p1[0]-p2[0];
-    var dy = p1[1]-p2[1];
-    return Math.sqrt(dx*dx+dy*dy);
-  }
-  // Snap distance (in px)
-  this.snapDistance_ = options.pixelTolerance || 10;
-  this.enableInitialGuides_ = options.enableInitialGuides || false;
-  // Default style
-  var sketchStyle = [
-    new ol.style.Style({
-      stroke: new ol.style.Stroke({
-        color: '#ffcc33',
-        lineDash: [8,5],
-        width: 1.25
-      })
-    })
-  ];
-  // Custom style
-  if (options.style) sketchStyle = options.style instanceof Array ? options.style : [options.style];
-  // Create a new overlay for the sketch
-  this.overlaySource_ = new ol.source.Vector({
-    features: new ol.Collection(),
-    useSpatialIndex: false
-  });
-  // Use ol/layer/VectorImage to render the snap guides as an image to improve performance on rerenderers
-  var vectorClass = options.vectorClass || ol.layer.Vector;
-  this.overlayLayer_ = new vectorClass({
-    // render the snap guides as an image to improve performance on rerenderers
-    renderMode: 'image',
-    source: this.overlaySource_,
-      style: function() {
-        return sketchStyle;
-      },
-      name:'Snap overlay',
-      displayInLayerSwitcher: false
-    });
-  // Use snap interaction
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      if (this.getActive()) {
-        var features = this.overlaySource_.getFeatures();
-        var prev = null;
-        var p = null;
-        var res = e.frameState.viewState.resolution;
-        for (var i=0, f; f = features[i]; i++) {
-          var c = f.getGeometry().getClosestPoint(e.coordinate);
-          if ( dist2D(c, e.coordinate) / res < this.snapDistance_) {
-            // Intersection on 2 lines
-            if (prev) {
-              var c2 = getIntersectionPoint(prev.getGeometry().getCoordinates(),  f.getGeometry().getCoordinates());
-              if (c2) {
-                if (dist2D(c2, e.coordinate) / res < this.snapDistance_) {
-                  p = c2;
+    function dist2D(p1, p2) {
+      var dx = p1[0] - p2[0]
+      var dy = p1[1] - p2[1]
+      return Math.sqrt(dx * dx + dy * dy)
+    }
+    // Use snap interaction
+    super({
+      handleEvent: function (e) {
+        if (this.getActive()) {
+          var features = this.overlaySource_.getFeatures()
+          var prev = null
+          var p = null
+          var res = e.frameState.viewState.resolution
+          for (var i = 0, f; f = features[i]; i++) {
+            var c = f.getGeometry().getClosestPoint(e.coordinate)
+            if (dist2D(c, e.coordinate) / res < this.snapDistance_) {
+              // Intersection on 2 lines
+              if (prev) {
+                var c2 = getIntersectionPoint(prev.getGeometry().getCoordinates(), f.getGeometry().getCoordinates())
+                if (c2) {
+                  if (dist2D(c2, e.coordinate) / res < this.snapDistance_) {
+                    p = c2
+                  }
                 }
+              } else {
+                p = c
               }
-            } else {
-              p = c;
+              prev = f
             }
-            prev = f;
           }
+          if (p)
+            e.coordinate = p
         }
-        if (p) e.coordinate = p;
+        return true
       }
-      return true;
+    })
+    // Snap distance (in px)
+    this.snapDistance_ = options.pixelTolerance || 10
+    this.enableInitialGuides_ = options.enableInitialGuides || false
+    // Default style
+    var sketchStyle = [
+      new ol.style.Style({
+        stroke: new ol.style.Stroke({
+          color: '#ffcc33',
+          lineDash: [8, 5],
+          width: 1.25
+        })
+      })
+    ]
+    // Custom style
+    if (options.style) {
+      sketchStyle = options.style instanceof Array ? options.style : [options.style]
     }
-  });
-};
-ol.ext.inherits(ol.interaction.SnapGuides, ol.interaction.Interaction);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.SnapGuides.prototype.setMap = function(map) {
-  if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
-  ol.interaction.Interaction.prototype.setMap.call (this, map);
-  this.overlayLayer_.setMap(map);
-  if (map) this.projExtent_ = map.getView().getProjection().getExtent();
-};
-/** Activate or deactivate the interaction.
- * @param {boolean} active
- */
-ol.interaction.SnapGuides.prototype.setActive = function(active) {
-  this.overlayLayer_.setVisible(active);
-  ol.interaction.Interaction.prototype.setActive.call (this, active);
-}
-/** Clear previous added guidelines
- * @param {Array<ol.Feature> | undefined} features a list of feature to remove, default remove all feature
- */
-ol.interaction.SnapGuides.prototype.clearGuides = function(features) {
-  if (!features) {
-    this.overlaySource_.clear();
-  } else {
-    for (var i=0, f; f=features[i]; i++) {
-      try {
-        this.overlaySource_.removeFeature(f);
-      } catch(e) {/* nothing to to */}
+    // Create a new overlay for the sketch
+    this.overlaySource_ = new ol.source.Vector({
+      features: new ol.Collection(),
+      useSpatialIndex: false
+    })
+    // Use ol/layer/VectorImage to render the snap guides as an image to improve performance on rerenderers
+    var vectorClass = options.vectorClass || ol.layer.Vector
+    this.overlayLayer_ = new vectorClass({
+      // render the snap guides as an image to improve performance on rerenderers
+      renderMode: 'image',
+      source: this.overlaySource_,
+      style: function () {
+        return sketchStyle
+      },
+      name: 'Snap overlay',
+      displayInLayerSwitcher: false
+    })
+    this.overlayLayer_.setVisible(this.getActive());
+  }
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_)
+    super.setMap(map)
+    this.overlayLayer_.setMap(map)
+    if (map) this.projExtent_ = map.getView().getProjection().getExtent()
+  }
+  /** Activate or deactivate the interaction.
+   * @param {boolean} active
+   */
+  setActive(active) {
+    if (this.overlayLayer_) this.overlayLayer_.setVisible(active)
+    super.setActive(active)
+  }
+  /** Clear previous added guidelines
+   * @param {Array<ol.Feature> | undefined} features a list of feature to remove, default remove all feature
+   */
+  clearGuides(features) {
+    if (!features) {
+      this.overlaySource_.clear()
+    } else {
+      for (var i = 0, f; f = features[i]; i++) {
+        try {
+          this.overlaySource_.removeFeature(f)
+        } catch (e) { /* nothing to to */ }
+      }
     }
   }
-};
-/** Get guidelines
- * @return {ol.Collection} guidelines features
- */
-ol.interaction.SnapGuides.prototype.getGuides = function() {
-  return this.overlaySource_.getFeaturesCollection();
-}
-/** Add a new guide to snap to
- * @param {Array<ol.coordinate>} v the direction vector
- * @return {ol.Feature} feature guide
- */
-ol.interaction.SnapGuides.prototype.addGuide = function(v, ortho) {
-  if (v) {
-    var map = this.getMap();
-    // Limit extent
-    var extent = map.getView().calculateExtent(map.getSize());
-    var guideLength = Math.max(
-      this.projExtent_[2] - this.projExtent_[0],
-      this.projExtent_[3] - this.projExtent_[1]
-    );
-    extent = ol.extent.buffer(extent, guideLength * 1.5);
-    //extent = ol.extent.boundingExtent(extent, this.projExtent_);
-    if (extent[0]<this.projExtent_[0]) extent[0]=this.projExtent_[0];
-    if (extent[1]<this.projExtent_[1]) extent[1]=this.projExtent_[1];
-    if (extent[2]>this.projExtent_[2]) extent[2]=this.projExtent_[2];
-    if (extent[3]>this.projExtent_[3]) extent[3]=this.projExtent_[3];
-    var dx = v[0][0] - v[1][0];
-    var dy = v[0][1] - v[1][1];
-    var d = 1 / Math.sqrt(dx*dx+dy*dy);
-    var generateLine = function(loopDir) {
-      var p, g = [];
-      var loopCond = guideLength*loopDir*2;
-      for (var i=0; loopDir > 0 ? i < loopCond : i > loopCond; i+=(guideLength * loopDir) / 100) {
-        if (ortho) p = [ v[0][0] + dy*d*i, v[0][1] - dx*d*i];
-        else p = [ v[0][0] + dx*d*i, v[0][1] + dy*d*i];
-        if (ol.extent.containsCoordinate(extent, p)) g.push(p);
-        else break;
-      }
-      return new ol.Feature(new ol.geom.LineString([g[0], g[g.length-1]]));
-    }
-    var f0 = generateLine(1);
-    var f1 = generateLine(-1);
-    this.overlaySource_.addFeature(f0);
-    this.overlaySource_.addFeature(f1);
-    return [f0, f1];
+  /** Get guidelines
+   * @return {ol.Collection} guidelines features
+   */
+  getGuides() {
+    return this.overlaySource_.getFeaturesCollection()
   }
-};
-/** Add a new orthogonal guide to snap to
- * @param {Array<ol.coordinate>} v the direction vector
- * @return {ol.Feature} feature guide
- */
-ol.interaction.SnapGuides.prototype.addOrthoGuide = function(v) {
-  return this.addGuide(v, true);
-};
-/** Listen to draw event to add orthogonal guidelines on the first and last point.
- * @param {_ol_interaction_Draw_} drawi a draw interaction to listen to
- * @api
- */
-ol.interaction.SnapGuides.prototype.setDrawInteraction = function(drawi) {
-  var self = this;
-  // Number of points currently drawing
-  var nb = 0;
-  // Current guidelines
-  var features = [];
-  function setGuides(e) {
-    var coord = e.target.getCoordinates();
-    var s = 2;
-    switch (e.target.getType()) {
-      case 'Point':
-        return;
-      case 'Polygon':
-        coord = coord[0].slice(0, -1);
-        break;
-      default: break;
-    }
-    var l = coord.length;
-    if (l === s && self.enableInitialGuides_) {
-      var x = coord[0][0];
-      var y = coord[0][1];
-      coord = [[x, y], [x, y - 1]];
-    }
-    if (l != nb && (self.enableInitialGuides_ ? l >= s : l > s)) {
-      self.clearGuides(features);
-      // use try catch to remove a bug on freehand draw...
-      try {
-        var p1 = coord[l - s], p2 = coord[l - s - 1];
-        if (l > s && !(p1[0] === p2[0] && p1[1] === p2[1])) {
-          features = self.addOrthoGuide([coord[l - s], coord[l - s - 1]]);
+  /** Add a new guide to snap to
+   * @param {Array<ol.coordinate>} v the direction vector
+   * @return {ol.Feature} feature guide
+   */
+  addGuide(v, ortho) {
+    if (v) {
+      var map = this.getMap()
+      // Limit extent
+      var extent = map.getView().calculateExtent(map.getSize())
+      var guideLength = Math.max(
+        this.projExtent_[2] - this.projExtent_[0],
+        this.projExtent_[3] - this.projExtent_[1]
+      )
+      extent = ol.extent.buffer(extent, guideLength * 1.5)
+      //extent = ol.extent.boundingExtent(extent, this.projExtent_);
+      if (extent[0] < this.projExtent_[0])
+        extent[0] = this.projExtent_[0]
+      if (extent[1] < this.projExtent_[1])
+        extent[1] = this.projExtent_[1]
+      if (extent[2] > this.projExtent_[2])
+        extent[2] = this.projExtent_[2]
+      if (extent[3] > this.projExtent_[3])
+        extent[3] = this.projExtent_[3]
+      var dx = v[0][0] - v[1][0]
+      var dy = v[0][1] - v[1][1]
+      var d = 1 / Math.sqrt(dx * dx + dy * dy)
+      var generateLine = function (loopDir) {
+        var p, g = []
+        var loopCond = guideLength * loopDir * 2
+        for (var i = 0; loopDir > 0 ? i < loopCond : i > loopCond; i += (guideLength * loopDir) / 100) {
+          if (ortho)
+            p = [v[0][0] + dy * d * i, v[0][1] - dx * d * i]
+          else
+            p = [v[0][0] + dx * d * i, v[0][1] + dy * d * i]
+          if (ol.extent.containsCoordinate(extent, p))
+            g.push(p)
+          else
+            break
         }
-        features = features.concat(self.addGuide([coord[0], coord[1]]));
-        features = features.concat(self.addOrthoGuide([coord[0], coord[1]]));
-        nb = l;
-      } catch (e) { /* ok*/ }
+        return new ol.Feature(new ol.geom.LineString([g[0], g[g.length - 1]]))
+      }
+      var f0 = generateLine(1)
+      var f1 = generateLine(-1)
+      this.overlaySource_.addFeature(f0)
+      this.overlaySource_.addFeature(f1)
+      return [f0, f1]
     }
   }
-  // New drawing
-  drawi.on ("drawstart", function(e) {
-    // When geom is changing add a new orthogonal direction 
-    e.feature.getGeometry().on("change", setGuides);
-  });
-  // end drawing / deactivate => clear directions
-  drawi.on (["drawend", "change:active"], function(e) {
-    self.clearGuides(features);
-    if (e.feature) e.feature.getGeometry().un("change", setGuides);
-    nb = 0;
-    features = [];
-  });
-};
-/** Listen to modify event to add orthogonal guidelines relative to the currently dragged point
- * @param {_ol_interaction_Modify_} modifyi a modify interaction to listen to
- * @api
- */
-ol.interaction.SnapGuides.prototype.setModifyInteraction = function (modifyi) {
-  function mod(d, n) {
-    return ((d % n) + n) % n;
+  /** Add a new orthogonal guide to snap to
+   * @param {Array<ol.coordinate>} v the direction vector
+   * @return {ol.Feature} feature guide
+   */
+  addOrthoGuide(v) {
+    return this.addGuide(v, true)
   }
-  var self = this;
-  // Current guidelines
-  var features = [];
-  function computeGuides(e) {
-    var selectedVertex = e.target.vertexFeature_
-    if (!selectedVertex) return;
-    var f = e.target.getModifiedFeatures()[0];
-    var geom = f.getGeometry();
-    var coord = geom.getCoordinates();
-    switch (geom.getType()) {
-      case 'Point':
-        return;
-      case 'Polygon':
-        coord = coord[0].slice(0, -1);
-        break;
-      default: break;
+  /** Listen to draw event to add orthogonal guidelines on the first and last point.
+   * @param {_ol_interaction_Draw_} drawi a draw interaction to listen to
+   * @api
+   */
+  setDrawInteraction(drawi) {
+    var self = this
+    // Number of points currently drawing
+    var nb = 0
+    // Current guidelines
+    var features = []
+    function setGuides(e) {
+      var coord = e.target.getCoordinates()
+      var s = 2
+      switch (e.target.getType()) {
+        case 'Point':
+          return
+        case 'Polygon':
+          coord = coord[0].slice(0, -1)
+          break
+        default: break
+      }
+      var l = coord.length
+      if (l === s && self.enableInitialGuides_) {
+        var x = coord[0][0]
+        var y = coord[0][1]
+        coord = [[x, y], [x, y - 1]]
+      }
+      if (l != nb && (self.enableInitialGuides_ ? l >= s : l > s)) {
+        self.clearGuides(features)
+        // use try catch to remove a bug on freehand draw...
+        try {
+          var p1 = coord[l - s], p2 = coord[l - s - 1]
+          if (l > s && !(p1[0] === p2[0] && p1[1] === p2[1])) {
+            features = self.addOrthoGuide([coord[l - s], coord[l - s - 1]])
+          }
+          features = features.concat(self.addGuide([coord[0], coord[1]]))
+          features = features.concat(self.addOrthoGuide([coord[0], coord[1]]))
+          nb = l
+        } catch (e) { /* ok*/ }
+      }
     }
-    var modifyVertex = selectedVertex.getGeometry().getCoordinates();
-    var idx = coord.findIndex(function(c) {
-      return c[0] === modifyVertex[0] && c[1] === modifyVertex[1]
-    });
-    var l = coord.length;
-    self.clearGuides(features);
-    features = self.addOrthoGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]);
-    features = features.concat(self.addGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]));
-    features = features.concat(self.addGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
-    features = features.concat(self.addOrthoGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]));
+    // New drawing
+    drawi.on("drawstart", function (e) {
+      // When geom is changing add a new orthogonal direction 
+      e.feature.getGeometry().on("change", setGuides)
+    })
+    // end drawing / deactivate => clear directions
+    drawi.on(["drawend", "change:active"], function (e) {
+      self.clearGuides(features)
+      if (e.feature)
+        e.feature.getGeometry().un("change", setGuides)
+      nb = 0
+      features = []
+    })
   }
-  function setGuides(e) {
-    // This callback is called before ol adds the vertex to the feature, so
-    // defer a moment for openlayers to add the new vertex
-    setTimeout(computeGuides, 0, e);
+  /** Listen to modify event to add orthogonal guidelines relative to the currently dragged point
+   * @param {_ol_interaction_Modify_} modifyi a modify interaction to listen to
+   * @api
+   */
+  setModifyInteraction(modifyi) {
+    function mod(d, n) {
+      return ((d % n) + n) % n
+    }
+    var self = this
+    // Current guidelines
+    var features = []
+    function computeGuides(e) {
+      var modifyVertex = e.coordinate
+      if (!modifyVertex) {
+        var selectedVertex = e.target.vertexFeature_
+        if (!selectedVertex) return
+        modifyVertex = selectedVertex.getGeometry().getCoordinates()
+      }
+      var f = e.target.getModifiedFeatures()[0]
+      var geom = f.getGeometry()
+      var coord = geom.getCoordinates()
+      switch (geom.getType()) {
+        case 'Point':
+          return
+        case 'Polygon':
+          coord = coord[0].slice(0, -1)
+          break
+        default: break
+      }
+      var idx = coord.findIndex(function (c) {
+        return c[0] === modifyVertex[0] && c[1] === modifyVertex[1]
+      })
+      var l = coord.length
+      self.clearGuides(features)
+      features = self.addOrthoGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]])
+      features = features.concat(self.addGuide([coord[mod(idx - 1, l)], coord[mod(idx - 2, l)]]))
+      features = features.concat(self.addGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]))
+      features = features.concat(self.addOrthoGuide([coord[mod(idx + 1, l)], coord[mod(idx + 2, l)]]))
+    }
+    function setGuides(e) {
+      // This callback is called before ol adds the vertex to the feature, so
+      // defer a moment for openlayers to add the new vertex
+      setTimeout(computeGuides, 0, e)
+    }
+    function drawEnd() {
+      self.clearGuides(features)
+      features = []
+    }
+    // New drawing
+    modifyi.on('modifystart', setGuides)
+    // end drawing, clear directions
+    modifyi.on('modifyend', drawEnd)
   }
-  function drawEnd() {
-    self.clearGuides(features);
-    features = [];
-  }
-  // New drawing
-  modifyi.on("modifystart", setGuides);
-  // end drawing, clear directions
-  modifyi.on("modifyend", drawEnd);
-};
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -26488,223 +26560,235 @@ ol.interaction.Split = class olinteractionSplit extends ol.interaction.Interacti
  *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split. Default is 1e-10.
  * @todo verify auto intersection on features that split.
  */
-ol.interaction.Splitter = function(options) {
-  if (!options) options = {};
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      // Hack to get only one changeFeature when draging with ol.interaction.Modify on.
-      if (e.type != "pointermove" && e.type != "pointerdrag") {
-        if (this.lastEvent_) {
-          this.splitSource(this.lastEvent_.feature);
-          this.lastEvent_ = null;
+ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Interaction {
+  constructor(options) {
+    options = options || {}
+    super({
+      handleEvent: function (e) {
+        // Hack to get only one changeFeature when draging with ol.interaction.Modify on.
+        if (e.type != "pointermove" && e.type != "pointerdrag") {
+          if (this.lastEvent_) {
+            this.splitSource(this.lastEvent_.feature)
+            this.lastEvent_ = null
+          }
+          this.moving_ = false
+        } else {
+          this.moving_ = true
         }
-        this.moving_ = false;
-      }
-      else this.moving_ = true;
-      return true; 
-    },
-  });
-  // Features added / remove
-  this.added_ = [];
-  this.removed_ = [];
-  // Source to split
-  if (options.features) {
-    this.source_ = new ol.source.Vector({ features: options.features });
-  } else {
-    this.source_ = options.source ? options.source : new ol.source.Vector({ features: new ol.Collection() });
+        return true
+      },
+    })
+    // Features added / remove
+    this.added_ = []
+    this.removed_ = []
+    // Source to split
+    if (options.features) {
+      this.source_ = new ol.source.Vector({ features: options.features })
+    } else {
+      this.source_ = options.source ? options.source : new ol.source.Vector({ features: new ol.Collection() })
+    }
+    var trigger = this.triggerSource
+    if (options.triggerFeatures) {
+      trigger = new ol.source.Vector({ features: options.triggerFeatures })
+    }
+    if (trigger) {
+      trigger.on("addfeature", this.onAddFeature.bind(this))
+      trigger.on("changefeature", this.onChangeFeature.bind(this))
+      trigger.on("removefeature", this.onRemoveFeature.bind(this))
+    } else {
+      this.source_.on("addfeature", this.onAddFeature.bind(this))
+      this.source_.on("changefeature", this.onChangeFeature.bind(this))
+      this.source_.on("removefeature", this.onRemoveFeature.bind(this))
+    }
+    // Split tolerance between the calculated intersection and the geometry
+    this.tolerance_ = options.tolerance || 1e-10
+    // Get all features candidate
+    this.filterSplit_ = options.filter || function () { return true }
   }
-  var trigger = this.triggerSource;
-  if (options.triggerFeatures) {
-    trigger = new ol.source.Vector({ features: options.triggerFeatures });
+  /** Calculate intersection on 2 segs
+  * @param {Array<_ol_coordinate_>} s1 first seg to intersect (2 points)
+  * @param {Array<_ol_coordinate_>} s2 second seg to intersect (2 points)
+  * @return { boolean | _ol_coordinate_ } intersection point or false no intersection
+  */
+  intersectSegs(s1, s2) {
+    var tol = this.tolerance_
+    // Solve
+    var x12 = s1[0][0] - s1[1][0]
+    var x34 = s2[0][0] - s2[1][0]
+    var y12 = s1[0][1] - s1[1][1]
+    var y34 = s2[0][1] - s2[1][1]
+    var det = x12 * y34 - y12 * x34
+    // No intersection
+    if (Math.abs(det) < tol) {
+      return false
+    } else {
+      // Outside segement
+      var r1 = ((s1[0][0] - s2[1][0]) * y34 - (s1[0][1] - s2[1][1]) * x34) / det
+      if (Math.abs(r1) < tol)
+        return s1[0]
+      if (Math.abs(1 - r1) < tol)
+        return s1[1]
+      if (r1 < 0 || r1 > 1)
+        return false
+      var r2 = ((s1[0][1] - s2[1][1]) * x12 - (s1[0][0] - s2[1][0]) * y12) / det
+      if (Math.abs(r2) < tol)
+        return s2[1]
+      if (Math.abs(1 - r2) < tol)
+        return s2[0]
+      if (r2 < 0 || r2 > 1)
+        return false
+      // Intersection
+      var a = s1[0][0] * s1[1][1] - s1[0][1] * s1[1][0]
+      var b = s2[0][0] * s2[1][1] - s2[0][1] * s2[1][0]
+      var p = [(a * x34 - b * x12) / det, (a * y34 - b * y12) / det]
+      // Test start / end
+      /*
+      console.log("r1: "+r1)
+      console.log("r2: "+r2)
+      console.log ("s10: "+(_ol_coordinate_.dist2d(p,s1[0])<tol)) ;
+      console.log ("s11: "+(_ol_coordinate_.dist2d(p,s1[1])<tol)) ;
+      console.log ("s20: "+(_ol_coordinate_.dist2d(p,s2[0])<tol)) ;
+      console.log ("s21: "+(_ol_coordinate_.dist2d(p,s2[1])<tol)) ;
+      */
+      return p
+    }
   }
-  if (trigger) {
-    trigger.on("addfeature", this.onAddFeature.bind(this));
-    trigger.on("changefeature", this.onChangeFeature.bind(this));
-    trigger.on("removefeature", this.onRemoveFeature.bind(this));
-  } else {
-    this.source_.on("addfeature", this.onAddFeature.bind(this));
-    this.source_.on("changefeature", this.onChangeFeature.bind(this));
-    this.source_.on("removefeature", this.onRemoveFeature.bind(this));
+  /** Split the source using a feature
+  * @param {ol.Feature} feature The feature to use to split.
+  * @private
+  */
+  splitSource(feature, change) {
+    if (!this.getActive())
+      return
+    // Allready perform a split
+    if (this.splitting)
+      return
+    // Start splitting
+    this.source_.dispatchEvent({ type: 'beforesplit', feaure: feature, source: this.source_ })
+    this.dispatchEvent({ type: 'beforesplit', feaure: feature, source: this.source_ })
+    // If the interaction is inserted other interaction, the objet is not consistant 
+    // > wait end of other interactions
+    if (change) {
+      this._splitSource(feature)
+    } else {
+      setTimeout(function () { this._splitSource(feature) }.bind(this))
+    }
   }
-  // Split tolerance between the calculated intersection and the geometry
-  this.tolerance_ = options.tolerance || 1e-10;
-  // Get all features candidate
-  this.filterSplit_ = options.filter || function(){ return true; };
-};
-ol.ext.inherits(ol.interaction.Splitter, ol.interaction.Interaction);
-/** Calculate intersection on 2 segs
-* @param {Array<_ol_coordinate_>} s1 first seg to intersect (2 points)
-* @param {Array<_ol_coordinate_>} s2 second seg to intersect (2 points)
-* @return { boolean | _ol_coordinate_ } intersection point or false no intersection
-*/
-ol.interaction.Splitter.prototype.intersectSegs = function(s1,s2) {
-  var tol = this.tolerance_;
-  // Solve
-  var x12 = s1[0][0] - s1[1][0];
-  var x34 = s2[0][0] - s2[1][0];
-  var y12 = s1[0][1] - s1[1][1];
-  var y34 = s2[0][1] - s2[1][1];
-  var det = x12 * y34 - y12 * x34;
-  // No intersection
-  if (Math.abs(det) < tol) {
-    return false;
-  } else {
-    // Outside segement
-    var r1 = ((s1[0][0] - s2[1][0])*y34 - (s1[0][1] - s2[1][1])*x34) / det;
-    if (Math.abs(r1)<tol) return s1[0];
-    if (Math.abs(1-r1)<tol) return s1[1];
-    if (r1<0 || r1>1) return false;
-    var r2 = ((s1[0][1] - s2[1][1])*x12 - (s1[0][0] - s2[1][0])*y12) / det;
-    if (Math.abs(r2)<tol) return s2[1];
-    if (Math.abs(1-r2)<tol) return s2[0];
-    if (r2<0 || r2>1) return false;
-    // Intersection
-    var a = s1[0][0] * s1[1][1] - s1[0][1] * s1[1][0];
-    var b = s2[0][0] * s2[1][1] - s2[0][1] * s2[1][0];
-    var p = [(a * x34 - b * x12) / det, (a * y34 - b * y12) / det];
-    // Test start / end
-/*
-console.log("r1: "+r1)
-console.log("r2: "+r2)
-console.log ("s10: "+(_ol_coordinate_.dist2d(p,s1[0])<tol)) ;
-console.log ("s11: "+(_ol_coordinate_.dist2d(p,s1[1])<tol)) ;
-console.log ("s20: "+(_ol_coordinate_.dist2d(p,s2[0])<tol)) ;
-console.log ("s21: "+(_ol_coordinate_.dist2d(p,s2[1])<tol)) ;
-*/
-    return p;
-  }
-};
-/** Split the source using a feature
-* @param {ol.Feature} feature The feature to use to split.
-* @private
-*/
-ol.interaction.Splitter.prototype.splitSource = function(feature, change) {
-  if (!this.getActive()) return;
-  // Allready perform a split
-  if (this.splitting) return;
-  // Start splitting
-  this.source_.dispatchEvent({ type:'beforesplit', feaure: feature, source: this.source_ });
-  this.dispatchEvent({ type:'beforesplit', feaure: feature, source: this.source_ });
-  // If the interaction is inserted other interaction, the objet is not consistant 
-  // > wait end of other interactions
-  if (change) {
-    this._splitSource(feature);
-  } else {
-    setTimeout(function() { this._splitSource(feature); }.bind(this));
-  }
-}
-/** Split the source using a feature
-* @param {ol.Feature} feature The feature to use to split.
-* @private
-*/
-ol.interaction.Splitter.prototype._splitSource = function(feature) {
-  var i, k, f2;
-  this.splitting = true;
-  this.added_ = [];
-  this.removed_ = [];
-  var c = feature.getGeometry().getCoordinates();
-  var seg, split = [];
-  function intersect (f) {
-    if (f !== feature) {
-      var c2 = f.getGeometry().getCoordinates();
-      for (var j=0; j<c2.length-1; j++) {
-        var p = this.intersectSegs (seg, [c2[j],c2[j+1]]);
-        if (p) {
-          split.push(p);
-          g = f.getGeometry().splitAt(p, this.tolerance_);
-          if (g && g.length>1) {
-            found = f;
-            return true;
+  /** Split the source using a feature
+  * @param {ol.Feature} feature The feature to use to split.
+  * @private
+  */
+  _splitSource(feature) {
+    var i, k, f2
+    this.splitting = true
+    this.added_ = []
+    this.removed_ = []
+    var c = feature.getGeometry().getCoordinates()
+    var seg, split = []
+    function intersect(f) {
+      if (f !== feature) {
+        var c2 = f.getGeometry().getCoordinates()
+        for (var j = 0; j < c2.length - 1; j++) {
+          var p = this.intersectSegs(seg, [c2[j], c2[j + 1]])
+          if (p) {
+            split.push(p)
+            g = f.getGeometry().splitAt(p, this.tolerance_)
+            if (g && g.length > 1) {
+              found = f
+              return true
+            }
           }
         }
       }
+      return false
     }
-    return false;
-  }
-  // Split existing features
-  for (i=0; i<c.length-1; i++) {
-    seg = [c[i],c[i+1]];
-    var extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/ );
-    var g;
-    while (true) {
-      var found = false;
-      this.source_.forEachFeatureIntersectingExtent(extent, intersect.bind(this));
-      // Split feature
-      if (found) {
-        var f = found;
-        this.source_.removeFeature(f);
-        for (k=0; k<g.length; k++) {
-          f2 = f.clone();
-          f2.setGeometry(g[k]);
-          this.source_.addFeature(f2);
+    // Split existing features
+    for (i = 0; i < c.length - 1; i++) {
+      seg = [c[i], c[i + 1]]
+      var extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/)
+      var g
+      while (true) {
+        var found = false
+        this.source_.forEachFeatureIntersectingExtent(extent, intersect.bind(this))
+        // Split feature
+        if (found) {
+          var f = found
+          this.source_.removeFeature(f)
+          for (k = 0; k < g.length; k++) {
+            f2 = f.clone()
+            f2.setGeometry(g[k])
+            this.source_.addFeature(f2)
+          }
+        }
+        else
+          break
+      }
+    }
+    // Auto intersect
+    for (i = 0; i < c.length - 2; i++) {
+      for (var j = i + 1; j < c.length - 1; j++) {
+        var p = this.intersectSegs([c[i], c[i + 1]], [c[j], c[j + 1]])
+        if (p && p != c[i + 1]) {
+          split.push(p)
         }
       }
-      else break;
+    }
+    // Split original
+    var splitOriginal = false
+    if (split.length) {
+      var result = feature.getGeometry().splitAt(split, this.tolerance_)
+      if (result.length > 1) {
+        for (k = 0; k < result.length; k++) {
+          f2 = feature.clone()
+          f2.setGeometry(result[k])
+          this.source_.addFeature(f2)
+        }
+        splitOriginal = true
+      }
+    }
+    // End splitting
+    setTimeout(function () {
+      if (splitOriginal)
+        this.source_.removeFeature(feature)
+      this.source_.dispatchEvent({ type: 'aftersplit', featureAdded: this.added_, featureRemoved: this.removed_, source: this.source_ })
+      this.dispatchEvent({ type: 'aftersplit', featureAdded: this.added_, featureRemoved: this.removed_, source: this.source_ })
+      // Finish
+      this.splitting = false
+    }.bind(this))
+  }
+  /** New feature source is added
+   * @private
+  */
+  onAddFeature(e) {
+    this.splitSource(e.feature)
+    if (this.splitting) {
+      this.added_.push(e.feature)
     }
   }
-  // Auto intersect
-  for (i=0; i<c.length-2; i++) {
-    for (var j=i+1; j<c.length-1; j++) {
-      var p = this.intersectSegs ([c[i],c[i+1]], [c[j],c[j+1]]);
-      if (p && p!=c[i+1]) {
-        split.push(p);
+  /** Feature source is removed > count features added/removed
+   * @private
+  */
+  onRemoveFeature(e) {
+    if (this.splitting) {
+      var n = this.added_.indexOf(e.feature)
+      if (n == -1) {
+        this.removed_.push(e.feature)
+      } else {
+        this.added_.splice(n, 1)
       }
     }
   }
-  // Split original
-  var splitOriginal = false;
-  if (split.length) {
-    var result = feature.getGeometry().splitAt(split, this.tolerance_);
-    if (result.length>1) {
-      for (k=0; k<result.length; k++) {
-        f2 = feature.clone();
-        f2.setGeometry(result[k]);
-        this.source_.addFeature(f2);
-      }
-      splitOriginal = true;
-    }
-  }
-  // End splitting
-  setTimeout(function() {
-    if (splitOriginal) this.source_.removeFeature(feature);
-    this.source_.dispatchEvent({ type:'aftersplit', featureAdded: this.added_, featureRemoved: this.removed_, source: this.source_ });
-    this.dispatchEvent({ type:'aftersplit', featureAdded: this.added_, featureRemoved: this.removed_, source: this.source_ });
-    // Finish
-    this.splitting = false;
-  }.bind(this));
-};
-/** New feature source is added 
- * @private
-*/
-ol.interaction.Splitter.prototype.onAddFeature = function(e) {
-  this.splitSource(e.feature);
-  if (this.splitting) {
-    this.added_.push(e.feature);
-  }
-};
-/** Feature source is removed > count features added/removed
- * @private
-*/
-ol.interaction.Splitter.prototype.onRemoveFeature = function(e) {
-  if (this.splitting) {
-    var n = this.added_.indexOf(e.feature);
-    if (n==-1) {
-      this.removed_.push(e.feature);
+  /** Feature source is changing
+   * @private
+  */
+  onChangeFeature(e) {
+    if (this.moving_) {
+      this.lastEvent_ = e
     } else {
-      this.added_.splice(n,1);
+      this.splitSource(e.feature, true)
     }
   }
-};
-/** Feature source is changing 
- * @private
-*/
-ol.interaction.Splitter.prototype.onChangeFeature = function(e) {
-  if (this.moving_) {
-    this.lastEvent_ = e;
-  } else {
-    this.splitSource(e.feature, true);
-  }
-};
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -35155,70 +35239,72 @@ popup.hide();
 *	@param {function|undefined} options.onshow callback function when popup is shown
 * @api stable
 */
-ol.Overlay.Placemark = function (options) {
-  options = options || {};
-  options.popupClass = (options.popupClass || '') + ' placemark anim'
-  options.positioning = 'bottom-center',
-  ol.Overlay.Popup.call(this, options);
-  this.setPositioning = function(){};
-  if (options.color) this.element.style.color = options.color;
-  if (options.backgroundColor ) this.element.style.backgroundColor  = options.backgroundColor ;
-  if (options.contentColor ) this.setContentColor(options.contentColor);
-  if (options.size) this.setRadius(options.size);
-};
-ol.ext.inherits(ol.Overlay.Placemark, ol.Overlay.Popup);
-/**
- * Set the position and the content of the placemark (hide it before to enable animation).
- * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
- * @param {string|undefined} html the HTML content (undefined = previous content).
- */
-ol.Overlay.Placemark.prototype.show = function(coordinate, html) {
-  if (coordinate===true) {
-    coordinate = this.getPosition();
+ol.Overlay.Placemark = class olOverlayPlacemark extends ol.Overlay.Popup {
+  constructor(options) {
+    options = options || {};
+    options.popupClass = (options.popupClass || '') + ' placemark anim';
+    options.positioning = 'bottom-center',
+    super(options);
+    this.setPositioning = function () { };
+    if (options.color) le.color = options.color;
+    if (options.backgroundColor) undColor = options.backgroundColor;
+    if (options.contentColor) this.setContentColor(options.contentColor);
+    if (options.size) this.setRadius(options.size);
   }
-  this.hide();
-  ol.Overlay.Popup.prototype.show.apply(this, [coordinate, html]);
-};
-/**
- * Set the placemark color.
- * @param {string} color
- */
-ol.Overlay.Placemark.prototype.setColor = function(color) {
-  this.element.style.color = color;
-};
-/**
- * Set the placemark background color.
- * @param {string} color
- */
-ol.Overlay.Placemark.prototype.setBackgroundColor = function(color) {
-  this._elt.style.backgroundColor = color;
-};
-/**
- * Set the placemark content color.
- * @param {string} color
- */
-ol.Overlay.Placemark.prototype.setContentColor = function(color) {
-  var c = this.element.getElementsByClassName('ol-popup-content')[0];
-  if (c) c.style.color = color;
-};
-/**
- * Set the placemark class.
- * @param {string} name
- */
-ol.Overlay.Placemark.prototype.setClassName = function(name) {
-  var oldclass = this.element.className;
-  this.element.className = 'ol-popup placemark ol-popup-bottom ol-popup-center ' 
-    + (/visible/.test(oldclass) ? 'visible ' : '')
-    + (/anim/.test(oldclass) ? 'anim ' : '')
-    + name;
-};
-/**
- * Set the placemark radius.
- * @param {number} size size in pixel
- */
-ol.Overlay.Placemark.prototype.setRadius = function(size) {
-  this.element.style.fontSize = size + 'px';
-};
+  /**
+   * Set the position and the content of the placemark (hide it before to enable animation).
+   * @param {ol.Coordinate|string} coordinate the coordinate of the popup or the HTML content.
+   * @param {string|undefined} html the HTML content (undefined = previous content).
+   */
+  show(coordinate, html) {
+    if (coordinate === true) {
+      coordinate = this.getPosition();
+    }
+    this.hide();
+    super.show([coordinate, html]);
+  }
+  /**
+   * Set the placemark color.
+   * @param {string} color
+   */
+  setColor(color) {
+    this.element.style.color = color;
+  }
+  /**
+   * Set the placemark background color.
+   * @param {string} color
+   */
+  setBackgroundColor(color) {
+    this._elt.style.backgroundColor = color;
+  }
+  /**
+   * Set the placemark content color.
+   * @param {string} color
+   */
+  setContentColor(color) {
+    var c = this.element.getElementsByClassName('ol-popup-content')[0];
+    if (c)
+      c.style.color = color;
+  }
+  /**
+   * Set the placemark class.
+   * @param {string} name
+   */
+  setClassName(name) {
+    var oldclass = this.element.className;
+    this.element.className = 'ol-popup placemark ol-popup-bottom ol-popup-center '
+      + (/visible/.test(oldclass) ? 'visible ' : '')
+      + (/anim/.test(oldclass) ? 'anim ' : '')
+      + name;
+  }
+  /**
+   * Set the placemark radius.
+   * @param {number} size size in pixel
+   */
+  setRadius(size) {
+    this.element.style.fontSize = size + 'px';
+  }
+}
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
