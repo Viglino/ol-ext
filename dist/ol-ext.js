@@ -9762,259 +9762,263 @@ ol.control.Imageline.prototype._drawLink = function(e) {
  *
  *  @param {string} options.exclusions Exclusion list separate with a comma 'Toll,Tunnel,Bridge'
  */
-ol.control.IsochroneGeoportail = function(options) {
-  var self = this;
-	if (!options) options = {};
-	if (options.typing == undefined) options.typing = 300;
-	var classNames = (options.className ? options.className : '')+ ' ol-isochrone ol-routing';
-	if (!options.target) classNames += ' ol-unselectable ol-control';
-	var element = ol.ext.element.create('DIV', { className: classNames })
-	if (!options.target) {
-    var bt = ol.ext.element.create('BUTTON', { parent: element })
-    bt.addEventListener('click', function(){
-      element.classList.toggle('ol-collapsed');
+ol.control.IsochroneGeoportail = class olcontrolIsochroneGeoportail extends ol.control.Control {
+  constructor(options) {
+    if (!options)
+      options = {};
+    if (options.typing == undefined)
+      options.typing = 300;
+    var classNames = (options.className ? options.className : '') + ' ol-isochrone ol-routing';
+    if (!options.target) classNames += ' ol-unselectable ol-control';
+    var element = ol.ext.element.create('DIV', { className: classNames });
+    if (!options.target) {
+      var bt = ol.ext.element.create('BUTTON', { parent: element });
+      bt.addEventListener('click', function () {
+        element.classList.toggle('ol-collapsed');
+      });
+    }
+    // Inherits
+    super({
+      element: element,
+      target: options.target
     });
+    var self = this;
+    this.set('iter', 1);
+    var content = ol.ext.element.create('DIV', { className: 'content', parent: element });
+    // Search control
+    this._addSearchCtrl(content, options);
+    // Method buttons
+    ol.ext.element.create('BUTTON', { className: 'ol-button ol-method-time selected', title: 'isochrone', parent: content })
+      .addEventListener('click', function () {
+        this.setMethod('time');
+      }.bind(this));
+    ol.ext.element.create('I', { className: 'ol-button ol-method-distance', title: 'isodistance', parent: content })
+      .addEventListener('click', function () {
+        this.setMethod('distance');
+      }.bind(this));
+    // Mode buttons
+    ol.ext.element.create('I', { className: 'ol-button ol-car selected', title: 'by car', parent: content })
+      .addEventListener('click', function () {
+        this.setMode('car');
+      }.bind(this));
+    ol.ext.element.create('I', { className: 'ol-button ol-pedestrian', title: 'by foot', parent: content })
+      .addEventListener('click', function () {
+        this.setMode('pedestrian');
+      }.bind(this));
+    // Direction buttons
+    ol.ext.element.create('I', { className: 'ol-button ol-direction-direct selected', title: 'direct', parent: content })
+      .addEventListener('click', function () {
+        this.setDirection('direct');
+      }.bind(this));
+    ol.ext.element.create('I', { className: 'ol-button ol-direction-reverse', title: 'reverse', parent: content })
+      .addEventListener('click', function () {
+        this.setDirection('reverse');
+      }.bind(this));
+    // Input 
+    var div = ol.ext.element.create('DIV', { className: 'ol-time', parent: content });
+    ol.ext.element.create('DIV', { html: 'isochrone:', parent: div });
+    ol.ext.element.create('INPUT', { type: 'number', parent: div, min: 0 })
+      .addEventListener('change', function () {
+        self.set('hour', Number(this.value));
+      });
+    ol.ext.element.create('TEXT', { parent: div, html: 'h' });
+    ol.ext.element.create('INPUT', { type: 'number', parent: div, min: 0 })
+      .addEventListener('change', function () {
+        self.set('minute', Number(this.value));
+      });
+    ol.ext.element.create('TEXT', { parent: div, html: 'mn' });
+    div = ol.ext.element.create('DIV', { className: 'ol-distance', parent: content });
+    ol.ext.element.create('DIV', { html: 'isodistance:', parent: div });
+    ol.ext.element.create('INPUT', { type: 'number', step: 'any', parent: div, min: 0 })
+      .addEventListener('change', function () {
+        self.set('distance', Number(this.value));
+      });
+    ol.ext.element.create('TEXT', { parent: div, html: 'km' });
+    div = ol.ext.element.create('DIV', { className: 'ol-iter', parent: content });
+    ol.ext.element.create('DIV', { html: 'Iteration:', parent: div });
+    ol.ext.element.create('INPUT', { type: 'number', parent: div, value: 1, min: 1 })
+      .addEventListener('change', function () {
+        self.set('iter', Number(this.value));
+      });
+    // OK button
+    ol.ext.element.create('I', { className: 'ol-ok', html: 'ok', parent: content })
+      .addEventListener('click', function () {
+        var val = 0;
+        switch (this.get('method')) {
+          case 'distance': {
+            val = this.get('distance') * 1000;
+            break;
+          }
+          default: {
+            val = (this.get('hour') || 0) * 3600 + (this.get('minute') || 0) * 60;
+            break;
+          }
+        }
+        if (val && this.get('coordinate')) {
+          this.search(this.get('coordinate'), val);
+        }
+      }.bind(this));
+    this.set('url', 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/isochrone/isochrone.json');
+    this._ajax = new ol.ext.Ajax({
+      dataType: 'JSON',
+      auth: options.auth
+    });
+    this._ajax.on('success', this._success.bind(this));
+    this._ajax.on('error', this._error.bind(this));
+    // searching
+    this._ajax.on('loadstart', function () {
+      this.element.classList.add('ol-searching');
+    }.bind(this));
+    this._ajax.on('loadend', function () {
+      this.element.classList.remove('ol-searching');
+    }.bind(this));
+    this.setMethod(options.method);
   }
-  // Inherits
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.set('iter', 1);
-  var content = ol.ext.element.create('DIV', { className: 'content', parent: element } )
-  // Search control
-  this._addSearchCtrl(content, options);
-  // Method buttons
-  ol.ext.element.create('BUTTON', { className: 'ol-button ol-method-time selected', title:'isochrone', parent: content })
-    .addEventListener('click', function(){
-      this.setMethod('time');
-    }.bind(this));
-  ol.ext.element.create('I', { className: 'ol-button ol-method-distance', title:'isodistance', parent: content })
-    .addEventListener('click', function(){
-      this.setMethod('distance');
-    }.bind(this));
-  // Mode buttons
-  ol.ext.element.create('I', { className: 'ol-button ol-car selected', title:'by car', parent: content })
-    .addEventListener('click', function(){
-      this.setMode('car');
-    }.bind(this));
-  ol.ext.element.create('I', { className: 'ol-button ol-pedestrian', title:'by foot', parent: content })
-    .addEventListener('click', function(){
-      this.setMode('pedestrian');
-    }.bind(this));
-  // Direction buttons
-  ol.ext.element.create('I', { className: 'ol-button ol-direction-direct selected', title:'direct', parent: content })
-    .addEventListener('click', function(){
-      this.setDirection('direct');
-    }.bind(this));
-  ol.ext.element.create('I', { className: 'ol-button ol-direction-reverse', title:'reverse', parent: content })
-    .addEventListener('click', function(){
-      this.setDirection('reverse');
-    }.bind(this));
-  // Input 
-  var div = ol.ext.element.create('DIV', { className: 'ol-time', parent: content })
-  ol.ext.element.create('DIV', { html:'isochrone:', parent: div });
-  ol.ext.element.create('INPUT', { type: 'number', parent: div, min: 0 })
-    .addEventListener('change', function(){
-      self.set('hour', Number(this.value));
+  /**
+   * Set the map instance the control is associated with
+   * and add its controls associated to this map.
+   * @param {_ol_Map_} map The map instance.
+   */
+  setMap(map) {
+    ol.control.Control.prototype.setMap.call(this, map);
+    this._search.setMap(map);
+  }
+  /** Add a new search input
+   * @private
+   */
+  _addSearchCtrl(element, options) {
+    var div = ol.ext.element.create("DIV", { parent: element });
+    var search = this._search = new ol.control.SearchGeoportail({
+      className: 'IGNF ol-collapsed',
+      apiKey: options.apiKey,
+      target: div
     });
-  ol.ext.element.create('TEXT', { parent: div, html: 'h' });
-  ol.ext.element.create('INPUT', { type: 'number', parent: div, min: 0 })
-    .addEventListener('change', function(){
-      self.set('minute', Number(this.value));
-    });
-  ol.ext.element.create('TEXT', { parent: div, html: 'mn' });
-  div = ol.ext.element.create('DIV', { className: 'ol-distance', parent: content });
-  ol.ext.element.create('DIV', { html:'isodistance:', parent: div });
-  ol.ext.element.create('INPUT', { type: 'number', step: 'any', parent: div, min: 0 })
-    .addEventListener('change', function(){
-      self.set('distance', Number(this.value));
-    });
-  ol.ext.element.create('TEXT', { parent: div, html: 'km' });
-  div = ol.ext.element.create('DIV', { className: 'ol-iter', parent: content })
-  ol.ext.element.create('DIV', { html:'Iteration:', parent: div });
-  ol.ext.element.create('INPUT', { type: 'number', parent: div, value: 1, min: 1 })
-    .addEventListener('change', function(){
-      self.set('iter', Number(this.value));
-    });
-  // OK button
-  ol.ext.element.create('I', { className:'ol-ok', html:'ok', parent: content })
-    .addEventListener('click', function() {
-      var val = 0;
-      switch (this.get('method')) {
-        case 'distance':  {
-          val = this.get('distance')*1000;
+    search.on('select', function (e) {
+      search.setInput(e.search.fulltext);
+      this.set('coordinate', e.coordinate);
+    }.bind(this));
+    search.on('change:input', function () {
+      this.set('coordinate', false);
+    }.bind(this));
+  }
+  /** Set the travel method
+   * @param [string] method The method (time or distance)
+   */
+  setMethod(method) {
+    7;
+    method = (/distance/.test(method) ? 'distance' : 'time');
+    this.element.querySelector(".ol-method-time").classList.remove("selected");
+    this.element.querySelector(".ol-method-distance").classList.remove("selected");
+    this.element.querySelector(".ol-method-" + method).classList.add("selected");
+    this.element.querySelector("div.ol-time").classList.remove("selected");
+    this.element.querySelector("div.ol-distance").classList.remove("selected");
+    this.element.querySelector("div.ol-" + method).classList.add("selected");
+    this.set('method', method);
+  }
+  /** Set mode
+   * @param {string} mode The mode: 'car' or 'pedestrian', default 'car'
+   */
+  setMode(mode) {
+    this.set('mode', mode);
+    this.element.querySelector(".ol-car").classList.remove("selected");
+    this.element.querySelector(".ol-pedestrian").classList.remove("selected");
+    this.element.querySelector(".ol-" + mode).classList.add("selected");
+  }
+  /** Set direction
+   * @param {string} direction The direction: 'direct' or 'reverse', default direct
+   */
+  setDirection(direction) {
+    this.set('direction', direction);
+    this.element.querySelector(".ol-direction-direct").classList.remove("selected");
+    this.element.querySelector(".ol-direction-reverse").classList.remove("selected");
+    this.element.querySelector(".ol-direction-" + direction).classList.add("selected");
+  }
+  /** Calculate an isochrone
+   * @param {ol.coordinate} coord
+   * @param {number|string} option A number as time (in second) or distance (in meter), depend on method propertie
+   * or a string with a unit (s, mn, h for time or km, m)
+   */
+  search(coord, option, iter) {
+    var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
+    var method = /distance/.test(this.get('method')) ? 'distance' : 'time';
+    if (typeof (option) === 'string') {
+      var unit = option.replace(/([0-9|.]*)([a-z]*)$/, '$2');
+      method = 'time';
+      option = parseFloat(option);
+      // convert unit
+      switch (unit) {
+        case 'mn': {
+          option = option * 60;
           break;
         }
-        default: {
-          val = (this.get('hour')||0)*3600 + (this.get('minute')||0)*60;
+        case 'h': {
+          option = option * 3600;
           break;
         }
-      }
-      if (val && this.get('coordinate')) {
-        this.search(this.get('coordinate'), val);
-      }
-    }.bind(this));
-  this.set('url', 'https://wxs.ign.fr/'+(options.apiKey || 'essentiels')+'/isochrone/isochrone.json');
-  this._ajax = new ol.ext.Ajax({ 
-    dataType: 'JSON',
-    auth: options.auth
-  });
-  this._ajax.on('success', this._success.bind(this));
-  this._ajax.on('error', this._error.bind(this));
-  // searching
-  this._ajax.on('loadstart', function() {
-    this.element.classList.add('ol-searching');
-  }.bind(this));
-  this._ajax.on('loadend', function() {
-    this.element.classList.remove('ol-searching');
-  }.bind(this));
-  this.setMethod(options.method);
-};
-ol.ext.inherits(ol.control.IsochroneGeoportail, ol.control.Control);
-/**
- * Set the map instance the control is associated with
- * and add its controls associated to this map.
- * @param {_ol_Map_} map The map instance.
- */
-ol.control.IsochroneGeoportail.prototype.setMap = function (map) {
-	ol.control.Control.prototype.setMap.call(this, map);
-	this._search.setMap(map);
-};
-/** Add a new search input
- * @private
- */
-ol.control.IsochroneGeoportail.prototype._addSearchCtrl = function (element, options) {
-	var div = ol.ext.element.create("DIV", { parent: element });
-  var search = this._search = new ol.control.SearchGeoportail({
-    className: 'IGNF ol-collapsed',
-		apiKey: options.apiKey,
-		target: div
-	});
-	search.on('select', function(e){
-    search.setInput(e.search.fulltext);
-    this.set('coordinate', e.coordinate);
-  }.bind(this));
-  search.on('change:input', function(){
-    this.set('coordinate', false);
-  }.bind(this));
-};
-/** Set the travel method
- * @param [string] method The method (time or distance)
- */
-ol.control.IsochroneGeoportail.prototype.setMethod = function(method) {7
-  method = (/distance/.test(method) ? 'distance' : 'time');
-  this.element.querySelector(".ol-method-time").classList.remove("selected");
-  this.element.querySelector(".ol-method-distance").classList.remove("selected");
-  this.element.querySelector(".ol-method-"+method).classList.add("selected");
-  this.element.querySelector("div.ol-time").classList.remove("selected");
-  this.element.querySelector("div.ol-distance").classList.remove("selected");
-  this.element.querySelector("div.ol-"+method).classList.add("selected");
-  this.set('method', method);
-};
-/** Set mode
- * @param {string} mode The mode: 'car' or 'pedestrian', default 'car'
- */
-ol.control.IsochroneGeoportail.prototype.setMode = function (mode) {
-  this.set('mode', mode);
-  this.element.querySelector(".ol-car").classList.remove("selected");
-  this.element.querySelector(".ol-pedestrian").classList.remove("selected");
-  this.element.querySelector(".ol-"+mode).classList.add("selected");
-};
-/** Set direction
- * @param {string} direction The direction: 'direct' or 'reverse', default direct
- */
-ol.control.IsochroneGeoportail.prototype.setDirection = function (direction) {
-  this.set('direction', direction);
-  this.element.querySelector(".ol-direction-direct").classList.remove("selected");
-  this.element.querySelector(".ol-direction-reverse").classList.remove("selected");
-  this.element.querySelector(".ol-direction-"+direction).classList.add("selected");
-};
-/** Calculate an isochrone
- * @param {ol.coordinate} coord
- * @param {number|string} option A number as time (in second) or distance (in meter), depend on method propertie
- * or a string with a unit (s, mn, h for time or km, m)
- */
-ol.control.IsochroneGeoportail.prototype.search = function(coord, option, iter) {
-  var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
-  var method = /distance/.test(this.get('method')) ? 'distance' : 'time';
-  if (typeof(option)==='string') {
-    var unit = option.replace(/([0-9|.]*)([a-z]*)$/,'$2');
-    method = 'time';
-    option = parseFloat(option);
-    // convert unit
-    switch (unit) {
-      case 'mn': {
-        option = option*60;
-        break;
-      }
-      case 'h': {
-        option = option*3600;
-        break;
-      }
-      case 'm': {
-        method = 'distance';
-        break;
-      }
-      case 'km': {
-        method = 'distance';
-        option = option*1000;
-        break;
+        case 'm': {
+          method = 'distance';
+          break;
+        }
+        case 'km': {
+          method = 'distance';
+          option = option * 1000;
+          break;
+        }
       }
     }
+    var dt = Math.round(option * (this.get('iter') - (iter || 0)) / this.get('iter'));
+    if (typeof option === 'number') {
+      // Send data
+      var data = {
+        'gp-access-lib': '2.1.0',
+        location: ol.proj.toLonLat(coord, proj),
+        graphName: (this.get('mode') === 'pedestrian' ? 'Pieton' : 'Voiture'),
+        exclusions: this.get('exclusions') || undefined,
+        method: method,
+        time: method === 'time' ? dt : undefined,
+        distance: method === 'distance' ? dt : undefined,
+        reverse: (this.get('direction') === 'reverse'),
+        smoothing: this.get('smoothing') || true,
+        holes: this.get('holes') || false
+      };
+      this._ajax.send(this.get('url'), data, {
+        coord: coord,
+        option: option,
+        data: data,
+        iteration: (iter || 0) + 1
+      });
+    }
   }
-  var dt = Math.round(option * (this.get('iter')-(iter||0)) / this.get('iter'));
-  if (typeof option === 'number') {
-    // Send data
-    var data = {
-      'gp-access-lib': '2.1.0',
-      location: ol.proj.toLonLat(coord, proj),
-      graphName: (this.get('mode')==='pedestrian' ?  'Pieton' : 'Voiture'),
-      exclusions: this.get('exclusions') || undefined,
-      method: method,
-      time: method==='time' ? dt : undefined,
-      distance: method==='distance' ? dt : undefined,
-      reverse: (this.get('direction') === 'reverse'),
-      smoothing: this.get('smoothing') || true,
-      holes: this.get('holes') || false
-    };
-    this._ajax.send(this.get('url'), data, { 
-      coord: coord, 
-      option: option,
-      data: data,
-      iteration: (iter||0)+1 
+  /** Trigger result
+   * @private
+   */
+  _success(e) {
+    var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
+    // Convert to features
+    var format = new ol.format.WKT();
+    var evt = e.response;
+    evt.feature = format.readFeature(evt.wktGeometry, {
+      dataProjection: 'EPSG:4326',
+      featureProjection: proj
     });
+    evt.feature.set('iteration', e.options.iteration);
+    evt.feature.set('method', e.options.data.method);
+    evt.feature.set(e.options.data.method, e.options.data[e.options.data.method]);
+    delete evt.wktGeometry;
+    evt.type = 'isochrone';
+    evt.iteration = e.options.iteration - 1;
+    this.dispatchEvent(evt);
+    if (e.options.iteration < this.get('iter')) {
+      this.search(e.options.coord, e.options.option, e.options.iteration);
+    }
   }
-};
-/** Trigger result
- * @private
- */
-ol.control.IsochroneGeoportail.prototype._success = function(e) {
-  var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
-  // Convert to features
-  var format = new ol.format.WKT();
-  var evt = e.response;
-	evt.feature = format.readFeature(evt.wktGeometry, {
-    dataProjection: 'EPSG:4326',
-    featureProjection: proj
-  });
-  evt.feature.set('iteration', e.options.iteration);
-  evt.feature.set('method', e.options.data.method);
-  evt.feature.set(e.options.data.method, e.options.data[e.options.data.method]);
-  delete evt.wktGeometry;
-  evt.type = 'isochrone';
-  evt.iteration = e.options.iteration-1;
-  this.dispatchEvent (evt);
-  if (e.options.iteration < this.get('iter')) {
-    this.search(e.options.coord, e.options.option, e.options.iteration);
+  /** Trigger error
+   * @private
+   */
+  _error() {
+    this.dispatchEvent({ type: 'error' });
   }
-};
-/** Trigger error
- * @private
- */
-ol.control.IsochroneGeoportail.prototype._error = function() {
-  this.dispatchEvent ({ type:'error' });
-};
+}
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -10781,7 +10785,7 @@ ol.control.Overlay = class olcontrolOverlay extends ol.control.Control {
       elt.style.top = "";
       elt.style.left = "";
     }
-    if (html) tContent(html);
+    if (html) this.setContent(html);
     if (this._timeout) clearTimeout(this._timeout);
     this._timeout = setTimeout(function () {
       elt.classList.add("ol-visible");
@@ -13519,463 +13523,492 @@ ol.control.ProgressBar.prototype.setLayers = function (layers) {
  *	@param {function} options.autocomplete a function that take a search string and callback function to send an array
  *	@param {number} options.timeout default 20s
  */
-ol.control.RoutingGeoportail = function(options) {
-  var self = this;
-  if (!options) options = {};
-  if (options.typing == undefined) options.typing = 300;
-  options.apiKey = options.apiKey || 'itineraire';
-  if (!options.search) options.search = {};
-  options.search.apiKey = options.search.apiKey || 'essentiels';
-  // Class name for history
-  this._classname = options.className || 'search';
-  this._source = new ol.source.Vector();
-  // Authentication
-  this._auth = options.authentication;
-  var element = document.createElement("DIV");
-  var classNames = (options.className||"")+ " ol-routing";
-  if (!options.target) {
-    classNames += " ol-unselectable ol-control";
-  }
-  element.setAttribute('class', classNames);
-	if (!options.target) {
-    var bt = ol.ext.element.create('BUTTON', { parent: element })
-    bt.addEventListener('click', function(){
-      element.classList.toggle('ol-collapsed');
+ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    if (options.typing == undefined) options.typing = 300;
+    options.apiKey = options.apiKey || 'itineraire';
+    if (!options.search) options.search = {};
+    options.search.apiKey = options.search.apiKey || 'essentiels';
+    var element = document.createElement("DIV");
+    super({
+      element: element,
+      target: options.target
     });
-  }
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.set('url', 'https://wxs.ign.fr/calcul/geoportail/'+options.apiKey+'/rest/1.0.0/route');
-  var content = ol.ext.element.create('DIV', { className: 'content', parent: element } )
-  var listElt = ol.ext.element.create('DIV', { className: 'search-input', parent: content });
-  this._search = [];
-  this.addSearch(listElt, options);
-  this.addSearch(listElt, options);
-  ol.ext.element.create('I', { className: 'ol-car', title: options.carlabel||'by car', parent: content })
-    .addEventListener("click", function() {
-      self.setMode('car');
-    });
-  ol.ext.element.create('I', { className: 'ol-pedestrian', title: options.pedlabel||'pedestrian', parent: content })
-    .addEventListener("click", function() {
-      self.setMode('pedestrian');
-    });
-  ol.ext.element.create('I', { className: 'ol-ok', title: options.runlabel||'search', html:'OK', parent: content })
-    .addEventListener("click", function() {
-      self.calculate();
-    });
-  ol.ext.element.create('I', { className: 'ol-cancel', html:'cancel', parent: content })
-    .addEventListener("click", function() {
-      this.resultElement.innerHTML = '';
-    }.bind(this));
-  this.resultElement = document.createElement("DIV");
-  this.resultElement.setAttribute('class', 'ol-result');
-  element.appendChild(this.resultElement);
-  this.setMode(options.mode || 'car');
-  this.set('timeout', options.timeout || 20000);
-};
-ol.ext.inherits(ol.control.RoutingGeoportail, ol.control.Control);
-ol.control.RoutingGeoportail.prototype.setMode = function (mode, silent) {
-  this.set('mode', mode);
-  this.element.querySelector(".ol-car").classList.remove("selected");
-  this.element.querySelector(".ol-pedestrian").classList.remove("selected");
-  this.element.querySelector(".ol-"+mode).classList.add("selected");
-  if (!silent) this.calculate();
-};
-ol.control.RoutingGeoportail.prototype.setMethod = function (method, silent) {
-  this.set('method', method);
-  if (!silent) this.calculate();
-};
-ol.control.RoutingGeoportail.prototype.addButton = function (className, title, info) {
-  var bt = document.createElement("I");
-  bt.setAttribute("class", className);
-  bt.setAttribute("type", "button");
-  bt.setAttribute("title", title);
-  bt.innerHTML = info||'';
-  this.element.appendChild(bt);
-  return bt;
-};
-/** Get point source
- * @return {ol.source.Vector }
- */
-ol.control.RoutingGeoportail.prototype.getSource = function () {
-  return this._source;
-};
-ol.control.RoutingGeoportail.prototype._resetArray = function (element) {
-  this._search = [];
-  var q = element.parentNode.querySelectorAll('.search-input > div')
-  q.forEach(function(d) {
-    if (d.olsearch) {
-      if (d.olsearch.get('feature')) {
-        d.olsearch.get('feature').set('step', this._search.length);
-        if (this._search.length===0) d.olsearch.get('feature').set('pos', 'start');
-        else if (this._search.length === q.length-1) d.olsearch.get('feature').set('pos', 'end');
-        else d.olsearch.get('feature').set('pos', '');
-      }
-      this._search.push(d.olsearch);
+    var self = this;
+    // Class name for history
+    this._classname = options.className || 'search';
+    this._source = new ol.source.Vector();
+    // Authentication
+    this._auth = options.authentication;
+    var classNames = (options.className || "") + " ol-routing";
+    if (!options.target) {
+      classNames += " ol-unselectable ol-control";
     }
-  }.bind(this));
-};
-/** Remove a new search input
- * @private
- */
-ol.control.RoutingGeoportail.prototype.removeSearch = function (element, options, after) {
-  element.removeChild(after);
-  if (after.olsearch.get('feature')) this._source.removeFeature(after.olsearch.get('feature'));
-  if (this.getMap()) this.getMap().removeControl(after.olsearch);
-  this._resetArray(element);
-};
-/** Add a new search input
- * @private
- */
-ol.control.RoutingGeoportail.prototype.addSearch = function (element, options, after) {
-  var self = this;
-  var div = ol.ext.element.create('DIV');
-  if (after) element.insertBefore(div, after.nextSibling);
-  else element.appendChild(div);
-  ol.ext.element.create ('BUTTON', { title: options.startlabel||"add/remove", parent: div})
-    .addEventListener('click', function(e) {
-      if (e.ctrlKey) {
-        if (this._search.length>2) this.removeSearch(element, options, div);
-      } else if (e.shiftKey) {
-        this.addSearch(element, options, div);
-      }
-    }.bind(this));
-  var search = div.olsearch = new ol.control.SearchGeoportail({
-    className: 'IGNF ol-collapsed',
-    apiKey: options.search.apiKey,
-    authentication: options.search.authentication,
-    target: div,
-    reverse: true
-  });
-  search._changeCounter = 0;
-  this._resetArray(element);
-  search.on('select', function(e){
-    search.setInput(e.search.fulltext);
-    var f = search.get('feature');
-    if (!f) {
-      f = new ol.Feature(new ol.geom.Point(e.coordinate));
-      search.set('feature', f);
-      this._source.addFeature(f);
-      // Check geometry change
-      search.checkgeom = true;
-      f.getGeometry().on('change', function() {
-        if (search.checkgeom) this.onGeometryChange(search, f);
+    element.setAttribute('class', classNames);
+    if (!options.target) {
+      var bt = ol.ext.element.create('BUTTON', { parent: element });
+      bt.addEventListener('click', function () {
+        element.classList.toggle('ol-collapsed');
+      });
+    }
+    this.set('url', 'https://wxs.ign.fr/calcul/geoportail/' + options.apiKey + '/rest/1.0.0/route');
+    var content = ol.ext.element.create('DIV', { className: 'content', parent: element });
+    var listElt = ol.ext.element.create('DIV', { className: 'search-input', parent: content });
+    this._search = [];
+    this.addSearch(listElt, options);
+    this.addSearch(listElt, options);
+    ol.ext.element.create('I', { 
+      className: 'ol-car', 
+      title: options.carlabel || 'by car', 
+      parent: content 
+    })
+      .addEventListener("click", function () {
+        self.setMode('car');
+      });
+    ol.ext.element.create('I', { 
+      className: 'ol-pedestrian', 
+      title: options.pedlabel || 'pedestrian', 
+      parent: content 
+    })
+      .addEventListener("click", function () {
+        self.setMode('pedestrian');
+      });
+    ol.ext.element.create('I', { className: 'ol-ok', title: options.runlabel || 'search', html: 'OK', parent: content })
+      .addEventListener("click", function () {
+        self.calculate();
+      });
+    ol.ext.element.create('I', { className: 'ol-cancel', html: 'cancel', parent: content })
+      .addEventListener("click", function () {
+        this.resultElement.innerHTML = '';
       }.bind(this));
+    this.resultElement = document.createElement("DIV");
+    this.resultElement.setAttribute('class', 'ol-result');
+    element.appendChild(this.resultElement);
+    this.setMode(options.mode || 'car');
+    this.set('timeout', options.timeout || 20000);
+  }
+  setMode(mode, silent) {
+    this.set('mode', mode);
+    this.element.querySelector(".ol-car").classList.remove("selected");
+    this.element.querySelector(".ol-pedestrian").classList.remove("selected");
+    this.element.querySelector(".ol-" + mode).classList.add("selected");
+    if (!silent)
+      this.calculate();
+  }
+  setMethod(method, silent) {
+    this.set('method', method);
+    if (!silent)
+      this.calculate();
+  }
+  addButton(className, title, info) {
+    var bt = document.createElement("I");
+    bt.setAttribute("class", className);
+    bt.setAttribute("type", "button");
+    bt.setAttribute("title", title);
+    bt.innerHTML = info || '';
+    this.element.appendChild(bt);
+    return bt;
+  }
+  /** Get point source
+   * @return {ol.source.Vector }
+   */
+  getSource() {
+    return this._source;
+  }
+  _resetArray(element) {
+    this._search = [];
+    var q = element.parentNode.querySelectorAll('.search-input > div');
+    q.forEach(function (d) {
+      if (d.olsearch) {
+        if (d.olsearch.get('feature')) {
+          d.olsearch.get('feature').set('step', this._search.length);
+          if (this._search.length === 0)
+            d.olsearch.get('feature').set('pos', 'start');
+          else if (this._search.length === q.length - 1)
+            d.olsearch.get('feature').set('pos', 'end');
+          else
+            d.olsearch.get('feature').set('pos', '');
+        }
+        this._search.push(d.olsearch);
+      }
+    }.bind(this));
+  }
+  /** Remove a new search input
+   * @private
+   */
+  removeSearch(element, options, after) {
+    element.removeChild(after);
+    if (after.olsearch.get('feature'))
+      this._source.removeFeature(after.olsearch.get('feature'));
+    if (this.getMap())
+      this.getMap().removeControl(after.olsearch);
+    this._resetArray(element);
+  }
+  /** Add a new search input
+   * @private
+   */
+  addSearch(element, options, after) {
+    var self = this;
+    var div = ol.ext.element.create('DIV');
+    if (after)
+      element.insertBefore(div, after.nextSibling);
+    else
+      element.appendChild(div);
+    ol.ext.element.create('BUTTON', { title: options.startlabel || "add/remove", parent: div })
+      .addEventListener('click', function (e) {
+        if (e.ctrlKey) {
+          if (this._search.length > 2)
+            this.removeSearch(element, options, div);
+        } else if (e.shiftKey) {
+          this.addSearch(element, options, div);
+        }
+      }.bind(this));
+    var search = div.olsearch = new ol.control.SearchGeoportail({
+      className: 'IGNF ol-collapsed',
+      apiKey: options.search.apiKey,
+      authentication: options.search.authentication,
+      target: div,
+      reverse: true
+    });
+    search._changeCounter = 0;
+    this._resetArray(element);
+    search.on('select', function (e) {
+      search.setInput(e.search.fulltext);
+      var f = search.get('feature');
+      if (!f) {
+        f = new ol.Feature(new ol.geom.Point(e.coordinate));
+        search.set('feature', f);
+        this._source.addFeature(f);
+        // Check geometry change
+        search.checkgeom = true;
+        f.getGeometry().on('change', function () {
+          if (search.checkgeom)
+            this.onGeometryChange(search, f);
+        }.bind(this));
+      } else {
+        search.checkgeom = false;
+        if (!e.silent)
+          f.getGeometry().setCoordinates(e.coordinate);
+        search.checkgeom = true;
+      }
+      f.set('name', search.getTitle(e.search));
+      f.set('step', this._search.indexOf(search));
+      if (f.get('step') === 0)
+        f.set('pos', 'start');
+      else if (f.get('step') === this._search.length - 1)
+        f.set('pos', 'end');
+      search.set('selection', e.search);
+    }.bind(this));
+    search.element.querySelector('input').addEventListener('change', function () {
+      search.set('selection', null);
+      self.resultElement.innerHTML = '';
+    });
+    if (this.getMap())
+      this.getMap().addControl(search);
+  }
+  /** Geometry has changed
+   * @private
+   */
+  onGeometryChange(search, f, delay) {
+    // Set current geom 
+    var lonlat = ol.proj.transform(f.getGeometry().getCoordinates(), this.getMap().getView().getProjection(), 'EPSG:4326');
+    search._handleSelect({
+      x: lonlat[0],
+      y: lonlat[1],
+      fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6)
+    }, true, { silent: true });
+    // Try to revers geocode
+    if (delay) {
+      search._changeCounter--;
+      if (!search._changeCounter) {
+        search.reverseGeocode(f.getGeometry().getCoordinates(), { silent: true });
+        return;
+      }
     } else {
-      search.checkgeom = false;
-      if (!e.silent) f.getGeometry().setCoordinates(e.coordinate);
-      search.checkgeom = true;
+      search._changeCounter++;
+      setTimeout(function () {
+        this.onGeometryChange(search, f, true);
+      }.bind(this), 1000);
     }
-    f.set('name', search.getTitle(e.search));
-    f.set('step', this._search.indexOf(search));
-    if (f.get('step') === 0) f.set('pos','start');
-    else if (f.get('step') === this._search.length-1) f.set('pos','end');
-    search.set('selection', e.search);
-  }.bind(this));
-  search.element.querySelector('input').addEventListener('change', function(){
-    search.set('selection', null);
-    self.resultElement.innerHTML = '';
-  });
-  if (this.getMap()) this.getMap().addControl(search);
-};
-/** Geometry has changed
- * @private
- */
-ol.control.RoutingGeoportail.prototype.onGeometryChange = function (search, f, delay) {
-  // Set current geom 
-  var lonlat = ol.proj.transform(f.getGeometry().getCoordinates(), this.getMap().getView().getProjection(), 'EPSG:4326');
-  search._handleSelect({ 
-    x: lonlat[0], 
-    y: lonlat[1], 
-    fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
-  }, true, { silent: true });
-  // Try to revers geocode
-  if (delay) {
-    search._changeCounter--;
-    if (!search._changeCounter) {
-      search.reverseGeocode(f.getGeometry().getCoordinates(), { silent: true });
+  }
+  /**
+   * Set the map instance the control is associated with
+   * and add its controls associated to this map.
+   * @param {_ol_Map_} map The map instance.
+   */
+  setMap(map) {
+    super.setMap(map);
+    for (var i = 0; i < this._search.length; i++) {
+      var c = this._search[i];
+      c.setMap(map);
+    }
+  }
+  /** Get request data
+   * @private
+   */
+  requestData(steps) {
+    var start = steps[0];
+    var end = steps[steps.length - 1];
+    var waypoints = '';
+    for (var i = 1; i < steps.length - 1; i++) {
+      waypoints += (waypoints ? ';' : '') + steps[i].x + ',' + steps[i].y;
+    }
+    return {
+      resource: 'bdtopo-osrm',
+      profile: this.get('mode') === 'pedestrian' ? 'pedestrian' : 'car',
+      optimization: this.get('method') || 'fastest',
+      start: start.x + ',' + start.y,
+      end: end.x + ',' + end.y,
+      intermediates: waypoints,
+      geometryFormat: 'geojson'
+    };
+  }
+  /** Gets time as string
+   * @param {*} routing routing response
+   * @return {string}
+   * @api
+   */
+  getTimeString(t) {
+    t /= 60;
+    return (t < 1) ? '' : (t < 60) ? t.toFixed(0) + ' min' : (t / 60).toFixed(0) + ' h ' + (t % 60).toFixed(0) + ' min';
+  }
+  /** Gets distance as string
+   * @param {number} d distance
+   * @return {string}
+   * @api
+   */
+  getDistanceString(d) {
+    return (d < 1000) ? d.toFixed(0) + ' m' : (d / 1000).toFixed(2) + ' km';
+  }
+  /** Show routing as a list
+   * @private
+   */
+  listRouting(routing) {
+    this.resultElement.innerHTML = '';
+    var t = this.getTimeString(routing.duration);
+    t += ' (' + this.getDistanceString(routing.distance) + ')';
+    var iElement = document.createElement('i');
+    iElement.textContent = t;
+    this.resultElement.appendChild(iElement);
+    var ul = document.createElement('ul');
+    this.resultElement.appendChild(ul);
+    var info = {
+      'none': 'Prendre sur ',
+      'R': 'Tourner à droite sur ',
+      'FR': 'Tourner légèrement à droite sur ',
+      'L': 'Tourner à gauche sur ',
+      'FL': 'Tourner légèrement à gauche sur ',
+      'F': 'Continuer tout droit sur ',
+    };
+    routing.features.forEach(function (f, i) {
+      var d = this.getDistanceString(f.get('distance'));
+      t = this.getTimeString(f.get('durationT'));
+      ol.ext.element.create('LI', {
+        className: f.get('instruction'),
+        html: (info[f.get('instruction') || 'none'] || '#')
+          + ' ' + f.get('name')
+          + '<i>' + d + (t ? ' - ' + t : '') + '</i>',
+        on: {
+          pointerenter: function () {
+            this.dispatchEvent({ type: 'step:hover', hover: false, index: i, feature: f });
+          }.bind(this),
+          pointerleave: function () {
+            this.dispatchEvent({ type: 'step:hover', hover: false, index: i, feature: f });
+          }.bind(this)
+        },
+        click: function () {
+          this.dispatchEvent({ type: 'step:select', index: i, feature: f });
+        }.bind(this),
+        parent: ul
+      });
+    }.bind(this));
+  }
+  /** Handle routing response
+   * @private
+   */
+  handleResponse(data, start, end) {
+    if (data.status === 'ERROR') {
+      this.dispatchEvent({
+        type: 'errror',
+        status: '200',
+        statusText: data.message
+      });
       return;
     }
-  } else {
-    search._changeCounter++;
-    setTimeout(function() {
-      this.onGeometryChange(search, f, true);
-    }.bind(this), 1000);
+    // console.log(data)
+    var routing = { type: 'routing' };
+    routing.features = [];
+    var distance = 0;
+    var duration = 0;
+    var f;
+    var parser = new ol.format.GeoJSON();
+    var lastPt;
+    for (var i = 0, l; l = data.portions[i]; i++) {
+      for (var j = 0, s; s = l.steps[j]; j++) {
+        /*
+        var options = {
+          geometry: geom.transform('EPSG:4326',this.getMap().getView().getProjection()),
+          name: s.name,
+          instruction: s.navInstruction,
+          distance: parseFloat(s.distanceMeters),
+          duration: parseFloat(s.durationSeconds)
+        }
+        //console.log(duration, options.duration, s)
+        distance += options.distance;
+        duration += options.duration;
+        options.distanceT = distance;
+        options.durationT = duration;
+        f = new ol.Feature(options);
+        */
+        s.type = 'Feature';
+        s.properties = s.attributes.name || s.attributes;
+        s.properties.distance = s.distance;
+        s.properties.duration = Math.round(s.duration * 60);
+        // Route info
+        if (s.instruction) {
+          s.properties.instruction_type = s.instruction.type;
+          s.properties.instruction_modifier = s.instruction.modifier;
+        }
+        // Distance / time
+        distance += s.distance;
+        duration += s.duration;
+        s.properties.distanceT = Math.round(distance * 100) / 100;
+        s.properties.durationT = Math.round(duration * 60);
+        s.properties.name = s.properties.cpx_toponyme_route_nommee || s.properties.cpx_toponyme || s.properties.cpx_numero || s.properties.nom_1_droite || s.properties.nom_1_gauche || '';
+        // TODO: BUG ?
+        var lp = s.geometry.coordinates[s.geometry.coordinates.length - 1];
+        if (lastPt && !ol.coordinate.equal(lp, s.geometry.coordinates[s.geometry.coordinates.length - 1])) {
+          s.geometry.coordinates.unshift(lastPt);
+        }
+        lastPt = s.geometry.coordinates[s.geometry.coordinates.length - 1];
+        //
+        f = parser.readFeature(s, {
+          featureProjection: this.getMap().getView().getProjection()
+        });
+        routing.features.push(f);
+      }
+    }
+    routing.distance = parseFloat(data.distance);
+    routing.duration = parseFloat(data.duration) / 60;
+    // Full route
+    var route = parser.readGeometry(data.geometry, {
+      featureProjection: this.getMap().getView().getProjection()
+    });
+    routing.feature = new ol.Feature({
+      geometry: route,
+      start: this._search[0].getTitle(start),
+      end: this._search[0].getTitle(end),
+      distance: routing.distance,
+      duration: routing.duration
+    });
+    // console.log(data, routing);
+    this.dispatchEvent(routing);
+    this.path = routing;
+    return routing;
+  }
+  /** Abort request
+   */
+  abort() {
+    // Abort previous request
+    if (this._request) {
+      this._request.abort();
+      this._request = null;
+      this.dispatchEvent({ type: 'abort' });
+    }
+  }
+  /** Calculate route
+   * @param {Array<ol.coordinate>|undefined} steps an array of steps in EPSG:4326, default use control input values
+   * @return {boolean} true is a new request is send (more than 2 points to calculate)
+   */
+  calculate(steps) {
+    this.resultElement.innerHTML = '';
+    if (steps) {
+      var convert = [];
+      steps.forEach(function (s) {
+        convert.push({ x: s[0], y: s[1] });
+      });
+      steps = convert;
+    } else {
+      steps = [];
+      for (var i = 0; i < this._search.length; i++) {
+        if (this._search[i].get('selection'))
+          steps.push(this._search[i].get('selection'));
+      }
+    }
+    if (steps.length < 2)
+      return false;
+    var start = steps[0];
+    var end = steps[steps.length - 1];
+    var data = this.requestData(steps);
+    var url = encodeURI(this.get('url'));
+    var parameters = '';
+    for (var index in data) {
+      parameters += (parameters) ? '&' : '?';
+      if (data.hasOwnProperty(index))
+        parameters += index + '=' + data[index];
+    }
+    var self = this;
+    this.dispatchEvent({ type: 'routing:start' });
+    this.ajax(url + parameters,
+      function (resp) {
+        if (resp.status >= 200 && resp.status < 400) {
+          self.listRouting(self.handleResponse(JSON.parse(resp.response), start, end));
+        } else {
+          //console.log(url + parameters, arguments);
+          this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText });
+        }
+      }.bind(this),
+      function (resp) {
+        // console.log('ERROR', resp)
+        this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText });
+      }.bind(this)
+    );
+    return true;
+  }
+  /** Send an ajax request (GET)
+   * @param {string} url
+   * @param {function} onsuccess callback
+   * @param {function} onerror callback
+   */
+  ajax(url, onsuccess, onerror) {
+    var self = this;
+    // Abort previous request
+    if (this._request) {
+      this._request.abort();
+    }
+    // New request
+    var ajax = this._request = new XMLHttpRequest();
+    ajax.open('GET', url, true);
+    ajax.timeout = this.get('timeout') || 20000;
+    if (this._auth) {
+      ajax.setRequestHeader("Authorization", "Basic " + this._auth);
+    }
+    this.element.classList.add('ol-searching');
+    // Load complete
+    ajax.onload = function () {
+      self._request = null;
+      self.element.classList.remove('ol-searching');
+      onsuccess.call(self, this);
+    };
+    // Timeout
+    ajax.ontimeout = function () {
+      self._request = null;
+      self.element.classList.remove('ol-searching');
+      if (onerror)
+        onerror.call(self, this);
+    };
+    // Oops, TODO do something ?
+    ajax.onerror = function () {
+      self._request = null;
+      self.element.classList.remove('ol-searching');
+      if (onerror)
+        onerror.call(self, this);
+    };
+    // GO!
+    ajax.send();
   }
 }
-/**
- * Set the map instance the control is associated with
- * and add its controls associated to this map.
- * @param {_ol_Map_} map The map instance.
- */
-ol.control.RoutingGeoportail.prototype.setMap = function (map) {
-  ol.control.Control.prototype.setMap.call(this, map);
-  for (var i=0; i<this._search.length; i++) {
-    var c = this._search[i];
-    c.setMap(map);
-  }
-};
-/** Get request data
- * @private
- */
-ol.control.RoutingGeoportail.prototype.requestData = function (steps) {
-  var start = steps[0];
-  var end = steps[steps.length-1];
-  var waypoints = '';
-  for (var i=1; i<steps.length-1; i++) {
-    waypoints += (waypoints ? ';':'') + steps[i].x+','+steps[i].y;
-  }
-  return {
-    resource: 'bdtopo-osrm', // 'bdtopo-pgr',
-    profile: this.get('mode')==='pedestrian' ? 'pedestrian' : 'car',
-    optimization: this.get('method') || 'fastest', // 'distance'
-    start: start.x+','+start.y,
-    end: end.x+','+end.y,
-    intermediates: waypoints,
-    geometryFormat: 'geojson'
-  };
-};
-/** Gets time as string
- * @param {*} routing routing response
- * @return {string}
- * @api
- */
-ol.control.RoutingGeoportail.prototype.getTimeString = function (t) {
-  t /= 60;
-  return (t<1) ? '' : (t<60) ? t.toFixed(0)+' min' : (t/60).toFixed(0)+' h '+(t%60).toFixed(0)+' min';
-};
-/** Gets distance as string
- * @param {number} d distance
- * @return {string}
- * @api
- */
-ol.control.RoutingGeoportail.prototype.getDistanceString = function (d) {
-  return (d<1000) ? d.toFixed(0)+' m' : (d/1000).toFixed(2)+' km';
-};
-/** Show routing as a list
- * @private
- */
-ol.control.RoutingGeoportail.prototype.listRouting = function (routing) {
-  this.resultElement.innerHTML = '';
-  var t = this.getTimeString(routing.duration);
-  t += ' ('+this.getDistanceString(routing.distance)+')';
-  var iElement = document.createElement('i');
-  iElement.textContent = t;
-  this.resultElement.appendChild(iElement)
-  var ul = document.createElement('ul');
-  this.resultElement.appendChild(ul);
-  var info = {
-    'none': 'Prendre sur ',
-    'R': 'Tourner à droite sur ',
-    'FR': 'Tourner légèrement à droite sur ',
-    'L': 'Tourner à gauche sur ',
-    'FL': 'Tourner légèrement à gauche sur ',
-    'F': 'Continuer tout droit sur ',
-  }
-  routing.features.forEach(function(f, i) {
-    var d = this.getDistanceString(f.get('distance'));
-    t = this.getTimeString(f.get('durationT'));
-    ol.ext.element.create('LI', {
-      className: f.get('instruction'),
-      html: (info[f.get('instruction')||'none']||'#')
-        + ' ' + f.get('name')
-        + '<i>' + d + (t ? ' - ' + t : '') +'</i>',
-      on: {
-        pointerenter: function() {
-          this.dispatchEvent({ type: 'step:hover', hover: false, index: i, feature: f });
-        }.bind(this),
-        pointerleave: function() {
-          this.dispatchEvent({ type: 'step:hover', hover: false, index: i, feature: f });
-        }.bind(this)
-      },
-      click: function() {
-        this.dispatchEvent({ type: 'step:select', index: i, feature: f });
-      }.bind(this),
-      parent: ul
-    });
-  }.bind(this));
-};
-/** Handle routing response
- * @private
- */
-ol.control.RoutingGeoportail.prototype.handleResponse = function (data, start, end) {
-  if (data.status === 'ERROR') {
-    this.dispatchEvent({
-      type: 'errror',
-      status: '200',
-      statusText: data.message
-    })
-    return;
-  }
-  // console.log(data)
-  var routing = { type:'routing' };
-  routing.features = [];
-  var distance = 0;
-  var duration = 0;
-  var f;
-  var parser = new ol.format.GeoJSON();
-  var lastPt;
-  for (var i=0, l; l=data.portions[i]; i++) {
-    for (var j=0, s; s=l.steps[j]; j++) {
-      /*
-      var options = {
-        geometry: geom.transform('EPSG:4326',this.getMap().getView().getProjection()),
-        name: s.name,
-        instruction: s.navInstruction,
-        distance: parseFloat(s.distanceMeters),
-        duration: parseFloat(s.durationSeconds)
-      }
-      //console.log(duration, options.duration, s)
-      distance += options.distance;
-      duration += options.duration;
-      options.distanceT = distance;
-      options.durationT = duration;
-      f = new ol.Feature(options);
-      */
-      s.type = 'Feature'; 
-      s.properties = s.attributes.name || s.attributes;
-      s.properties.distance = s.distance;
-      s.properties.duration = Math.round(s.duration * 60);
-      // Route info
-      if (s.instruction) {
-        s.properties.instruction_type = s.instruction.type;
-        s.properties.instruction_modifier = s.instruction.modifier;
-      }
-      // Distance / time
-      distance += s.distance;
-      duration += s.duration;
-      s.properties.distanceT = Math.round(distance * 100) / 100;
-      s.properties.durationT = Math.round(duration * 60);
-      s.properties.name = s.properties.cpx_toponyme_route_nommee || s.properties.cpx_toponyme || s.properties.cpx_numero || s.properties.nom_1_droite || s.properties.nom_1_gauche || ''; 
-      // TODO: BUG ?
-      var lp = s.geometry.coordinates[s.geometry.coordinates.length-1]
-      if (lastPt && !ol.coordinate.equal(lp, s.geometry.coordinates[s.geometry.coordinates.length-1])) {
-        s.geometry.coordinates.unshift(lastPt);
-      }
-      lastPt = s.geometry.coordinates[s.geometry.coordinates.length-1];
-      //
-      f = parser.readFeature(s, {
-        featureProjection: this.getMap().getView().getProjection()
-      });
-      routing.features.push(f);
-    }
-  }
-  routing.distance = parseFloat(data.distance);
-  routing.duration = parseFloat(data.duration) / 60;
-  // Full route
-  var route = parser.readGeometry(data.geometry, {
-    featureProjection: this.getMap().getView().getProjection()
-  });
-  routing.feature = new ol.Feature ({
-    geometry: route,
-    start: this._search[0].getTitle(start),
-    end: this._search[0].getTitle(end), 
-    distance: routing.distance,
-    duration: routing.duration
-  });
-  // console.log(data, routing);
-  this.dispatchEvent(routing);
-  this.path = routing;
-  return routing;
-};
-/** Abort request
- */
-ol.control.RoutingGeoportail.prototype.abort = function () {
-  // Abort previous request
-  if (this._request) {
-    this._request.abort();
-    this._request = null;
-    this.dispatchEvent({ type: 'abort' });
-  }
-};
-/** Calculate route
- * @param {Array<ol.coordinate>|undefined} steps an array of steps in EPSG:4326, default use control input values
- * @return {boolean} true is a new request is send (more than 2 points to calculate)
- */
-ol.control.RoutingGeoportail.prototype.calculate = function (steps) {
-  this.resultElement.innerHTML = '';
-  if (steps) {
-    var convert = [];
-    steps.forEach(function(s) {
-      convert.push({ x: s[0], y: s[1] });
-    });
-    steps = convert;
-  } else {
-    steps = []
-    for (var i=0; i<this._search.length; i++) {
-      if (this._search[i].get('selection')) steps.push(this._search[i].get('selection'));
-    }
-  }
-  if (steps.length<2) return false;
-  var start = steps[0];
-  var end = steps[steps.length-1];
-  var data = this.requestData(steps);
-  var url = encodeURI(this.get('url'));
-  var parameters = '';
-  for (var index in data) {
-    parameters += (parameters) ? '&' : '?';
-    if (data.hasOwnProperty(index)) parameters += index + '=' + data[index];
-  }
-  var self = this;
-  this.dispatchEvent({ type: 'routing:start' });
-  this.ajax(url + parameters, 
-    function (resp) {
-      if (resp.status >= 200 && resp.status < 400) {
-        self.listRouting(self.handleResponse (JSON.parse(resp.response), start, end));
-      } else {
-        //console.log(url + parameters, arguments);
-        this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText});
-      }
-    }.bind(this), 
-    function(resp){
-      // console.log('ERROR', resp)
-      this.dispatchEvent({ type: 'error', status: resp.status, statusText: resp.statusText});
-    }.bind(this)
-  );
-  return true;
-};	
-/** Send an ajax request (GET)
- * @param {string} url
- * @param {function} onsuccess callback
- * @param {function} onerror callback
- */
-ol.control.RoutingGeoportail.prototype.ajax = function (url, onsuccess, onerror){
-  var self = this;
-  // Abort previous request
-  if (this._request) {
-    this._request.abort();
-  }
-  // New request
-  var ajax = this._request = new XMLHttpRequest();
-  ajax.open('GET', url, true);
-  ajax.timeout = this.get('timeout') || 20000;
-  if (this._auth) {
-    ajax.setRequestHeader("Authorization", "Basic " + this._auth);
-  }
-  this.element.classList.add('ol-searching');
-  // Load complete
-  ajax.onload = function() {
-    self._request = null;
-    self.element.classList.remove('ol-searching');
-    onsuccess.call(self, this);
-  };
-  // Timeout
-  ajax.ontimeout = function () {
-    self._request = null;
-    self.element.classList.remove('ol-searching');
-    if (onerror) onerror.call(self, this);
-  };
-  // Oops, TODO do something ?
-  ajax.onerror = function() {
-    self._request = null;
-    self.element.classList.remove('ol-searching');
-    if (onerror) onerror.call(self, this);
-  };
-  // GO!
-  ajax.send();
-};
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -34881,326 +34914,342 @@ ol.Overlay.Fixed.prototype.updatePixelPosition = function() {
  *		the 'auto' positioning var the popup choose its positioning to stay on the map.
  * @api stable
  */
-ol.Overlay.FixedPopup = function (options) {
-  options.anchor = false;
-  options.positioning = options.positioning || 'center-center';
-  options.className = (options.className || '') + ' ol-fixPopup';
-  ol.Overlay.Popup.call(this, options);
-  this.set('minScale', options.minScale || .5);
-  this.set('maxScale', options.maxScale || 2);
-  var canvas = document.createElement('canvas');
-  this._overlay = new ol.layer.Image({
-    source: new ol.source.ImageCanvas({
-      canvasFunction: function(extent, res, ratio, size) {
-        canvas.width  = size[0];
-        canvas.height = size[1];
-        return canvas
-      }
+ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
+  constructor(options) {
+    options.anchor = false
+    options.positioning = options.positioning || 'center-center'
+    options.className = (options.className || '') + ' ol-fixPopup'
+    super(options)
+    this.set('minScale', options.minScale || .5)
+    this.set('maxScale', options.maxScale || 2)
+    // Canvas for drawing inks
+    var canvas = document.createElement('canvas')
+    this._overlay = new ol.layer.Image({
+      source: new ol.source.ImageCanvas({
+        canvasFunction: function (extent, res, ratio, size) {
+          canvas.width = size[0]
+          canvas.height = size[1]
+          return canvas
+        }
+      })
     })
-  });
-  this._style = options.style || new ol.style.Style({
-    fill: new ol.style.Fill({ color: [102,153,255] })
-  });
-  this._overlay.on(['postcompose','postrender'], function(e) {
-    if (this.getVisible() && this._pixel) {
-      var map = this.getMap();
-      var position = this.getPosition();
-      var pixel = map.getPixelFromCoordinate(position);
-      var r1 = this.element.getBoundingClientRect()
-      var r2 = this.getMap().getTargetElement().getBoundingClientRect();
-      var pixel2 = [r1.left-r2.left+r1.width/2, r1.top-r2.top+r1.height/2]
-      e.context.save();
-        var tr = e.inversePixelTransform;
+    this._style = options.style || new ol.style.Style({
+      fill: new ol.style.Fill({ color: [102, 153, 255] })
+    })
+    this._overlay.on(['postcompose', 'postrender'], function (e) {
+      if (this.getVisible() && this._pixel) {
+        var map = this.getMap()
+        var position = this.getPosition()
+        var pixel = map.getPixelFromCoordinate(position)
+        var r1 = this.element.getBoundingClientRect()
+        var r2 = this.getMap().getTargetElement().getBoundingClientRect()
+        var pixel2 = [r1.left - r2.left + r1.width / 2, r1.top - r2.top + r1.height / 2]
+        e.context.save()
+        var tr = e.inversePixelTransform
         if (tr) {
-          e.context.transform(tr[0],tr[1],tr[2],tr[3],tr[4],tr[5]);
+          e.context.transform(tr[0], tr[1], tr[2], tr[3], tr[4], tr[5])
         } else {
           // ol ~ v5.3.0
-          e.context.scale(e.frameState.pixelRatio,e.frameState.pixelRatio)
+          e.context.scale(e.frameState.pixelRatio, e.frameState.pixelRatio)
         }
-        e.context.beginPath();
-        e.context.moveTo(pixel[0], pixel[1]);
-        if (Math.abs(pixel2[0]-pixel[0]) > Math.abs(pixel2[1]-pixel[1])) {
-          e.context.lineTo(pixel2[0],pixel2[1]-8);
-          e.context.lineTo(pixel2[0],pixel2[1]+8);
+        e.context.beginPath()
+        e.context.moveTo(pixel[0], pixel[1])
+        if (Math.abs(pixel2[0] - pixel[0]) > Math.abs(pixel2[1] - pixel[1])) {
+          e.context.lineTo(pixel2[0], pixel2[1] - 8)
+          e.context.lineTo(pixel2[0], pixel2[1] + 8)
         } else {
-          e.context.lineTo(pixel2[0]-8,pixel2[1]);
-          e.context.lineTo(pixel2[0]+8,pixel2[1]);
+          e.context.lineTo(pixel2[0] - 8, pixel2[1])
+          e.context.lineTo(pixel2[0] + 8, pixel2[1])
         }
-        e.context.moveTo(pixel[0], pixel[1]);
+        e.context.moveTo(pixel[0], pixel[1])
         if (this._style.getFill()) {
-          e.context.fillStyle = ol.color.asString(this._style.getFill().getColor());
-          e.context.fill();
+          e.context.fillStyle = ol.color.asString(this._style.getFill().getColor())
+          e.context.fill()
         }
         if (this._style.getStroke()) {
-          e.context.strokeStyle = ol.color.asString(this._style.getStroke().getColor());
-          e.context.lineWidth = this._style.getStroke().width();
-          e.context.stroke();
+          e.context.strokeStyle = ol.color.asString(this._style.getStroke().getColor())
+          e.context.lineWidth = this._style.getStroke().width()
+          e.context.stroke()
         }
-      e.context.restore();
-    }
-  }.bind(this));
-  var update = function() { 
-    this.setPixelPosition();
-  }.bind(this);
-  this.on(['hide', 'show'], function() {
-    setTimeout(update)
-  }.bind(this))
-  // Get events centroid
-  function centroid(pevents) {
-    var clientX = 0;
-    var clientY = 0;
-    var length = 0;
-    for (var i in pevents) {
-      clientX += pevents[i].clientX;
-      clientY += pevents[i].clientY;
-      length++;
-    }
-    return [clientX / length, clientY / length];
-  }
-  // Get events angle
-  function angle() {
-    var p1,p2, v = Object.keys(pointerEvents);
-    if (v.length<2) return false;
-    p1 = pointerEvents[v[0]];
-    p2 = pointerEvents[v[1]];
-    var v1 = [p2.clientX - p1.clientX, p2.clientY - p1.clientY];
-    p1 = pointerEvents2[v[0]];
-    p2 = pointerEvents2[v[1]];
-    var v2 = [p2.clientX - p1.clientX, p2.clientY - p1.clientY];
-    var d1 = Math.sqrt(v1[0]*v1[0]+v1[1]*v1[1]);
-    var d2 = Math.sqrt(v2[0]*v2[0]+v2[1]*v2[1]);
-    var a = Math.acos((v1[0]*v2[0]+v1[1]*v2[1]) / (d1*d2)) * 360 / Math.PI;
-    if (v1[0]*v2[1]-v1[1]*v2[0] < 0) return -a;
-    else return a;
-  }
-  // Get distance beetween events
-  function distance(pevents) {
-    var v = Object.keys(pevents);
-    if (v.length<2) return false;
-    return ol.coordinate.dist2d([pevents[v[0]].clientX, pevents[v[0]].clientY], [pevents[v[1]].clientX, pevents[v[1]].clientY]);
-  }
-  // Handle popup move
-  var pointerEvents = {};
-  var pointerEvents2 = {};
-  var pixelPosition = [];
-  var distIni, rotIni, scaleIni, move;
-  // down
-  this.element.addEventListener('pointerdown', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    // Reset events to this position
-    for (var i in pointerEvents) {
-      if (pointerEvents2[i]) {
-        pointerEvents[i] = pointerEvents2[i];
+        e.context.restore()
       }
-    }
-    pointerEvents[e.pointerId] = e;
-    pixelPosition = this._pixel;
-    rotIni = this.get('rotation') || 0;
-    scaleIni = this.get('scale') || 1;
-    distIni = distance(pointerEvents);
-    move = false;
-  }.bind(this));
-  // Prevent click when move
-  this.element.addEventListener('click', function(e) {
-    if (move) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }, true);
-  // up / cancel
-  var removePointer = function(e) {
-    if (pointerEvents[e.pointerId]) {
-      delete pointerEvents[e.pointerId];
-      e.preventDefault();
-    }
-    if (pointerEvents2[e.pointerId]) {
-      delete pointerEvents2[e.pointerId];
-    }
-    /* Simulate a second touch pointer * /
-    if (e.metaKey || e.ctrlKey) {
-      pointerEvents['touch'] = e;
-      pointerEvents2['touch'] = e;
-    } else {
-      delete pointerEvents['touch'];
-      delete pointerEvents2['touch'];
-    }
-    /**/
-  }.bind(this);
-  document.addEventListener('pointerup', removePointer);
-  document.addEventListener('pointercancel', removePointer);
-  // move
-  document.addEventListener('pointermove', function(e) {
-    if (pointerEvents[e.pointerId]) {
-      e.preventDefault();
-      pointerEvents2[e.pointerId] = e;
-      var c1 = centroid(pointerEvents);
-      var c2 = centroid(pointerEvents2);
-      var dx = c2[0] - c1[0];
-      var dy = c2[1] - c1[1];
-      move = move || Math.abs(dx) > 3 || Math.abs(dy) > 3;
-      var a = angle();
-      if (a) {
-        this.setRotation(rotIni + a*1.5, false);
+    }.bind(this))
+    var update = function () {
+      this.setPixelPosition()
+    }.bind(this)
+    this.on(['hide', 'show'], function () {
+      setTimeout(update)
+    }.bind(this))
+    // Get events centroid
+    function centroid(pevents) {
+      var clientX = 0
+      var clientY = 0
+      var length = 0
+      for (var i in pevents) {
+        clientX += pevents[i].clientX
+        clientY += pevents[i].clientY
+        length++
       }
-      var d = distance(pointerEvents2);
-      if (d!==false && distIni) {
-        this.setScale(scaleIni * d / distIni, false);
-        distIni = scaleIni * d / this.get('scale');
-      }
-      this.setPixelPosition([pixelPosition[0]+dx, pixelPosition[1]+dy]);
+      return [clientX / length, clientY / length]
     }
-  }.bind(this));
-};
-ol.ext.inherits(ol.Overlay.FixedPopup, ol.Overlay.Popup);
-/**
- * Set the map instance the control is associated with
- * and add its controls associated to this map.
- * @param {_ol_Map_} map The map instance.
- */
-ol.Overlay.FixedPopup.prototype.setMap = function (map) {
-  ol.Overlay.Popup.prototype.setMap.call(this, map);
-  this._overlay.setMap(this.getMap());
-  if (this._listener) {
-    ol.Observable.unByKey(this._listener);
-  }
-  if (map) {
-    // Force popup inside the viewport
-    this._listener = map.on('change:size', function() {
-      this.setPixelPosition();
+    // Get events angle
+    function angle() {
+      var p1, p2, v = Object.keys(pointerEvents)
+      if (v.length < 2)
+        return false
+      p1 = pointerEvents[v[0]]
+      p2 = pointerEvents[v[1]]
+      var v1 = [p2.clientX - p1.clientX, p2.clientY - p1.clientY]
+      p1 = pointerEvents2[v[0]]
+      p2 = pointerEvents2[v[1]]
+      var v2 = [p2.clientX - p1.clientX, p2.clientY - p1.clientY]
+      var d1 = Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1])
+      var d2 = Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1])
+      var a = Math.acos((v1[0] * v2[0] + v1[1] * v2[1]) / (d1 * d2)) * 360 / Math.PI
+      if (v1[0] * v2[1] - v1[1] * v2[0] < 0)
+        return -a
+      else
+        return a
+    }
+    // Get distance beetween events
+    function distance(pevents) {
+      var v = Object.keys(pevents)
+      if (v.length < 2)
+        return false
+      return ol.coordinate.dist2d([pevents[v[0]].clientX, pevents[v[0]].clientY], [pevents[v[1]].clientX, pevents[v[1]].clientY])
+    }
+    // Handle popup move
+    var pointerEvents = {}
+    var pointerEvents2 = {}
+    var pixelPosition = []
+    var distIni, rotIni, scaleIni, move
+    // down
+    this.element.addEventListener('pointerdown', function (e) {
+      e.preventDefault()
+      e.stopPropagation()
+      // Reset events to this position
+      for (var i in pointerEvents) {
+        if (pointerEvents2[i]) {
+          pointerEvents[i] = pointerEvents2[i]
+        }
+      }
+      pointerEvents[e.pointerId] = e
+      pixelPosition = this._pixel
+      rotIni = this.get('rotation') || 0
+      scaleIni = this.get('scale') || 1
+      distIni = distance(pointerEvents)
+      move = false
+    }.bind(this))
+    // Prevent click when move
+    this.element.addEventListener('click', function (e) {
+      if (move) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }, true)
+    // up / cancel
+    var removePointer = function (e) {
+      if (pointerEvents[e.pointerId]) {
+        delete pointerEvents[e.pointerId]
+        e.preventDefault()
+      }
+      if (pointerEvents2[e.pointerId]) {
+        delete pointerEvents2[e.pointerId]
+      }
+      /* Simulate a second touch pointer * /
+      if (e.metaKey || e.ctrlKey) {
+        pointerEvents['touch'] = e;
+        pointerEvents2['touch'] = e;
+      } else {
+        delete pointerEvents['touch'];
+        delete pointerEvents2['touch'];
+      }
+      /**/
+    }.bind(this)
+    document.addEventListener('pointerup', removePointer)
+    document.addEventListener('pointercancel', removePointer)
+    // move
+    document.addEventListener('pointermove', function (e) {
+      if (pointerEvents[e.pointerId]) {
+        e.preventDefault()
+        pointerEvents2[e.pointerId] = e
+        var c1 = centroid(pointerEvents)
+        var c2 = centroid(pointerEvents2)
+        var dx = c2[0] - c1[0]
+        var dy = c2[1] - c1[1]
+        move = move || Math.abs(dx) > 3 || Math.abs(dy) > 3
+        var a = angle()
+        if (a) {
+          this.setRotation(rotIni + a * 1.5, false)
+        }
+        var d = distance(pointerEvents2)
+        if (d !== false && distIni) {
+          this.setScale(scaleIni * d / distIni, false)
+          distIni = scaleIni * d / this.get('scale')
+        }
+        this.setPixelPosition([pixelPosition[0] + dx, pixelPosition[1] + dy])
+      }
     }.bind(this))
   }
-};
-/** Update pixel position
- * @return {boolean}
- * @private
- */
-ol.Overlay.FixedPopup.prototype.updatePixelPosition = function () {
-  var map = this.getMap();
-  var position = this.getPosition();
-  if (!map || !map.isRendered() || !position) {
-    this.setVisible(false);
-    return;
-  }
-  if (!this._pixel) {
-    this._pixel = map.getPixelFromCoordinate(position);
-    var mapSize = map.getSize();
-    this.updateRenderedPosition(this._pixel, mapSize);
-  } else {
-    this.setVisible(true);
-  }
-};
-/** updateRenderedPosition
- * @private
- */
-ol.Overlay.FixedPopup.prototype.updateRenderedPosition = function (pixel, mapsize) {
-  ol.Overlay.Popup.prototype.updateRenderedPosition.call(this, pixel, mapsize);
-  this.setRotation();
-  this.setScale()
-};
-/** Set pixel position
- * @param {ol.pixel} pix
- * @param {string} position top/bottom/middle-left/right/center
- */
-ol.Overlay.FixedPopup.prototype.setPixelPosition = function (pix, position) {
-  var r, map = this.getMap();
-  var mapSize = map ? map.getSize() : [0,0];
-  if (position) {
-    this.setPositioning(position);
-    r = ol.ext.element.offsetRect(this.element);
-    r.width = r.height = 0;
-    if (/top/.test(position)) pix[1] += r.height/2;
-    else if (/bottom/.test(position)) pix[1] = mapSize[1] - r.height/2 - pix[1];
-    else pix[1] = mapSize[1]/2 + pix[1];
-    if (/left/.test(position)) pix[0] += r.width/2;
-    else if (/right/.test(position)) pix[0] = mapSize[0] - r.width/2 - pix[0];
-    else pix[0] = mapSize[0]/2 + pix[0];
-  }
-  if (pix) this._pixel = pix;
-  if (map && map.getTargetElement() && this._pixel) {
-    this.updateRenderedPosition(this._pixel, mapSize);
-    // Prevent outside
-    var outside = false;
-    r = ol.ext.element.offsetRect(this.element);
-    var rmap = ol.ext.element.offsetRect(map.getTargetElement());
-    if (r.left < rmap.left) {
-      this._pixel[0] = this._pixel[0] + rmap.left - r.left;
-      outside = true;
-    } else if (r.left + r.width > rmap.left + rmap.width) {
-      this._pixel[0] = this._pixel[0] + rmap.left - r.left + rmap.width - r.width;
-      outside = true;
-    } 
-    if (r.top < rmap.top) {
-      this._pixel[1] = this._pixel[1] + rmap.top - r.top;
-      outside = true;
-    } else if (r.top + r.height > rmap.top + rmap.height) {
-      this._pixel[1] = this._pixel[1] + rmap.top - r.top + rmap.height - r.height;
-      outside = true;
+  /**
+   * Set the map instance the control is associated with
+   * and add its controls associated to this map.
+   * @param {_ol_Map_} map The map instance.
+   */
+  setMap(map) {
+    super.setMap(map)
+    this._overlay.setMap(this.getMap())
+    if (this._listener) {
+      ol.Observable.unByKey(this._listener)
     }
-    if (outside) this.updateRenderedPosition(this._pixel, mapSize);
-    this._overlay.changed();
+    if (map) {
+      // Force popup inside the viewport
+      this._listener = map.on('change:size', function () {
+        this.setPixelPosition()
+      }.bind(this))
+    }
   }
-};
-/** Set pixel position
- * @returns {ol.pixel}
- */
-ol.Overlay.FixedPopup.prototype.getPixelPosition = function () {
-  return this._pixel;
-};
-/**
- * Set the CSS class of the popup.
- * @param {string} c class name.
- * @api stable
- */
-ol.Overlay.FixedPopup.prototype.setPopupClass = function (c) {
-  ol.Overlay.Popup.prototype.setPopupClass.call(this, c);
-  this.addPopupClass('ol-fixPopup');
-};
-/** Set poppup rotation
- * @param {number} angle
- * @param {booelan} update update popup, default true
- * @api
- */
-ol.Overlay.FixedPopup.prototype.setRotation = function (angle, update) {
-  if (typeof(angle) === 'number') this.set('rotation', angle);
-  if (update!==false) {
-    if (/rotate/.test(this.element.style.transform)) {
-      this.element.style.transform = this.element.style.transform.replace(/rotate\((-?[\d,.]+)deg\)/,'rotate('+(this.get('rotation')||0)+'deg)')
+  /** Update pixel position
+   * @return {boolean}
+   * @private
+   */
+  updatePixelPosition() {
+    var map = this.getMap()
+    var position = this.getPosition()
+    if (!map || !map.isRendered() || !position) {
+      this.setVisible(false)
+      return
+    }
+    if (!this._pixel) {
+      this._pixel = map.getPixelFromCoordinate(position)
+      var mapSize = map.getSize()
+      this.updateRenderedPosition(this._pixel, mapSize)
     } else {
-      this.element.style.transform = this.element.style.transform + ' rotate('+(this.get('rotation')||0)+'deg)';
+      this.setVisible(true)
     }
   }
-};
-/** Set poppup scale
- * @param {number} scale
- * @param {booelan} update update popup, default true
- * @api
- */
-ol.Overlay.FixedPopup.prototype.setScale = function (scale, update) {
-  if (typeof(scale) === 'number') this.set('scale', scale);
-  scale = Math.min(Math.max(this.get('minScale')||0, this.get('scale')||1 ), this.get('maxScale')||2);
-  this.set('scale', scale);
-  if (update!==false) {
-    if (/scale/.test(this.element.style.transform)) {
-      this.element.style.transform = this.element.style.transform.replace(/scale\(([\d,.]+)\)/,'scale('+(scale)+')')
-    } else {
-      this.element.style.transform = this.element.style.transform + ' scale('+(scale)+')';
+  /** updateRenderedPosition
+   * @private
+   */
+  updateRenderedPosition(pixel, mapsize) {
+    super.updateRenderedPosition(pixel, mapsize)
+    this.setRotation()
+    this.setScale()
+  }
+  /** Set pixel position
+   * @param {ol.pixel} pix
+   * @param {string} position top/bottom/middle-left/right/center
+   */
+  setPixelPosition(pix, position) {
+    var r, map = this.getMap()
+    var mapSize = map ? map.getSize() : [0, 0]
+    if (position) {
+      this.setPositioning(position)
+      r = ol.ext.element.offsetRect(this.element)
+      r.width = r.height = 0
+      if (/top/.test(position))
+        pix[1] += r.height / 2
+      else if (/bottom/.test(position))
+        pix[1] = mapSize[1] - r.height / 2 - pix[1]
+      else
+        pix[1] = mapSize[1] / 2 + pix[1]
+      if (/left/.test(position))
+        pix[0] += r.width / 2
+      else if (/right/.test(position))
+        pix[0] = mapSize[0] - r.width / 2 - pix[0]
+      else
+        pix[0] = mapSize[0] / 2 + pix[0]
+    }
+    if (pix)
+      this._pixel = pix
+    if (map && map.getTargetElement() && this._pixel) {
+      this.updateRenderedPosition(this._pixel, mapSize)
+      // Prevent outside
+      var outside = false
+      r = ol.ext.element.offsetRect(this.element)
+      var rmap = ol.ext.element.offsetRect(map.getTargetElement())
+      if (r.left < rmap.left) {
+        this._pixel[0] = this._pixel[0] + rmap.left - r.left
+        outside = true
+      } else if (r.left + r.width > rmap.left + rmap.width) {
+        this._pixel[0] = this._pixel[0] + rmap.left - r.left + rmap.width - r.width
+        outside = true
+      }
+      if (r.top < rmap.top) {
+        this._pixel[1] = this._pixel[1] + rmap.top - r.top
+        outside = true
+      } else if (r.top + r.height > rmap.top + rmap.height) {
+        this._pixel[1] = this._pixel[1] + rmap.top - r.top + rmap.height - r.height
+        outside = true
+      }
+      if (outside)
+        this.updateRenderedPosition(this._pixel, mapSize)
+      this._overlay.changed()
     }
   }
-};
-/** Set link style
- * @param {ol.style.Style} style
- */
-ol.Overlay.FixedPopup.prototype.setLinkStyle = function (style) {
-  this._style = style;
-  this._overlay.changed();
-};
-/** Get link style
- * @return {ol.style.Style} style
- */
-ol.Overlay.FixedPopup.prototype.getLinkStyle = function () {
-  return this._style;
-};
+  /** Set pixel position
+   * @returns {ol.pixel}
+   */
+  getPixelPosition() {
+    return this._pixel
+  }
+  /**
+   * Set the CSS class of the popup.
+   * @param {string} c class name.
+   * @api stable
+   */
+  setPopupClass(c) {
+    super.setPopupClass(c)
+    this.addPopupClass('ol-fixPopup')
+  }
+  /** Set poppup rotation
+   * @param {number} angle
+   * @param {booelan} update update popup, default true
+   * @api
+   */
+  setRotation(angle, update) {
+    if (typeof (angle) === 'number')
+      this.set('rotation', angle)
+    if (update !== false) {
+      if (/rotate/.test(this.element.style.transform)) {
+        this.element.style.transform = this.element.style.transform.replace(/rotate\((-?[\d,.]+)deg\)/, 'rotate(' + (this.get('rotation') || 0) + 'deg)')
+      } else {
+        this.element.style.transform = this.element.style.transform + ' rotate(' + (this.get('rotation') || 0) + 'deg)'
+      }
+    }
+  }
+  /** Set poppup scale
+   * @param {number} scale
+   * @param {booelan} update update popup, default true
+   * @api
+   */
+  setScale(scale, update) {
+    if (typeof (scale) === 'number')
+      this.set('scale', scale)
+    scale = Math.min(Math.max(this.get('minScale') || 0, this.get('scale') || 1), this.get('maxScale') || 2)
+    this.set('scale', scale)
+    if (update !== false) {
+      if (/scale/.test(this.element.style.transform)) {
+        this.element.style.transform = this.element.style.transform.replace(/scale\(([\d,.]+)\)/, 'scale(' + (scale) + ')')
+      } else {
+        this.element.style.transform = this.element.style.transform + ' scale(' + (scale) + ')'
+      }
+    }
+  }
+  /** Set link style
+   * @param {ol.style.Style} style
+   */
+  setLinkStyle(style) {
+    this._style = style
+    this._overlay.changed()
+  }
+  /** Get link style
+   * @return {ol.style.Style} style
+   */
+  getLinkStyle() {
+    return this._style
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -35350,8 +35399,8 @@ ol.Overlay.Placemark = class olOverlayPlacemark extends ol.Overlay.Popup {
     options.positioning = 'bottom-center',
     super(options);
     this.setPositioning = function () { };
-    if (options.color) le.color = options.color;
-    if (options.backgroundColor) undColor = options.backgroundColor;
+    if (options.color) this.element.style.color = options.color;
+    if (options.backgroundColor) this.element.style.backgroundColor = options.backgroundColor;
     if (options.contentColor) this.setContentColor(options.contentColor);
     if (options.size) this.setRadius(options.size);
   }
@@ -35365,7 +35414,7 @@ ol.Overlay.Placemark = class olOverlayPlacemark extends ol.Overlay.Popup {
       coordinate = this.getPosition();
     }
     this.hide();
-    super.show([coordinate, html]);
+    super.show(coordinate, html);
   }
   /**
    * Set the placemark color.
@@ -36137,156 +36186,164 @@ ol.graph = {};
  *  @param {integer} [options.stepIteration=2000] number of iterations before a calculating event is fired, default 2000
  *  @param {number} [options.epsilon=1E-6] geometric precision (min distance beetween 2 points), default 1E-6
  */
-ol.graph.Dijskra = function (options) {
-  options = options || {};
-  this.source = options.source;
-  this.nodes = new ol.source.Vector();
-  // Maximum iterations
-  this.maxIteration = options.maxIteration || 20000;
-  this.stepIteration = options.stepIteration || 2000;
-  // A* optimisation
-  this.astar = true;
-  this.candidat = [];
-  ol.Object.call (this);
-  this.set ('epsilon', options.epsilon || 1E-6);
-};
-ol.ext.inherits(ol.graph.Dijskra, ol.Object);
-/** Get the weighting of the edge, for example a speed factor
- * The function returns a value beetween ]0,1]
- * - 1   = no weighting
- * - 0.5 = goes twice more faster on this road
- * 
- * If no feature is provided you must return the lower weighting you're using
- * @param {ol/Feature} feature
- * @return {number} a number beetween 0-1 
- * @api
- */
-ol.graph.Dijskra.prototype.weight = function(/* feature */) {
-  return 1;
-};
-/** Get the edge direction
- * -  0 : the road is blocked
- * -  1 : direct way
- * - -1 : revers way
- * -  2 : both way
- * @param {ol/Feature} feature
- * @return {Number} 0: blocked, 1: direct way, -1: revers way, 2:both way 
- * @api
- */
-ol.graph.Dijskra.prototype.direction = function(/* feature */) {
-  return 2;
-};
-/** Calculate the length of an edge
- * @param {ol/Feature|ol/geom/LineString} geom
- * @return {number}
- * @api
- */
-ol.graph.Dijskra.prototype.getLength = function(geom) {
-  if (geom.getGeometry) geom = geom.getGeometry();
-  return geom.getLength();
-};
-/** Get the nodes source concerned in the calculation
- * @return {ol/source/Vector}
- */
-ol.graph.Dijskra.prototype.getNodeSource = function() {
-  return this.nodes;
-};
-/** Get all features at a coordinate
- * @param {ol/coordinate} coord
- * @return {Array<ol/Feature>}
- */
-ol.graph.Dijskra.prototype.getEdges = function(coord) {
-  var extent = ol.extent.buffer (ol.extent.boundingExtent([coord]), this.get('epsilon'));
-  var result = [];
-  this.source.forEachFeatureIntersectingExtent(extent, function(f){
-    result.push(f);
-  });
-  return result;
-};
-/** Get a node at a coordinate
- * @param {ol/coordinate} coord
- * @return {ol/Feature} the node
- */
-ol.graph.Dijskra.prototype.getNode = function(coord) {
-  var extent = ol.extent.buffer (ol.extent.boundingExtent([coord]), this.get('epsilon'));
-  var result = [];
-  this.nodes.forEachFeatureIntersectingExtent(extent, function(f){
-    result.push(f);
-  });
-  return result[0];
-};
-/** Add a node
- * @param {ol/coorindate} p
- * @param {number} wdist the distance to reach this node
- * @param {ol/Feature} from the feature used to come to this node
- * @param {ol/Feature} prev the previous node
- * @return {ol/Feature} the node
- * @private
- */
-ol.graph.Dijskra.prototype.addNode = function(p, wdist, dist, from, prev) {
-  // Final condition
-  if (this.wdist && wdist > this.wdist) return false;
-  // Look for existing point
-  var node = this.getNode(p);
-  // Optimisation ?
-  var dtotal = wdist + this.getLength(new ol.geom.LineString([this.end, p])) * this.weight();
-  if (this.astar && this.wdist && dtotal > this.wdist) return false;
-  if (node) {
-    // Allready there
-    if (node!==this.arrival && node.get('wdist') <= wdist) return node;
-    // New candidat
-    node.set('dist', dist);
-    node.set('wdist', wdist);
-    node.set('dtotal', dtotal);
-    node.set('from', from);
-    node.set('prev', prev);
-    if (node===this.arrival) {
-      this.wdist = wdist;
-    }
-    this.candidat.push (node);
-  } else {
-    // New candidat
-    node =  new ol.Feature({
-      geometry: new ol.geom.Point(p),
-      from: from, 
-      prev: prev, 
-      dist: dist || 0, 
-      wdist: wdist, 
-      dtotal: dtotal, 
-    });
-    if (wdist<0) {
-      node.set('wdist', false);
-    }
-    else this.candidat.push (node);
-    // Add it in the node source
-    this.nodes.addFeature(node);
+ol.graph.Dijskra = class olgraphDijskra extends ol.Object {
+  constructor(options) {
+    options = options || {};
+    super();
+    this.source = options.source;
+    this.nodes = new ol.source.Vector();
+    // Maximum iterations
+    this.maxIteration = options.maxIteration || 20000;
+    this.stepIteration = options.stepIteration || 2000;
+    // A* optimisation
+    this.astar = true;
+    this.candidat = [];
+    this.set('epsilon', options.epsilon || 1E-6);
   }
-  return node;
-};
-/** Get the closest coordinate of a node in the graph source (an edge extremity)
- * @param {ol/coordinate} p
- * @return {ol/coordinate} 
- * @private
- */
-ol.graph.Dijskra.prototype.closestCoordinate = function(p) {
-  var e = this.source.getClosestFeatureToCoordinate(p);
-  var p0 = e.getGeometry().getFirstCoordinate();
-  var p1 = e.getGeometry().getLastCoordinate();
-  if (ol.coordinate.dist2d(p, p0) < ol.coordinate.dist2d(p, p1)) return p0;
-  else return p1;
-};
-/** Calculate a path beetween 2 points
- * @param {ol/coordinate} start
- * @param {ol/coordinate} end
- * @return {boolean|Array<ol/coordinate>} false if don't start (still running) or start and end nodes
- */
-ol.graph.Dijskra.prototype.path = function(start, end) {
-  if (this.running) return false;
-  // Starting nodes
-  start = this.closestCoordinate(start);
-  this.end = this.closestCoordinate(end);
-  if (start[0]===this.end[0] 
-    && start[1]===this.end[1]) {
+  /** Get the weighting of the edge, for example a speed factor
+   * The function returns a value beetween ]0,1]
+   * - 1   = no weighting
+   * - 0.5 = goes twice more faster on this road
+   *
+   * If no feature is provided you must return the lower weighting you're using
+   * @param {ol/Feature} feature
+   * @return {number} a number beetween 0-1
+   * @api
+   */
+  weight( /* feature */) {
+    return 1;
+  }
+  /** Get the edge direction
+   * -  0 : the road is blocked
+   * -  1 : direct way
+   * - -1 : revers way
+   * -  2 : both way
+   * @param {ol/Feature} feature
+   * @return {Number} 0: blocked, 1: direct way, -1: revers way, 2:both way
+   * @api
+   */
+  direction( /* feature */) {
+    return 2;
+  }
+  /** Calculate the length of an edge
+   * @param {ol/Feature|ol/geom/LineString} geom
+   * @return {number}
+   * @api
+   */
+  getLength(geom) {
+    if (geom.getGeometry)
+      geom = geom.getGeometry();
+    return geom.getLength();
+  }
+  /** Get the nodes source concerned in the calculation
+   * @return {ol/source/Vector}
+   */
+  getNodeSource() {
+    return this.nodes;
+  }
+  /** Get all features at a coordinate
+   * @param {ol/coordinate} coord
+   * @return {Array<ol/Feature>}
+   */
+  getEdges(coord) {
+    var extent = ol.extent.buffer(ol.extent.boundingExtent([coord]), this.get('epsilon'));
+    var result = [];
+    this.source.forEachFeatureIntersectingExtent(extent, function (f) {
+      result.push(f);
+    });
+    return result;
+  }
+  /** Get a node at a coordinate
+   * @param {ol/coordinate} coord
+   * @return {ol/Feature} the node
+   */
+  getNode(coord) {
+    var extent = ol.extent.buffer(ol.extent.boundingExtent([coord]), this.get('epsilon'));
+    var result = [];
+    this.nodes.forEachFeatureIntersectingExtent(extent, function (f) {
+      result.push(f);
+    });
+    return result[0];
+  }
+  /** Add a node
+   * @param {ol/coorindate} p
+   * @param {number} wdist the distance to reach this node
+   * @param {ol/Feature} from the feature used to come to this node
+   * @param {ol/Feature} prev the previous node
+   * @return {ol/Feature} the node
+   * @private
+   */
+  addNode(p, wdist, dist, from, prev) {
+    // Final condition
+    if (this.wdist && wdist > this.wdist)
+      return false;
+    // Look for existing point
+    var node = this.getNode(p);
+    // Optimisation ?
+    var dtotal = wdist + this.getLength(new ol.geom.LineString([this.end, p])) * this.weight();
+    if (this.astar && this.wdist && dtotal > this.wdist)
+      return false;
+    if (node) {
+      // Allready there
+      if (node !== this.arrival && node.get('wdist') <= wdist)
+        return node;
+      // New candidat
+      node.set('dist', dist);
+      node.set('wdist', wdist);
+      node.set('dtotal', dtotal);
+      node.set('from', from);
+      node.set('prev', prev);
+      if (node === this.arrival) {
+        this.wdist = wdist;
+      }
+      this.candidat.push(node);
+    } else {
+      // New candidat
+      node = new ol.Feature({
+        geometry: new ol.geom.Point(p),
+        from: from,
+        prev: prev,
+        dist: dist || 0,
+        wdist: wdist,
+        dtotal: dtotal,
+      });
+      if (wdist < 0) {
+        node.set('wdist', false);
+      }
+      else
+        this.candidat.push(node);
+      // Add it in the node source
+      this.nodes.addFeature(node);
+    }
+    return node;
+  }
+  /** Get the closest coordinate of a node in the graph source (an edge extremity)
+   * @param {ol/coordinate} p
+   * @return {ol/coordinate}
+   * @private
+   */
+  closestCoordinate(p) {
+    var e = this.source.getClosestFeatureToCoordinate(p);
+    var p0 = e.getGeometry().getFirstCoordinate();
+    var p1 = e.getGeometry().getLastCoordinate();
+    if (ol.coordinate.dist2d(p, p0) < ol.coordinate.dist2d(p, p1))
+      return p0;
+    else
+      return p1;
+  }
+  /** Calculate a path beetween 2 points
+   * @param {ol/coordinate} start
+   * @param {ol/coordinate} end
+   * @return {boolean|Array<ol/coordinate>} false if don't start (still running) or start and end nodes
+   */
+  path(start, end) {
+    if (this.running)
+      return false;
+    // Starting nodes
+    start = this.closestCoordinate(start);
+    this.end = this.closestCoordinate(end);
+    if (start[0] === this.end[0]
+      && start[1] === this.end[1]) {
       this.dispatchEvent({
         type: 'finish',
         route: [],
@@ -36295,135 +36352,139 @@ ol.graph.Dijskra.prototype.path = function(start, end) {
       });
       return false;
     }
-  // Initialize
-  var self = this;
-  this.nodes.clear();
-  this.candidat = [];
-  this.wdist = 0;
-  this.running = true;
-  // Starting point
-  this.addNode(start, 0);
-  // Arrival
-  this.arrival = this.addNode(this.end, -1);
-  // Start
-  this.nb = 0;
-  this.dispatchEvent({
-    type: 'start'
-  });
-  setTimeout(function() { self._resume(); });
-  return [start, this.end];
-};
-/** Restart after pause
- */
-ol.graph.Dijskra.prototype.resume = function() {
-  if (this.running) return;
-  if (this.candidat.length) {
+    // Initialize
+    var self = this;
+    this.nodes.clear();
+    this.candidat = [];
+    this.wdist = 0;
     this.running = true;
+    // Starting point
+    this.addNode(start, 0);
+    // Arrival
+    this.arrival = this.addNode(this.end, -1);
+    // Start
     this.nb = 0;
-    this._resume();
-  }
-};
-/** Pause 
- */
-ol.graph.Dijskra.prototype.pause = function() {
-  if (!this.running) return;
-  this.nb = -1;
-};
-/** Get the current 'best way'.
- * This may be used to animate while calculating.
- * @return {Array<ol/Feature>}
- */
-ol.graph.Dijskra.prototype.getBestWay = function() {
-  var node, max = -1;
-  for (var i=0, n; n = this.candidat[i]; i++) {
-    if (n.get('wdist') > max) {
-      node = n;
-      max = n.get('wdist');
-    }
-  }
-  // Calculate route to this node
-  return this.getRoute(node);
-};
-/** Go on searching new candidats
- * @private
- */
-ol.graph.Dijskra.prototype._resume = function() {
-  if (!this.running) return;
-  while (this.candidat.length) {
-    // Sort by wdist
-    this.candidat.sort (function(a,b) {
-      return (a.get('dtotal') < b.get('dtotal') ? 1 : a.get('dtotal')===b.get('dtotal') ? 0 : -1);
+    this.dispatchEvent({
+      type: 'start'
     });
-    // First candidate
-    var node = this.candidat.pop();
-    var p = node.getGeometry().getCoordinates();
-    // Find connected edges
-    var edges = this.getEdges(p);
-    for (var i=0, e; e=edges[i]; i++) {
-      if (node.get('from')!==e) {
-        var dist = this.getLength (e);
-        if (dist < 0) {
-          console.log ('distance < 0!');
-          // continue;
-        }
-        var wdist = node.get('wdist') + dist * this.weight(e);
-        dist = node.get('dist') + dist;
-        var pt1 = e.getGeometry().getFirstCoordinate();
-        var pt2 = e.getGeometry().getLastCoordinate();
-        var sens = this.direction(e);
-        if (sens!==0) {
-          if (p[0]===pt1[0] && p[1]===pt1[1] && sens!==-1) {
-            this.addNode(pt2, wdist, dist, e, node);
-          }
-          if (p[0]===pt2[0] && p[0]===pt2[0] && sens!==1) {
-            this.addNode(pt1, wdist, dist, e, node);
-          }
-        }
-      }
-      // Test overflow or pause
-      if (this.nb === -1 || this.nb++ > this.maxIteration) {
-        this.running = false;
-        this.dispatchEvent({
-          type: 'pause',
-          overflow: (this.nb !== -1)
-        });
-        return;
-      }
-      // Take time to do something
-      if (!(this.nb % this.stepIteration)){
-        var self = this;
-        window.setTimeout(function() { self._resume() }, 5);
-        this.dispatchEvent({
-          type: 'calculating'
-        });
-        return;
-      }
+    setTimeout(function () { self._resume(); });
+    return [start, this.end];
+  }
+  /** Restart after pause
+   */
+  resume() {
+    if (this.running)
+      return;
+    if (this.candidat.length) {
+      this.running = true;
+      this.nb = 0;
+      this._resume();
     }
   }
-  // Finish!
-  this.nodes.clear();
-  this.running = false;
-  this.dispatchEvent({
-    type: 'finish',
-    route: this.getRoute(this.arrival),
-    wDistance: this.wdist,
-    distance: this.arrival.get('dist')
-  });
-};
-/** Get the route to a node
- * @param {ol/Feature} node
- * @return {Array<ol/Feature>}
- * @private
- */
-ol.graph.Dijskra.prototype.getRoute = function(node) {
-  var route = [];
-  while (node) {
-    route.unshift(node.get('from'));
-    node = node.get('prev');
+  /** Pause
+   */
+  pause() {
+    if (!this.running)
+      return;
+    this.nb = -1;
   }
-  route.shift();
-  return route;
-};
+  /** Get the current 'best way'.
+   * This may be used to animate while calculating.
+   * @return {Array<ol/Feature>}
+   */
+  getBestWay() {
+    var node, max = -1;
+    for (var i = 0, n; n = this.candidat[i]; i++) {
+      if (n.get('wdist') > max) {
+        node = n;
+        max = n.get('wdist');
+      }
+    }
+    // Calculate route to this node
+    return this.getRoute(node);
+  }
+  /** Go on searching new candidats
+   * @private
+   */
+  _resume() {
+    if (!this.running)
+      return;
+    while (this.candidat.length) {
+      // Sort by wdist
+      this.candidat.sort(function (a, b) {
+        return (a.get('dtotal') < b.get('dtotal') ? 1 : a.get('dtotal') === b.get('dtotal') ? 0 : -1);
+      });
+      // First candidate
+      var node = this.candidat.pop();
+      var p = node.getGeometry().getCoordinates();
+      // Find connected edges
+      var edges = this.getEdges(p);
+      for (var i = 0, e; e = edges[i]; i++) {
+        if (node.get('from') !== e) {
+          var dist = this.getLength(e);
+          if (dist < 0) {
+            console.log('distance < 0!');
+            // continue;
+          }
+          var wdist = node.get('wdist') + dist * this.weight(e);
+          dist = node.get('dist') + dist;
+          var pt1 = e.getGeometry().getFirstCoordinate();
+          var pt2 = e.getGeometry().getLastCoordinate();
+          var sens = this.direction(e);
+          if (sens !== 0) {
+            if (p[0] === pt1[0] && p[1] === pt1[1] && sens !== -1) {
+              this.addNode(pt2, wdist, dist, e, node);
+            }
+            if (p[0] === pt2[0] && p[0] === pt2[0] && sens !== 1) {
+              this.addNode(pt1, wdist, dist, e, node);
+            }
+          }
+        }
+        // Test overflow or pause
+        if (this.nb === -1 || this.nb++ > this.maxIteration) {
+          this.running = false;
+          this.dispatchEvent({
+            type: 'pause',
+            overflow: (this.nb !== -1)
+          });
+          return;
+        }
+        // Take time to do something
+        if (!(this.nb % this.stepIteration)) {
+          var self = this;
+          window.setTimeout(function () { self._resume(); }, 5);
+          this.dispatchEvent({
+            type: 'calculating'
+          });
+          return;
+        }
+      }
+    }
+    // Finish!
+    this.nodes.clear();
+    this.running = false;
+    this.dispatchEvent({
+      type: 'finish',
+      route: this.getRoute(this.arrival),
+      wDistance: this.wdist,
+      distance: this.arrival.get('dist')
+    });
+  }
+  /** Get the route to a node
+   * @param {ol/Feature} node
+   * @return {Array<ol/Feature>}
+   * @private
+   */
+  getRoute(node) {
+    var route = [];
+    while (node) {
+      route.unshift(node.get('from'));
+      node = node.get('prev');
+    }
+    route.shift();
+    return route;
+  }
+}
 
 /** French Geoportail alti coding
  * @param {ol.geom.Geometry} geom

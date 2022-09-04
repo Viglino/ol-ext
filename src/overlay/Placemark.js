@@ -3,6 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
+import ol_ext_inherits from '../util/ext'
 import ol_Overlay_Popup from './Popup'
 
 /**
@@ -35,11 +36,10 @@ var ol_Overlay_Placemark = class olOverlayPlacemark extends ol_Overlay_Popup {
     options.positioning = 'bottom-center',
 
     super(options);
-
     this.setPositioning = function () { };
 
-    if (options.color) le.color = options.color;
-    if (options.backgroundColor) undColor = options.backgroundColor;
+    if (options.color) this.element.style.color = options.color;
+    if (options.backgroundColor) this.element.style.backgroundColor = options.backgroundColor;
     if (options.contentColor) this.setContentColor(options.contentColor);
     if (options.size) this.setRadius(options.size);
   }
@@ -53,7 +53,7 @@ var ol_Overlay_Placemark = class olOverlayPlacemark extends ol_Overlay_Popup {
       coordinate = this.getPosition();
     }
     this.hide();
-    super.show([coordinate, html]);
+    super.show(coordinate, html);
   }
   /**
    * Set the placemark color.

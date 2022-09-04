@@ -3376,6 +3376,10 @@ ul.ol-legend li div {
   background-color: currentColor;
 }
 
+.ol-control.ol-routing .content {
+  margin: .5em;
+}
+
 .ol-control.ol-routing.ol-collapsed .content {
   display: none;
 }
@@ -3475,8 +3479,11 @@ ul.ol-legend li div {
   background: transparent;
 }
 
+.ol-control.ol-routing {
+  background-color: rgba(255,255,255,.25);
+}
 .ol-control.ol-routing:hover {
-  background-color: rgba(255,255,255,.85);
+  background-color: rgba(255,255,255,.75);
 }
 
 .search-input > div > button:before {

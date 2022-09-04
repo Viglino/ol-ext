@@ -80,7 +80,7 @@ var ol_control_Overlay = class olcontrolOverlay extends ol_control_Control {
       elt.style.top = "";
       elt.style.left = "";
     }
-    if (html) tContent(html);
+    if (html) this.setContent(html);
     if (this._timeout) clearTimeout(this._timeout);
     this._timeout = setTimeout(function () {
       elt.classList.add("ol-visible");
