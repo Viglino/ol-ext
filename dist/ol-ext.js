@@ -564,47 +564,51 @@ ol.View.prototype.takeTour = function(destinations, options) {
  * @param {object} options
  *  @param {function} [options.onMessage] a callback function to get worker result
  */
-ol.ext.Worker = function(mainFn, options) {
-  // Convert to function
-  var mainStr = mainFn.toString().replace(/^.*\(/,'function(')
-  // Code
-  var lines = ['var mainFn = '+ mainStr + `
+ol.ext.Worker = class olextWorker {
+  constructor(mainFn, options) {
+    // Convert to function
+    var mainStr = mainFn.toString().replace(/^.*\(/, 'function(');
+    // Code
+    var lines = ['var mainFn = ' + mainStr + `
     self.addEventListener("message", function(event) {
       var result = mainFn(event);
       self.postMessage(result);
     });`
-  ];
-  this.code_ = URL.createObjectURL(new Blob(lines, {type: 'text/javascript'}));
-  this.onMessage_ = options.onMessage;
-  this.start();
-};
-/** Terminate current worker and start a new one
- */
-ol.ext.Worker.prototype.start = function() {
-  if (this.worker) this.worker.terminate();
-  this.worker = new Worker(this.code_);
-  this.worker.addEventListener('message', function(e) {
-    this.onMessage_(e.data);
-  }.bind(this));
-};
-/** Terminate a worker */
-ol.ext.Worker.prototype.terminate = function() {
-  this.worker.terminate();
-};
-/** Post a new message to the worker
- * @param {object} message
- * @param {boolean} [restart=false] stop the worker and restart a new one
- */
-ol.ext.Worker.prototype.postMessage = function(message, restart) {
-  if (restart) this.start();
-  this.worker.postMessage(message);
-};
-/** Set onMessage callback
- * @param {function} fn a callback function to get worker result
- */
-ol.ext.Worker.prototype.onMessage = function(fn) {
-  this.onMessage_ = fn
-};
+    ];
+    this.code_ = URL.createObjectURL(new Blob(lines, { type: 'text/javascript' }));
+    this.onMessage_ = options.onMessage;
+    this.start();
+  }
+  /** Terminate current worker and start a new one
+   */
+  start() {
+    if (this.worker)
+      this.worker.terminate();
+    this.worker = new Worker(this.code_);
+    this.worker.addEventListener('message', function (e) {
+      this.onMessage_(e.data);
+    }.bind(this));
+  }
+  /** Terminate a worker */
+  terminate() {
+    this.worker.terminate();
+  }
+  /** Post a new message to the worker
+   * @param {object} message
+   * @param {boolean} [restart=false] stop the worker and restart a new one
+   */
+  postMessage(message, restart) {
+    if (restart)
+      this.start();
+    this.worker.postMessage(message);
+  }
+  /** Set onMessage callback
+   * @param {function} fn a callback function to get worker result
+   */
+  onMessage(fn) {
+    this.onMessage_ = fn;
+  }
+}
 
 /** Converts an RGB color value to HSL.
  * returns hsl as array h:[0,360], s:[0,100], l:[0,100]
@@ -14196,52 +14200,53 @@ ol.control.SearchBAN = class olcontrolSearchBAN extends ol.control.SearchPhoton 
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property 
  *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
  */
-ol.control.SearchDFCI = function(options) {
-  if (!options) options = {};
-  options.className = options.className || 'dfci';
-  options.placeholder = options.placeholder || 'Code DFCI';
-  ol.control.Search.call(this, options);
-};
-ol.ext.inherits(ol.control.SearchDFCI, ol.control.Search);
-/** Autocomplete function
-* @param {string} s search string
-* @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
-* @api
-*/
-ol.control.SearchDFCI.prototype.autocomplete = function (s) {
-  s = s.toUpperCase();
-  s = s.replace(/[^0-9,^A-H,^K-N]/g,'');
-  if (s.length<2) {
-    this.setInput(s);
-    return [];
+ol.control.SearchDFCI = class olcontrolSearchDFCI extends ol.control.Search {
+  constructor(options) {
+    options = options || {};
+    options.className = options.className || 'dfci';
+    options.placeholder = options.placeholder || 'Code DFCI';
+    super(options);
   }
-  var i;
-  var proj = this.getMap().getView().getProjection();
-  var result = [];
-  var c = ol.coordinate.fromDFCI(s, proj);
-  var level = Math.floor(s.length/2)-1;
-  var dfci = ol.coordinate.toDFCI(c, level, proj);
-  dfci = dfci.replace(/[^0-9,^A-H,^K-N]/g,'');
-  // Valid DFCI ?
-  if (!/NaN/.test(dfci) && dfci) {
-    console.log('ok', dfci)
-    this.setInput(dfci + s.substring(dfci.length, s.length));
-    result.push({ coordinate: ol.coordinate.fromDFCI(dfci, proj), name: dfci });
-    if (s.length===5) {
-      c = ol.coordinate.fromDFCI(s+0, proj);
-      dfci = (ol.coordinate.toDFCI(c, level+1, proj)).substring(0,5);
-      for (i=0; i<10; i++) {
-        result.push({ coordinate: ol.coordinate.fromDFCI(dfci+i, proj), name: dfci+i });
+  /** Autocomplete function
+  * @param {string} s search string
+  * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
+  * @api
+  */
+  autocomplete(s) {
+    s = s.toUpperCase();
+    s = s.replace(/[^0-9,^A-H,^K-N]/g, '');
+    if (s.length < 2) {
+      this.setInput(s);
+      return [];
+    }
+    var i;
+    var proj = this.getMap().getView().getProjection();
+    var result = [];
+    var c = ol.coordinate.fromDFCI(s, proj);
+    var level = Math.floor(s.length / 2) - 1;
+    var dfci = ol.coordinate.toDFCI(c, level, proj);
+    dfci = dfci.replace(/[^0-9,^A-H,^K-N]/g, '');
+    // Valid DFCI ?
+    if (!/NaN/.test(dfci) && dfci) {
+      console.log('ok', dfci);
+      this.setInput(dfci + s.substring(dfci.length, s.length));
+      result.push({ coordinate: ol.coordinate.fromDFCI(dfci, proj), name: dfci });
+      if (s.length === 5) {
+        c = ol.coordinate.fromDFCI(s + 0, proj);
+        dfci = (ol.coordinate.toDFCI(c, level + 1, proj)).substring(0, 5);
+        for (i = 0; i < 10; i++) {
+          result.push({ coordinate: ol.coordinate.fromDFCI(dfci + i, proj), name: dfci + i });
+        }
+      }
+      if (level === 2) {
+        for (i = 0; i < 6; i++) {
+          result.push({ coordinate: ol.coordinate.fromDFCI(dfci + '.' + i, proj), name: dfci + '.' + i });
+        }
       }
     }
-    if (level === 2) {
-      for (i=0; i<6; i++) {
-        result.push({ coordinate: ol.coordinate.fromDFCI(dfci+'.'+i, proj), name: dfci+'.'+i });
-      }
-    }
+    return result;
   }
-  return result;
-};
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -29732,125 +29737,131 @@ ol.style.dbPediaStyleFunction = function(options) {
  * @param {any} options Vector source options
  *  @param {Array<Number>} resolutions a list of resolution to change the drawing level, default [1000,100,20]
  */
-ol.source.DFCI = function(options) {
-	options = options || {};
-	options.loader = this._calcGrid;
-  options.strategy =  function(extent, resolution) {
-    if (this.resolution && this.resolution != resolution){
-      this.clear();
-      this.refresh();
+ol.source.DFCI = class olsourceDFCI extends ol.source.Vector {
+  constructor(options) {
+    options = options || {}
+    options.loader = function(extent, resolution, projection) {
+      return this._calcGrid(extent, resolution, projection)
     }
-    return [extent];
-  }
-  this._bbox = [[0,1600000],[11*100000, 1600000+10*100000]];
-  ol.source.Vector.call (this, options);
-  this.set('resolutions', options.resolutions || [1000,100,20]);
-  // Add Lambert IIe proj 
-  if (!proj4.defs["EPSG:27572"]) proj4.defs("EPSG:27572","+proj=lcc +lat_1=46.8 +lat_0=46.8 +lon_0=0 +k_0=0.99987742 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356515 +towgs84=-168,-60,320,0,0,0,0 +pm=paris +units=m +no_defs");
-  ol.proj.proj4.register(proj4);
-};
-ol.ext.inherits(ol.source.DFCI, ol.source.Vector);
-/** Cacluate grid according extent/resolution
- */
-ol.source.DFCI.prototype._calcGrid = function (extent, resolution, projection) {
-  // Show step 0
-  var f, ext, res = this.get('resolutions');
-  if (resolution > (res[0] || 1000)) {
-    if (this.resolution != resolution) {
-      if (!this._features0) {
-        ext = [this._bbox[0][0], this._bbox[0][1],this._bbox[1][0], this._bbox[1][1]];
-        this._features0 = this._getFeatures(0, ext, projection);
+    options.strategy = function (extent, resolution) {
+      if (this.resolution && this.resolution != resolution) {
+        this.clear()
+        this.refresh()
       }
-      this.addFeatures(this._features0);
+      return [extent]
     }
+    super(options)
+    this._bbox = [[0, 1600000], [11 * 100000, 1600000 + 10 * 100000]]
+    this.set('resolutions', options.resolutions || [1000, 100, 20])
+    // Add Lambert IIe proj 
+    if (!proj4.defs["EPSG:27572"])
+      proj4.defs("EPSG:27572", "+proj=lcc +lat_1=46.8 +lat_0=46.8 +lon_0=0 +k_0=0.99987742 +x_0=600000 +y_0=2200000 +a=6378249.2 +b=6356515 +towgs84=-168,-60,320,0,0,0,0 +pm=paris +units=m +no_defs")
+    ol.proj.proj4.register(proj4)
   }
-  else if (resolution > (res[1] || 100)) {
-    this.clear();
-    ext = ol.proj.transformExtent(extent, projection, 'EPSG:27572');
-    f = this._getFeatures(1, ext, projection)
-    this.addFeatures(f);
-  }
-  else if (resolution > (res[2] || 0)) {
-    this.clear();
-    ext = ol.proj.transformExtent(extent, projection, 'EPSG:27572');
-    f = this._getFeatures(2, ext, projection)
-    this.addFeatures(f);
-  }
-  else {
-    this.clear();
-    ext = ol.proj.transformExtent(extent, projection, 'EPSG:27572');
-    f = this._getFeatures(3, ext, projection)
-    this.addFeatures(f);
-  }
-  // reset load
-  this.resolution = resolution;
-};
-/**
- * Get middle point
- * @private
- */
-ol.source.DFCI.prototype._midPt = function(p1,p2) {
-  return [(p1[0]+p2[0])/2, (p1[1]+p2[1])/2];
-};
-/**
- * Get feature with geom
- * @private
- */
-ol.source.DFCI.prototype._trFeature = function(geom, id, level, projection) {
-  var g  = new ol.geom.Polygon([geom]);
-  var f = new ol.Feature(g.transform('EPSG:27572', projection));
-  f.set('id', id);
-  f.set('level', level);
-  return f;
-};
-/** Get features
- * 
- */
-ol.source.DFCI.prototype._getFeatures = function (level, extent, projection) {
-  var features = [];
-  var i;
-  var step = 100000;
-  if (level>0) step /= 5;
-  if (level>1) step /= 10;
-  var p0 = [
-    Math.max(this._bbox[0][0], Math.floor(extent[0]/step)*step), 
-    Math.max(this._bbox[0][1], Math.floor(extent[1]/step)*step)
-  ];
-  var p1 = [
-    Math.min(this._bbox[1][0]+99999, Math.floor(extent[2]/step)*step), 
-    Math.min(this._bbox[1][1]+99999, Math.floor(extent[3]/step)*step)
-  ];
-  for (var x=p0[0]; x<=p1[0]; x += step) {
-    for (var y=p0[1]; y<=p1[1]; y += step) {
-      var p, geom = [ [x,y], [x+step, y], [x+step, y+step], [x , y+step], [x,y]];
-      if (level>2) {
-        var m = this._midPt(geom[0],geom[2]);
-        // .5
-        var g = [];
-        for (i=0; i<geom.length; i++) {
-          g.push(this._midPt(geom[i],m))
+  /** Cacluate grid according extent/resolution
+   */
+  _calcGrid(extent, resolution, projection) {
+    // Show step 0
+    var f, ext, res = this.get('resolutions')
+    if (resolution > (res[0] || 1000)) {
+      if (this.resolution != resolution) {
+        if (!this._features0) {
+          ext = [this._bbox[0][0], this._bbox[0][1], this._bbox[1][0], this._bbox[1][1]]
+          this._features0 = this._getFeatures(0, ext, projection)
         }
-        features.push(this._trFeature(g, ol.coordinate.toDFCI([x,y], 2)+'.5', level, projection));
-        // .1 > .4
-        for (i=0; i<4; i++) {
-          g = [];
-          g.push(geom[i]);
-          g.push(this._midPt(geom[i],geom[(i+1)%4]));
-          g.push(this._midPt(m,g[1]));
-          g.push(this._midPt(m,geom[i]));
-          p = this._midPt(geom[i],geom[(i+3)%4]);
-          g.push(this._midPt(m,p));
-          g.push(p);
-          g.push(geom[i]);
-          features.push(this._trFeature(g, ol.coordinate.toDFCI([x,y], 2)+'.'+(4-i), level, projection));
-        }
-      } else {
-        features.push(this._trFeature(geom, ol.coordinate.toDFCI([x,y], level), level, projection));
+        this.addFeatures(this._features0)
       }
     }
+    else if (resolution > (res[1] || 100)) {
+      this.clear()
+      ext = ol.proj.transformExtent(extent, projection, 'EPSG:27572')
+      f = this._getFeatures(1, ext, projection)
+      this.addFeatures(f)
+    }
+    else if (resolution > (res[2] || 0)) {
+      this.clear()
+      ext = ol.proj.transformExtent(extent, projection, 'EPSG:27572')
+      f = this._getFeatures(2, ext, projection)
+      this.addFeatures(f)
+    }
+    else {
+      this.clear()
+      ext = ol.proj.transformExtent(extent, projection, 'EPSG:27572')
+      f = this._getFeatures(3, ext, projection)
+      this.addFeatures(f)
+    }
+    // reset load
+    this.resolution = resolution
   }
-  return features
-};
+  /**
+   * Get middle point
+   * @private
+   */
+  _midPt(p1, p2) {
+    return [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]
+  }
+  /**
+   * Get feature with geom
+   * @private
+   */
+  _trFeature(geom, id, level, projection) {
+    var g = new ol.geom.Polygon([geom])
+    var f = new ol.Feature(g.transform('EPSG:27572', projection))
+    f.set('id', id)
+    f.set('level', level)
+    return f
+  }
+  /** Get features
+   *
+   */
+  _getFeatures(level, extent, projection) {
+    var features = []
+    var i
+    var step = 100000
+    if (level > 0)
+      step /= 5
+    if (level > 1)
+      step /= 10
+    var p0 = [
+      Math.max(this._bbox[0][0], Math.floor(extent[0] / step) * step),
+      Math.max(this._bbox[0][1], Math.floor(extent[1] / step) * step)
+    ]
+    var p1 = [
+      Math.min(this._bbox[1][0] + 99999, Math.floor(extent[2] / step) * step),
+      Math.min(this._bbox[1][1] + 99999, Math.floor(extent[3] / step) * step)
+    ]
+    for (var x = p0[0]; x <= p1[0]; x += step) {
+      for (var y = p0[1]; y <= p1[1]; y += step) {
+        var p, geom = [[x, y], [x + step, y], [x + step, y + step], [x, y + step], [x, y]]
+        if (level > 2) {
+          var m = this._midPt(geom[0], geom[2])
+          // .5
+          var g = []
+          for (i = 0; i < geom.length; i++) {
+            g.push(this._midPt(geom[i], m))
+          }
+          features.push(this._trFeature(g, ol.coordinate.toDFCI([x, y], 2) + '.5', level, projection))
+          // .1 > .4
+          for (i = 0; i < 4; i++) {
+            g = []
+            g.push(geom[i])
+            g.push(this._midPt(geom[i], geom[(i + 1) % 4]))
+            g.push(this._midPt(m, g[1]))
+            g.push(this._midPt(m, geom[i]))
+            p = this._midPt(geom[i], geom[(i + 3) % 4])
+            g.push(this._midPt(m, p))
+            g.push(p)
+            g.push(geom[i])
+            features.push(this._trFeature(g, ol.coordinate.toDFCI([x, y], 2) + '.' + (4 - i), level, projection))
+          }
+        } else {
+          features.push(this._trFeature(geom, ol.coordinate.toDFCI([x, y], level), level, projection))
+        }
+      }
+    }
+    return features
+  }
+}
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -29863,189 +29874,188 @@ ol.source.DFCI.prototype._getFeatures = function (level, extent, projection) {
  *  @param {string|Date} time source date time
  *  @param {number} step step in degree for coordinate precision
  */
-ol.source.DayNight = function(options) {
-  options = options || {};
-  options.loader = this._loader
-  options.strategy = ol.loadingstrategy.all;
-  ol.source.Vector.call (this, options);
-  this.set('time', options.time || new Date());
-  this.set('step', options.step || 1);
-};
-ol.ext.inherits(ol.source.DayNight, ol.source.Vector);
-(function(){
-/** Loader
- * @private
- */
-ol.source.DayNight.prototype._loader = function(extent, resolution, projection) {
-  var lonlat = this.getCoordinates(this.get('time'));
-  var geom = new ol.geom.Polygon([lonlat]);
-  geom.transform('EPSG:4326', projection);
-  this.addFeature(new ol.Feature(geom));
-};
-/** Set source date time
- * @param {string|Date} time source date time
- */
-ol.source.DayNight.prototype.setTime = function(time) {
-  this.set('time', time);
-  this.refresh();
-};
-/** Compute the position of the Sun in ecliptic coordinates at julianDay.
- * @see http://en.wikipedia.org/wiki/Position_of_the_Sun 
- * @param {number} julianDay
- * @private
- */
-function _sunEclipticPosition(julianDay) {
-  var deg2rad = Math.PI / 180;
-  // Days since start of J2000.0
-  var n = julianDay - 2451545.0;
-  // mean longitude of the Sun
-  var L = 280.460 + 0.9856474 * n;
-  L %= 360;
-  // mean anomaly of the Sun
-  var g = 357.528 + 0.9856003 * n;
-  g %= 360;
-  // ecliptic longitude of Sun
-  var lambda = L + 1.915 * Math.sin(g * deg2rad) +
-    0.02 * Math.sin(2 * g * deg2rad);
-  // distance from Sun in AU
-  var R = 1.00014 - 0.01671 * Math.cos(g * deg2rad) -
-    0.0014 * Math.cos(2 * g * deg2rad);
-  return { lambda: lambda, R: R };
-}
-/** 
- * @see http://en.wikipedia.org/wiki/Axial_tilt#Obliquity_of_the_ecliptic_.28Earth.27s_axial_tilt.29
- * @param {number} julianDay
- * @private
- */
-function _eclipticObliquity(julianDay) {
-  var n = julianDay - 2451545.0;
-  // Julian centuries since J2000.0
-  var T = n / 36525;
-  var epsilon = 23.43929111 -
-    T * (46.836769 / 3600
-      - T * (0.0001831 / 3600
-        + T * (0.00200340 / 3600
-          - T * (0.576e-6 / 3600
-            - T * 4.34e-8 / 3600))));
-  return epsilon;
-}
-/* Compute the Sun's equatorial position from its ecliptic position.
- * @param {number} sunEclLng sun lon in degrees
- * @param {number} eclObliq secliptic position in degrees
- * @return {number} position in degrees
- * @private
- */
-function _sunEquatorialPosition(sunEclLon, eclObliq) {
-  var rad2deg = 180 / Math.PI;
-  var deg2rad = Math.PI / 180;
-  var alpha = Math.atan(Math.cos(eclObliq * deg2rad)
-    * Math.tan(sunEclLon * deg2rad)) * rad2deg;
-  var delta = Math.asin(Math.sin(eclObliq * deg2rad)
-    * Math.sin(sunEclLon * deg2rad)) * rad2deg;
-  var lQuadrant = Math.floor(sunEclLon / 90) * 90;
-  var raQuadrant = Math.floor(alpha / 90) * 90;
-  alpha = alpha + (lQuadrant - raQuadrant);
-  return {alpha: alpha, delta: delta};
-}
-/** Get sun coordinates on earth
- * @param {string} time DateTime string, default yet
- * @returns {ol.coordinate} position in lonlat
- */
-ol.source.DayNight.prototype.getSunPosition = function (time) {
-  var date = time ? new Date(time) : new Date();
-  // Calculate the present UTC Julian Date. 
-  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
-  var julianDay = (date / 86400000) + 2440587.5;
-  // Calculate Greenwich Mean Sidereal Time (low precision equation).
-  // http://aa.usno.navy.mil/faq/docs/GAST.php 
-  var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
-  var sunEclPos = _sunEclipticPosition(julianDay);
-  var eclObliq = _eclipticObliquity(julianDay);
-  var sunEqPos = _sunEquatorialPosition(sunEclPos.lambda, eclObliq);
-  return [sunEqPos.alpha - gst * 15, sunEqPos.delta]
-};
-/** Get the day/night separation latitude
- * @param {number} lon
- * @param {Date} time
- * @returns {number}
- */
-ol.source.DayNight.getNightLat = function (lon, time) {
-  var rad2deg = 180 / Math.PI;
-  var deg2rad = Math.PI / 180;
-  var date = time ? new Date(time) : new Date();
-  // Calculate the present UTC Julian Date. 
-  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
-  var julianDay = (date / 86400000) + 2440587.5;
-  // Calculate Greenwich Mean Sidereal Time (low precision equation).
-  // http://aa.usno.navy.mil/faq/docs/GAST.php 
-  var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
-  var sunEclPos = _sunEclipticPosition(julianDay);
-  var eclObliq = _eclipticObliquity(julianDay);
-  var sunEqPos = _sunEquatorialPosition(sunEclPos.lambda, eclObliq);
-  // Hour angle (indegrees) of the sun for a longitude on Earth.
-  var ha = (gst * 15 + lon) - sunEqPos.alpha;
-  // Latitude     
-  var lat = Math.atan(-Math.cos(ha * deg2rad) /
-    Math.tan(sunEqPos.delta * deg2rad)) * rad2deg;
-  return lat;
-};
-/** Get night-day separation line
- * @param {string} time DateTime string, default yet
- * @param {string} options use 'line' to get the separation line, 'day' to get the day polygon, 'night' to get the night polygon or 'daynight' to get both polygon, default 'night'
- * @return {Array<ol.Point>|Array<Array<ol.Point>>}
- */
-ol.source.DayNight.prototype.getCoordinates = function (time, options) {
-  var rad2deg = 180 / Math.PI;
-  var deg2rad = Math.PI / 180;
-  var date = time ? new Date(time) : new Date();
-  // Calculate the present UTC Julian Date. 
-  // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
-  var julianDay = (date / 86400000) + 2440587.5;
-  // Calculate Greenwich Mean Sidereal Time (low precision equation).
-  // http://aa.usno.navy.mil/faq/docs/GAST.php 
-  var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
-  var lonlat = [];
-  var sunEclPos = _sunEclipticPosition(julianDay);
-  var eclObliq = _eclipticObliquity(julianDay);
-  var sunEqPos = _sunEquatorialPosition(sunEclPos.lambda, eclObliq);
-  var step = this.get('step') || 1;
-  for (var i = -180; i <= 180; i += step) {
-    var lon = i;
+ol.source.DayNight = class olsourceDayNight extends ol.source.Vector {
+  constructor(options) {
+    options = options || {};
+    options.strategy = ol.loadingstrategy.all;
+    super(options);
+    this.setLoader(this._loader);
+    this.set('time', options.time || new Date());
+    this.set('step', options.step || 1);
+  }
+  /** Compute the position of the Sun in ecliptic coordinates at julianDay.
+   * @see http://en.wikipedia.org/wiki/Position_of_the_Sun
+   * @param {number} julianDay
+   * @private
+   */
+  static _sunEclipticPosition(julianDay) {
+    var deg2rad = Math.PI / 180;
+    // Days since start of J2000.0
+    var n = julianDay - 2451545.0;
+    // mean longitude of the Sun
+    var L = 280.460 + 0.9856474 * n;
+    L %= 360;
+    // mean anomaly of the Sun
+    var g = 357.528 + 0.9856003 * n;
+    g %= 360;
+    // ecliptic longitude of Sun
+    var lambda = L + 1.915 * Math.sin(g * deg2rad) +
+      0.02 * Math.sin(2 * g * deg2rad);
+    // distance from Sun in AU
+    var R = 1.00014 - 0.01671 * Math.cos(g * deg2rad) -
+      0.0014 * Math.cos(2 * g * deg2rad);
+    return { lambda: lambda, R: R };
+  }
+  /**
+   * @see http://en.wikipedia.org/wiki/Axial_tilt#Obliquity_of_the_ecliptic_.28Earth.27s_axial_tilt.29
+   * @param {number} julianDay
+   * @private
+   */
+  static _eclipticObliquity(julianDay) {
+    var n = julianDay - 2451545.0;
+    // Julian centuries since J2000.0
+    var T = n / 36525;
+    var epsilon = 23.43929111 -
+      T * (46.836769 / 3600
+        - T * (0.0001831 / 3600
+          + T * (0.00200340 / 3600
+            - T * (0.576e-6 / 3600
+              - T * 4.34e-8 / 3600))));
+    return epsilon;
+  }
+  /* Compute the Sun's equatorial position from its ecliptic position.
+   * @param {number} sunEclLng sun lon in degrees
+   * @param {number} eclObliq secliptic position in degrees
+   * @return {number} position in degrees
+   * @private
+   */
+  static _sunEquatorialPosition(sunEclLon, eclObliq) {
+    var rad2deg = 180 / Math.PI;
+    var deg2rad = Math.PI / 180;
+    var alpha = Math.atan(Math.cos(eclObliq * deg2rad)
+      * Math.tan(sunEclLon * deg2rad)) * rad2deg;
+    var delta = Math.asin(Math.sin(eclObliq * deg2rad)
+      * Math.sin(sunEclLon * deg2rad)) * rad2deg;
+    var lQuadrant = Math.floor(sunEclLon / 90) * 90;
+    var raQuadrant = Math.floor(alpha / 90) * 90;
+    alpha = alpha + (lQuadrant - raQuadrant);
+    return { alpha: alpha, delta: delta };
+  }
+  /** Get the day/night separation latitude
+   * @param {number} lon
+   * @param {Date} time
+   * @returns {number}
+   */
+  static getNightLat(lon, time) {
+    var rad2deg = 180 / Math.PI;
+    var deg2rad = Math.PI / 180;
+    var date = time ? new Date(time) : new Date();
+    // Calculate the present UTC Julian Date. 
+    // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
+    var julianDay = (date / 86400000) + 2440587.5;
+    // Calculate Greenwich Mean Sidereal Time (low precision equation).
+    // http://aa.usno.navy.mil/faq/docs/GAST.php 
+    var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
+    var sunEclPos = ol.source.DayNight._sunEclipticPosition(julianDay);
+    var eclObliq = ol.source.DayNight._eclipticObliquity(julianDay);
+    var sunEqPos = ol.source.DayNight._sunEquatorialPosition(sunEclPos.lambda, eclObliq);
     // Hour angle (indegrees) of the sun for a longitude on Earth.
     var ha = (gst * 15 + lon) - sunEqPos.alpha;
     // Latitude     
     var lat = Math.atan(-Math.cos(ha * deg2rad) /
       Math.tan(sunEqPos.delta * deg2rad)) * rad2deg;
-    // New point
-    lonlat.push([lon, lat]);
+    return lat;
   }
-  switch (options) {
-    case 'line': break;
-    case 'day': sunEqPos.delta *= -1;
-    // fallthrough
-    default: {
-      // Close polygon
-      lat = (sunEqPos.delta < 0) ? 90 : -90;
-      for(var tlon=180; tlon>=-180; tlon-=step){
-        lonlat.push([tlon,lat]);
-      }
-      lonlat.push(lonlat[0])
-      break;
+  /** Loader
+   * @private
+   */
+  _loader(extent, resolution, projection) {
+    var lonlat = this.getCoordinates(this.get('time'));
+    var geom = new ol.geom.Polygon([lonlat]);
+    geom.transform('EPSG:4326', projection);
+    this.addFeature(new ol.Feature(geom));
+  }
+  /** Set source date time
+   * @param {string|Date} time source date time
+   */
+  setTime(time) {
+    this.set('time', time);
+    this.refresh();
+  }
+  /** Get sun coordinates on earth
+   * @param {string} time DateTime string, default yet
+   * @returns {ol.coordinate} position in lonlat
+   */
+  getSunPosition(time) {
+    var date = time ? new Date(time) : new Date();
+    // Calculate the present UTC Julian Date. 
+    // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
+    var julianDay = (date / 86400000) + 2440587.5;
+    // Calculate Greenwich Mean Sidereal Time (low precision equation).
+    // http://aa.usno.navy.mil/faq/docs/GAST.php 
+    var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
+    var sunEclPos = ol.source.DayNight._sunEclipticPosition(julianDay);
+    var eclObliq = ol.source.DayNight._eclipticObliquity(julianDay);
+    var sunEqPos = ol.source.DayNight._sunEquatorialPosition(sunEclPos.lambda, eclObliq);
+    return [sunEqPos.alpha - gst * 15, sunEqPos.delta];
+  }
+  /** Get night-day separation line
+   * @param {string} time DateTime string, default yet
+   * @param {string} options use 'line' to get the separation line, 'day' to get the day polygon, 'night' to get the night polygon or 'daynight' to get both polygon, default 'night'
+   * @return {Array<ol.Point>|Array<Array<ol.Point>>}
+   */
+  getCoordinates(time, options) {
+    var rad2deg = 180 / Math.PI;
+    var deg2rad = Math.PI / 180;
+    var date = time ? new Date(time) : new Date();
+    // Calculate the present UTC Julian Date. 
+    // Function is valid after the beginning of the UNIX epoch 1970-01-01 and ignores leap seconds. 
+    var julianDay = (date / 86400000) + 2440587.5;
+    // Calculate Greenwich Mean Sidereal Time (low precision equation).
+    // http://aa.usno.navy.mil/faq/docs/GAST.php 
+    var gst = (18.697374558 + 24.06570982441908 * (julianDay - 2451545.0)) % 24;
+    var lonlat = [];
+    var sunEclPos = ol.source.DayNight._sunEclipticPosition(julianDay);
+    var eclObliq = ol.source.DayNight._eclipticObliquity(julianDay);
+    var sunEqPos = ol.source.DayNight._sunEquatorialPosition(sunEclPos.lambda, eclObliq);
+    var step = this.get('step') || 1;
+    for (var i = -180; i <= 180; i += step) {
+      var lon = i;
+      // Hour angle (indegrees) of the sun for a longitude on Earth.
+      var ha = (gst * 15 + lon) - sunEqPos.alpha;
+      // Latitude     
+      var lat = Math.atan(-Math.cos(ha * deg2rad) /
+        Math.tan(sunEqPos.delta * deg2rad)) * rad2deg;
+      // New point
+      lonlat.push([lon, lat]);
     }
+    switch (options) {
+      case 'line': break;
+      case 'day': sunEqPos.delta *= -1;
+      // fallthrough
+      default: {
+        // Close polygon
+        lat = (sunEqPos.delta < 0) ? 90 : -90;
+        for (var tlon = 180; tlon >= -180; tlon -= step) {
+          lonlat.push([tlon, lat]);
+        }
+        lonlat.push(lonlat[0]);
+        break;
+      }
+    }
+    // Return night + day polygon
+    if (options === 'daynight') {
+      var day = [];
+      lonlat.forEach(function (t) { day.push(t.slice()); });
+      day[0][1] = -day[0][1];
+      day[day.length - 1][1] = -day[0][1];
+      day[day.length - 1][1] = -day[0][1];
+      lonlat = [lonlat, day];
+    }
+    // Return polygon
+    return lonlat;
   }
-  // Return night + day polygon
-  if (options === 'daynight') {
-    var day = [];
-    lonlat.forEach(function (t) { day.push(t.slice()); });
-    day[0][1] = -day[0][1];
-    day[day.length-1][1] = -day[0][1];
-    day[day.length-1][1] = -day[0][1];
-    lonlat = [ lonlat, day ];
-  }
-  // Return polygon
-  return lonlat;
-};
-})();
+}
 
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 /** Delaunay source

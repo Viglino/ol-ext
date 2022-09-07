@@ -3,7 +3,6 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_inherits from '../util/ext'
 import ol_control_Search from './Search'
 import {ol_coordinate_fromDFCI} from '../geom/DFCI'
 import {ol_coordinate_toDFCI} from '../geom/DFCI'
@@ -27,54 +26,54 @@ import {ol_coordinate_toDFCI} from '../geom/DFCI'
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property 
  *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
  */
-var ol_control_SearchDFCI = function(options) {
-  if (!options) options = {};
-  options.className = options.className || 'dfci';
-  options.placeholder = options.placeholder || 'Code DFCI';
+var ol_control_SearchDFCI = class olcontrolSearchDFCI extends ol_control_Search {
+  constructor(options) {
+    options = options || {};
+    options.className = options.className || 'dfci';
+    options.placeholder = options.placeholder || 'Code DFCI';
 
-  ol_control_Search.call(this, options);
-};
-ol_ext_inherits(ol_control_SearchDFCI, ol_control_Search);
-
-/** Autocomplete function
-* @param {string} s search string
-* @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
-* @api
-*/
-ol_control_SearchDFCI.prototype.autocomplete = function (s) {
-  s = s.toUpperCase();
-  s = s.replace(/[^0-9,^A-H,^K-N]/g,'');
-  if (s.length<2) {
-    this.setInput(s);
-    return [];
+    super(options);
   }
+  /** Autocomplete function
+  * @param {string} s search string
+  * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
+  * @api
+  */
+  autocomplete(s) {
+    s = s.toUpperCase();
+    s = s.replace(/[^0-9,^A-H,^K-N]/g, '');
+    if (s.length < 2) {
+      this.setInput(s);
+      return [];
+    }
 
-  var i;
-  var proj = this.getMap().getView().getProjection();
-  var result = [];
-  var c = ol_coordinate_fromDFCI(s, proj);
-  var level = Math.floor(s.length/2)-1;
-  var dfci = ol_coordinate_toDFCI(c, level, proj);
-  dfci = dfci.replace(/[^0-9,^A-H,^K-N]/g,'');
-  // Valid DFCI ?
-  if (!/NaN/.test(dfci) && dfci) {
-    console.log('ok', dfci)
-    this.setInput(dfci + s.substring(dfci.length, s.length));
-    result.push({ coordinate: ol_coordinate_fromDFCI(dfci, proj), name: dfci });
-    if (s.length===5) {
-      c = ol_coordinate_fromDFCI(s+0, proj);
-      dfci = (ol_coordinate_toDFCI(c, level+1, proj)).substring(0,5);
-      for (i=0; i<10; i++) {
-        result.push({ coordinate: ol_coordinate_fromDFCI(dfci+i, proj), name: dfci+i });
+    var i;
+    var proj = this.getMap().getView().getProjection();
+    var result = [];
+    var c = ol_coordinate_fromDFCI(s, proj);
+    var level = Math.floor(s.length / 2) - 1;
+    var dfci = ol_coordinate_toDFCI(c, level, proj);
+    dfci = dfci.replace(/[^0-9,^A-H,^K-N]/g, '');
+    // Valid DFCI ?
+    if (!/NaN/.test(dfci) && dfci) {
+      console.log('ok', dfci);
+      this.setInput(dfci + s.substring(dfci.length, s.length));
+      result.push({ coordinate: ol_coordinate_fromDFCI(dfci, proj), name: dfci });
+      if (s.length === 5) {
+        c = ol_coordinate_fromDFCI(s + 0, proj);
+        dfci = (ol_coordinate_toDFCI(c, level + 1, proj)).substring(0, 5);
+        for (i = 0; i < 10; i++) {
+          result.push({ coordinate: ol_coordinate_fromDFCI(dfci + i, proj), name: dfci + i });
+        }
+      }
+      if (level === 2) {
+        for (i = 0; i < 6; i++) {
+          result.push({ coordinate: ol_coordinate_fromDFCI(dfci + '.' + i, proj), name: dfci + '.' + i });
+        }
       }
     }
-    if (level === 2) {
-      for (i=0; i<6; i++) {
-        result.push({ coordinate: ol_coordinate_fromDFCI(dfci+'.'+i, proj), name: dfci+'.'+i });
-      }
-    }
+    return result;
   }
-  return result;
-};
+}
 
 export default ol_control_SearchDFCI
