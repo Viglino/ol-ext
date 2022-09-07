@@ -29328,194 +29328,204 @@ ol.interaction.UndoRedo.prototype.blockEnd;
  *  @param {fucntion} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {function} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
-ol.source.BinBase = function (options) {
-  options = options || {};
-  this._bindModify = this._onModifyFeature.bind(this);
-  this._watch = true;
-  ol.source.Vector.call(this, options);
-  this._origin = options.source;
-  this._listen = (options.listenChange !== false);
-  // Geometry function
-  this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function (f) { return f.getGeometry().getFirstCoordinate(); };
-  // Existing features
-  this.reset();
-  // Future features
-  this._origin.on('addfeature', this._onAddFeature.bind(this));
-  this._origin.on('removefeature', this._onRemoveFeature.bind(this));
-  this._origin.on('clearstart', this._onClearFeature.bind(this));
-  this._origin.on('clearend', this._onClearFeature.bind(this));
-  if (typeof (options.flatAttributes) === 'function') this._flatAttributes = options.flatAttributes;
-};
-ol.ext.inherits(ol.source.BinBase, ol.source.Vector);
-/**
- * On add feature
- * @param {ol.events.Event} e
- * @param {ol.Feature} bin
- * @private
- */
-ol.source.BinBase.prototype._onAddFeature = function (e, bin, listen) {
-  var f = e.feature || e.target;
-  bin = bin || this.getBinAt(this._geomFn(f), true);
-  if (bin) bin.get('features').push(f);
-  if (this._listen && listen!==false) f.on('change', this._bindModify);
-};
-/**
- *  On remove feature
- *  @param {ol.events.Event} e
- *  @param {ol.Feature} bin
- *  @private
- */
-ol.source.BinBase.prototype._onRemoveFeature = function (e, bin, listen) {
-  if (!this._watch) return;
-  var f = e.feature || e.target;
-  bin = bin || this.getBinAt(this._geomFn(f));
-  if (bin) {
-    // Remove feature from bin
-    var features = bin.get('features');
-    for (var i=0, fi; fi=features[i]; i++) {
-      if (fi===f) {
-        features.splice(i, 1);
-        break;
-      }
-    }
-    // Remove bin if no features
-    if (!features.length) {
-      this.removeFeature(bin);
-    }
-  } else {
-    // console.log("[ERROR:Bin] remove feature: feature doesn't exists anymore.");
-  }
-  if (this._listen && listen!==false) f.un('change', this._bindModify);
-};
-/** When clearing features remove the listener
- * @private
- */
-ol.source.BinBase.prototype._onClearFeature = function (e) {
-  if (e.type==='clearstart') {
-    if (this._listen) {
-      this._origin.getFeatures().forEach(function (f) {
-        f.un('change', this._bindModify);
-      }.bind(this));
-    }
-    this.clear();
-    this._watch = false;
-  } else {
+ol.source.BinBase = class olsourceBinBase extends ol.source.Vector {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this._bindModify = this._onModifyFeature.bind(this);
     this._watch = true;
-  }
-};
-/**
- * Get the bin that contains a feature
- * @param {ol.Feature} f the feature
- * @return {ol.Feature} the bin or null it doesn't exit
- */
-ol.source.BinBase.prototype.getBin = function (feature) {
-  var bins = this.getFeatures();
-  for (var i=0, b; b = bins[i]; i++) {
-    var features = b.get('features');
-    for (var j=0, f; f=features[j]; j++) {
-      if (f===feature) return b;
+    this._origin = options.source;
+    this._listen = (options.listenChange !== false);
+    // Geometry function
+    this._geomFn = options.geometryFunction || ol.coordinate.getFeatureCenter || function (f) { return f.getGeometry().getFirstCoordinate(); };
+    // Future features
+    this._origin.on('addfeature', this._onAddFeature.bind(this));
+    this._origin.on('removefeature', this._onRemoveFeature.bind(this));
+    this._origin.on('clearstart', this._onClearFeature.bind(this));
+    this._origin.on('clearend', this._onClearFeature.bind(this));
+    if (typeof (options.flatAttributes) === 'function') {
+      this._flatAttributes = options.flatAttributes;
     }
+    // Handle exsting feature (should be called from children when fully created)
+    // this.reset()
   }
-  return null;
-}
-/** Get the grid geometry at the coord 
- * @param {ol.Coordinate} coord
- * @param {Object} attributes add key/value to this object to add properties to the grid feature
- * @returns {ol.geom.Polygon} 
- * @api
- */
-ol.source.BinBase.prototype.getGridGeomAt = function (coord /*, attributes */) {
-  return new ol.geom.Polygon([coord]);
-};
-/** Get the bean at a coord
- * @param {ol.Coordinate} coord
- * @param {boolean} create true to create if doesn't exit
- * @return {ol.Feature} the bin or null it doesn't exit
- */
-ol.source.BinBase.prototype.getBinAt = function (coord, create) {
-  var attributes = {};
-  var g = this.getGridGeomAt(coord, attributes);
-  if (!g) return null;
-  var center = g.getInteriorPoint ? g.getInteriorPoint().getCoordinates() : g.getInteriorPoints().getCoordinates()[0];// ol.extent.getCenter(g.getExtent());
-  var features = this.getFeaturesAtCoordinate( center );
-  var bin = features[0];
-  if (!bin && create) {
-    attributes.geometry = g;
-    attributes.features = [];
-    attributes.center = center;
-    bin = new ol.Feature(attributes);
-    this.addFeature(bin);
+  /**
+   * On add feature
+   * @param {ol.events.Event} e
+   * @param {ol.Feature} bin
+   * @private
+   */
+  _onAddFeature(e, bin, listen) {
+    var f = e.feature || e.target;
+    bin = bin || this.getBinAt(this._geomFn(f), true);
+    if (bin)
+      bin.get('features').push(f);
+    if (this._listen && listen !== false)
+      f.on('change', this._bindModify);
   }
-  return bin || null;
-};
-/**
- *  A feature has been modified
- *  @param {ol.events.Event} e
- *  @private
- */
-ol.source.BinBase.prototype._onModifyFeature = function (e) {
-  var bin = this.getBin(e.target);
-  var bin2 = this.getBinAt(this._geomFn(e.target), 'create');
-  if (bin !== bin2) {
-    // remove from the bin
+  /**
+   *  On remove feature
+   *  @param {ol.events.Event} e
+   *  @param {ol.Feature} bin
+   *  @private
+   */
+  _onRemoveFeature(e, bin, listen) {
+    if (!this._watch)
+      return;
+    var f = e.feature || e.target;
+    bin = bin || this.getBinAt(this._geomFn(f));
     if (bin) {
-      this._onRemoveFeature(e, bin, false);
+      // Remove feature from bin
+      var features = bin.get('features');
+      for (var i = 0, fi; fi = features[i]; i++) {
+        if (fi === f) {
+          features.splice(i, 1);
+          break;
+        }
+      }
+      // Remove bin if no features
+      if (!features.length) {
+        this.removeFeature(bin);
+      }
+    } else {
+      // console.log("[ERROR:Bin] remove feature: feature doesn't exists anymore.");
     }
-    // insert in the new bin
-    if (bin2) {
-      this._onAddFeature(e, bin2, false);
+    if (this._listen && listen !== false)
+      f.un('change', this._bindModify);
+  }
+  /** When clearing features remove the listener
+   * @private
+   */
+  _onClearFeature(e) {
+    if (e.type === 'clearstart') {
+      if (this._listen) {
+        this._origin.getFeatures().forEach(function (f) {
+          f.un('change', this._bindModify);
+        }.bind(this));
+      }
+      this.clear();
+      this._watch = false;
+    } else {
+      this._watch = true;
     }
   }
-  this.changed();
-};
-/** Clear all bins and generate a new one. 
- */
-ol.source.BinBase.prototype.reset = function () {
-  this.clear();
-  var features = this._origin.getFeatures();
-  for (var i = 0, f; f = features[i]; i++) {
-    this._onAddFeature({ feature: f });
-  }
-  this.changed();
-};
-/**
- * Get features without circular dependencies (vs. getFeatures)
- * @return {Array<ol.Feature>}
- */
-ol.source.BinBase.prototype.getGridFeatures = function () {
-  var features = [];
-  this.getFeatures().forEach(function (f) {
-    var bin = new ol.Feature(f.getGeometry().clone());
-    for (var i in f.getProperties()) {
-      if (i!=='features' && i!=='geometry') {
-        bin.set(i, f.get(i));
+  /**
+   * Get the bin that contains a feature
+   * @param {ol.Feature} f the feature
+   * @return {ol.Feature} the bin or null it doesn't exit
+   */
+  getBin(feature) {
+    var bins = this.getFeatures();
+    for (var i = 0, b; b = bins[i]; i++) {
+      var features = b.get('features');
+      for (var j = 0, f; f = features[j]; j++) {
+        if (f === feature)
+          return b;
       }
     }
-    bin.set('nb', f.get('features').length);
-    this._flatAttributes(bin, f.get('features'));
-    features.push(bin);
-  }.bind(this));
-  return features;
-};
-/** Create bin attributes using the features it contains when exporting 
- * @param {ol.Feature} bin the bin to export
- * @param {Array<ol.Features>} features the features it contains
- */
-ol.source.BinBase.prototype._flatAttributes = function(/*bin, features*/) {
-};
-/** Set the flatAttribute function
- * @param {function} fn Function that takes a bin and the features it contains and aggragate the features in the bin attributes when saving
- */
- ol.source.BinBase.prototype.setFlatAttributesFn = function(fn) {
-  if (typeof(fn)==='function') this._flatAttributes = fn;
-};
-/**
- * Get the orginal source
- * @return {ol.source.Vector}
- */
-ol.source.BinBase.prototype.getSource = function () {
-  return this._origin;
-};
+    return null;
+  }
+  /** Get the grid geometry at the coord
+   * @param {ol.Coordinate} coord
+   * @param {Object} attributes add key/value to this object to add properties to the grid feature
+   * @returns {ol.geom.Polygon}
+   * @api
+   */
+  getGridGeomAt(coord /*, attributes */) {
+    return new ol.geom.Polygon([coord]);
+  }
+  /** Get the bean at a coord
+   * @param {ol.Coordinate} coord
+   * @param {boolean} create true to create if doesn't exit
+   * @return {ol.Feature} the bin or null it doesn't exit
+   */
+  getBinAt(coord, create) {
+    var attributes = {};
+    var g = this.getGridGeomAt(coord, attributes);
+    if (!g)
+      return null;
+    var center = g.getInteriorPoint ? g.getInteriorPoint().getCoordinates() : g.getInteriorPoints().getCoordinates()[0]; // ol.extent.getCenter(g.getExtent());
+    var features = this.getFeaturesAtCoordinate(center);
+    var bin = features[0];
+    if (!bin && create) {
+      attributes.geometry = g;
+      attributes.features = [];
+      attributes.center = center;
+      bin = new ol.Feature(attributes);
+      this.addFeature(bin);
+    }
+    return bin || null;
+  }
+  /**
+   *  A feature has been modified
+   *  @param {ol.events.Event} e
+   *  @private
+   */
+  _onModifyFeature(e) {
+    var bin = this.getBin(e.target);
+    var bin2 = this.getBinAt(this._geomFn(e.target), 'create');
+    if (bin !== bin2) {
+      // remove from the bin
+      if (bin) {
+        this._onRemoveFeature(e, bin, false);
+      }
+      // insert in the new bin
+      if (bin2) {
+        this._onAddFeature(e, bin2, false);
+      }
+    }
+    this.changed();
+  }
+  /** Clear all bins and generate a new one.
+   */
+  reset() {
+    this.clear();
+    var features = this._origin.getFeatures();
+    for (var i = 0, f; f = features[i]; i++) {
+      this._onAddFeature({ feature: f });
+    }
+    this.changed();
+  }
+  /**
+   * Get features without circular dependencies (vs. getFeatures)
+   * @return {Array<ol.Feature>}
+   */
+  getGridFeatures() {
+    var features = [];
+    this.getFeatures().forEach(function (f) {
+      var bin = new ol.Feature(f.getGeometry().clone());
+      for (var i in f.getProperties()) {
+        if (i !== 'features' && i !== 'geometry') {
+          bin.set(i, f.get(i));
+        }
+      }
+      bin.set('nb', f.get('features').length);
+      this._flatAttributes(bin, f.get('features'));
+      features.push(bin);
+    }.bind(this));
+    return features;
+  }
+  /** Create bin attributes using the features it contains when exporting
+   * @param {ol.Feature} bin the bin to export
+   * @param {Array<ol.Features>} features the features it contains
+   */
+  _flatAttributes( /*bin, features*/) {
+  }
+  /** Set the flatAttribute function
+   * @param {function} fn Function that takes a bin and the features it contains and aggragate the features in the bin attributes when saving
+   */
+  setFlatAttributesFn(fn) {
+    if (typeof (fn) === 'function')
+      this._flatAttributes = fn;
+  }
+  /**
+   * Get the orginal source
+   * @return {ol.source.Vector}
+   */
+  getSource() {
+    return this._origin;
+  }
+}
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -30517,49 +30527,54 @@ ol.source.Delaunay.prototype.calculateVoronoi = function(border) {
  *  @param {function} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {function} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
-ol.source.FeatureBin = function (options) {
-  options = options || {};
-  if (options.binSource) {
-    this._sourceFeature = options.binSource;
-    // When features change recalculate the bin...
-    var timout;
-    this._sourceFeature.on(['addfeature','changefeature','removefeature'], function() {
-      if (timout) {
-        // Do it only one time
-        clearTimeout(timout);
-      }
-      timout = setTimeout(function () {
-        this.reset();
+ol.source.FeatureBin = class olsourceFeatureBin extends ol.source.BinBase {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    if (options.binSource) {
+      this._sourceFeature = options.binSource;
+      // When features change recalculate the bin...
+      var timout;
+      this._sourceFeature.on(['addfeature', 'changefeature', 'removefeature'], function () {
+        if (timout) {
+          // Do it only one time
+          clearTimeout(timout);
+        }
+        timout = setTimeout(function () {
+          this.reset();
+        }.bind(this));
       }.bind(this));
-    }.bind(this));
-  } else {
-    this._sourceFeature = new ol.source.Vector ({ features: options.features || [] });
+    } else {
+      this._sourceFeature = new ol.source.Vector({ features: options.features || [] });
+    }
+    // Handle existing features
+    this.reset();
   }
-  ol.source.BinBase.call(this, options);
-};
-ol.ext.inherits(ol.source.FeatureBin, ol.source.BinBase);
-/** Set features to use as bin collector
- * @param {ol.Feature} features
- */
-ol.source.FeatureBin.prototype.setFeatures = function (features) {
-  this._sourceFeature.clear();
-  this._sourceFeature.addFeatures(features || []);
-  this.reset();
-};
-/** Get the grid geometry at the coord 
- * @param {ol.Coordinate} coord
- * @returns {ol.geom.Polygon} 
- * @api
- */
-ol.source.FeatureBin.prototype.getGridGeomAt = function (coord, attributes) {
-  var f = this._sourceFeature.getFeaturesAtCoordinate(coord)[0];
-  if (!f) return null;
-  var a = f.getProperties();
-  for (var i in a) {
-    if (i!=='geometry') attributes[i] = a[i];
+  /** Set features to use as bin collector
+   * @param {ol.Feature} features
+   */
+  setFeatures(features) {
+    this._sourceFeature.clear();
+    this._sourceFeature.addFeatures(features || []);
+    this.reset();
   }
-  return f.getGeometry();
-};
+  /** Get the grid geometry at the coord
+   * @param {ol.Coordinate} coord
+   * @returns {ol.geom.Polygon}
+   * @api
+   */
+  getGridGeomAt(coord, attributes) {
+    var f = this._sourceFeature.getFeaturesAtCoordinate(coord)[0];
+    if (!f)
+      return null;
+    var a = f.getProperties();
+    for (var i in a) {
+      if (i !== 'geometry')
+        attributes[i] = a[i];
+    }
+    return f.getGeometry();
+  }
+}
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -31058,40 +31073,42 @@ ol.source.Geoportail.getServiceURL = function(server, gppKey) {
  *  @param {function} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {function} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
-ol.source.GridBin = function (options) {
-  options = options || {};
-  ol.source.BinBase.call(this, options);
-  this.set('gridProjection', options.gridProjection || 'EPSG:4326');
-  this.set('size', options.size || 1);
-};
-ol.ext.inherits(ol.source.GridBin, ol.source.BinBase);
-/** Set grid projection
- * @param {ol.ProjectionLike} proj
- */
-ol.source.GridBin.prototype.setGridProjection = function (proj) {
-  this.set('gridProjection', proj);
-  this.reset();
-};
-/** Set grid size
- * @param {number} size
- */
-ol.source.GridBin.prototype.setSize = function (size) {
-  this.set('size', size);
-  this.reset();
-};
-/** Get the grid geometry at the coord 
- * @param {ol.Coordinate} coord
- * @returns {ol.geom.Polygon} 
- * @api
- */
-ol.source.GridBin.prototype.getGridGeomAt = function (coord) {
-  coord = ol.proj.transform (coord, this.getProjection() || 'EPSG:3857', this.get('gridProjection'));
-  var size = this.get('size');
-  var x = size * Math.floor(coord[0] / size);
-  var y = size * Math.floor(coord[1] / size);
-  var geom = new ol.geom.Polygon([[[x,y], [x+size,y], [x+size,y+size], [x,y+size], [x,y]]]);
-  return geom.transform(this.get('gridProjection'), this.getProjection() || 'EPSG:3857');
-};
+ol.source.GridBin = class olsourceGridBin extends ol.source.BinBase {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.set('gridProjection', options.gridProjection || 'EPSG:4326');
+    this.setSize('size', options.size || 1);
+    this.reset();
+  }
+  /** Set grid projection
+   * @param {ol.ProjectionLike} proj
+   */
+  setGridProjection(proj) {
+    this.set('gridProjection', proj);
+    this.reset();
+  }
+  /** Set grid size
+   * @param {number} size
+   */
+  setSize(size) {
+    this.set('size', size);
+    this.reset();
+  }
+  /** Get the grid geometry at the coord
+   * @param {ol.Coordinate} coord
+   * @returns {ol.geom.Polygon}
+   * @api
+   */
+  getGridGeomAt(coord) {
+    coord = ol.proj.transform(coord, this.getProjection() || 'EPSG:3857', this.get('gridProjection'));
+    var size = this.get('size');
+    var x = size * Math.floor(coord[0] / size);
+    var y = size * Math.floor(coord[1] / size);
+    var geom = new ol.geom.Polygon([[[x, y], [x + size, y], [x + size, y + size], [x, y + size], [x, y]]]);
+    return geom.transform(this.get('gridProjection'), this.getProjection() || 'EPSG:3857');
+  }
+}
 
 /*	Copyright (c) 2017-2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -31108,79 +31125,82 @@ ol.source.GridBin.prototype.getGridGeomAt = function (coord) {
  *  @param {function} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {function} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
-ol.source.HexBin = function (options) {
-  options = options || {};
-  /** The HexGrid
-   * 	@type {ol.HexGrid}
+ol.source.HexBin = class olsourceHexBin extends ol.source.BinBase {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    /** The HexGrid
+     * 	@type {ol.HexGrid}
+     */
+    this._hexgrid = new ol.HexGrid(options);
+    // Handle existing features
+    this.reset();
+  }
+  /** Get the hexagon geometry at the coord
+   * @param {ol.Coordinate} coord
+   * @returns {ol.geom.Polygon}
+   * @api
    */
-  this._hexgrid = new ol.HexGrid(options);
-  ol.source.BinBase.call(this, options);
-};
-ol.ext.inherits(ol.source.HexBin, ol.source.BinBase);
-/** Get the hexagon geometry at the coord 
- * @param {ol.Coordinate} coord
- * @returns {ol.geom.Polygon} 
- * @api
- */
-ol.source.HexBin.prototype.getGridGeomAt = function (coord) {
-  var h = this._hexgrid.coord2hex(coord);
-  return new ol.geom.Polygon([this._hexgrid.getHexagon(h)])
-};
-/**	Set the inner HexGrid size.
- * 	@param {number} newSize
- * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
- */
-ol.source.HexBin.prototype.setSize = function (newSize, noreset) {
-  this._hexgrid.setSize(newSize);
-  if (!noreset) {
-    this.reset();
+  getGridGeomAt(coord) {
+    var h = this._hexgrid.coord2hex(coord);
+    return new ol.geom.Polygon([this._hexgrid.getHexagon(h)]);
+  }
+  /**	Set the inner HexGrid size.
+   * 	@param {number} newSize
+   * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
+   */
+  setSize(newSize, noreset) {
+    this._hexgrid.setSize(newSize);
+    if (!noreset) {
+      this.reset();
+    }
+  }
+  /**	Get the inner HexGrid size.
+   * 	@return {number}
+   */
+  getSize() {
+    return this._hexgrid.getSize();
+  }
+  /**	Set the inner HexGrid layout.
+   * 	@param {HexagonLayout} newLayout
+   * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
+   */
+  setLayout(newLayout, noreset) {
+    this._hexgrid.setLayout(newLayout);
+    if (!noreset) {
+      this.reset();
+    }
+  }
+  /**	Get the inner HexGrid layout.
+   * 	@return {HexagonLayout}
+   */
+  getLayout() {
+    return this._hexgrid.getLayout();
+  }
+  /**	Set the inner HexGrid origin.
+   * 	@param {ol.Coordinate} newLayout
+   * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
+   */
+  setOrigin(newLayout, noreset) {
+    this._hexgrid.setOrigin(newLayout);
+    if (!noreset) {
+      this.reset();
+    }
+  }
+  /**	Get the inner HexGrid origin.
+   * 	@return {ol.Coordinate}
+   */
+  getOrigin() {
+    return this._hexgrid.getOrigin();
+  }
+  /**
+   * Get hexagons without circular dependencies (vs. getFeatures)
+   * @return {Array<ol.Feature>}
+   */
+  getHexFeatures() {
+    return ol.source.BinBase.prototype.getGridFeatures.call(this);
   }
 }
-/**	Get the inner HexGrid size.
- * 	@return {number}
- */
-ol.source.HexBin.prototype.getSize = function () {
-  return this._hexgrid.getSize();
-}
-/**	Set the inner HexGrid layout.
- * 	@param {HexagonLayout} newLayout
- * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
- */
-ol.source.HexBin.prototype.setLayout = function (newLayout, noreset) {
-  this._hexgrid.setLayout(newLayout);
-  if (!noreset) {
-    this.reset();
-  }
-}
-/**	Get the inner HexGrid layout.
- * 	@return {HexagonLayout}
- */
-ol.source.HexBin.prototype.getLayout = function () {
-  return this._hexgrid.getLayout();
-};
-/**	Set the inner HexGrid origin.
- * 	@param {ol.Coordinate} newLayout
- * 	@param {boolean} noreset If true, reset will not be called (It need to be called through)
- */
-ol.source.HexBin.prototype.setOrigin = function (newLayout, noreset) {
-  this._hexgrid.setOrigin(newLayout);
-  if (!noreset) {
-    this.reset();
-  }
-};
-/**	Get the inner HexGrid origin.
- * 	@return {ol.Coordinate}
- */
-ol.source.HexBin.prototype.getOrigin = function () {
-  return this._hexgrid.getOrigin();
-};
-/**
- * Get hexagons without circular dependencies (vs. getFeatures)
- * @return {Array<ol.Feature>}
- */
-ol.source.HexBin.prototype.getHexFeatures = function () {
-  return ol.source.BinBase.prototype.getGridFeatures.call(this);
-};
 
 /*	Copyright (c) 2021 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -31401,42 +31421,44 @@ ol.source.IDW.prototype.onImageData = function(imageData) {
  *  @param {function} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {function} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
-ol.source.InseeBin = function (options) {
-  options = options || {};
-  this._grid = new ol.InseeGrid({ size: options.size });
-  ol.source.BinBase.call(this, options);
-};
-ol.ext.inherits(ol.source.InseeBin, ol.source.BinBase);
-/** Set grid size
- * @param {number} size
- */
-ol.source.InseeBin.prototype.setSize = function (size) {
-  if (this.getSize() !== size) {
-    this._grid.set('size', size);
+ol.source.InseeBin = class olsourceInseeBin extends ol.source.BinBase {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this._grid = new ol.InseeGrid({ size: options.size });
     this.reset();
   }
-};
-/** Get grid size
- * @return {number} size
- */
-ol.source.InseeBin.prototype.getSize = function () {
-  return this._grid.get('size');
-};
-/** Get the grid geometry at the coord 
- * @param {ol.Coordinate} coord
- * @returns {ol.geom.Polygon} 
- * @api
- */
-ol.source.InseeBin.prototype.getGridGeomAt = function (coord) {
-  return this._grid.getGridAtCoordinate(coord, this.getProjection());
-};
-/** Get grid extent 
- * @param {ol.ProjectionLike} proj
- * @return {ol.Extent}
- */
-ol.source.InseeBin.prototype.getGridExtent = function (proj) {
-  return this._grid.getExtent(proj);
-};
+  /** Set grid size
+   * @param {number} size
+   */
+  setSize(size) {
+    if (this.getSize() !== size) {
+      this._grid.set('size', size);
+      this.reset();
+    }
+  }
+  /** Get grid size
+   * @return {number} size
+   */
+  getSize() {
+    return this._grid.get('size');
+  }
+  /** Get the grid geometry at the coord
+   * @param {ol.Coordinate} coord
+   * @returns {ol.geom.Polygon}
+   * @api
+   */
+  getGridGeomAt(coord) {
+    return this._grid.getGridAtCoordinate(coord, this.getProjection());
+  }
+  /** Get grid extent
+   * @param {ol.ProjectionLike} proj
+   * @return {ol.Extent}
+   */
+  getGridExtent(proj) {
+    return this._grid.getExtent(proj);
+  }
+}
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -37668,8 +37690,8 @@ ol.geom.LineString.prototype.calcCSpline_ = function(options) {
 // 
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** @typedef {'pointy' | 'flat'} HexagonLayout
  *  Layout of a Hexagon. Flat means the bottom part of the hexagon is flat.
@@ -37686,268 +37708,280 @@ ol.geom.LineString.prototype.calcCSpline_ = function(options) {
 *	@param {ol.Coordinate} [options.origin] orgin of the grid, default [0,0]
 *	@param {HexagonLayout} [options.layout] grid layout, default pointy
 */
-ol.HexGrid = function (options)
-{	options = options || {};
-	ol.Object.call (this, options);
-	// Options
-	this.size_ = options.size||80000;
-	this.origin_ = options.origin || [0,0];
-	this.layout_ = this.layout[options.layout] || this.layout.pointy;
-};
-ol.ext.inherits(ol.HexGrid, ol.Object);
-/** Layout
-*/
-ol.HexGrid.prototype.layout =
-{	pointy: 
-	[	Math.sqrt(3), Math.sqrt(3)/2, 0, 3/2, 
-		Math.sqrt(3)/3, -1/3, 0, 2/3, 
-		// corners
-		Math.cos(Math.PI / 180 * (60 * 0 + 30)), Math.sin(Math.PI / 180 * (60 * 0 + 30)), 
-		Math.cos(Math.PI / 180 * (60 * 1 + 30)), Math.sin(Math.PI / 180 * (60 * 1 + 30)), 
-		Math.cos(Math.PI / 180 * (60 * 2 + 30)), Math.sin(Math.PI / 180 * (60 * 2 + 30)), 
-		Math.cos(Math.PI / 180 * (60 * 3 + 30)), Math.sin(Math.PI / 180 * (60 * 3 + 30)), 
-		Math.cos(Math.PI / 180 * (60 * 4 + 30)), Math.sin(Math.PI / 180 * (60 * 4 + 30)), 
-		Math.cos(Math.PI / 180 * (60 * 5 + 30)), Math.sin(Math.PI / 180 * (60 * 5 + 30))
-	],
-	flat: 
-	[	3/2, 0, Math.sqrt(3)/2, Math.sqrt(3), 2/3, 
-		0, -1/3, Math.sqrt(3) / 3, 
-		// corners
-		Math.cos(Math.PI / 180 * (60 * 0)), Math.sin(Math.PI / 180 * (60 * 0)), 
-		Math.cos(Math.PI / 180 * (60 * 1)), Math.sin(Math.PI / 180 * (60 * 1)), 
-		Math.cos(Math.PI / 180 * (60 * 2)), Math.sin(Math.PI / 180 * (60 * 2)), 
-		Math.cos(Math.PI / 180 * (60 * 3)), Math.sin(Math.PI / 180 * (60 * 3)), 
-		Math.cos(Math.PI / 180 * (60 * 4)), Math.sin(Math.PI / 180 * (60 * 4)), 
-		Math.cos(Math.PI / 180 * (60 * 5)), Math.sin(Math.PI / 180 * (60 * 5))
-	]
-};
-/** Set layout
-* @param {HexagonLayout | undefined} layout name, default pointy
-*/
-ol.HexGrid.prototype.setLayout = function (layout)
-{	this.layout_ = this.layout[layout] || this.layout.pointy;
-	this.changed();
-}
-/** Get layout
-* @return {HexagonLayout} layout name
-*/
-ol.HexGrid.prototype.getLayout = function ()
-{	return (this.layout_[9]!=0 ? 'pointy' : 'flat');
-}
-/** Set hexagon origin
-* @param {ol.Coordinate} coord origin
-*/
-ol.HexGrid.prototype.setOrigin = function (coord)
-{	this.origin_ = coord;
-	this.changed();
-}
-/** Get hexagon origin
-* @return {ol.Coordinate} coord origin
-*/
-ol.HexGrid.prototype.getOrigin = function ()
-{	return this.origin_;
-}
-/** Set hexagon size
-* @param {number} hexagon size
-*/
-ol.HexGrid.prototype.setSize = function (s) {
-	this.size_ = s || 80000;
-	this.changed();
-}
-/** Get hexagon size
-* @return {number} hexagon size
-*/
-ol.HexGrid.prototype.getSize = function () {
-	return this.size_;
-}
-/** Convert cube to axial coords
-* @param {ol.Coordinate} c cube coordinate
-* @return {ol.Coordinate} axial coordinate
-*/
-ol.HexGrid.prototype.cube2hex = function (c)
-{	return [c[0], c[2]];
-};
-/** Convert axial to cube coords
-* @param {ol.Coordinate} h axial coordinate
-* @return {ol.Coordinate} cube coordinate
-*/
-ol.HexGrid.prototype.hex2cube = function(h)
-{	return [h[0], -h[0]-h[1], h[1]];
-};
-/** Convert offset to axial coords
-* @param {ol.Coordinate} h axial coordinate
-* @return {ol.Coordinate} offset coordinate
-*/
-ol.HexGrid.prototype.hex2offset = function (h)
-{	if (this.layout_[9]) return [ h[0] + (h[1] - (h[1]&1)) / 2, h[1] ];
-	else return [ h[0], h[1] + (h[0] + (h[0]&1)) / 2 ];
-}
-/** Convert axial to offset coords
-* @param {ol.Coordinate} o offset coordinate
-* @return {ol.Coordinate} axial coordinate
-*/
-ol.HexGrid.prototype.offset2hex = function(o)
-{	if (this.layout_[9]) return [ o[0] - (o[1] - (o[1]&1)) / 2,  o[1] ];
-	else return [ o[0], o[1] - (o[0] + (o[0]&1)) / 2 ];
-}
-/** Convert offset to cube coords
-* @param {ol.Coordinate} c cube coordinate
-* @return {ol.Coordinate} offset coordinate
-* /
-ol.HexGrid.prototype.cube2offset = function(c)
-{	return hex2offset(cube2hex(c));
-};
-/** Convert cube to offset coords
-* @param {ol.Coordinate} o offset coordinate
-* @return {ol.Coordinate} cube coordinate
-* /
-ol.HexGrid.prototype.offset2cube = function (o)
-{	return hex2cube(offset2Hex(o));
-};
-/** Round cube coords
-* @param {ol.Coordinate} h cube coordinate
-* @return {ol.Coordinate} rounded cube coordinate
-*/
-ol.HexGrid.prototype.cube_round = function(h)
-{	var rx = Math.round(h[0])
-	var ry = Math.round(h[1])
-	var rz = Math.round(h[2])
-	var x_diff = Math.abs(rx - h[0])
-	var y_diff = Math.abs(ry - h[1])
-	var z_diff = Math.abs(rz - h[2])
-	if (x_diff > y_diff && x_diff > z_diff) rx = -ry-rz
-	else if (y_diff > z_diff) ry = -rx-rz
-	else rz = -rx-ry
-	return [rx, ry, rz];
-};
-/** Round axial coords
-* @param {ol.Coordinate} h axial coordinate
-* @return {ol.Coordinate} rounded axial coordinate
-*/
-ol.HexGrid.prototype.hex_round = function(h)
-{	return this.cube2hex( this.cube_round( this.hex2cube(h )) );
-};
-/** Get hexagon corners
-*/
-ol.HexGrid.prototype.hex_corner = function(center, size, i)
-{	return [ center[0] + size * this.layout_[8+(2*(i%6))], center[1] + size * this.layout_[9+(2*(i%6))]];
-};
-/** Get hexagon coordinates at a coordinate
-* @param {ol.Coordinate} coord
-* @return {Arrary<ol.Coordinate>}
-*/
-ol.HexGrid.prototype.getHexagonAtCoord = function (coord)
-{	return (this.getHexagon(this.coord2hex(coord)));
-};
-/** Get hexagon coordinates at hex
-* @param {ol.Coordinate} hex
-* @return {Arrary<ol.Coordinate>}
-*/
-ol.HexGrid.prototype.getHexagon = function (hex)
-{	var p = [];
-	var c = this.hex2coord(hex);
-	for (var i=0; i<=7; i++)
-	{	p.push(this.hex_corner(c, this.size_, i, this.layout_[8]));
-	}
-	return p;
-};
-/** Convert hex to coord
-* @param {ol.hex} hex
-* @return {ol.Coordinate}
-*/
-ol.HexGrid.prototype.hex2coord = function (hex)
-{	return [
-		this.origin_[0] + this.size_ * (this.layout_[0] * hex[0] + this.layout_[1] * hex[1]), 
-		this.origin_[1] + this.size_ * (this.layout_[2] * hex[0] + this.layout_[3] * hex[1])
-	];
-};
-/** Convert coord to hex
-* @param {ol.Coordinate} coord
-* @return {ol.hex}
-*/
-ol.HexGrid.prototype.coord2hex = function (coord)
-{	var c = [ (coord[0]-this.origin_[0]) / this.size_, (coord[1]-this.origin_[1]) / this.size_ ];
-	var q = this.layout_[4] * c[0] + this.layout_[5] * c[1];
-	var r = this.layout_[6] * c[0] + this.layout_[7] * c[1];
-	return this.hex_round([q, r]);
-};
-/** Calculate distance between to hexagon (number of cube)
-* @param {ol.Coordinate} a first cube coord
-* @param {ol.Coordinate} a second cube coord
-* @return {number} distance
-*/
-ol.HexGrid.prototype.cube_distance = function (a, b)
-{	//return ( (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])) / 2 );
-	return ( Math.max (Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]), Math.abs(a[2] - b[2])) );
-};
-(function(){
-/** Line interpolation
-*/
-function lerp(a, b, t)
-{	// for floats
+ol.HexGrid = class olHexGrid extends ol.Object {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    // Options
+    this.size_ = options.size || 80000;
+    this.origin_ = options.origin || [0, 0];
+    this.layout_ = this.layout[options.layout] || this.layout.pointy;
+  }
+  /** Set layout
+  * @param {HexagonLayout | undefined} layout name, default pointy
+  */
+  setLayout(layout) {
+    this.layout_ = this.layout[layout] || this.layout.pointy;
+    this.changed();
+  }
+  /** Get layout
+  * @return {HexagonLayout} layout name
+  */
+  getLayout() {
+    return (this.layout_[9] != 0 ? 'pointy' : 'flat');
+  }
+  /** Set hexagon origin
+  * @param {ol.Coordinate} coord origin
+  */
+  setOrigin(coord) {
+    this.origin_ = coord;
+    this.changed();
+  }
+  /** Get hexagon origin
+  * @return {ol.Coordinate} coord origin
+  */
+  getOrigin() {
+    return this.origin_;
+  }
+  /** Set hexagon size
+  * @param {number} hexagon size
+  */
+  setSize(s) {
+    this.size_ = s || 80000;
+    this.changed();
+  }
+  /** Get hexagon size
+  * @return {number} hexagon size
+  */
+  getSize() {
+    return this.size_;
+  }
+  /** Convert cube to axial coords
+  * @param {ol.Coordinate} c cube coordinate
+  * @return {ol.Coordinate} axial coordinate
+  */
+  cube2hex(c) {
+    return [c[0], c[2]];
+  }
+  /** Convert axial to cube coords
+  * @param {ol.Coordinate} h axial coordinate
+  * @return {ol.Coordinate} cube coordinate
+  */
+  hex2cube(h) {
+    return [h[0], -h[0] - h[1], h[1]];
+  }
+  /** Convert offset to axial coords
+  * @param {ol.Coordinate} h axial coordinate
+  * @return {ol.Coordinate} offset coordinate
+  */
+  hex2offset(h) {
+    if (this.layout_[9])
+      return [h[0] + (h[1] - (h[1] & 1)) / 2, h[1]];
+    else
+      return [h[0], h[1] + (h[0] + (h[0] & 1)) / 2];
+  }
+  /** Convert axial to offset coords
+  * @param {ol.Coordinate} o offset coordinate
+  * @return {ol.Coordinate} axial coordinate
+  */
+  offset2hex(o) {
+    if (this.layout_[9])
+      return [o[0] - (o[1] - (o[1] & 1)) / 2, o[1]];
+    else
+      return [o[0], o[1] - (o[0] + (o[0] & 1)) / 2];
+  }
+  /** Convert offset to cube coords
+  * @param {ol.Coordinate} c cube coordinate
+  * @return {ol.Coordinate} offset coordinate
+  * /
+  cube2offset(c) {
+    return this.hex2offset(this.cube2hex(c));
+  };
+  /** Convert cube to offset coords
+  * @param {ol.Coordinate} o offset coordinate
+  * @return {ol.Coordinate} cube coordinate
+  * /
+  offset2cube(o) {
+    return this.hex2cube(this.offset2Hex(o));
+  };
+  /** Round cube coords
+  * @param {ol.Coordinate} h cube coordinate
+  * @return {ol.Coordinate} rounded cube coordinate
+  */
+  cube_round(h) {
+    var rx = Math.round(h[0]);
+    var ry = Math.round(h[1]);
+    var rz = Math.round(h[2]);
+    var x_diff = Math.abs(rx - h[0]);
+    var y_diff = Math.abs(ry - h[1]);
+    var z_diff = Math.abs(rz - h[2]);
+    if (x_diff > y_diff && x_diff > z_diff)
+      rx = -ry - rz;
+    else if (y_diff > z_diff)
+      ry = -rx - rz;
+    else
+      rz = -rx - ry;
+    return [rx, ry, rz];
+  }
+  /** Round axial coords
+  * @param {ol.Coordinate} h axial coordinate
+  * @return {ol.Coordinate} rounded axial coordinate
+  */
+  hex_round(h) {
+    return this.cube2hex(this.cube_round(this.hex2cube(h)));
+  }
+  /** Get hexagon corners
+  */
+  hex_corner(center, size, i) {
+    return [center[0] + size * this.layout_[8 + (2 * (i % 6))], center[1] + size * this.layout_[9 + (2 * (i % 6))]];
+  }
+  /** Get hexagon coordinates at a coordinate
+  * @param {ol.Coordinate} coord
+  * @return {Arrary<ol.Coordinate>}
+  */
+  getHexagonAtCoord(coord) {
+    return (this.getHexagon(this.coord2hex(coord)));
+  }
+  /** Get hexagon coordinates at hex
+  * @param {ol.Coordinate} hex
+  * @return {Arrary<ol.Coordinate>}
+  */
+  getHexagon(hex) {
+    var p = [];
+    var c = this.hex2coord(hex);
+    for (var i = 0; i <= 7; i++) {
+      p.push(this.hex_corner(c, this.size_, i, this.layout_[8]));
+    }
+    return p;
+  }
+  /** Convert hex to coord
+  * @param {ol.hex} hex
+  * @return {ol.Coordinate}
+  */
+  hex2coord(hex) {
+    return [
+      this.origin_[0] + this.size_ * (this.layout_[0] * hex[0] + this.layout_[1] * hex[1]),
+      this.origin_[1] + this.size_ * (this.layout_[2] * hex[0] + this.layout_[3] * hex[1])
+    ];
+  }
+  /** Convert coord to hex
+  * @param {ol.Coordinate} coord
+  * @return {ol.hex}
+  */
+  coord2hex(coord) {
+    var c = [(coord[0] - this.origin_[0]) / this.size_, (coord[1] - this.origin_[1]) / this.size_];
+    var q = this.layout_[4] * c[0] + this.layout_[5] * c[1];
+    var r = this.layout_[6] * c[0] + this.layout_[7] * c[1];
+    return this.hex_round([q, r]);
+  }
+  /** Calculate distance between to hexagon (number of cube)
+  * @param {ol.Coordinate} a first cube coord
+  * @param {ol.Coordinate} a second cube coord
+  * @return {number} distance
+  */
+  cube_distance(a, b) {
+    return (Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]), Math.abs(a[2] - b[2])));
+  }
+  /** Line interpolation (for floats)
+   * @private
+   */
+  lerp(a, b, t) {
     return a + (b - a) * t;
-}
-function cube_lerp(a, b, t)
-{	// for hexes
-    return [ 
-		lerp (a[0]+1e-6, b[0], t), 
-		lerp (a[1]+1e-6, b[1], t),
-		lerp (a[2]+1e-6, b[2], t)
-	];
-}
-/** Calculate line between to hexagon
-* @param {ol.Coordinate} a first cube coord
-* @param {ol.Coordinate} b second cube coord
-* @return {Array<ol.Coordinate>} array of cube coordinates
-*/
-ol.HexGrid.prototype.cube_line = function (a, b)
-{	var d = this.cube_distance(a, b);
-	if (!d) return [a];
-    var results = []
-    for (var i=0; i<=d; i++) 
-	{	results.push ( this.cube_round ( cube_lerp(a, b, i/d) ) );
-	}
+  }
+  /** Line interpolation (for hexes)
+   * @private
+   */
+  cube_lerp(a, b, t) {
+    return [
+      this.lerp(a[0] + 1e-6, b[0], t),
+      this.lerp(a[1] + 1e-6, b[1], t),
+      this.lerp(a[2] + 1e-6, b[2], t)
+    ];
+  }
+  /** Calculate line between to hexagon
+  * @param {ol.Coordinate} a first cube coord
+  * @param {ol.Coordinate} b second cube coord
+  * @return {Array<ol.Coordinate>} array of cube coordinates
+  */
+  cube_line(a, b) {
+    var d = this.cube_distance(a, b);
+    if (!d)
+      return [a];
+    var results = [];
+    for (var i = 0; i <= d; i++) {
+      results.push(this.cube_round(this.cube_lerp(a, b, i / d)));
+    }
     return results;
+  }
+  /** Get the neighbors for an hexagon
+  * @param {ol.Coordinate} h axial coord
+  * @param {number} direction
+  * @return { ol.Coordinate | Array<ol.Coordinate> } neighbor || array of neighbors
+  */
+  hex_neighbors(h, d) {
+    if (d !== undefined) {
+      return [h[0] + this.neighbors.hex[d % 6][0], h[1] + this.neighbors.hex[d % 6][1]];
+    }
+    else {
+      var n = [];
+      for (d = 0; d < 6; d++) {
+        n.push([h[0] + this.neighbors.hex[d][0], h[1] + this.neighbors.hex[d][1]]);
+      }
+      return n;
+    }
+  }
+  /** Get the neighbors for an hexagon
+  * @param {ol.Coordinate} c cube coord
+  * @param {number} direction
+  * @return { ol.Coordinate | Array<ol.Coordinate> } neighbor || array of neighbors
+  */
+  cube_neighbors(c, d) {
+    if (d !== undefined) {
+      return [c[0] + this.neighbors.cube[d % 6][0], c[1] + this.neighbors.cube[d % 6][1], c[2] + this.neighbors.cube[d % 6][2]];
+    }
+    else {
+      var n = [];
+      for (d = 0; d < 6; d++) {
+        n.push([c[0] + this.neighbors.cube[d][0], c[1] + this.neighbors.cube[d][1], c[2] + this.neighbors.cube[d][2]]);
+      }
+      for (d = 0; d < 6; d++)
+        n[d] = this.cube2hex(n[d]);
+      return n;
+    }
+  }
+}
+/** Grid layout
+ */
+ol.HexGrid.prototype.layout = {
+  pointy: [
+    Math.sqrt(3), Math.sqrt(3)/2, 0, 3/2, 
+    Math.sqrt(3)/3, -1/3, 0, 2/3, 
+    // corners
+    Math.cos(Math.PI / 180 * (60 * 0 + 30)), Math.sin(Math.PI / 180 * (60 * 0 + 30)), 
+    Math.cos(Math.PI / 180 * (60 * 1 + 30)), Math.sin(Math.PI / 180 * (60 * 1 + 30)), 
+    Math.cos(Math.PI / 180 * (60 * 2 + 30)), Math.sin(Math.PI / 180 * (60 * 2 + 30)), 
+    Math.cos(Math.PI / 180 * (60 * 3 + 30)), Math.sin(Math.PI / 180 * (60 * 3 + 30)), 
+    Math.cos(Math.PI / 180 * (60 * 4 + 30)), Math.sin(Math.PI / 180 * (60 * 4 + 30)), 
+    Math.cos(Math.PI / 180 * (60 * 5 + 30)), Math.sin(Math.PI / 180 * (60 * 5 + 30))
+  ],
+  flat: [
+    3/2, 0, Math.sqrt(3)/2, Math.sqrt(3), 2/3, 
+    0, -1/3, Math.sqrt(3) / 3, 
+    // corners
+    Math.cos(Math.PI / 180 * (60 * 0)), Math.sin(Math.PI / 180 * (60 * 0)), 
+    Math.cos(Math.PI / 180 * (60 * 1)), Math.sin(Math.PI / 180 * (60 * 1)), 
+    Math.cos(Math.PI / 180 * (60 * 2)), Math.sin(Math.PI / 180 * (60 * 2)), 
+    Math.cos(Math.PI / 180 * (60 * 3)), Math.sin(Math.PI / 180 * (60 * 3)), 
+    Math.cos(Math.PI / 180 * (60 * 4)), Math.sin(Math.PI / 180 * (60 * 4)), 
+    Math.cos(Math.PI / 180 * (60 * 5)), Math.sin(Math.PI / 180 * (60 * 5))
+  ]
 };
-})();
-ol.HexGrid.prototype.neighbors =
-{	'cube':	[ [+1, -1,  0], [+1,  0, -1], [0, +1, -1], [-1, +1,  0], [-1,  0, +1], [0, -1, +1] ],
-	'hex':	[ [+1, 0], [+1,  -1], [0, -1], [-1, 0], [-1, +1], [0, +1] ]
-};
-/** Get the neighbors for an hexagon
-* @param {ol.Coordinate} h axial coord
-* @param {number} direction
-* @return { ol.Coordinate | Array<ol.Coordinate> } neighbor || array of neighbors
-*/
-ol.HexGrid.prototype.hex_neighbors = function (h, d)
-{	if (d!==undefined)
-	{	return [ h[0] + this.neighbors.hex[d%6][0], h[1]  + this.neighbors.hex[d%6][1] ];
-	}
-	else
-	{	var n = [];
-		for (d=0; d<6; d++)
-		{	n.push ([ h[0] + this.neighbors.hex[d][0], h[1]  + this.neighbors.hex[d][1] ]);
-		}
-		return n;
-	}
-};
-/** Get the neighbors for an hexagon
-* @param {ol.Coordinate} c cube coord
-* @param {number} direction
-* @return { ol.Coordinate | Array<ol.Coordinate> } neighbor || array of neighbors
-*/
-ol.HexGrid.prototype.cube_neighbors = function (c, d)
-{	if (d!==undefined)
-	{	return [ c[0] + this.neighbors.cube[d%6][0], c[1]  + this.neighbors.cube[d%6][1], c[2]  + this.neighbors.cube[d%6][2] ];
-	}
-	else
-	{	var n = [];
-		for (d=0; d<6; d++)
-		{	n.push ([ c[0] + this.neighbors.cube[d][0], c[1]  + this.neighbors.cube[d][1], c[2]  + this.neighbors.cube[d][2] ]);
-		}
-		for (d=0; d<6; d++) n[d] = this.cube2hex(n[d])
-		return n;
-	}
+/** Neighbors list
+ * @private
+ */
+ol.HexGrid.prototype.neighbors = {
+  'cube':	[ [+1, -1,  0], [+1,  0, -1], [0, +1, -1], [-1, +1,  0], [-1,  0, +1], [0, -1, +1] ],
+  'hex':	[ [+1, 0], [+1,  -1], [0, -1], [-1, 0], [-1, +1], [0, +1] ]
 };
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
@@ -37965,41 +37999,42 @@ ol.HexGrid.prototype.cube_neighbors = function (c, d)
  * @param {Object} [options]
  *  @param {number} [options.size] size grid size in meter, default 200 (200x200m)
  */
-ol.InseeGrid = function (options) {
-  options = options || {};
-  // Define EPSG:3035 if none
-  if (!proj4.defs["EPSG:3035"]) {
-    proj4.defs("EPSG:3035","+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs");
-    ol.proj.proj4.register(proj4);
+ol.InseeGrid = class olInseeGrid extends ol.Object {
+  constructor(options) {
+    options = options || {};
+    // Define EPSG:3035 if none
+    if (!proj4.defs["EPSG:3035"]) {
+      proj4.defs("EPSG:3035", "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs");
+      ol.proj.proj4.register(proj4);
+    }
+    super(options);
+    // Options
+    var size = Math.max(200, Math.round((options.size || 0) / 200) * 200);
+    this.set('size', size);
   }
-  ol.Object.call (this, options);
-  // Options
-  var size = Math.max(200, Math.round((options.size||0)/200) * 200);
-  this.set('size', size);
-};
-ol.ext.inherits (ol.InseeGrid, ol.Object);
-/** Grid extent (in EPSG:3035)
+  /** Get the grid extent
+   * @param {ol.proj.ProjLike} [proj='EPSG:3857']
+   */
+  getExtent(proj) {
+    return ol.proj.transformExtent(ol.InseeGrid.extent, proj || 'EPSG:3035', 'EPSG:3857');
+  }
+  /** Get grid geom at coord
+   * @param {ol.Coordinate} coord
+   * @param {ol.proj.ProjLike} [proj='EPSG:3857']
+   */
+  getGridAtCoordinate(coord, proj) {
+    var c = ol.proj.transform(coord, proj || 'EPSG:3857', 'EPSG:3035');
+    var s = this.get('size');
+    var x = Math.floor(c[0] / s) * s;
+    var y = Math.floor(c[1] / s) * s;
+    var geom = new ol.geom.Polygon([[[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]]]);
+    geom.transform('EPSG:3035', proj || 'EPSG:3857');
+    return geom;
+  }
+}
+/** Default grid extent (in EPSG:3035)
  */
 ol.InseeGrid.extent = [3200000,2000000,4300000,3140000];
-/** Get the grid extent
- * @param {ol.proj.ProjLike} [proj='EPSG:3857']
- */
-ol.InseeGrid.prototype.getExtent = function (proj) {
-  return ol.proj.transformExtent(ol.InseeGrid.extent, proj||'EPSG:3035', 'EPSG:3857')
-};
-/** Get grid geom at coord
- * @param {ol.Coordinate} coord
- * @param {ol.proj.ProjLike} [proj='EPSG:3857']
- */
-ol.InseeGrid.prototype.getGridAtCoordinate = function (coord, proj) {
-  var c = ol.proj.transform(coord, proj||'EPSG:3857', 'EPSG:3035')
-  var s = this.get('size');
-  var x = Math.floor(c[0]/s) * s;
-  var y = Math.floor(c[1]/s) * s;
-  var geom = new ol.geom.Polygon([[[x,y],[x+s,y],[x+s,y+s],[x,y+s],[x,y]]]);
-  geom.transform('EPSG:3035', proj||'EPSG:3857');
-  return geom;
-};
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
