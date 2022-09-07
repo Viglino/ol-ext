@@ -67,7 +67,7 @@
 	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
 	<a href="../../index.html">
-		<h1>ol-ext: Geoportail layer</h1>
+		<h1>ol-ext: IDW layer</h1>
 	</a>
 	<div class="info">
     <p>
@@ -109,7 +109,7 @@
 
   // IDW source
   var idw = new ol.source.IDW({
-    // useWorker: true,
+    useWorker: true,
     // scale: 8,
     // Source that contains the data
     source: new ol.source.Vector(),

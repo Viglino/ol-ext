@@ -565,7 +565,10 @@ ol.View.prototype.takeTour = function(destinations, options) {
  *  @param {function} [options.onMessage] a callback function to get worker result
  */
 ol.ext.Worker = function(mainFn, options) {
-  var lines = ['var mainFn = '+ mainFn.toString() + `
+  // Convert to function
+  var mainStr = mainFn.toString().replace(/^.*\(/,'function(')
+  // Code
+  var lines = ['var mainFn = '+ mainStr + `
     self.addEventListener("message", function(event) {
       var result = mainFn(event);
       self.postMessage(result);
@@ -30595,246 +30598,257 @@ ol.source.FeatureBin = class olsourceFeatureBin extends ol.source.BinBase {
  * @extends {ol.source.ImageCanvas}
  * @param {GeoImageOptions} options
  */
-ol.source.GeoImage = function(opt_options) {
-  var options = { 
-    attributions: opt_options.attributions,
-    logo: opt_options.logo,
-    projection: opt_options.projection
-  };
-  // options.projection = opt_options.projection;
-  // Load Image
-  this._image = (opt_options.image ? opt_options.image : new Image );
-  this._image.crossOrigin = opt_options.crossOrigin; // 'anonymous';
-  // Show image on load
-  var self = this;
-  this._image.onload = function() {
-    self.setCrop (self.crop);
-    self.changed();
-  }
-  if (!opt_options.image) this._image.src = opt_options.url;
-  // Draw image on canvas
-  options.canvasFunction = this.calculateImage;
-  ol.source.ImageCanvas.call (this, options);	
-  // Coordinate of the image center 
-  this.center = opt_options.imageCenter;
-  // Image scale 
-  this.setScale(opt_options.imageScale);
-  // Rotation of the image
-  this.rotate = opt_options.imageRotate ? opt_options.imageRotate : 0;
-  // Crop of the image
-  this.crop = opt_options.imageCrop;
-  // Mask of the image
-  this.mask = opt_options.imageMask;
-  // Crop
-  this.setCrop (this.crop);
-  // Calculate extent on change
-  this.on('change', function() {
-    this.set('extent', this.calculateExtent());
-  }.bind(this));
-};
-ol.ext.inherits(ol.source.GeoImage, ol.source.ImageCanvas);
-/** calculate image at extent / resolution
- * @param {ol/extent/Extent} extent
- * @param {number} resolution
- * @param {number} pixelRatio
- * @param {ol/size/Size} size
- * @return {HTMLCanvasElement}
- */
-ol.source.GeoImage.prototype.calculateImage = function(extent, resolution, pixelRatio, size) {
-  if (!this.center) return;
-  var canvas = document.createElement('canvas');
-  canvas.width = size[0];
-  canvas.height = size[1];
-  var ctx = canvas.getContext('2d');
-  if (!this._imageSize) return canvas;
-  // transform coords to pixel
-  function tr(xy) {
-    return [
-      (xy[0]-extent[0])/(extent[2]-extent[0]) * size[0],
-      (xy[1]-extent[3])/(extent[1]-extent[3]) * size[1]
-    ];
-  }
-  // Clipping mask
-  if (this.mask) {
-    ctx.beginPath();
-    var p = tr(this.mask[0]);
-    ctx.moveTo(p[0],p[1]);
-    for (var i=1; i<this.mask.length; i++) {
-      p = tr(this.mask[i]);
-      ctx.lineTo(p[0],p[1]);
+ol.source.GeoImage = class olsourceGeoImage extends ol.source.ImageCanvas {
+  constructor(opt_options) {
+    var options = {
+      attributions: opt_options.attributions,
+      logo: opt_options.logo,
+      projection: opt_options.projection
     }
-    ctx.clip();
+    // Draw image on canvas
+    options.canvasFunction = function (extent, resolution, pixelRatio, size) {
+      return this.calculateImage(extent, resolution, pixelRatio, size)
+    }
+    super(options)
+    // options.projection = opt_options.projection;
+    // Load Image
+    this._image = (opt_options.image ? opt_options.image : new Image)
+    this._image.crossOrigin = opt_options.crossOrigin // 'anonymous';
+    // Show image on load
+    this._image.onload = function () {
+      this.setCrop(this.crop)
+      this.changed()
+    }.bind(this)
+    if (!opt_options.image) this._image.src = opt_options.url
+    // Coordinate of the image center 
+    this.center = opt_options.imageCenter
+    // Image scale 
+    this.setScale(opt_options.imageScale)
+    // Rotation of the image
+    this.rotate = opt_options.imageRotate ? opt_options.imageRotate : 0
+    // Crop of the image
+    this.crop = opt_options.imageCrop
+    // Mask of the image
+    this.mask = opt_options.imageMask
+    // Crop
+    this.setCrop(this.crop)
+    // Calculate extent on change
+    this.on('change', function () {
+      this.set('extent', this.calculateExtent())
+    }.bind(this))
   }
-  // Draw
-  var pixel = tr(this.center);
-  var dx = (this._image.naturalWidth/2 - this.crop[0]) *this.scale[0] /resolution *pixelRatio;
-  var dy = (this._image.naturalHeight/2 - this.crop[1]) *this.scale[1] /resolution *pixelRatio;
-  var sx = this._imageSize[0]*this.scale[0]/resolution *pixelRatio;
-  var sy = this._imageSize[1]*this.scale[1]/resolution *pixelRatio;
-  ctx.translate(pixel[0],pixel[1]);
-  if (this.rotate) ctx.rotate(this.rotate);
-  ctx.drawImage(this._image, this.crop[0], this.crop[1], this._imageSize[0], this._imageSize[1], -dx, -dy, sx,sy);
-  return canvas;
-}
-/**
- * Get coordinate of the image center.
- * @return {ol.Coordinate} coordinate of the image center.
- * @api stable
- */
-ol.source.GeoImage.prototype.getCenter = function() {
-  return this.center;
-}
-/**
- * Set coordinate of the image center.
- * @param {ol.Coordinate} coordinate of the image center.
- * @api stable
- */
-ol.source.GeoImage.prototype.setCenter = function(center) {
-  this.center = center;
-  this.changed();
-}
-/**
- * Get image scale.
- * @return {ol.size} image scale (along x and y axis).
- * @api stable
- */
-ol.source.GeoImage.prototype.getScale = function() {
-  return this.scale;
-}
-/**
- * Set image scale.
- * @param {ol.size|Number} image scale (along x and y axis or both).
- * @api stable
- */
-ol.source.GeoImage.prototype.setScale = function(scale) {
-  switch (typeof(scale)) {
-    case 'number':
-      scale = [scale,scale];
-      break;
-    case 'object': 
-      if (scale.length != 2) return;
-      break;
-    default: return;
+  /** calculate image at extent / resolution
+   * @param {ol/extent/Extent} extent
+   * @param {number} resolution
+   * @param {number} pixelRatio
+   * @param {ol/size/Size} size
+   * @return {HTMLCanvasElement}
+   */
+  calculateImage(extent, resolution, pixelRatio, size) {
+    if (!this.center)
+      return
+    var canvas = document.createElement('canvas')
+    canvas.width = size[0]
+    canvas.height = size[1]
+    var ctx = canvas.getContext('2d')
+    if (!this._imageSize)
+      return canvas
+    // transform coords to pixel
+    function tr(xy) {
+      return [
+        (xy[0] - extent[0]) / (extent[2] - extent[0]) * size[0],
+        (xy[1] - extent[3]) / (extent[1] - extent[3]) * size[1]
+      ]
+    }
+    // Clipping mask
+    if (this.mask) {
+      ctx.beginPath()
+      var p = tr(this.mask[0])
+      ctx.moveTo(p[0], p[1])
+      for (var i = 1; i < this.mask.length; i++) {
+        p = tr(this.mask[i])
+        ctx.lineTo(p[0], p[1])
+      }
+      ctx.clip()
+    }
+    // Draw
+    var pixel = tr(this.center)
+    var dx = (this._image.naturalWidth / 2 - this.crop[0]) * this.scale[0] / resolution * pixelRatio
+    var dy = (this._image.naturalHeight / 2 - this.crop[1]) * this.scale[1] / resolution * pixelRatio
+    var sx = this._imageSize[0] * this.scale[0] / resolution * pixelRatio
+    var sy = this._imageSize[1] * this.scale[1] / resolution * pixelRatio
+    ctx.translate(pixel[0], pixel[1])
+    if (this.rotate)
+      ctx.rotate(this.rotate)
+    ctx.drawImage(this._image, this.crop[0], this.crop[1], this._imageSize[0], this._imageSize[1], -dx, -dy, sx, sy)
+    return canvas
   }
-  this.scale = scale;
-  this.changed();
-};
-/**
- * Get image rotation.
- * @return {Number} rotation in degre.
- * @api stable
- */
-ol.source.GeoImage.prototype.getRotation = function() {
-  return this.rotate;
-};
-/**
- * Set image rotation.
- * @param {Number} rotation in radian.
- * @api stable
- */
-ol.source.GeoImage.prototype.setRotation = function(angle) {
-  this.rotate = angle;
-  this.changed();
-};
-/**
- * Get the image.
- * @api stable
- */
-ol.source.GeoImage.prototype.getGeoImage = function() {
-  return this._image;
-};
-/**
- * Get image crop extent.
- * @return {ol.extent} image crop extent.
- * @api stable
- */
-ol.source.GeoImage.prototype.getCrop = function() {
-  return this.crop;
-};
-/**
- * Set image mask.
- * @param {ol.geom.LineString} coords of the mask
- * @api stable
- */
-ol.source.GeoImage.prototype.setMask = function(mask) {
-  this.mask = mask;
-  this.changed();
-};
-/**
- * Get image mask.
- * @return {ol.geom.LineString} coords of the mask
- * @api stable
- */
-ol.source.GeoImage.prototype.getMask = function() {
-  return this.mask;
-};
-/**
- * Set image crop extent.
- * @param {ol.extent|Number} image crop extent or a number to crop from original size.
- * @api stable
- */
-ol.source.GeoImage.prototype.setCrop = function(crop) {
-  // Image not loaded => get it latter
-  if (!this._image.naturalWidth) {
-    this.crop = crop;
-    return;
+  /**
+   * Get coordinate of the image center.
+   * @return {ol.Coordinate} coordinate of the image center.
+   * @api stable
+   */
+  getCenter() {
+    return this.center
   }
-  if (crop) {
-    switch (typeof(crop)) {
+  /**
+   * Set coordinate of the image center.
+   * @param {ol.Coordinate} coordinate of the image center.
+   * @api stable
+   */
+  setCenter(center) {
+    this.center = center
+    this.changed()
+  }
+  /**
+   * Get image scale.
+   * @return {ol.size} image scale (along x and y axis).
+   * @api stable
+   */
+  getScale() {
+    return this.scale
+  }
+  /**
+   * Set image scale.
+   * @param {ol.size|Number} image scale (along x and y axis or both).
+   * @api stable
+   */
+  setScale(scale) {
+    switch (typeof (scale)) {
       case 'number':
-        crop = [crop,crop,this._image.naturalWidth-crop,this._image.naturalHeight-crop];
-        break;
-      case 'object': 
-        if (crop.length != 4) return;
-        break;
-      default: return;
+        scale = [scale, scale]
+        break
+      case 'object':
+        if (scale.length != 2)
+          return
+        break
+      default: return
     }
-    crop = ol.extent.boundingExtent([ [crop[0],crop[1]], [crop[2],crop[3]] ]);
-    this.crop = [ Math.max(0,crop[0]), Math.max(0,crop[1]), Math.min(this._image.naturalWidth,crop[2]), Math.min(this._image.naturalHeight,crop[3]) ];
+    this.scale = scale
+    this.changed()
   }
-  else this.crop = [0,0, this._image.naturalWidth,this._image.naturalHeight];
-  if (this.crop[2]<=this.crop[0]) this.crop[2] = this.crop[0]+1;
-  if (this.crop[3]<=this.crop[1]) this.crop[3] = this.crop[1]+1;
-  this._imageSize = [ this.crop[2]-this.crop[0], this.crop[3]-this.crop[1] ];
-  this.changed();
-};
-/** Get the extent of the source.
- * @param {module:ol/extent~Extent} extent If provided, no new extent will be created. Instead, that extent's coordinates will be overwritten.
- * @return {ol.extent}
- */
-ol.source.GeoImage.prototype.getExtent = function(opt_extent) {
-  var ext = this.get('extent');
-  if (!ext) ext = this.calculateExtent();
-  if (opt_extent) {
-    for (var i=0; i<opt_extent.length; i++) {
-      opt_extent[i] = ext[i];
+  /**
+   * Get image rotation.
+   * @return {Number} rotation in degre.
+   * @api stable
+   */
+  getRotation() {
+    return this.rotate
+  }
+  /**
+   * Set image rotation.
+   * @param {Number} rotation in radian.
+   * @api stable
+   */
+  setRotation(angle) {
+    this.rotate = angle
+    this.changed()
+  }
+  /**
+   * Get the image.
+   * @api stable
+   */
+  getGeoImage() {
+    return this._image
+  }
+  /**
+   * Get image crop extent.
+   * @return {ol.extent} image crop extent.
+   * @api stable
+   */
+  getCrop() {
+    return this.crop
+  }
+  /**
+   * Set image mask.
+   * @param {ol.geom.LineString} coords of the mask
+   * @api stable
+   */
+  setMask(mask) {
+    this.mask = mask
+    this.changed()
+  }
+  /**
+   * Get image mask.
+   * @return {ol.geom.LineString} coords of the mask
+   * @api stable
+   */
+  getMask() {
+    return this.mask
+  }
+  /**
+   * Set image crop extent.
+   * @param {ol.extent|Number} image crop extent or a number to crop from original size.
+   * @api stable
+   */
+  setCrop(crop) {
+    // Image not loaded => get it latter
+    if (!this._image.naturalWidth) {
+      this.crop = crop
+      return
     }
+    if (crop) {
+      switch (typeof (crop)) {
+        case 'number':
+          crop = [crop, crop, this._image.naturalWidth - crop, this._image.naturalHeight - crop]
+          break
+        case 'object':
+          if (crop.length != 4)
+            return
+          break
+        default: return
+      }
+      crop = ol.extent.boundingExtent([[crop[0], crop[1]], [crop[2], crop[3]]])
+      this.crop = [Math.max(0, crop[0]), Math.max(0, crop[1]), Math.min(this._image.naturalWidth, crop[2]), Math.min(this._image.naturalHeight, crop[3])]
+    }
+    else
+      this.crop = [0, 0, this._image.naturalWidth, this._image.naturalHeight]
+    if (this.crop[2] <= this.crop[0])
+      this.crop[2] = this.crop[0] + 1
+    if (this.crop[3] <= this.crop[1])
+      this.crop[3] = this.crop[1] + 1
+    this._imageSize = [this.crop[2] - this.crop[0], this.crop[3] - this.crop[1]]
+    this.changed()
   }
-  return ext;
-};
-/** Calculate the extent of the source image.
- * @param {boolean} usemask return the mask extent, default return the image extent
- * @return {ol.extent}
- */
-ol.source.GeoImage.prototype.calculateExtent = function(usemask) {
-  var polygon;
-  if (usemask!==false && this.getMask()) {
-    polygon = new ol.geom.Polygon([this.getMask()])
-  } else {
-    var center = this.getCenter();
-    var scale = this.getScale();
-    var width = this.getGeoImage().width * scale[0];
-    var height = this.getGeoImage().height * scale[1];
-    var extent = ol.extent.boundingExtent([
-      [ center[0]-width/2, center[1]-height/2 ],
-      [ center[0]+width/2, center[1]+height/2 ]
-    ]);
-    polygon = ol.geom.Polygon.fromExtent(extent);
-    polygon.rotate(-this.getRotation(), center);
+  /** Get the extent of the source.
+   * @param {module:ol/extent~Extent} extent If provided, no new extent will be created. Instead, that extent's coordinates will be overwritten.
+   * @return {ol.extent}
+   */
+  getExtent(opt_extent) {
+    var ext = this.get('extent')
+    if (!ext)
+      ext = this.calculateExtent()
+    if (opt_extent) {
+      for (var i = 0; i < opt_extent.length; i++) {
+        opt_extent[i] = ext[i]
+      }
+    }
+    return ext
   }
-  var ext = polygon.getExtent();
-  return ext;
-};
+  /** Calculate the extent of the source image.
+   * @param {boolean} usemask return the mask extent, default return the image extent
+   * @return {ol.extent}
+   */
+  calculateExtent(usemask) {
+    var polygon
+    if (usemask !== false && this.getMask()) {
+      polygon = new ol.geom.Polygon([this.getMask()])
+    } else {
+      var center = this.getCenter()
+      var scale = this.getScale()
+      var width = this.getGeoImage().width * scale[0]
+      var height = this.getGeoImage().height * scale[1]
+      var extent = ol.extent.boundingExtent([
+        [center[0] - width / 2, center[1] - height / 2],
+        [center[0] + width / 2, center[1] + height / 2]
+      ])
+      polygon = ol.geom.Polygon.fromExtent(extent)
+      polygon.rotate(-this.getRotation(), center)
+    }
+    var ext = polygon.getExtent()
+    return ext
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -31217,194 +31231,201 @@ ol.source.HexBin = class olsourceHexBin extends ol.source.BinBase {
  *  @param {number} [options.scale=4] scale factor, use large factor to enhance performances (but minor accuracy)
  *  @param {string|function} options.weight The feature attribute to use for the weight or a function that returns a weight from a feature. Weight values should range from 0 to 100. Default use the weight attribute of the feature.
  */
-ol.source.IDW = function(options) {
-  options = options || {};
-  // Draw image on canvas
-  options.canvasFunction = this.calculateImage;
-  this._source = options.source;
-  this._canvas = document.createElement('CANVAS');
-  this._source.on(['addfeature','removefeature','clear','removefeature'], function() {
-    this.changed();
-  }.bind(this));
-  ol.source.ImageCanvas.call (this, options);
-  if (options.useWorker) {
-    this.worker = new ol.ext.Worker(this.computeImage, {
-      onMessage:  this.onImageData.bind(this)
-    })
+ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
+  constructor(options) {
+    options = options || {};
+    // Draw image on canvas
+    options.canvasFunction = function (extent, resolution, pixelRatio, size) {
+      return this.calculateImage(extent, resolution, pixelRatio, size);
+    };
+    super(options);
+    this._source = options.source;
+    this._canvas = document.createElement('CANVAS');
+    this._source.on(['addfeature', 'removefeature', 'clear', 'removefeature'], function () {
+      this.changed();
+    }.bind(this));
+    if (options.useWorker) {
+      this.worker = new ol.ext.Worker(this.computeImage, {
+        onMessage: this.onImageData.bind(this)
+      });
+    }
+    this._position = { extent: [], resolution: 0 };
+    this.set('scale', options.scale || 4);
+    this._weight = typeof (options.weight) === 'function' ? options.weight : function (f) { return f.get(options.weight || 'weight'); };
   }
-  this._position = { extent: [], resolution: 0 }
-  this.set('scale', options.scale || 4);
-  this._weight = typeof(options.weight) === 'function' ? options.weight : function(f) { return f.get(options.weight||'weight'); }
-};
-ol.ext.inherits(ol.source.IDW, ol.source.ImageCanvas);
-/** Get the source
- */
-ol.source.IDW.prototype.getSource = function() {
-  return this._source;
-};
-/** Apply the value to the map RGB. Overwrite this function to set your own colors.
- * @param {number} v value
- * @param {Uint8ClampedArray} data RGBA array
- * @param {number} i index in the RGBA array
- * @api
- */
-ol.source.IDW.prototype.setData = function(v, data, i) {
-  // Get color
-  var color = this.getColor(v)
-  // Convert to RGB
-  data[i] = color[0];
-  data[i+1] = color[1];
-  data[i+2] = color[2];
-  data[i+3] = color[3];
-};
-/** Get image value at coord (RGBA)
- * @param {l.coordinate} coord
- * @return {Uint8ClampedArray}
- */
-ol.source.IDW.prototype.getValue = function(coord) {
-  if (!this._canvas) return null
-  var pt = this.transform(coord);
-  var v = this._canvas.getContext('2d').getImageData(Math.round(pt[0]), Math.round(pt[1]), 1, 1).data;
-  return (v);
-};
-/** Compute image data */
-ol.source.IDW.prototype.computeImage = function(e) {
-  /** Convert hue to rgb factor
-   * @param {number} h
-   * @return {number}
-   * @private
+  /** Get the source
    */
-  var hue2rgb = function(h) {
-    h = (h + 6) % 6;
-    if (h < 1) return Math.round(h * 255);
-    if (h < 3) return 255;
-    if (h < 4) return Math.round((4 - h) * 255);
-    return 0;
-  };
-  /** Get color for a value. Return an array of RGBA values.
+  getSource() {
+    return this._source;
+  }
+  /** Apply the value to the map RGB. Overwrite this function to set your own colors.
    * @param {number} v value
-   * @returns {Array<number>} 
+   * @param {Uint8ClampedArray} data RGBA array
+   * @param {number} i index in the RGBA array
    * @api
    */
-  var getColor = function(v) {
-    // Get hue
-    var h = 4 - (0.04 * v);
+  setData(v, data, i) {
+    // Get color
+    var color = this.getColor(v);
     // Convert to RGB
-    return [
-      hue2rgb(h + 2), 
-      hue2rgb(h),
-      hue2rgb(h - 2),
-      255
-    ]
-  };
-  var pts = e.data.pts;
-  var width = e.data.width;
-  var height = e.data.height;
-  var imageData = new Uint8ClampedArray(width*height*4);
-  // Compute image
-  var x, y;
-  for (y = 0; y < height; y++) {
-    for (x = 0; x < width; x++) {
-      var t = 0, b = 0;
-      for(var i = 0; i < pts.length; ++i) {
-        var dx = x -  pts[i][0];
-        var dy = y -  pts[i][1];
-        var d = dx*dx + dy*dy;
-        // Inverse distance weighting - Shepard's method
-        if (d === 0) {
-          b = 1; 
-          t = pts[i][2];
-          break;
-        }
-        var inv = 1 / (d*d);
-        t += inv * pts[i][2];
-        b += inv;
-      }
-      // Set color
-      var color = getColor(t/b);
+    data[i] = color[0];
+    data[i + 1] = color[1];
+    data[i + 2] = color[2];
+    data[i + 3] = color[3];
+  }
+  /** Get image value at coord (RGBA)
+   * @param {l.coordinate} coord
+   * @return {Uint8ClampedArray}
+   */
+  getValue(coord) {
+    if (!this._canvas)
+      return null;
+    var pt = this.transform(coord);
+    var v = this._canvas.getContext('2d').getImageData(Math.round(pt[0]), Math.round(pt[1]), 1, 1).data;
+    return (v);
+  }
+  /** Compute image data */
+  computeImage(e) {
+    /** Convert hue to rgb factor
+     * @param {number} h
+     * @return {number}
+     * @private
+     */
+    var hue2rgb = function (h) {
+      h = (h + 6) % 6;
+      if (h < 1)
+        return Math.round(h * 255);
+      if (h < 3)
+        return 255;
+      if (h < 4)
+        return Math.round((4 - h) * 255);
+      return 0;
+    };
+    /** Get color for a value. Return an array of RGBA values.
+     * @param {number} v value
+     * @returns {Array<number>}
+     * @api
+     */
+    var getColor = function (v) {
+      // Get hue
+      var h = 4 - (0.04 * v);
       // Convert to RGB
-      var pos = (y*width + x)*4;
-      imageData[pos] = color[0];
-      imageData[pos+1] = color[1];
-      imageData[pos+2] = color[2];
-      imageData[pos+3] = color[3];
+      return [
+        hue2rgb(h + 2),
+        hue2rgb(h),
+        hue2rgb(h - 2),
+        255
+      ];
+    };
+    var pts = e.data.pts;
+    var width = e.data.width;
+    var height = e.data.height;
+    var imageData = new Uint8ClampedArray(width * height * 4);
+    // Compute image
+    var x, y;
+    for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+        var t = 0, b = 0;
+        for (var i = 0; i < pts.length; ++i) {
+          var dx = x - pts[i][0];
+          var dy = y - pts[i][1];
+          var d = dx * dx + dy * dy;
+          // Inverse distance weighting - Shepard's method
+          if (d === 0) {
+            b = 1;
+            t = pts[i][2];
+            break;
+          }
+          var inv = 1 / (d * d);
+          t += inv * pts[i][2];
+          b += inv;
+        }
+        // Set color
+        var color = getColor(t / b);
+        // Convert to RGB
+        var pos = (y * width + x) * 4;
+        imageData[pos] = color[0];
+        imageData[pos + 1] = color[1];
+        imageData[pos + 2] = color[2];
+        imageData[pos + 3] = color[3];
+      }
     }
+    return { type: 'image', data: imageData, width: width, height: height };
   }
-  return { type: 'image', data: imageData, width: width, height: height };
-}
-/** Calculate IDW at extent / resolution
- * @param {ol/extent/Extent} extent
- * @param {number} resolution
- * @param {number} pixelRatio
- * @param {ol/size/Size} size
- * @return {HTMLCanvasElement}
- * @private
- */
-ol.source.IDW.prototype.calculateImage = function(extent, resolution, pixelRatio, size) {
-  if (!this._source) return this._canvas;
-  if (this._updated) {
-    this._updated = false;
-    return this._canvas
-  }
-  // Calculation canvas at small resolution
-  var width =  Math.round(size[0] / (this.get('scale')*pixelRatio));
-  var height = Math.round(size[1] / (this.get('scale')*pixelRatio));
-  // Transform coords to pixel / value
-  var pts = [];
-  var dw = width / (extent[2]-extent[0]);
-  var dh = height / (extent[1]-extent[3]);
-  var tr = this.transform = function(xy, v) {
-    return [
-      (xy[0]-extent[0]) * dw,
-      (xy[1]-extent[3]) * dh,
-      v
-    ];
-  }
-  // Get features / weight
-  this._source.getFeatures().forEach(function(f) {
-    pts.push(tr(f.getGeometry().getFirstCoordinate(), this._weight(f)));
-  }.bind(this));
-  if (this.worker) {
-    // kill old worker and star new one
-    this.worker.postMessage({ pts: pts, width: width, height: height }, true);
-    this.dispatchEvent({ type: 'drawstart' })
-    // Move the canvas position meanwhile
-    if (this._canvas.width !== Math.round(size[0]) 
-      || this._canvas.height !== Math.round(size[1])
-      || this._position.resolution !== resolution 
-      || this._position.extent[0] !== extent[0]
-      || this._position.extent[1] !== extent[1]
-    ) {
-      this._canvas.width = Math.round(size[0])
+  /** Calculate IDW at extent / resolution
+   * @param {ol/extent/Extent} extent
+   * @param {number} resolution
+   * @param {number} pixelRatio
+   * @param {ol/size/Size} size
+   * @return {HTMLCanvasElement}
+   * @private
+   */
+  calculateImage(extent, resolution, pixelRatio, size) {
+    if (!this._source)
+      return this._canvas;
+    if (this._updated) {
+      this._updated = false;
+      return this._canvas;
+    }
+    // Calculation canvas at small resolution
+    var width = Math.round(size[0] / (this.get('scale') * pixelRatio));
+    var height = Math.round(size[1] / (this.get('scale') * pixelRatio));
+    // Transform coords to pixel / value
+    var pts = [];
+    var dw = width / (extent[2] - extent[0]);
+    var dh = height / (extent[1] - extent[3]);
+    var tr = this.transform = function (xy, v) {
+      return [
+        (xy[0] - extent[0]) * dw,
+        (xy[1] - extent[3]) * dh,
+        v
+      ];
+    };
+    // Get features / weight
+    this._source.getFeatures().forEach(function (f) {
+      pts.push(tr(f.getGeometry().getFirstCoordinate(), this._weight(f)));
+    }.bind(this));
+    if (this.worker) {
+      // kill old worker and star new one
+      this.worker.postMessage({ pts: pts, width: width, height: height }, true);
+      this.dispatchEvent({ type: 'drawstart' });
+      // Move the canvas position meanwhile
+      if (this._canvas.width !== Math.round(size[0])
+        || this._canvas.height !== Math.round(size[1])
+        || this._position.resolution !== resolution
+        || this._position.extent[0] !== extent[0]
+        || this._position.extent[1] !== extent[1]) {
+        this._canvas.width = Math.round(size[0]);
+        this._canvas.height = Math.round(size[1]);
+      }
+      this._position.extent = extent;
+      this._position.resolution = resolution;
+    } else {
+      this._canvas.width = Math.round(size[0]);
       this._canvas.height = Math.round(size[1]);
+      var imageData = this.computeImage({ data: { pts: pts, width: width, height: height } });
+      this.onImageData(imageData);
     }
-    this._position.extent = extent;
-    this._position.resolution = resolution;
-  } else {
-    this._canvas.width = Math.round(size[0]);
-    this._canvas.height = Math.round(size[1]);
-    var imageData = this.computeImage({ data: { pts: pts, width: width, height: height } })
-    this.onImageData(imageData);
+    return this._canvas;
   }
-  return this._canvas;
-}
-/** Display data when ready
- * @private
- */
-ol.source.IDW.prototype.onImageData = function(imageData) {
-  // Calculation canvas at small resolution
-  var canvas = this._internal = document.createElement('CANVAS');
-  canvas.width = imageData.width;
-  canvas.height = imageData.height;
-  var ctx = canvas.getContext('2d');
-  ctx.putImageData(new ImageData(imageData.data, imageData.width, imageData.height), 0, 0);
-  // Draw full resolution canvas
-  this._canvas.getContext('2d').drawImage(canvas, 0, 0, this._canvas.width, this._canvas.height);
-  // Force redraw
-  if (this.worker) {
-    this.dispatchEvent({ type: 'drawend' })
-    this._updated = true;
-    this.changed();
+  /** Display data when ready
+   * @private
+   */
+  onImageData(imageData) {
+    // Calculation canvas at small resolution
+    var canvas = this._internal = document.createElement('CANVAS');
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    var ctx = canvas.getContext('2d');
+    ctx.putImageData(new ImageData(imageData.data, imageData.width, imageData.height), 0, 0);
+    // Draw full resolution canvas
+    this._canvas.getContext('2d').drawImage(canvas, 0, 0, this._canvas.width, this._canvas.height);
+    // Force redraw
+    if (this.worker) {
+      this.dispatchEvent({ type: 'drawend' });
+      this._updated = true;
+      this.changed();
+    }
   }
 }
 
@@ -32584,18 +32605,19 @@ ol.layer.AnimatedCluster = class ollayerAnimatedCluster extends ol.layer.Vector 
  * @param {Object=} options Layer Image options.
  * @api
  */
-ol.layer.GeoImage = function(options) {
-  ol.layer.Image.call(this, options);
-}
-ol.ext.inherits (ol.layer.GeoImage, ol.layer.Image);
-/**
- * Return the {@link module:ol/extent~Extent extent} of the source associated with the layer.
- * @return {ol.Extent} The layer extent.
- * @observable
- * @api
- */
-ol.layer.GeoImage.prototype.getExtent = function() {
-  return this.getSource().getExtent();
+ol.layer.GeoImage = class ollayerGeoImage extends ol.layer.Image {
+  constructor(options) {
+    super(options);
+  }
+  /**
+   * Return the {@link module:ol/extent~Extent extent} of the source associated with the layer.
+   * @return {ol.Extent} The layer extent.
+   * @observable
+   * @api
+   */
+  getExtent() {
+    return this.getSource().getExtent();
+  }
 }
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,

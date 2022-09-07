@@ -6,7 +6,10 @@
  *  @param {function} [options.onMessage] a callback function to get worker result
  */
 var ol_ext_Worker = function(mainFn, options) {
-  var lines = ['var mainFn = '+ mainFn.toString() + `
+  // Convert to function
+  var mainStr = mainFn.toString().replace(/^.*\(/,'function(')
+  // Code
+  var lines = ['var mainFn = '+ mainStr + `
     self.addEventListener("message", function(event) {
       var result = mainFn(event);
       self.postMessage(result);

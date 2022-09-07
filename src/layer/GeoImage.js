@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_layer_Image from 'ol/layer/Image'
-import {ol_ext_inherits} from '../util/ext'
 
 /**
  * @classdesc
@@ -12,19 +11,19 @@ import {ol_ext_inherits} from '../util/ext'
  * @param {Object=} options Layer Image options.
  * @api
  */
-var ol_layer_GeoImage = function(options) {
-  ol_layer_Image.call(this, options);
-}
-ol_ext_inherits (ol_layer_GeoImage, ol_layer_Image);
-
-/**
- * Return the {@link module:ol/extent~Extent extent} of the source associated with the layer.
- * @return {ol.Extent} The layer extent.
- * @observable
- * @api
- */
-ol_layer_GeoImage.prototype.getExtent = function() {
-  return this.getSource().getExtent();
+var ol_layer_GeoImage = class ollayerGeoImage extends ol_layer_Image {
+  constructor(options) {
+    super(options);
+  }
+  /**
+   * Return the {@link module:ol/extent~Extent extent} of the source associated with the layer.
+   * @return {ol.Extent} The layer extent.
+   * @observable
+   * @api
+   */
+  getExtent() {
+    return this.getSource().getExtent();
+  }
 }
 
 export default ol_layer_GeoImage;
