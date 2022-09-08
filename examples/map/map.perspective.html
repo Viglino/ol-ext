@@ -15,8 +15,8 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
@@ -71,7 +71,6 @@
       zoom: 19,
       center: [-245406, 5986536]// [-245575, 5986863], //[-244777, 5989809]
     }),
-    interactions: ol.interaction.defaults(),
     layers: [ layer ]
   });
 
