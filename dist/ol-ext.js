@@ -22091,87 +22091,88 @@ ol.interaction.Blob.prototype._calculate = function(dt) {
  *  @param {ol.style.Style|Array<ol.style.Style>} options.targetStyle a style to draw the target point, default cross style
  *  @param {string} options.composite composite operation for the target : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
-ol.interaction.CenterTouch = function(options) {
-  options = options || {};
-  // LIst of listerner on the object
-  this._listener = {};
-  // Filter event
-  var rex = /^pointermove$|^pointerup$/;
-  // Interaction to defer center on top of the interaction 
-  // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
-  this.ctouch = new ol.interaction.Interaction({
-    handleEvent: function(e) {
-      if (rex.test(e.type) && this.getMap()) {
-        e.coordinate = this.getMap().getView().getCenter();
-        e.pixel = this.getMap().getSize();
-        e.pixel = [ e.pixel[0]/2, e.pixel[1]/2 ];
+ol.interaction.CenterTouch = class olinteractionCenterTouch extends ol.interaction.Interaction {
+  constructor(options) {
+    options = options || {};
+    super({
+      handleEvent: function (e) {
+        if (rex.test(e.type)) this.pos_ = e.coordinate;
+        if (options.handleEvent) return options.handleEvent.call(this, e);
+        return true;
       }
-      return true; 
-    }
-  });
-  // Target on map center
-  this._target = new ol.control.Target({
-    style: options.targetStyle,
-    composite: options.composite
-  });
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      if (rex.test(e.type)) this.pos_ = e.coordinate;
-      if (options.handleEvent) return options.handleEvent.call (this,e);
-      return true; 
-    }
-  });
-};
-ol.ext.inherits(ol.interaction.CenterTouch, ol.interaction.Interaction);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {_ol_Map_} map Map.
- * @api stable
- */
-ol.interaction.CenterTouch.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    this.getMap().removeInteraction(this.ctouch);
-    this.getMap().removeInteraction(this._target);
+    });
+    // List of listerner on the object
+    this._listener = {};
+    // Filter event
+    var rex = /^pointermove$|^pointerup$/;
+    // Interaction to defer center on top of the interaction 
+    // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
+    this.ctouch = new ol.interaction.Interaction({
+      handleEvent: function (e) {
+        if (rex.test(e.type) && this.getMap()) {
+          e.coordinate = this.getMap().getView().getCenter();
+          e.pixel = this.getMap().getSize();
+          e.pixel = [e.pixel[0] / 2, e.pixel[1] / 2];
+        }
+        return true;
+      }
+    });
+    // Target on map center
+    this._target = new ol.control.Target({
+      style: options.targetStyle,
+      composite: options.composite
+    });
   }
-  ol.interaction.Interaction.prototype.setMap.call (this, map);
-  if (this.getMap()) {
-    if (this.getActive()) {
-      this.getMap().addInteraction(this.ctouch);
-      this.getMap().addControl(this._target);
-    }
-  }
-};
-/**
- * Activate or deactivate the interaction.
- * @param {boolean} active Active.
- * @observable
- * @api
- */
-ol.interaction.CenterTouch.prototype.setActive = function(b) {
-  ol.interaction.Interaction.prototype.setActive.call (this, b);
-  this.pos_ = null;
-  if (this.getMap()) {
-    if (this.getActive()) {
-      this.getMap().addInteraction(this.ctouch);
-      this.getMap().addControl(this._target);
-    } else {
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {_ol_Map_} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this.getMap()) {
       this.getMap().removeInteraction(this.ctouch);
-      this.getMap().removeControl(this._target);
+      this.getMap().removeInteraction(this._target);
+    }
+    super.setMap(map);
+    if (this.getMap()) {
+      if (this.getActive()) {
+        this.getMap().addInteraction(this.ctouch);
+        this.getMap().addControl(this._target);
+      }
     }
   }
-};
-/** Get the position of the target
- * @return {ol.coordinate}
- */
-ol.interaction.CenterTouch.prototype.getPosition = function () {
-  if (!this.pos_) {
-    var px =this.getMap().getSize();
-    px = [ px[0]/2, px[1]/2 ];
-    this.pos_ = this.getMap().getCoordinateFromPixel(px);
+  /**
+   * Activate or deactivate the interaction.
+   * @param {boolean} active Active.
+   * @observable
+   * @api
+   */
+  setActive(b) {
+    ol.interaction.Interaction.prototype.setActive.call(this, b);
+    this.pos_ = null;
+    if (this.getMap()) {
+      if (this.getActive()) {
+        this.getMap().addInteraction(this.ctouch);
+        this.getMap().addControl(this._target);
+      } else {
+        this.getMap().removeInteraction(this.ctouch);
+        this.getMap().removeControl(this._target);
+      }
+    }
   }
-  return this.pos_; 
-};
+  /** Get the position of the target
+   * @return {ol.coordinate}
+   */
+  getPosition() {
+    if (!this.pos_) {
+      var px = this.getMap().getSize();
+      px = [px[0] / 2, px[1] / 2];
+      this.pos_ = this.getMap().getCoordinateFromPixel(px);
+    }
+    return this.pos_;
+  }
+}
 
 /** Clip interaction to clip layers in a circle
  * @constructor
@@ -23239,101 +23240,106 @@ ol.interaction.DrawRegular.prototype.startAngle = {
  *  @param {ol.style.Style|Array<ol.style.Style>} [options.targetStyle] a style to draw the target point, default cross style
  *  @param {string} [options.composite] composite operation : difference|multiply|xor|screen|overlay|darken|lighter|lighten|...
  */
-ol.interaction.DrawTouch = function(options) {
-  options = options||{};
-  options.handleEvent = function(e) {
-    if (this.get('tap')) {
-      this.sketch.setPosition(this.getPosition());
-      switch (e.type) {
-        case 'singleclick': {
-          this.addPoint();
-          break;
-        }
-        case 'dblclick': {
-          this.addPoint();
-          this.finishDrawing();
-          return false;
-          //break;
-        }
-        default: break;
-      }
-    }
-    return true;
-  }
-  if (!options.sketchStyle) {
-    options.sketchStyle = ol.style.Style.defaultStyle();
-  }
-  var sketch = this.sketch = new ol.layer.SketchOverlay(options);
-  sketch.on(['drawstart', 'drawabort'], function(e) { this.dispatchEvent(e); }.bind(this));
-  sketch.on(['drawend'], function(e) { 
-    if (e.feature && e.valid && options.source) options.source.addFeature(e.feature);
-    this.dispatchEvent(e); 
-  }.bind(this));
-  ol.interaction.CenterTouch.call(this, options);
-  this._source = options.source;
-  this.set('tap', options.tap!==false);
-};
-ol.ext.inherits(ol.interaction.DrawTouch, ol.interaction.CenterTouch);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.DrawTouch.prototype.setMap = function(map) {
-  if (this._listener) {
-    for(var l in this._listener) ol.Observable.unByKey(l);
-  }
-  this._listener = {};
-  ol.interaction.CenterTouch.prototype.setMap.call (this, map);
-  this.sketch.setMap(map);
-  if (map){
-    this._listener.center = map.on('postcompose', function() {
-      if (!ol.coordinate.equal(this.getPosition(), this.sketch.getPosition() || [])) {
+ol.interaction.DrawTouch = class olinteractionDrawTouch extends ol.interaction.CenterTouch {
+  constructor(options) {
+    options = options || {};
+    options.handleEvent = function (e) {
+      if (this.get('tap')) {
         this.sketch.setPosition(this.getPosition());
+        switch (e.type) {
+          case 'singleclick': {
+            this.addPoint();
+            break;
+          }
+          case 'dblclick': {
+            this.addPoint();
+            this.finishDrawing();
+            return false;
+            //break;
+          }
+          default: break;
+        }
       }
+      return true;
+    };
+    super(options);
+    if (!options.sketchStyle) {
+      options.sketchStyle = ol.style.Style.defaultStyle();
+    }
+    var sketch = this.sketch = new ol.layer.SketchOverlay(options);
+    sketch.on(['drawstart', 'drawabort'], function (e) { this.dispatchEvent(e); }.bind(this));
+    sketch.on(['drawend'], function (e) {
+      if (e.feature && e.valid && options.source)
+        options.source.addFeature(e.feature);
+      this.dispatchEvent(e);
     }.bind(this));
+    this._source = options.source;
+    this.set('tap', options.tap !== false);
+    this.setActive(options.active !== false);
   }
-};
-/** Set geometry type
- * @param {ol.geom.GeometryType} type
- */
-ol.interaction.DrawTouch.prototype.setGeometryType = function(type) {
-  return this.sketch.setGeometryType(type);
-};
-/** Get geometry type
- * @return {ol.geom.GeometryType}
- */
-ol.interaction.DrawTouch.prototype.getGeometryType = function() {
-  return this.sketch.getGeometryType();
-};
-/** Start drawing and add the sketch feature to the target layer. 
- * The ol.interaction.Draw.EventType.DRAWEND event is dispatched before inserting the feature.
- */
-ol.interaction.DrawTouch.prototype.finishDrawing = function() {
-  this.sketch.finishDrawing(true);
-};
-/** Add a new Point to the drawing
- */
-ol.interaction.DrawTouch.prototype.addPoint = function() {
-  this.sketch.addPoint(this.getPosition());
-};
-/** Remove last point of the feature currently being drawn.
- */
-ol.interaction.DrawTouch.prototype.removeLastPoint = function() {
-  this.sketch.removeLastPoint();
-};
-/**
- * Activate or deactivate the interaction.
- * @param {boolean} active Active.
- * @observable
- * @api
- */
-ol.interaction.DrawTouch.prototype.setActive = function(b) {
-  ol.interaction.CenterTouch.prototype.setActive.call (this, b);
-  this.sketch.abortDrawing();
-  this.sketch.setVisible(b);
-};
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this._listener) {
+      for (var l in this._listener) ol.Observable.unByKey(l);
+    }
+    this._listener = {};
+    super.setMap(map);
+    this.sketch.setMap(map);
+    if (map) {
+      this._listener.center = map.on('postcompose', function () {
+        if (!ol.coordinate.equal(this.getPosition(), this.sketch.getPosition() || [])) {
+          this.sketch.setPosition(this.getPosition());
+        }
+      }.bind(this));
+    }
+  }
+  /** Set geometry type
+   * @param {ol.geom.GeometryType} type
+   */
+  setGeometryType(type) {
+    return this.sketch.setGeometryType(type);
+  }
+  /** Get geometry type
+   * @return {ol.geom.GeometryType}
+   */
+  getGeometryType() {
+    return this.sketch.getGeometryType();
+  }
+  /** Start drawing and add the sketch feature to the target layer.
+   * The ol.interaction.Draw.EventType.DRAWEND event is dispatched before inserting the feature.
+   */
+  finishDrawing() {
+    this.sketch.finishDrawing(true);
+  }
+  /** Add a new Point to the drawing
+   */
+  addPoint() {
+    this.sketch.addPoint(this.getPosition());
+  }
+  /** Remove last point of the feature currently being drawn.
+   */
+  removeLastPoint() {
+    this.sketch.removeLastPoint();
+  }
+  /**
+   * Activate or deactivate the interaction.
+   * @param {boolean} active Active.
+   * @observable
+   * @api
+   */
+  setActive(b) {
+    super.setActive(b);
+    if (this.sketch) {
+      this.sketch.abortDrawing();
+      this.sketch.setVisible(b);
+    }
+  }
+}
 
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
  * @constructor
@@ -24386,62 +24392,63 @@ ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interacti
  *	@param {integer | undefined} [options.pixelTolerance=0] pixel tolerance before drag, default 0
  *	@param {integer | undefined} [options.delay=1000] The delay for a long touch in ms, default is 1000
  */
-ol.interaction.LongTouch = function(options) {
-  if (!options) options = {};
-  this.delay_ = options.delay || 1000;
-  var ltouch = options.handleLongTouchEvent || function(){};
-  var _timeout = null;
-  var position, event;
-  var tol = options.pixelTolerance || 0;
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      if (this.getActive()) {
-        switch (e.type) {
-          case 'pointerdown': {
-            if (_timeout) clearTimeout(_timeout);
-            position = e.pixel;
-            event = {
-              type: 'longtouch',
-              originalEvent: e.originalEvent,
-              frameState: e.frameState,
-              pixel: e.pixel,
-              coordinate: e.coordinate,
-              map: this.getMap()
+ol.interaction.LongTouch = class olinteractionLongTouch extends ol.interaction.Interaction {
+  constructor(options) {
+    options = options || {};
+    var ltouch = options.handleLongTouchEvent || function () { };
+    var _timeout = null;
+    var position, event;
+    var tol = options.pixelTolerance || 0;
+    super({
+      handleEvent: function (e) {
+        if (this.getActive()) {
+          switch (e.type) {
+            case 'pointerdown': {
+              if (_timeout) clearTimeout(_timeout);
+              position = e.pixel;
+              event = {
+                type: 'longtouch',
+                originalEvent: e.originalEvent,
+                frameState: e.frameState,
+                pixel: e.pixel,
+                coordinate: e.coordinate,
+                map: this.getMap()
+              };
+              _timeout = setTimeout(function () {
+                ltouch(event);
+                event.map.dispatchEvent(event);
+              }, this.delay_);
+              break;
             }
-            _timeout = setTimeout (function() {
-              ltouch(event);
-              event.map.dispatchEvent(event);
-            }, this.delay_);
-            break;
-          }
-          case 'pointerdrag': {
-            // Check if dragging over tolerance
-            if (_timeout && (Math.abs(e.pixel[0] - position[0]) > tol || Math.abs(e.pixel[1] - position[1]) > tol)) {
-              clearTimeout(_timeout);
-              _timeout = null;
+            case 'pointerdrag': {
+              // Check if dragging over tolerance
+              if (_timeout && (Math.abs(e.pixel[0] - position[0]) > tol || Math.abs(e.pixel[1] - position[1]) > tol)) {
+                clearTimeout(_timeout);
+                _timeout = null;
+              }
+              break;
             }
-            break;
-          }
-          case 'pointerup': {
-            if (_timeout) {
-              clearTimeout(_timeout);
-              _timeout = null;
+            case 'pointerup': {
+              if (_timeout) {
+                clearTimeout(_timeout);
+                _timeout = null;
+              }
+              break;
             }
-            break;
+            default: break;
           }
-          default: break;
+        } else {
+          if (_timeout) {
+            clearTimeout(_timeout);
+            _timeout = null;
+          }
         }
-      } else {
-        if (_timeout) {
-          clearTimeout(_timeout);
-          _timeout = null;
-        }
+        return true;
       }
-      return true;
-    }
-  });
-};
-ol.ext.inherits(ol.interaction.LongTouch, ol.interaction.Interaction);
+    });
+    this.delay_ = options.delay || 1000;
+  }
+}
 
 // Use ol.getUid for Openlayers < v6
 /** Extent the ol/interaction/Modify with a getModifyFeatures
@@ -25229,132 +25236,136 @@ ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.inter
  * @param {Number|Array<number>|undefined} options.offsetBox offset box for the popup
  * @param {Boolean|undefined} options.usePopup use a popup, default true
  */
-ol.interaction.ModifyTouch = function(options) {
-  var self = this;
-  if (!options) options = {};
-  this._popup = new ol.Overlay.Popup ({
-    popupClass: options.className || 'modifytouch',
-    positioning: options.positioning || 'bottom-rigth',
-    offsetBox: options.offsetBox || 10
-  });
-  this._source = options.source;
-  this._features = options.features;
-  // popup content
-  var a = document.createElement('a');
-  a.appendChild(document.createTextNode(options.title || "remove point"));
-  a.onclick = function() {
-    self.removePoint();
-  };
-  this.setPopupContent(a);
-  var pixelTolerance = options.pixelTolerance || 0;
-  var searchDist = pixelTolerance +5;
-  // Check if there is a feature to select
-  options.condition = function(e) {
-    var features = this.getMap().getFeaturesAtPixel(e.pixel,{
-      hitTolerance: searchDist
+ol.interaction.ModifyTouch = class olinteractionModifyTouch extends ol.interaction.Modify {
+  constructor(options) {
+    options = options || {};
+    // Check if there is a feature to select
+    var pixelTolerance = options.pixelTolerance || 0;
+    var searchDist = pixelTolerance + 5;
+    options.condition = function (e) {
+      var features = this.getMap().getFeaturesAtPixel(e.pixel, {
+        hitTolerance: searchDist
+      });
+      var p0, p1, found = false;
+      if (features) {
+        var search = this._features;
+        if (!search) {
+          p0 = [e.pixel[0] - searchDist, e.pixel[1] - searchDist];
+          p1 = [e.pixel[0] + searchDist, e.pixel[1] + searchDist];
+          p0 = this.getMap().getCoordinateFromPixel(p0);
+          p1 = this.getMap().getCoordinateFromPixel(p1);
+          var ext = ol.extent.boundingExtent([p0, p1]);
+          search = this._source.getFeaturesInExtent(ext);
+        }
+        if (search.getArray)
+          search = search.getArray();
+        for (var i = 0, f; f = features[i]; i++) {
+          if (search.indexOf(f) >= 0)
+            break;
+        }
+        if (f) {
+          p0 = e.pixel;
+          p1 = f.getGeometry().getClosestPoint(e.coordinate);
+          p1 = this.getMap().getPixelFromCoordinate(p1);
+          var dx = p0[0] - p1[0];
+          var dy = p0[1] - p1[1];
+          found = (Math.sqrt(dx * dx + dy * dy) < searchDist);
+        }
+      }
+      // Show popup if any
+      this.showDeleteBt(found ? { type: 'show', feature: f, coordinate: e.coordinate } : { type: 'hide' });
+      return true;
+    };
+    // Hide popup on insert
+    options.insertVertexCondition = function () {
+      this.showDeleteBt({ type: 'hide' });
+      return true;
+    };
+    super(options);
+    this._popup = new ol.Overlay.Popup({
+      popupClass: options.className || 'modifytouch',
+      positioning: options.positioning || 'bottom-rigth',
+      offsetBox: options.offsetBox || 10
     });
-    var p0, p1, found = false;
-		if (features) {
-      var search = this._features;
-      if (!search) {
-        p0 = [e.pixel[0] - searchDist, e.pixel[1] - searchDist]
-        p1 = [e.pixel[0] + searchDist, e.pixel[1] + searchDist]
-        p0 = this.getMap().getCoordinateFromPixel(p0);
-        p1 = this.getMap().getCoordinateFromPixel(p1);
-        var ext = ol.extent.boundingExtent([p0,p1]);
-        search = this._source.getFeaturesInExtent(ext);
-      } 
-      if (search.getArray) search = search.getArray();
-      for (var i=0, f; f=features[i]; i++) {
-        if (search.indexOf(f) >= 0) break;
-      }
-      if (f) {
-        p0 = e.pixel;
-        p1 = f.getGeometry().getClosestPoint(e.coordinate);
-        p1 = this.getMap().getPixelFromCoordinate(p1);
-        var dx = p0[0] - p1[0];
-        var dy = p0[1] - p1[1];
-        found = (Math.sqrt(dx*dx+dy*dy) < searchDist);
-      }
+    this._source = options.source;
+    this._features = options.features;
+    // popup content
+    var a = document.createElement('a');
+    a.appendChild(document.createTextNode(options.title || "remove point"));
+    a.onclick = function () {
+      this.removePoint();
+    }.bind(this);
+    this.setPopupContent(a);
+    this.on(['modifystart', 'modifyend'], function () {
+      this.showDeleteBt({ type: 'hide', modifying: true });
+    });
+    // Use a popup ?
+    this.set('usePopup', options.usePopup !== false);
+  }
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this.getMap()) {
+      this.getMap().removeOverlay(this._popup);
     }
-    // Show popup if any
-    this.showDeleteBt(found ? { type:'show', feature:f, coordinate: e.coordinate } : { type:'hide' });
-    return true;
-  };
-  // Hide popup on insert
-	options.insertVertexCondition = function() {
-		this.showDeleteBt({ type:'hide' });
-		return true;
+    ol.interaction.Modify.prototype.setMap.call(this, map);
+    if (this.getMap()) {
+      this.getMap().addOverlay(this._popup);
+    }
   }
-  ol.interaction.Modify.call(this, options);
-  this.on(['modifystart','modifyend'], function(){
-		this.showDeleteBt({ type:'hide', modifying: true });
-  });
-  // Use a popup ?
-  this.set('usePopup', options.usePopup !== false);
-};
-ol.ext.inherits(ol.interaction.ModifyTouch, ol.interaction.Modify);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.ModifyTouch.prototype.setMap = function(map) {	
-  if (this.getMap()) {
-    this.getMap().removeOverlay(this._popup);
+  /** Activate the interaction and remove popup
+   * @param {Boolean} b
+   */
+  setActive(b) {
+    ol.interaction.Modify.prototype.setActive.call(this, b);
+    this.showDeleteBt({ type: 'hide' });
   }
-	ol.interaction.Modify.prototype.setMap.call (this, map);
-  if (this.getMap()) {
-    this.getMap().addOverlay(this._popup);
+  /**
+   * Remove the current point
+   */
+  removePoint() {
+    // Prevent touch + click on popup 
+    if (new Date() - this._timeout < 200)
+      return;
+    // Remove point
+    ol.interaction.Modify.prototype.removePoint.call(this);
+    this.showDeleteBt({ type: 'hide' });
   }
-};
-/** Activate the interaction and remove popup
- * @param {Boolean} b
- */
-ol.interaction.ModifyTouch.prototype.setActive = function(b) {	
-  ol.interaction.Modify.prototype.setActive.call (this, b);
-  this.showDeleteBt({ type:'hide' });
-};
-/**
- * Remove the current point
- */
-ol.interaction.ModifyTouch.prototype.removePoint = function() {	
-  // Prevent touch + click on popup 
-  if (new Date() - this._timeout < 200) return;
-  // Remove point
-  ol.interaction.Modify.prototype.removePoint.call (this);
-  this.showDeleteBt({ type:'hide' });
-}
-/**
- * Show the delete button (menu)
- * @param {Event} e
- * @api stable
- */
-ol.interaction.ModifyTouch.prototype.showDeleteBt = function(e) {
-  if (this.get('usePopup') && e.type==='show') {
-    this._popup.show(e.coordinate, this._menu);
-  } else {
-    this._popup.hide();
+  /**
+   * Show the delete button (menu)
+   * @param {Event} e
+   * @api stable
+   */
+  showDeleteBt(e) {
+    if (!this._popup) return;
+    if (this.get('usePopup') && e.type === 'show') {
+      this._popup.show(e.coordinate, this._menu);
+    } else {
+      this._popup.hide();
+    }
+    e.type += 'popup';
+    this.dispatchEvent(e);
+    // Date if popup start a timeout to prevent touch + click on the popup
+    this._timeout = new Date();
   }
-  e.type += 'popup';
-  this.dispatchEvent(e);
-  // Date if popup start a timeout to prevent touch + click on the popup
-  this._timeout = new Date();
-};
-/**
- * Change the popup content
- * @param {DOMElement} html 
- */
-ol.interaction.ModifyTouch.prototype.setPopupContent = function(html) {
-  this._menu = html;
-}
-/**
- * Get the popup content
- * @return {DOMElement}
- */
-ol.interaction.ModifyTouch.prototype.getPopupContent = function() {
-  return this._menu;
+  /**
+   * Change the popup content
+   * @param {DOMElement} html
+   */
+  setPopupContent(html) {
+    this._menu = html;
+  }
+  /**
+   * Get the popup content
+   * @return {DOMElement}
+   */
+  getPopupContent() {
+    return this._menu;
+  }
 }
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -27297,288 +27308,302 @@ ol.interaction.TouchCompass.prototype.compass = null;
  *  @param {Array<*>} options.buttons an array of buttons
  *  @param {number} options.maxButtons maximum number of buttons (default 5)
  */
-ol.interaction.TouchCursor = function(options) {
-  options = options || {};
-  // List of listerner on the object
-  this._listeners = {};
-  // Interaction to defer position on top of the interaction 
-  // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
-  var offset = [-35,-35];
-  this.ctouch = new ol.interaction.Interaction({
-    handleEvent: function(e) {
-      if (!/drag/.test(e.type) && this.getMap()) {
-        e.coordinate = this.overlay.getPosition();
-        e.pixel = this.getMap().getPixelFromCoordinate(e.coordinate);
-        this._lastEvent = e;
-      } else {
-        var res = e.frameState.viewState.resolution
-        var cosa = Math.cos(e.frameState.viewState.rotation);
-        var sina = Math.sin(e.frameState.viewState.rotation);
-        e.coordinate = [
-          e.coordinate[0] + cosa*offset[0]*res + sina*offset[1]*res, 
-          e.coordinate[1] + sina*offset[0]*res - cosa*offset[1]*res
-        ];
-        e.pixel = this.getMap().getPixelFromCoordinate(e.coordinate);
-      }
-      return true; 
-    }.bind(this)
-  });
-  // Force interaction on top
-  this.ctouch.set('onTop', true);
-  // Add Overlay
-  this.overlay = new ol.Overlay.Fixed({
-    className: ('ol-touch-cursor '+(options.className||'')).trim(),
-    positioning: 'top-left',
-    element: ol.ext.element.create('DIV', {}),
-    stopEvent: false,
-  });
-  ol.interaction.DragOverlay.call(this, {
-    centerOnClick: false,
-    //offset: [-20,-20],
-    overlays: this.overlay
-  });
-  this.setPosition(options.coordinate, true);
-  this.set('maxButtons', options.maxButtons || 5);
-  if (options.buttons) {
-    if (options.buttons.length > this.get('maxButtons')) this.set('maxButtons', options.buttons.length);
-    var elt = this.overlay.element;
-    var begin = options.buttons.length > 4 ? 0 : 1;
-    options.buttons.forEach((function (b, i) {
-      if (i<5) {
-        ol.ext.element.create('DIV', {
-          className: ((b.className||'')+' ol-button ol-button-' + (i+begin)).trim(),
-          html: ol.ext.element.create('DIV', { html: b.html }),
-          click: b.click,
-          on: b.on,
-          parent: elt
-        })
-      }
-    }))
-  }
-  // Replace events to handle click
-  var dragging = false;
-  var start = false;
-  this.on('dragstart', function (e) {
-    this._pixel = this.getMap().getPixelFromCoordinate(this.overlay.getPosition())
-    start = e;
-    return !e.overlay;
-  })
-  this.on('dragend', function (e) {
-    this._pixel = this.getMap().getPixelFromCoordinate(this.overlay.getPosition())
-    if (!e.overlay) return true;
-    if (dragging) {
-      this.dispatchEvent({
-        type: 'dragend', 
-        dragging: dragging,
-        originalEvent: e.originalEvent, 
-        frameState: e.frameState,
-        pixel: this._pixel,
-        coordinate: this.overlay.getPosition() 
-      });
-      dragging = false;
-    } else {
-      if (e.originalEvent.target === this.overlay.element) {
-        this.dispatchEvent({ 
-          type: 'click', 
+ol.interaction.TouchCursor = class olinteractionTouchCursor extends ol.interaction.DragOverlay {
+  constructor(options) {
+    options = options || {}
+    // Add Overlay
+    var overlay = new ol.Overlay.Fixed({
+      className: ('ol-touch-cursor ' + (options.className || '')).trim(),
+      positioning: 'top-left',
+      element: ol.ext.element.create('DIV', {}),
+      stopEvent: false,
+    })
+    super({
+      centerOnClick: false,
+      //offset: [-20,-20],
+      overlays: overlay
+    })
+    this.overlay = overlay;
+    // List of listerner on the object
+    this._listeners = {}
+    // Interaction to defer position on top of the interaction 
+    // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
+    var offset = [-35, -35]
+    this.ctouch = new ol.interaction.Interaction({
+      handleEvent: function (e) {
+        if (!/drag/.test(e.type) && this.getMap()) {
+          e.coordinate = this.overlay.getPosition()
+          e.pixel = this.getMap().getPixelFromCoordinate(e.coordinate)
+          this._lastEvent = e
+        } else {
+          var res = e.frameState.viewState.resolution
+          var cosa = Math.cos(e.frameState.viewState.rotation)
+          var sina = Math.sin(e.frameState.viewState.rotation)
+          e.coordinate = [
+            e.coordinate[0] + cosa * offset[0] * res + sina * offset[1] * res,
+            e.coordinate[1] + sina * offset[0] * res - cosa * offset[1] * res
+          ]
+          e.pixel = this.getMap().getPixelFromCoordinate(e.coordinate)
+        }
+        return true
+      }.bind(this)
+    })
+    // Force interaction on top
+    this.ctouch.set('onTop', true)
+    this.setPosition(options.coordinate, true)
+    this.set('maxButtons', options.maxButtons || 5)
+    if (options.buttons) {
+      if (options.buttons.length > this.get('maxButtons'))
+        this.set('maxButtons', options.buttons.length)
+      var elt = this.overlay.element
+      var begin = options.buttons.length > 4 ? 0 : 1
+      options.buttons.forEach((function (b, i) {
+        if (i < 5) {
+          ol.ext.element.create('DIV', {
+            className: ((b.className || '') + ' ol-button ol-button-' + (i + begin)).trim(),
+            html: ol.ext.element.create('DIV', { html: b.html }),
+            click: b.click,
+            on: b.on,
+            parent: elt
+          })
+        }
+      }))
+    }
+    // Replace events to handle click
+    var dragging = false
+    var start = false
+    this.on('dragstart', function (e) {
+      this._pixel = this.getMap().getPixelFromCoordinate(this.overlay.getPosition())
+      start = e
+      return !e.overlay
+    })
+    this.on('dragend', function (e) {
+      this._pixel = this.getMap().getPixelFromCoordinate(this.overlay.getPosition())
+      if (!e.overlay)
+        return true
+      if (dragging) {
+        this.dispatchEvent({
+          type: 'dragend',
           dragging: dragging,
-          originalEvent: e.originalEvent, 
+          originalEvent: e.originalEvent,
           frameState: e.frameState,
           pixel: this._pixel,
-          coordinate: this.overlay.getPosition() 
-        });
+          coordinate: this.overlay.getPosition()
+        })
+        dragging = false
+      } else {
+        if (e.originalEvent.target === this.overlay.element) {
+          this.dispatchEvent({
+            type: 'click',
+            dragging: dragging,
+            originalEvent: e.originalEvent,
+            frameState: e.frameState,
+            pixel: this._pixel,
+            coordinate: this.overlay.getPosition()
+          })
+        }
       }
-    }
-    return false;
-  }.bind(this))
-  this.on('dragging', function (e) {
-    this._pixel = this.getMap().getPixelFromCoordinate(this.overlay.getPosition());
-    if (!e.overlay) return true;
-    dragging = true;
-    if (start) {
-      this.dispatchEvent({ 
-        type: 'dragstart', 
+      return false
+    }.bind(this))
+    this.on('dragging', function (e) {
+      this._pixel = this.getMap().getPixelFromCoordinate(this.overlay.getPosition())
+      if (!e.overlay)
+        return true
+      dragging = true
+      if (start) {
+        this.dispatchEvent({
+          type: 'dragstart',
+          dragging: dragging,
+          originalEvent: start.originalEvent,
+          frameState: e.frameState,
+          pixel: this._pixel,
+          coordinate: start.coordinate
+        })
+        start = false
+      }
+      this.dispatchEvent({
+        type: 'dragging',
         dragging: dragging,
-        originalEvent: start.originalEvent, 
+        originalEvent: e.originalEvent,
         frameState: e.frameState,
         pixel: this._pixel,
-        coordinate: start.coordinate
-      });
-      start = false;
-    }
-    this.dispatchEvent({ 
-      type: 'dragging', 
-      dragging: dragging,
-      originalEvent: e.originalEvent, 
-      frameState: e.frameState,
-      pixel: this._pixel,
-      coordinate: this.overlay.getPosition() 
-    });
-    return false;
-  }.bind(this))
-};
-ol.ext.inherits(ol.interaction.TouchCursor, ol.interaction.DragOverlay);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {_ol_Map_} map Map.
- * @api stable
- */
-ol.interaction.TouchCursor.prototype.setMap = function(map) {
-  // Reset
-  if (this.getMap()) {
-    this.getMap().removeInteraction(this.ctouch);
-    if (this.getActive()) this.getMap().removeOverlay(this.overlay);
+        coordinate: this.overlay.getPosition()
+      })
+      return false
+    }.bind(this))
   }
-  for (var l in this._listeners) {
-    ol.Observable.unByKey(this._listeners[l]);
-  }
-  this._listeners = {};
-  ol.interaction.DragOverlay.prototype.setMap.call (this, map);
-  // Set listeners
-  if (map) {
-    if (this.getActive()) {
-      map.addOverlay(this.overlay);
-      setTimeout( function() {
-        this.setPosition(this.getPosition() || map.getView().getCenter());
-      }.bind(this));
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {_ol_Map_} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    // Reset
+    if (this.getMap()) {
+      this.getMap().removeInteraction(this.ctouch)
+      if (this.getActive())
+        this.getMap().removeOverlay(this.overlay)
     }
-    map.addInteraction(this.ctouch);
-    this._listeners.addInteraction = map.getInteractions().on('add', function(e) {
-      // Move on top
-      if (!e.element.get('onTop')) {
-        map.removeInteraction(this.ctouch);
-        map.addInteraction(this.ctouch);
+    for (var l in this._listeners) {
+      ol.Observable.unByKey(this._listeners[l])
+    }
+    this._listeners = {}
+    super.setMap(map)
+    // Set listeners
+    if (map) {
+      if (this.getActive()) {
+        map.addOverlay(this.overlay)
+        setTimeout(function () {
+          this.setPosition(this.getPosition() || map.getView().getCenter())
+        }.bind(this))
       }
-    }.bind(this));
+      map.addInteraction(this.ctouch)
+      this._listeners.addInteraction = map.getInteractions().on('add', function (e) {
+        // Move on top
+        if (!e.element.get('onTop')) {
+          map.removeInteraction(this.ctouch)
+          map.addInteraction(this.ctouch)
+        }
+      }.bind(this))
+    }
   }
-};
-/**
- * Activate or deactivate the interaction.
- * @param {boolean} active Active.
- * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
- * @observable
- * @api
- */
-ol.interaction.TouchCursor.prototype.setActive = function(b, position) {
-  if (b!==this.getActive()) {
-    this.ctouch.setActive(b);
-    if (!b) {
-      this.setPosition();
-      this.overlay.element.classList.remove('active');
-      if (this._activate) clearTimeout(this._activate);
-      if (this.getMap()) this.getMap().removeOverlay(this.overlay);
+  /**
+   * Activate or deactivate the interaction.
+   * @param {boolean} active Active.
+   * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
+   * @observable
+   * @api
+   */
+  setActive(b, position) {
+    if (b !== this.getActive()) {
+      if (this.ctouch) this.ctouch.setActive(b)
+      if (!b) {
+        this.setPosition()
+        this.overlay.element.classList.remove('active')
+        if (this._activate)
+          clearTimeout(this._activate)
+        if (this.getMap())
+          this.getMap().removeOverlay(this.overlay)
+      } else {
+        if (this.getMap()) {
+          this.getMap().addOverlay(this.overlay)
+        }
+        if (position) {
+          this.setPosition(position)
+        } else if (this.getMap()) {
+          this.setPosition(this.getMap().getView().getCenter())
+        }
+        this._activate = setTimeout(function () {
+          this.overlay.element.classList.add('active')
+        }.bind(this), 100)
+      }
+      super.setActive(b)
+    } else if (position) {
+      this.setPosition(position)
+    } else if (this.getMap()) {
+      this.setPosition(this.getMap().getView().getCenter())
+    }
+  }
+  /** Set the position of the target
+   * @param {ol.coordinate} coord
+   */
+  setPosition(coord) {
+    this.overlay.setPosition(coord, true)
+    if (this.getMap() && coord) {
+      this._pixel = this.getMap().getPixelFromCoordinate(coord)
+    }
+  }
+  /** Offset the target position
+   * @param {ol.coordinate} coord
+   */
+  offsetPosition(coord) {
+    var pos = this.overlay.getPosition()
+    if (pos)
+      this.overlay.setPosition([pos[0] + coord[0], pos[1] + coord[1]])
+  }
+  /** Get the position of the target
+   * @return {ol.coordinate}
+   */
+  getPosition() {
+    return this.overlay.getPosition()
+  }
+  /** Get pixel position
+   * @return {ol.pixel}
+   */
+  getPixel() {
+    if (this.getMap())
+      return this.getMap().getPixelFromCoordinate(this.getPosition())
+  }
+  /** Get cursor overlay
+   * @return {ol.Overlay}
+   */
+  getOverlay() {
+    return this.overlay
+  }
+  /** Get cursor overlay element
+   * @return {Element}
+   */
+  getOverlayElement() {
+    return this.overlay.element
+  }
+  /** Get cursor button element
+   * @param {string|number} button the button className or the button index
+   * @return {Element}
+   */
+  getButtonElement(button) {
+    if (typeof (button) === 'number')
+      return this.getOverlayElement().getElementsByClassName('ol-button')[button]
+    return this.getOverlayElement().getElementsByClassName(button)[0]
+  }
+  /** Remove a button element
+   * @param {string|number|undefined} button the button className or the button index, if undefined remove all buttons, default remove all
+   * @return {Element}
+   */
+  removeButton(button) {
+    if (button === undefined) {
+      var buttons = this.getOverlayElement().getElementsByClassName('ol-button')
+      for (var i = buttons.length - 1; i >= 0; i--) {
+        this.getOverlayElement().removeChild(buttons[i])
+      }
     } else {
-      if (this.getMap()) {
-        this.getMap().addOverlay(this.overlay);
-      }
-      if (position) {
-        this.setPosition(position);
-      } else if (this.getMap()) {
-        this.setPosition(this.getMap().getView().getCenter());
-      }
-      this._activate = setTimeout(function() {
-        this.overlay.element.classList.add('active');
-      }.bind(this), 100);
+      var elt = this.getButtonElement(button)
+      if (elt)
+        this.getOverlayElement().removeChild(elt)
     }
-    ol.interaction.DragOverlay.prototype.setActive.call (this, b);
-  } else if (position) {
-    this.setPosition(position);
-  } else if (this.getMap()) {
-    this.setPosition(this.getMap().getView().getCenter());
   }
-};
-/** Set the position of the target
- * @param {ol.coordinate} coord
- */
-ol.interaction.TouchCursor.prototype.setPosition = function (coord) {
-  this.overlay.setPosition(coord, true); 
-  if (this.getMap() && coord) {
-    this._pixel = this.getMap().getPixelFromCoordinate(coord);
-  }
-};
-/** Offset the target position
- * @param {ol.coordinate} coord
- */
-ol.interaction.TouchCursor.prototype.offsetPosition = function (coord) {
-  var pos = this.overlay.getPosition();
-  if (pos) this.overlay.setPosition([pos[0]+coord[0], pos[1]+coord[1]]); 
-};
-/** Get the position of the target
- * @return {ol.coordinate}
- */
-ol.interaction.TouchCursor.prototype.getPosition = function () {
-  return this.overlay.getPosition(); 
-};
-/** Get pixel position
- * @return {ol.pixel}
- */
-ol.interaction.TouchCursor.prototype.getPixel = function () {
-  if (this.getMap()) return this.getMap().getPixelFromCoordinate(this.getPosition());
-};
-/** Get cursor overlay
- * @return {ol.Overlay}
- */
-ol.interaction.TouchCursor.prototype.getOverlay = function () {
-  return this.overlay; 
-};
-/** Get cursor overlay element
- * @return {Element}
- */
-ol.interaction.TouchCursor.prototype.getOverlayElement = function () {
-  return this.overlay.element; 
-};
-/** Get cursor button element
- * @param {string|number} button the button className or the button index
- * @return {Element}
- */
-ol.interaction.TouchCursor.prototype.getButtonElement = function (button) {
-  if (typeof(button) === 'number') return this.getOverlayElement().getElementsByClassName('ol-button')[button];
-  return this.getOverlayElement().getElementsByClassName(button)[0];
-};
-/** Remove a button element
- * @param {string|number|undefined} button the button className or the button index, if undefined remove all buttons, default remove all
- * @return {Element}
- */
-ol.interaction.TouchCursor.prototype.removeButton = function (button) {
-  if (button===undefined) {
-    var buttons = this.getOverlayElement().getElementsByClassName('ol-button');
-    for (var i=buttons.length-1; i>=0; i--) {
-      this.getOverlayElement().removeChild(buttons[i]);
+  /** Add a button element
+   * @param {*} button
+   *  @param {string} options.className button class name
+   *  @param {DOMElement|string} options.html button content
+   *  @param {function} options.click onclick function
+   *  @param {*} options.on an object with
+   *  @param {boolean} options.before
+   */
+  addButton(b) {
+    var buttons = this.getOverlayElement().getElementsByClassName('ol-button')
+    var max = (this.get('maxButtons') || 5)
+    if (buttons.length >= max) {
+      console.error('[ol/interaction/TouchCursor~addButton] too many button on the cursor (max=' + max + ')...')
+      return
     }
-  } else {
-    var elt = this.getButtonElement(button);
-    if (elt) this.getOverlayElement().removeChild(elt);
+    var button = ol.ext.element.create('DIV', {
+      className: ((b.className || '') + ' ol-button').trim(),
+      html: ol.ext.element.create('DIV', { html: b.html }),
+      click: b.click,
+      on: b.on
+    })
+    if (!b.before || buttons.length === 0)
+      this.getOverlayElement().appendChild(button)
+    else
+      this.getOverlayElement().insertBefore(button, buttons[0])
+    // Reorder buttons
+    var start = buttons.length >= max ? 0 : 1
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].className = buttons[i].className.replace(/ol-button-\d/g, '').trim() + ' ol-button-' + (i + start)
+    }
   }
-};
-/** Add a button element
- * @param {*} button
- *  @param {string} options.className button class name
- *  @param {DOMElement|string} options.html button content
- *  @param {function} options.click onclick function
- *  @param {*} options.on an object with 
- *  @param {boolean} options.before
- */
-ol.interaction.TouchCursor.prototype.addButton = function (b) {
-  var buttons = this.getOverlayElement().getElementsByClassName('ol-button');
-  var max = (this.get('maxButtons') || 5);
-  if (buttons.length >= max) {
-    console.error('[ol/interaction/TouchCursor~addButton] too many button on the cursor (max='+max+')...')
-    return;
-  } 
-  var button = ol.ext.element.create('DIV', {
-    className: ((b.className||'')+' ol-button').trim(),
-    html: ol.ext.element.create('DIV', { html: b.html }),
-    click: b.click,
-    on: b.on
-  });
-  if (!b.before || buttons.length===0) this.getOverlayElement().appendChild(button);
-  else this.getOverlayElement().insertBefore(button, buttons[0]);
-  // Reorder buttons
-  var start = buttons.length >= max ? 0 : 1;
-  for (var i=0; i<buttons.length; i++) {
-    buttons[i].className = buttons[i].className.replace(/ol-button-\d/g, '').trim() + ' ol-button-' + (i+start);
-  }
-};
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -27605,128 +27630,132 @@ ol.interaction.TouchCursor.prototype.addButton = function (b) {
  *  @param {string} options.geometryName Geometry name to use for features created by the draw interaction.
  *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
  */
-ol.interaction.TouchCursorDraw = function(options) {
-  options = options || {};
-  // Draw 
-  var sketch = this.sketch = new ol.layer.SketchOverlay({
-    type: options.type
-  });
-  sketch.on('drawend', function(e) {
-    if (e.valid && options.source) options.source.addFeature(e.feature);
-    this.getOverlayElement().classList.add('nodrawing');
-    this.dispatchEvent(e);
-  }.bind(this));
-  sketch.on('drawstart', function(e) {
-    this.getOverlayElement().classList.remove('nodrawing');
-    this.dispatchEvent(e);
-  }.bind(this));
-  sketch.on('drawabort', function(e) {
-    this.getOverlayElement().classList.add('nodrawing');
-    this.dispatchEvent(e);
-  }.bind(this));
-  // Create cursor
-  ol.interaction.TouchCursor.call(this, {
-    className: options.className,
-    coordinate: options.coordinate,
-  });
-  this.getOverlayElement().classList.add('nodrawing');
-  this.set('types', options.types);
-  this.setType(options.type);
-  this.on('click', function() {
-    this.sketch.addPoint(this.getPosition());
-  }.bind(this))
-  this.on('dragging', function() {
-    this.sketch.setPosition(this.getPosition());
-  }.bind(this))
-};
-ol.ext.inherits(ol.interaction.TouchCursorDraw, ol.interaction.TouchCursor);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {_ol_Map_} map Map.
- * @api stable
- */
-ol.interaction.TouchCursorDraw.prototype.setMap = function(map) {
-  ol.interaction.TouchCursor.prototype.setMap.call (this, map);
-  this.sketch.setMap(map);
-  if (map) {
-    this._listeners.movend = map.on('moveend', function() {
-      this.sketch.setPosition(this.getPosition())
-    }.bind(this))
-  }
-};
-/**
- * Activate or deactivate the interaction.
- * @param {boolean} active Active.
- * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
- * @observable
- * @api
- */
-ol.interaction.TouchCursorDraw.prototype.setActive = function(b, position) {
-  ol.interaction.TouchCursor.prototype.setActive.call (this, b, position);
-  this.sketch.abortDrawing();
-  this.sketch.setPosition(position);
-  this.sketch.setVisible(b);
-};
-/**
- * Set Geometry type
- * @param {string} type Geometry type
- */
-ol.interaction.TouchCursorDraw.prototype.setType = function(type) {
-  this.removeButton();
-  var sketch = this.sketch;
-  this.getOverlayElement().classList.remove(sketch.getGeometryType());
-  // Set type
-  var oldValue = sketch.setGeometryType();
-  type = sketch.setGeometryType(type);
-  this.getOverlayElement().classList.add(type);
-  this.dispatchEvent({
-    type: 'change:type',
-    oldValue: oldValue
-  });
-  // Next type
-  var types = this.get('types');
-  if (types && types.length) {
-    var next = types[(types.indexOf(type) + 1) % types.length];
-    this.addButton({
-      className: 'ol-button-type '+next, 
-      click: function() {
-        this.setType(next)
-      }.bind(this)
+ol.interaction.TouchCursorDraw = class olinteractionTouchCursorDraw extends ol.interaction.TouchCursor {
+  constructor(options) {
+    options = options || {};
+    // Create cursor
+    super({
+      className: options.className,
+      coordinate: options.coordinate,
     });
-  }
-  // Add buttons
-  if (type !== 'Point') {
-    // Cancel drawing
-    this.addButton({
-      className: 'ol-button-x', 
-      click: function() {
-        sketch.abortDrawing();
-      }
+    this.getOverlayElement().classList.add('nodrawing');
+    // Draw 
+    var sketch = this.sketch = new ol.layer.SketchOverlay({
+      type: options.type
     });
-    if (type !== 'Circle') {
-      // Add a new point (nothing to do, just click)
-      this.addButton({ 
-        className: 'ol-button-check',
-        click: function() {
-          sketch.finishDrawing(true);
-        }
-      });
-      // Remove last point
-      this.addButton({  
-        className: 'ol-button-remove', 
-        click: function() {
-          sketch.removeLastPoint();
-        }
-      });
+    sketch.on('drawend', function (e) {
+      if (e.valid && options.source)
+        options.source.addFeature(e.feature);
+      this.getOverlayElement().classList.add('nodrawing');
+      this.dispatchEvent(e);
+    }.bind(this));
+    sketch.on('drawstart', function (e) {
+      this.getOverlayElement().classList.remove('nodrawing');
+      this.dispatchEvent(e);
+    }.bind(this));
+    sketch.on('drawabort', function (e) {
+      this.getOverlayElement().classList.add('nodrawing');
+      this.dispatchEvent(e);
+    }.bind(this));
+    this.set('types', options.types);
+    this.setType(options.type);
+    this.on('click', function () {
+      this.sketch.addPoint(this.getPosition());
+    }.bind(this));
+    this.on('dragging', function () {
+      this.sketch.setPosition(this.getPosition());
+    }.bind(this));
+  }
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {_ol_Map_} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    ol.interaction.TouchCursor.prototype.setMap.call(this, map);
+    this.sketch.setMap(map);
+    if (map) {
+      this._listeners.movend = map.on('moveend', function () {
+        this.sketch.setPosition(this.getPosition());
+      }.bind(this));
     }
   }
-};
-/** Get geometry type
- */
-ol.interaction.TouchCursorDraw.prototype.getType = function() {
-  return this.sketch.getGeometryType();
-};
+  /**
+   * Activate or deactivate the interaction.
+   * @param {boolean} active Active.
+   * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
+   * @observable
+   * @api
+   */
+  setActive(b, position) {
+    super.setActive(b, position);
+    if (this.sketch) {
+      this.sketch.abortDrawing();
+      this.sketch.setPosition(position);
+      this.sketch.setVisible(b);
+    }
+  }
+  /**
+   * Set Geometry type
+   * @param {string} type Geometry type
+   */
+  setType(type) {
+    this.removeButton();
+    var sketch = this.sketch;
+    this.getOverlayElement().classList.remove(sketch.getGeometryType());
+    // Set type
+    var oldValue = sketch.setGeometryType();
+    type = sketch.setGeometryType(type);
+    this.getOverlayElement().classList.add(type);
+    this.dispatchEvent({
+      type: 'change:type',
+      oldValue: oldValue
+    });
+    // Next type
+    var types = this.get('types');
+    if (types && types.length) {
+      var next = types[(types.indexOf(type) + 1) % types.length];
+      this.addButton({
+        className: 'ol-button-type ' + next,
+        click: function () {
+          this.setType(next);
+        }.bind(this)
+      });
+    }
+    // Add buttons
+    if (type !== 'Point') {
+      // Cancel drawing
+      this.addButton({
+        className: 'ol-button-x',
+        click: function () {
+          sketch.abortDrawing();
+        }
+      });
+      if (type !== 'Circle') {
+        // Add a new point (nothing to do, just click)
+        this.addButton({
+          className: 'ol-button-check',
+          click: function () {
+            sketch.finishDrawing(true);
+          }
+        });
+        // Remove last point
+        this.addButton({
+          className: 'ol-button-remove',
+          click: function () {
+            sketch.removeLastPoint();
+          }
+        });
+      }
+    }
+  }
+  /** Get geometry type
+   */
+  getType() {
+    return this.sketch.getGeometryType();
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -27746,138 +27775,140 @@ ol.interaction.TouchCursorDraw.prototype.getType = function() {
  *  @param {ol.style.Style | Array<ol.style.Style> | undefined} options.style Style for the sketch features.
  *  @param {boolean} options.wrapX Wrap the world horizontally on the sketch overlay, default false
  */
-ol.interaction.TouchCursorModify = function(options) {
-  options = options || {};
-  var drag = false;       // enable drag
-  var dragging = false;   // dragging a point
-  var del = false;        // deleting a point
-  // Modify interaction
-  var mod = this._modify = new ol.interaction.ModifyFeature ({ 
-    source: options.source,
-    sources: options.sources,
-    features: options.features,
-    pixelTolerance: options.pixelTolerance,
-    filter: options.filter,
-    style: options.style || [ 
-      new ol.style.Style({
-        image: new ol.style.RegularShape ({
-          points: 4,
-          radius: 10,
-          radius2: 0,
-          stroke: new ol.style.Stroke({
-            color: [255,255,255, .5],
-            width: 3
-          })
-        })
-      }),
-      new ol.style.Style({
-        image: new ol.style.RegularShape ({
-          points: 4,
-          radius: 10,
-          radius2: 0,
-          stroke: new ol.style.Stroke({
-            color: [0, 153, 255, 1],
-            width: 1.25
-          })
-        })
-      })
-    ],
-    wrapX: options.wrapX,
-    condition: function(e) {
-      return e.dragging || dragging;
-    },
-    deleteCondition: function() {
-      return del;
-    }
-  });
-  ol.interaction.TouchCursor.call(this, {
-    className: ('disable '+options.className).trim(),
-    coordinate: options.coordinate,
-    buttons: [{
+ol.interaction.TouchCursorModify = class olinteractionTouchCursorModify extends ol.interaction.TouchCursor {
+  constructor(options) {
+    options = options || {};
+    var drag = false; // enable drag
+    var dragging = false; // dragging a point
+    var del = false; // deleting a point
+    super({
+      className: ('disable ' + options.className).trim(),
+      coordinate: options.coordinate,
+      buttons: [{
         // Dragging button
-        className: 'ol-button-move', 
-        on: { 
-          pointerdown: function() { drag = true; },
-          pointerup: function() { drag = false; }
+        className: 'ol-button-move',
+        on: {
+          pointerdown: function () { drag = true; },
+          pointerup: function () { drag = false; }
         }
-      }, { 
+      }, {
         // Add a new point to a line
-        className: 'ol-button-add', 
-        click: function() { 
+        className: 'ol-button-add',
+        click: function () {
           dragging = true;
-          mod.handleDownEvent(this._lastEvent);
-          mod.handleUpEvent(this._lastEvent);
+          mod.handleDownEvent(self._lastEvent);
+          mod.handleUpEvent(self._lastEvent);
           dragging = false;
-        }.bind(this)
-      }, { 
+        }
+      }, {
         // Remove a point
-        className: 'ol-button-remove', 
-        click: function() { 
+        className: 'ol-button-remove',
+        click: function () {
           del = true;
-          mod.handleDownEvent(this._lastEvent); 
+          mod.handleDownEvent(self._lastEvent);
           del = false;
-        }.bind(this)
+        }
+      }]
+    });
+    var self = this;
+    // Modify interaction
+    var mod = this._modify = new ol.interaction.ModifyFeature({
+      source: options.source,
+      sources: options.sources,
+      features: options.features,
+      pixelTolerance: options.pixelTolerance,
+      filter: options.filter,
+      style: options.style || [
+        new ol.style.Style({
+          image: new ol.style.RegularShape({
+            points: 4,
+            radius: 10,
+            radius2: 0,
+            stroke: new ol.style.Stroke({
+              color: [255, 255, 255, .5],
+              width: 3
+            })
+          })
+        }),
+        new ol.style.Style({
+          image: new ol.style.RegularShape({
+            points: 4,
+            radius: 10,
+            radius2: 0,
+            stroke: new ol.style.Stroke({
+              color: [0, 153, 255, 1],
+              width: 1.25
+            })
+          })
+        })
+      ],
+      wrapX: options.wrapX,
+      condition: function (e) {
+        return e.dragging || dragging;
+      },
+      deleteCondition: function () {
+        return del;
       }
-    ]
-  });
-  // Show when modification is active
-  mod.on('select', function(e) {
-    if (e.selected.length) {
-      this.getOverlayElement().classList.remove('disable')
-    } else {
-      this.getOverlayElement().classList.add('disable')
-    }
-  }.bind(this));
-  // Handle dragging, prevent drag outside the control
-  this.on('dragstart', function() {
-    if (drag) {
-      mod.handleDownEvent(this._lastEvent);
-    }
-  }.bind(this));
-  this.on('dragging', function(e) {
-    if (drag) mod.handleDragEvent(e);
-  });
-  this.on('dragend', function(e) {
-    mod.handleUpEvent(e);
-    drag = false;
-  });
-};
-ol.ext.inherits(ol.interaction.TouchCursorModify, ol.interaction.TouchCursor);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {_ol_Map_} map Map.
- * @api stable
- */
-ol.interaction.TouchCursorModify.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    this.getMap().removeInteraction(this._modify);
+    });
+    // Show when modification is active
+    mod.on('select', function (e) {
+      if (e.selected.length) {
+        this.getOverlayElement().classList.remove('disable');
+      } else {
+        this.getOverlayElement().classList.add('disable');
+      }
+    }.bind(this));
+    // Handle dragging, prevent drag outside the control
+    this.on('dragstart', function () {
+      if (drag) {
+        mod.handleDownEvent(this._lastEvent);
+      }
+    }.bind(this));
+    this.on('dragging', function (e) {
+      if (drag)
+        mod.handleDragEvent(e);
+    });
+    this.on('dragend', function (e) {
+      mod.handleUpEvent(e);
+      drag = false;
+    });
   }
-  if (map) {
-    map.addInteraction(this._modify);
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {_ol_Map_} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this.getMap()) {
+      this.getMap().removeInteraction(this._modify);
+    }
+    if (map) {
+      map.addInteraction(this._modify);
+    }
+    super.setMap(map);
   }
-  ol.interaction.TouchCursor.prototype.setMap.call (this, map);
-};
-/**
- * Activate or deactivate the interaction.
- * @param {boolean} active Active.
- * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
- * @observable
- * @api
- */
-ol.interaction.TouchCursorModify.prototype.setActive = function(b, position) {
-  ol.interaction.TouchCursor.prototype.setActive.call (this, b, position);
-  this._modify.setActive(b);
-};
-/**
- * Get the modify interaction.
- * @retunr {ol.interaction.ModifyFeature} 
- * @observable
- * @api
- */
-ol.interaction.TouchCursorModify.prototype.getInteraction = function() {
-  return this._modify;
-};
+  /**
+   * Activate or deactivate the interaction.
+   * @param {boolean} active Active.
+   * @param {ol.coordinate|null} position position of the cursor (when activating), default viewport center.
+   * @observable
+   * @api
+   */
+  setActive(b, position) {
+    super.setActive(b, position);
+    if (this._modify) this._modify.setActive(b);
+  }
+  /**
+   * Get the modify interaction.
+   * @retunr {ol.interaction.ModifyFeature}
+   * @observable
+   * @api
+   */
+  getInteraction() {
+    return this._modify;
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -27890,89 +27921,92 @@ ol.interaction.TouchCursorModify.prototype.getInteraction = function() {
  *  @param {string} options.className cursor class name
  *  @param {ol.coordinate} options.coordinate position of the cursor
  */
-ol.interaction.TouchCursorSelect = function(options) {
-  options = options || {};
-  ol.interaction.TouchCursor.call(this, {
-    className: 'ol-select '+(options.className || ''),
-    coordinate: options.coordinate
-  });
-  this._selection = null;
-  this._layerFilter = options.layerFilter;
-  this._filter = options.filter;
-  this._style = options.style || ol.style.Style.defaultStyle(true);
-  this.set('hitTolerance', options.hitTolerance || 0);
-  this.on(['change:active', 'dragging'], function() { this.select() });
-};
-ol.ext.inherits(ol.interaction.TouchCursorSelect, ol.interaction.TouchCursor);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {_ol_Map_} map Map.
- * @api stable
- */
-ol.interaction.TouchCursorSelect.prototype.setMap = function(map) {
-  ol.interaction.TouchCursor.prototype.setMap.call (this, map);
-  if (map) {
-    // Select on move end
-    this._listeners.movend = map.on('moveend', function() {
-      this.select()
-    }.bind(this))
+ol.interaction.TouchCursorSelect = class olinteractionTouchCursorSelect extends ol.interaction.TouchCursor {
+  constructor(options) {
+    options = options || {};
+    super({
+      className: 'ol-select ' + (options.className || ''),
+      coordinate: options.coordinate
+    });
+    this._selection = null;
+    this._layerFilter = options.layerFilter;
+    this._filter = options.filter;
+    this._style = options.style || ol.style.Style.defaultStyle(true);
+    this.set('hitTolerance', options.hitTolerance || 0);
+    this.on(['change:active', 'dragging'], function () { this.select(); });
   }
-};
-/** Get current selection
- * @return {ol.Feature|null}
- */
-ol.interaction.TouchCursorSelect.prototype.getSelection = function() {
-  return this._selection ? this._selection.feature : null;
-};
-/** Set position
- * @param {ol.coordinate} coord
- */
-ol.interaction.TouchCursorSelect.prototype.setPosition = function(coord) {
-  ol.interaction.TouchCursor.prototype.setPosition.call (this, coord);
-  this.select();
-};
-/** Select feature 
- * @param {ol.Feature|undefined} f a feature to select or select at the cursor position
- */
-ol.interaction.TouchCursorSelect.prototype.select = function(f) {
-  var current = this._selection;
-  if (this.getActive() && this.getPosition()) {
-    if (!f) {
-      var sel = this.getMap().getFeaturesAtPixel(this.getPixel(), {
-        layerFilter: this._layerFilter,
-        filter: this._filter,
-        hitTolerance: this.get('hitTolerance')
-      });
-      f = sel ? sel[0] : null;
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {_ol_Map_} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    super.setMap(map);
+    if (map) {
+      // Select on move end
+      this._listeners.movend = map.on('moveend', function () {
+        this.select();
+      }.bind(this));
     }
-    if (f) {
-      if (current && f === current.feature) {
-        current = null;
-      } else {
-        this._selection = {
-          feature: f,
-          style: f.getStyle()
+  }
+  /** Get current selection
+   * @return {ol.Feature|null}
+   */
+  getSelection() {
+    return this._selection ? this._selection.feature : null;
+  }
+  /** Set position
+   * @param {ol.coordinate} coord
+   */
+  setPosition(coord) {
+    super.setPosition(coord);
+    this.select();
+  }
+  /** Select feature
+   * @param {ol.Feature|undefined} f a feature to select or select at the cursor position
+   */
+  select(f) {
+    var current = this._selection;
+    if (this.getActive() && this.getPosition()) {
+      if (!f) {
+        var sel = this.getMap().getFeaturesAtPixel(this.getPixel(), {
+          layerFilter: this._layerFilter,
+          filter: this._filter,
+          hitTolerance: this.get('hitTolerance')
+        });
+        f = sel ? sel[0] : null;
+      }
+      if (f) {
+        if (current && f === current.feature) {
+          current = null;
+        } else {
+          this._selection = {
+            feature: f,
+            style: f.getStyle()
+          };
+          f.setStyle(this._style);
+          this.dispatchEvent({ type: 'select', selected: [f], deselected: current ? [current.feature] : [] });
         }
-        f.setStyle(this._style);
-        this.dispatchEvent({ type:'select', selected: [f], deselected: current ? [current.feature] : [] });
+      } else {
+        this._selection = null;
+        this.dispatchEvent({ type: 'select', selected: [], deselected: current ? [current.feature] : [] });
       }
     } else {
       this._selection = null;
-      this.dispatchEvent({ type:'select', selected: [], deselected: current ? [current.feature] : [] });
+      this.dispatchEvent({ type: 'select', selected: [], deselected: current ? [current.feature] : [] });
     }
-  } else {
-    this._selection = null;
-    this.dispatchEvent({ type:'select', selected: [], deselected: current ? [current.feature] : [] });
+    // Restore current style
+    if (current) {
+      current.feature.setStyle(current.style);
+    }
+    // 
+    if (this._selection)
+      this.getOverlayElement().classList.remove('disable');
+    else
+      this.getOverlayElement().classList.add('disable');
   }
-  // Restore current style
-  if (current) {
-    current.feature.setStyle(current.style);
-  }
-  // 
-  if (this._selection) this.getOverlayElement().classList.remove('disable');
-  else this.getOverlayElement().classList.add('disable');
-};
+}
 
 /** Interaction rotate
  * @constructor
@@ -33628,268 +33662,272 @@ ol.render3D.prototype.drawGhost3D_ = function(ctx, build) {
  *  @param {ol.style.Style|Array<ol.style.Style>} options.style Drawing style
  *  @param {ol.style.Style|Array<ol.style.Style>} options.sketchStyle Sketch style
  */
-ol.layer.SketchOverlay = function(options) {
-  options = options || {};
-  var style = options.style || ol.style.Style.defaultStyle(true);
-  var sketchStyle = options.sketchStyle;
-  if (!sketchStyle) {
-    sketchStyle = ol.style.Style.defaultStyle();
-    sketchStyle = [
-      new ol.style.Style({
-        image: new ol.style.RegularShape ({
-          points: 4,
-          radius: 10,
-          radius2: 0,
-          stroke: new ol.style.Stroke({
-            color: [255,255,255, .5],
-            width: 3
+ol.layer.SketchOverlay = class ollayerSketchOverlay extends ol.layer.Vector {
+  constructor(options) {
+    options = options || {}
+    var style = options.style || ol.style.Style.defaultStyle(true)
+    var sketchStyle = options.sketchStyle
+    if (!sketchStyle) {
+      sketchStyle = ol.style.Style.defaultStyle()
+      sketchStyle = [
+        new ol.style.Style({
+          image: new ol.style.RegularShape({
+            points: 4,
+            radius: 10,
+            radius2: 0,
+            stroke: new ol.style.Stroke({
+              color: [255, 255, 255, .5],
+              width: 3
+            })
           })
+        }),
+        sketchStyle[0].clone()
+      ]
+      sketchStyle[1].setImage(new ol.style.RegularShape({
+        points: 4,
+        radius: 10,
+        radius2: 0,
+        stroke: new ol.style.Stroke({
+          color: [0, 153, 255, 1],
+          width: 1.25
         })
+      }))
+    }
+    super({
+      name: 'sketch',
+      source: new ol.source.Vector({ useSpatialIndex: false }),
+      style: function (f) {
+        return (f.get('sketch') ? sketchStyle : style)
+      },
+      updateWhileAnimating: true,
+      updateWhileInteracting: true
+    })
+    this._geom = []
+    // Sketch features
+    this.getSource().addFeatures([
+      new ol.Feature({
+        sketch: true,
+        geometry: new ol.geom.Point([])
       }),
-      sketchStyle[0].clone()
-    ];
-    sketchStyle[1].setImage(new ol.style.RegularShape ({
-      points: 4,
-      radius: 10,
-      radius2: 0,
-      stroke: new ol.style.Stroke({
-        color: [0, 153, 255, 1],
-        width: 1.25
+      new ol.Feature({
+        sketch: true,
+        geometry: new ol.geom.LineString([])
+      }),
+      new ol.Feature(),
+      new ol.Feature(new ol.geom.Point([]))
+    ])
+    this.setGeometryType(options.type)
+  }
+  /** Set geometry type
+   * @param {string} type Geometry type
+   * @return {string} the current type
+   */
+  setGeometryType(type) {
+    var t = /^Point$|^LineString$|^Polygon$|^Circle$/.test(type) ? type : 'LineString'
+    if (t !== this._type) {
+      this.abortDrawing()
+      this._type = t
+    }
+    return this._type
+  }
+  /** Get geometry type
+   * @return {string} Geometry type
+   */
+  getGeometryType() {
+    return this._type
+  }
+  /** Add a new Point to the sketch
+   * @param {ol.coordinate} coord
+   * @return {boolean} true if point has been added, false if same coord
+   */
+  addPoint(coord) {
+    if (this._lastCoord !== this._position) {
+      if (!this._geom.length) {
+        this.startDrawing()
+      }
+      this._geom.push(coord)
+      this._lastCoord = coord
+      this._position = coord
+      this.drawSketch()
+      if (this.getGeometryType() === 'Point') {
+        this.finishDrawing()
+      }
+      if (this.getGeometryType() === 'Circle' && this._geom.length >= 2) {
+        this.finishDrawing()
+      }
+      return true
+    }
+    return false
+  }
+  /** Remove the last Point from the sketch
+   */
+  removeLastPoint() {
+    this._geom.pop()
+    this._lastCoord = this._geom[this._geom.length - 1]
+    this.drawSketch()
+  }
+  /** Strat a new drawing
+   * @param {*} options
+   *  @param {string} type Geometry type, default the current type
+   *  @param {Array<ol.coordinate>} coordinates a list of coordinates to extend
+   *  @param {ol.Feature} feature a feature to extend (LineString or Polygon only)
+   *  @param {boolean} atstart extent coordinates or feature at start, default false (extend at end)
+   */
+  startDrawing(options) {
+    options = options || {}
+    this._geom = []
+    if (options.type)
+      this.setGeometryType(options.type)
+    this.drawSketch()
+    if (!this._drawing) {
+      this.dispatchEvent({
+        type: 'drawstart',
+        feature: this.getFeature()
       })
-    }));
-  }
-  this._geom = [];
-  ol.layer.Vector.call (this, {
-    name: 'sketch',
-    source: new ol.source.Vector({ useSpatialIndex: false }),
-    style: function(f) {
-      return (f.get('sketch') ? sketchStyle : style);
-    },
-    updateWhileAnimating: true,
-    updateWhileInteracting: true
-  });
-  // Sketch features
-  this.getSource().addFeatures([
-    new ol.Feature({
-      sketch: true,
-      geometry: new ol.geom.Point([])
-    }),
-    new ol.Feature({
-      sketch: true,
-      geometry: new ol.geom.LineString([])
-    }),
-    new ol.Feature(),
-    new ol.Feature(new ol.geom.Point([]))
-  ]);
-  this.setGeometryType(options.type);
-};
-ol.ext.inherits (ol.layer.SketchOverlay, ol.layer.Vector);
-/** Set geometry type
- * @param {string} type Geometry type
- * @return {string} the current type
- */
-ol.layer.SketchOverlay.prototype.setGeometryType = function(type) {
-  var t = /^Point$|^LineString$|^Polygon$|^Circle$/.test(type) ? type : 'LineString';
-  if (t !== this._type) {
-    this.abortDrawing();
-    this._type = t;
-  }
-  return this._type;
-};
-/** Get geometry type
- * @return {string} Geometry type
- */
-ol.layer.SketchOverlay.prototype.getGeometryType = function() {
-  return this._type;
-};
-/** Add a new Point to the sketch
- * @param {ol.coordinate} coord
- * @return {boolean} true if point has been added, false if same coord
- */
-ol.layer.SketchOverlay.prototype.addPoint = function(coord) {
-  if (this._lastCoord !== this._position) {
-    if (!this._geom.length) {
-      this.startDrawing();
     }
-    this._geom.push(coord);
-    this._lastCoord = coord; 
-    this._position = coord; 
-    this.drawSketch();
-    if (this.getGeometryType() === 'Point') {
-      this.finishDrawing();
-    }
-    if (this.getGeometryType() === 'Circle' && this._geom.length>=2) {
-      this.finishDrawing();
-    }
-    return true;
+    this._drawing = true
   }
-  return false;
-};
-/** Remove the last Point from the sketch
- */
-ol.layer.SketchOverlay.prototype.removeLastPoint = function() {
-  this._geom.pop();
-  this._lastCoord = this._geom[this._geom.length-1];
-  this.drawSketch();
-};
-/** Strat a new drawing
- * @param {*} options
- *  @param {string} type Geometry type, default the current type
- *  @param {Array<ol.coordinate>} coordinates a list of coordinates to extend
- *  @param {ol.Feature} feature a feature to extend (LineString or Polygon only)
- *  @param {boolean} atstart extent coordinates or feature at start, default false (extend at end)
- */
-ol.layer.SketchOverlay.prototype.startDrawing = function(options) {
-  options = options || {};
-  this._geom = [];
-  if (options.type) this.setGeometryType(options.type);
-  this.drawSketch();
-  if (!this._drawing) {
-    this.dispatchEvent({
-      type: 'drawstart',
-      feature: this.getFeature()
-    });
-  }
-  this._drawing = true;
-};
-/** Finish drawing
- * @return {ol.Feature} the drawed feature
- */
-ol.layer.SketchOverlay.prototype.finishDrawing = function(valid) {
-  var f = this.getSource().getFeatures()[2].clone();
-  var isvalid = !!f;
-  switch (this.getGeometryType()) {
-    case 'Circle': 
-    case 'LineString': {
-      isvalid = this._geom.length > 1;
-      break;
-    }
-    case 'Polygon': {
-      isvalid = this._geom.length > 2;
-      break;
-    }
-  }
-  if (valid && !isvalid) return false;
-  this._geom = [];
-  this._lastCoord = null;
-  this.drawSketch();
-  if (this._drawing) {
-    this.dispatchEvent({
-      type: 'drawend',
-      valid: isvalid,
-      feature: f
-    });
-  }
-  this._drawing = false
-  return f;
-};
-/** Abort drawing
- */
-ol.layer.SketchOverlay.prototype.abortDrawing = function() {
-  if (this._drawing) {
-    this.dispatchEvent({
-      type: 'drawabort',
-      feature: this.getFeature()
-    });
-  }
-  this._drawing = false;
-  this._geom = [];
-  this._lastCoord = null;
-  this.drawSketch();
-};
-/** Set current position
- * @param {ol.coordinate} coord
- */
-ol.layer.SketchOverlay.prototype.setPosition = function(coord) {
-  this._position = coord;
-  this.drawLink();
-};
-/** Get current position
- * @return {ol.coordinate} 
- */
-ol.layer.SketchOverlay.prototype.getPosition = function() {
-  return this._position;
-};
-/** Draw/refresh link
- */
-ol.layer.SketchOverlay.prototype.drawLink = function() {
-  var features = this.getSource().getFeatures();
-  if (this._position) {
-    if (this._lastCoord && this._lastCoord === this._position) {
-      features[0].getGeometry().setCoordinates([]);
-    } else {
-      features[0].getGeometry().setCoordinates(this._position);
-    }
-    if (this._geom.length) {
-      if (this.getGeometryType()==='Circle') {
-        features[1].setGeometry(new ol.geom.Circle(this._geom[0], ol.coordinate.dist2d(this._geom[0], this._position)));
-      } else if (this.getGeometryType()==='Polygon') {
-        features[1].setGeometry(new ol.geom.LineString([ this._lastCoord, this._position, this._geom[0] ]));
-      } else {
-        features[1].setGeometry(new ol.geom.LineString([ this._lastCoord, this._position ]));
-      }
-    } else {
-      features[1].setGeometry(new ol.geom.LineString([]));
-    }
-  } else {
-    features[0].getGeometry().setCoordinates([]);
-    features[1].setGeometry(new ol.geom.LineString([]));
-  }
-};
-/** Get current feature
- */
-ol.layer.SketchOverlay.prototype.getFeature = function() {
-  return this.getSource().getFeatures()[2];
-};
-/** Draw/refresh sketch
- */
-ol.layer.SketchOverlay.prototype.drawSketch = function() {
-  this.drawLink();
-  var features = this.getSource().getFeatures();
-  if (!this._geom.length) {
-    features[2].setGeometry(null);
-    features[3].setGeometry(new ol.geom.Point([]));
-  } else {
-    if (!this._lastCoord) this._lastCoord = this._geom[this._geom.length-1];
-    features[3].getGeometry().setCoordinates(this._lastCoord);
-    switch (this._type) {
-      case 'Point': {
-        features[2].setGeometry(new ol.geom.Point(this._lastCoord));
-        break;
-      }
-      case 'Circle': {
-        if (!features[2].getGeometry()) {
-          features[2].setGeometry(new ol.geom.Circle(this._geom[0], ol.coordinate.dist2d(this._geom[0], this._geom[this._geom.length-1])));
-        } else {
-          features[2].getGeometry().setRadius(ol.coordinate.dist2d(this._geom[0], this._geom[this._geom.length-1]));
-        }
-        break;
-      }
+  /** Finish drawing
+   * @return {ol.Feature} the drawed feature
+   */
+  finishDrawing(valid) {
+    var f = this.getSource().getFeatures()[2].clone()
+    var isvalid = !!f
+    switch (this.getGeometryType()) {
+      case 'Circle':
       case 'LineString': {
-        if (!features[2].getGeometry()) {
-          features[2].setGeometry(new ol.geom.LineString(this._geom));
-        } else {
-          features[2].getGeometry().setCoordinates(this._geom);
-        }
-        break;
+        isvalid = this._geom.length > 1
+        break
       }
       case 'Polygon': {
-        this._geom.push(this._geom[0]);
-        if (!features[2].getGeometry()) {
-          features[2].setGeometry(new ol.geom.Polygon([this._geom]));
-        } else {
-          features[2].getGeometry().setCoordinates([this._geom]);
-        }
-        this._geom.pop();
-        break;
+        isvalid = this._geom.length > 2
+        break
       }
-      default: {
-        console.error('[ol/layer/SketchOverlay~drawSketch] geometry type not supported ('+this._type+')');
-        break;
+    }
+    if (valid && !isvalid)
+      return false
+    this._geom = []
+    this._lastCoord = null
+    this.drawSketch()
+    if (this._drawing) {
+      this.dispatchEvent({
+        type: 'drawend',
+        valid: isvalid,
+        feature: f
+      })
+    }
+    this._drawing = false
+    return f
+  }
+  /** Abort drawing
+   */
+  abortDrawing() {
+    if (this._drawing) {
+      this.dispatchEvent({
+        type: 'drawabort',
+        feature: this.getFeature()
+      })
+    }
+    this._drawing = false
+    this._geom = []
+    this._lastCoord = null
+    this.drawSketch()
+  }
+  /** Set current position
+   * @param {ol.coordinate} coord
+   */
+  setPosition(coord) {
+    this._position = coord
+    this.drawLink()
+  }
+  /** Get current position
+   * @return {ol.coordinate}
+   */
+  getPosition() {
+    return this._position
+  }
+  /** Draw/refresh link
+   */
+  drawLink() {
+    var features = this.getSource().getFeatures()
+    if (this._position) {
+      if (this._lastCoord && this._lastCoord === this._position) {
+        features[0].getGeometry().setCoordinates([])
+      } else {
+        features[0].getGeometry().setCoordinates(this._position)
+      }
+      if (this._geom.length) {
+        if (this.getGeometryType() === 'Circle') {
+          features[1].setGeometry(new ol.geom.Circle(this._geom[0], ol.coordinate.dist2d(this._geom[0], this._position)))
+        } else if (this.getGeometryType() === 'Polygon') {
+          features[1].setGeometry(new ol.geom.LineString([this._lastCoord, this._position, this._geom[0]]))
+        } else {
+          features[1].setGeometry(new ol.geom.LineString([this._lastCoord, this._position]))
+        }
+      } else {
+        features[1].setGeometry(new ol.geom.LineString([]))
+      }
+    } else {
+      features[0].getGeometry().setCoordinates([])
+      features[1].setGeometry(new ol.geom.LineString([]))
+    }
+  }
+  /** Get current feature
+   */
+  getFeature() {
+    return this.getSource().getFeatures()[2]
+  }
+  /** Draw/refresh sketch
+   */
+  drawSketch() {
+    this.drawLink()
+    var features = this.getSource().getFeatures()
+    if (!this._geom.length) {
+      features[2].setGeometry(null)
+      features[3].setGeometry(new ol.geom.Point([]))
+    } else {
+      if (!this._lastCoord)
+        this._lastCoord = this._geom[this._geom.length - 1]
+      features[3].getGeometry().setCoordinates(this._lastCoord)
+      switch (this._type) {
+        case 'Point': {
+          features[2].setGeometry(new ol.geom.Point(this._lastCoord))
+          break
+        }
+        case 'Circle': {
+          if (!features[2].getGeometry()) {
+            features[2].setGeometry(new ol.geom.Circle(this._geom[0], ol.coordinate.dist2d(this._geom[0], this._geom[this._geom.length - 1])))
+          } else {
+            features[2].getGeometry().setRadius(ol.coordinate.dist2d(this._geom[0], this._geom[this._geom.length - 1]))
+          }
+          break
+        }
+        case 'LineString': {
+          if (!features[2].getGeometry()) {
+            features[2].setGeometry(new ol.geom.LineString(this._geom))
+          } else {
+            features[2].getGeometry().setCoordinates(this._geom)
+          }
+          break
+        }
+        case 'Polygon': {
+          this._geom.push(this._geom[0])
+          if (!features[2].getGeometry()) {
+            features[2].setGeometry(new ol.geom.Polygon([this._geom]))
+          } else {
+            features[2].getGeometry().setCoordinates([this._geom])
+          }
+          this._geom.pop()
+          break
+        }
+        default: {
+          console.error('[ol/layer/SketchOverlay~drawSketch] geometry type not supported (' + this._type + ')')
+          break
+        }
       }
     }
   }
-};
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -34963,34 +35001,35 @@ popup.setposition(position, true);
 * @param {} options Extend Overlay options 
 * @api stable
 */
-ol.Overlay.Fixed = function (options) {
-  ol.Overlay.call(this, options);
-};
-ol.ext.inherits(ol.Overlay.Fixed, ol.Overlay);
-/** Prevent modifying position and use a force argument to force positionning.
- * @param {ol.coordinate} position
- * @param {boolean} force true to change the position, default false
- */
-ol.Overlay.Fixed.prototype.setPosition = function(position, force) {
-  if (this.getMap() && position) {
-    this._pixel = this.getMap().getPixelFromCoordinate(position);
+ol.Overlay.Fixed = class olOverlayFixed extends ol.Overlay {
+  constructor(options) {
+    super(options);
   }
-  ol.Overlay.prototype.setPosition.call(this, position)
-  if (force) {
-    ol.Overlay.prototype.updatePixelPosition.call(this);
-  } 
-};
-/** Update position according the pixel position
- */
-ol.Overlay.Fixed.prototype.updatePixelPosition = function() {
-  if (this.getMap() && this._pixel && this.getPosition()) {
-    var pixel = this.getMap().getPixelFromCoordinate(this.getPosition())
-    if (Math.round(pixel[0]*1000) !== Math.round(this._pixel[0]*1000) 
-      || Math.round(pixel[0]*1000) !== Math.round(this._pixel[0]*1000) ) {
-      this.setPosition(this.getMap().getCoordinateFromPixel(this._pixel));
+  /** Prevent modifying position and use a force argument to force positionning.
+   * @param {ol.coordinate} position
+   * @param {boolean} force true to change the position, default false
+   */
+  setPosition(position, force) {
+    if (this.getMap() && position) {
+      this._pixel = this.getMap().getPixelFromCoordinate(position);
+    }
+    ol.Overlay.prototype.setPosition.call(this, position);
+    if (force) {
+      ol.Overlay.prototype.updatePixelPosition.call(this);
     }
   }
-};
+  /** Update position according the pixel position
+   */
+  updatePixelPosition() {
+    if (this.getMap() && this._pixel && this.getPosition()) {
+      var pixel = this.getMap().getPixelFromCoordinate(this.getPosition());
+      if (Math.round(pixel[0] * 1000) !== Math.round(this._pixel[0] * 1000)
+        || Math.round(pixel[0] * 1000) !== Math.round(this._pixel[0] * 1000)) {
+        this.setPosition(this.getMap().getCoordinateFromPixel(this._pixel));
+      }
+    }
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)

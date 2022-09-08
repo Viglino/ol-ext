@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_inherits from '../util/ext'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 
 /** Interaction to handle longtouch events
@@ -14,64 +13,65 @@ import ol_interaction_Interaction from 'ol/interaction/Interaction'
  *	@param {integer | undefined} [options.pixelTolerance=0] pixel tolerance before drag, default 0
  *	@param {integer | undefined} [options.delay=1000] The delay for a long touch in ms, default is 1000
  */
-var ol_interaction_LongTouch = function(options) {
-  if (!options) options = {};
+var ol_interaction_LongTouch = class olinteractionLongTouch extends ol_interaction_Interaction {
+  constructor(options) {
+    options = options || {};
 
-  this.delay_ = options.delay || 1000;
-  var ltouch = options.handleLongTouchEvent || function(){};
-  
-  var _timeout = null;
-  var position, event;
-  var tol = options.pixelTolerance || 0;
-  ol_interaction_Interaction.call(this, {
-    handleEvent: function(e) {
-      if (this.getActive()) {
-        switch (e.type) {
-          case 'pointerdown': {
-            if (_timeout) clearTimeout(_timeout);
-            position = e.pixel;
-            event = {
-              type: 'longtouch',
-              originalEvent: e.originalEvent,
-              frameState: e.frameState,
-              pixel: e.pixel,
-              coordinate: e.coordinate,
-              map: this.getMap()
+    var ltouch = options.handleLongTouchEvent || function () { };
+    var _timeout = null;
+    var position, event;
+    var tol = options.pixelTolerance || 0;
+
+    super({
+      handleEvent: function (e) {
+        if (this.getActive()) {
+          switch (e.type) {
+            case 'pointerdown': {
+              if (_timeout) clearTimeout(_timeout);
+              position = e.pixel;
+              event = {
+                type: 'longtouch',
+                originalEvent: e.originalEvent,
+                frameState: e.frameState,
+                pixel: e.pixel,
+                coordinate: e.coordinate,
+                map: this.getMap()
+              };
+              _timeout = setTimeout(function () {
+                ltouch(event);
+                event.map.dispatchEvent(event);
+              }, this.delay_);
+              break;
             }
-            _timeout = setTimeout (function() {
-              ltouch(event);
-              event.map.dispatchEvent(event);
-            }, this.delay_);
-            break;
-          }
-          case 'pointerdrag': {
-            // Check if dragging over tolerance
-            if (_timeout && (Math.abs(e.pixel[0] - position[0]) > tol || Math.abs(e.pixel[1] - position[1]) > tol)) {
-              clearTimeout(_timeout);
-              _timeout = null;
+            case 'pointerdrag': {
+              // Check if dragging over tolerance
+              if (_timeout && (Math.abs(e.pixel[0] - position[0]) > tol || Math.abs(e.pixel[1] - position[1]) > tol)) {
+                clearTimeout(_timeout);
+                _timeout = null;
+              }
+              break;
             }
-            break;
-          }
-          case 'pointerup': {
-            if (_timeout) {
-              clearTimeout(_timeout);
-              _timeout = null;
+            case 'pointerup': {
+              if (_timeout) {
+                clearTimeout(_timeout);
+                _timeout = null;
+              }
+              break;
             }
-            break;
+            default: break;
           }
-          default: break;
+        } else {
+          if (_timeout) {
+            clearTimeout(_timeout);
+            _timeout = null;
+          }
         }
-      } else {
-        if (_timeout) {
-          clearTimeout(_timeout);
-          _timeout = null;
-        }
+        return true;
       }
-      return true;
-    }
-  });
+    });
 
-};
-ol_ext_inherits(ol_interaction_LongTouch, ol_interaction_Interaction);
+    this.delay_ = options.delay || 1000;
+  }
+}
 
 export default ol_interaction_LongTouch
