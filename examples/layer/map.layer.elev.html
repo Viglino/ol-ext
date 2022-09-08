@@ -15,8 +15,8 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
@@ -278,12 +278,11 @@ var alti = ol.ext.imageLoader.elevationMap(function(z) {
     // rgb
     if (z<=0) return [0,0,0,0];
     z = Math.max(0, z/maxAlti);
-    return ol.source.IDW.prototype.getColor(180*(z+.1))
+    return getColor(180*(z+.1))
   }
 });
 
 elev.getSource().setTileLoadFunction(alti)
-
 
 // Color pixel / elevation
 tints0.forEach(t => t[3] = 255);
@@ -310,6 +309,29 @@ var alti2 = ol.ext.imageLoader.elevationMap(function(z) {
 elev.getSource().setTileLoadFunction(alti2)
 elev.getSource().refresh()
 */
+
+var hue2rgb = function (h) {
+  h = (h + 6) % 6;
+  if (h < 1)
+    return Math.round(h * 255);
+  if (h < 3)
+    return 255;
+  if (h < 4)
+    return Math.round((4 - h) * 255);
+  return 0;
+};
+
+var getColor = function (v) {
+  // Get hue
+  var h = 4 - (0.04 * v);
+  // Convert to RGB
+  return [
+    hue2rgb(h + 2),
+    hue2rgb(h),
+    hue2rgb(h - 2),
+    255
+  ];
+};
 
 </script>
 </body>

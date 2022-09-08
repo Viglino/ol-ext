@@ -15,8 +15,8 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
@@ -153,18 +153,9 @@ elev.once('prerender', function(evt) {
 var popup = new ol.Overlay.Tooltip();
 map.addOverlay(popup)
 map.on('pointermove', function(e) {
-  map.forEachLayerAtPixel(
-    e.pixel, 
-    function(layer, p) {
-      if (layer===elev) {
-        var h = ol.ext.getElevationFromPixel(p);
-        popup.setInfo(h>-5000 ? h.toFixed(2)+' m' : '');
-      }
-    }),{
-      layerFilter: function(l) {
-        return l===elev;
-      }
-    }
+  var pix = elev.getData(e.pixel);
+  var h = ol.ext.getElevationFromPixel(pix);
+  popup.setInfo(h > -5000 ? h.toFixed(2)+' m' : '');
 });
 
 </script>

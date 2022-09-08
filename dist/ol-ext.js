@@ -15862,84 +15862,90 @@ ol.control.SelectPopup = class olcontrolSelectPopup extends ol.control.SelectBas
  *  @param {string} options.position position of the status 'top', 'left', 'bottom' or 'right', default top
  *  @param {boolean} options.visible default true
  */
-ol.control.Status = function(options) {
-  options = options || {};
-  // New element
-  var element = ol.ext.element.create('DIV', {
-    className: (options.className || '') + ' ol-status'
-      + (options.target ? '': ' ol-unselectable ol-control')
-  });
-  // Initialize
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.setVisible(options.visible!==false);
-  if (options.position) this.setPosition(options.position);
-  this.status(options.status || '');
-};
-ol.ext.inherits(ol.control.Status, ol.control.Control);
-/** Set visiblitity 
- * @param {boolean} visible
- */
-ol.control.Status.prototype.setVisible = function(visible) {
-  if (visible) this.element.classList.add ('ol-visible');
-  else this.element.classList.remove('ol-visible');
-};
-/** Show status on the map
- * @param {string|Element} html status text or DOM element
- */
-ol.control.Status.prototype.status = function(html) {
-  var s = html || '';
-  if (s) {
-    ol.ext.element.show(this.element);
-    if (s instanceof Element || typeof(s) === 'string') {
-      ol.ext.element.setHTML(this.element, s)
-    } else {
-      s = '';
-      for (var i in html) {
-        s += '<label>'+i+':</label> '+html[i]+'<br/>';
+ol.control.Status = class olcontrolStatus extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    // New element
+    var element = ol.ext.element.create('DIV', {
+      className: (options.className || '') + ' ol-status'
+        + (options.target ? '' : ' ol-unselectable ol-control')
+    });
+    // Initialize
+    super({
+      element: element,
+      target: options.target
+    });
+    this.setVisible(options.visible !== false);
+    if (options.position)
+      this.setPosition(options.position);
+    this.status(options.status || '');
+  }
+  /** Set visiblitity
+   * @param {boolean} visible
+   */
+  setVisible(visible) {
+    if (visible)
+      this.element.classList.add('ol-visible');
+    else
+      this.element.classList.remove('ol-visible');
+  }
+  /** Show status on the map
+   * @param {string|Element} html status text or DOM element
+   */
+  status(html) {
+    var s = html || '';
+    if (s) {
+      ol.ext.element.show(this.element);
+      if (s instanceof Element || typeof (s) === 'string') {
+        ol.ext.element.setHTML(this.element, s);
+      } else {
+        s = '';
+        for (var i in html) {
+          s += '<label>' + i + ':</label> ' + html[i] + '<br/>';
+        }
       }
+      ol.ext.element.setHTML(this.element, s);
+    } else {
+      ol.ext.element.hide(this.element);
     }
-    ol.ext.element.setHTML(this.element, s);
-  } else {
+  }
+  /** Set status position
+   * @param {string} position position of the status 'top', 'left', 'bottom' or 'right', default top
+   */
+  setPosition(position) {
+    this.element.classList.remove('ol-left');
+    this.element.classList.remove('ol-right');
+    this.element.classList.remove('ol-bottom');
+    this.element.classList.remove('ol-center');
+    if (/^left$|^right$|^bottom$|^center$/.test(position)) {
+      this.element.classList.add('ol-' + position);
+    }
+  }
+  /** Show the status
+   * @param {boolean} show show or hide the control, default true
+   */
+  show(show) {
+    if (show === false)
+      ol.ext.element.hide(this.element);
+    else
+      ol.ext.element.show(this.element);
+  }
+  /** Hide the status
+   */
+  hide() {
     ol.ext.element.hide(this.element);
   }
-};
-/** Set status position
- * @param {string} position position of the status 'top', 'left', 'bottom' or 'right', default top
- */
-ol.control.Status.prototype.setPosition = function(position) {
-  this.element.classList.remove('ol-left');
-  this.element.classList.remove('ol-right');
-  this.element.classList.remove('ol-bottom');
-  this.element.classList.remove('ol-center');
-  if (/^left$|^right$|^bottom$|^center$/.test(position)) {
-    this.element.classList.add('ol-'+position);
+  /** Toggle the status
+   */
+  toggle() {
+    ol.ext.element.toggle(this.element);
   }
-};
-/** Show the status
- * @param {boolean} show show or hide the control, default true
- */
-ol.control.Status.prototype.show = function(show) {
-  if (show===false) ol.ext.element.hide(this.element);
-  else ol.ext.element.show(this.element);
-};
-/** Hide the status
- */
-ol.control.Status.prototype.hide = function() {
-  ol.ext.element.hide(this.element);
-};
-/** Toggle the status
- */
-ol.control.Status.prototype.toggle = function() {
-  ol.ext.element.toggle(this.element);
-};
-/** Is status visible
- */
-ol.control.Status.prototype.isShown = function() {
-  return this.element.style.display==='none';
-};
+  /** Is status visible
+   */
+  isShown() {
+    return this.element.style.display === 'none';
+  }
+}
 
 // Add flyTo
 /** A control with scroll-driven navigation to create narrative maps
@@ -17465,183 +17471,188 @@ ol.control.Timeline = class olcontrolTimeline extends ol.control.Control {
  *	@param {number} [options.videoBitsPerSecond=5000000] bitrate for the video
  *	@param {DOMElement|string} [options.videoTarget] video element or the container to add the video when finished or 'DIALOG' to show it in a dialog, default none
  */
-ol.control.VideoRecorder = function(options) {
-  if (!options) options = {};
-  var element = ol.ext.element.create('DIV', {
-    className: (options.className || 'ol-videorec') + ' ol-unselectable ol-control'
-  });
-  // buttons
-  ol.ext.element.create('BUTTON', {
-    type: 'button',
-    className: 'ol-start',
-    title: 'start',
-    click: function() { 
-      this.start();
-    }.bind(this),
-    parent: element
-  });
-  ol.ext.element.create('BUTTON', {
-    type: 'button',
-    className: 'ol-stop',
-    title: 'stop',
-    click: function() { 
-      this.stop();
-    }.bind(this),
-    parent: element
-  });
-  ol.ext.element.create('BUTTON', {
-    type: 'button',
-    className: 'ol-pause',
-    title: 'pause',
-    click: function() { 
-      this.pause();
-    }.bind(this),
-    parent: element
-  });
-  ol.ext.element.create('BUTTON', {
-    type: 'button',
-    className: 'ol-resume',
-    title: 'resume',
-    click: function() {
-      this.resume();
-    }.bind(this),
-    parent: element
-  });
-  // Start
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.set('framerate', 30);
-  this.set('videoBitsPerSecond', 5000000);
-  if (options.videoTarget === 'DIALOG') {
-    this._dialog = new ol.control.Dialog({ 
-      className: 'ol-fullscreen-dialog', 
-      target: document.body, 
-      closeBox: true 
-    });
-    this._videoTarget = this._dialog.getContentElement();
-  } else {
-    this._videoTarget = options.videoTarget;
-  }
-  // Print control
-  this._printCtrl = new ol.control.Print({
-    target: ol.ext.element.create('DIV')
-  });
-}
-ol.ext.inherits(ol.control.VideoRecorder, ol.control.Control);
-/**
- * Remove the control from its current map and attach it to the new map.
- * Subclasses may set up event handlers to get notified about changes to
- * the map here.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.control.VideoRecorder.prototype.setMap = function (map) {
-  if (this.getMap()) {
-    this.getMap().removeControl(this._printCtrl);
-    if (this._dialog) this.getMap().removeControl(this._dialog);
-  }
-  ol.control.Control.prototype.setMap.call(this, map);
-  if (this.getMap()) {
-    this.getMap().addControl(this._printCtrl);
-    if (this._dialog) this.getMap().addControl(this._dialog);
-  }
-};
-/** Start recording */
-ol.control.VideoRecorder.prototype.start = function () {
-  var print = this._printCtrl;
-  var stop = false;
-  function capture(canvas) {
-    if (stop) return;
-    print.fastPrint({
-      canvas: canvas
-    }, capture);
-  }
-  print.fastPrint({}, function(canvas) {
-    var videoStream;
-    try {
-      videoStream = canvas.captureStream(this.get('framerate') || 30);
-    } catch(e) {
-      this.dispatchEvent({
-        type: 'error',
-        error: e
-      });
-      // console.warn(e);
-      return;
+ol.control.VideoRecorder = class olcontrolVideoRecorder extends ol.control.Control {
+  constructor(options) {
+    options = options || {}
+    var element = ol.ext.element.create('DIV', {
+      className: (options.className || 'ol-videorec') + ' ol-unselectable ol-control'
+    })
+    super({
+      element: element,
+      target: options.target
+    })
+    // buttons
+    ol.ext.element.create('BUTTON', {
+      type: 'button',
+      className: 'ol-start',
+      title: 'start',
+      click: function () {
+        this.start()
+      }.bind(this),
+      parent: element
+    })
+    ol.ext.element.create('BUTTON', {
+      type: 'button',
+      className: 'ol-stop',
+      title: 'stop',
+      click: function () {
+        this.stop()
+      }.bind(this),
+      parent: element
+    })
+    ol.ext.element.create('BUTTON', {
+      type: 'button',
+      className: 'ol-pause',
+      title: 'pause',
+      click: function () {
+        this.pause()
+      }.bind(this),
+      parent: element
+    })
+    ol.ext.element.create('BUTTON', {
+      type: 'button',
+      className: 'ol-resume',
+      title: 'resume',
+      click: function () {
+        this.resume()
+      }.bind(this),
+      parent: element
+    })
+    // Start
+    this.set('framerate', 30)
+    this.set('videoBitsPerSecond', 5000000)
+    if (options.videoTarget === 'DIALOG') {
+      this._dialog = new ol.control.Dialog({
+        className: 'ol-fullscreen-dialog',
+        target: document.body,
+        closeBox: true
+      })
+      this._videoTarget = this._dialog.getContentElement()
+    } else {
+      this._videoTarget = options.videoTarget
     }
-    this._mediaRecorder = new MediaRecorder(videoStream, {
-      videoBitsPerSecond : this.get('videoBitsPerSecond') || 5000000
-    });
-    var chunks = [];
-    this._mediaRecorder.ondataavailable = function(e) {
-      chunks.push(e.data);
-    };
-    this._mediaRecorder.onstop = function() {
-      stop = true;
-      var blob = new Blob(chunks, { 'type' : 'video/mp4' }); // other types are available such as 'video/webm' for instance, see the doc for more info
-      chunks = [];
-      if (this._videoTarget instanceof Element) {
-        var video;
-        if (this._videoTarget.tagName === 'VIDEO') {
-          video = this._videoTarget;
-        } else {
-          video = this._videoTarget.querySelector('video');
-          if (!video) {
-            video = ol.ext.element.create('VIDEO', {
-              controls: '',
-              parent: this._videoTarget
-            });
-          }
-        }
-        if (this._dialog) this._dialog.show();
-        video.src = URL.createObjectURL(blob);
-        this.dispatchEvent({ type: 'stop', videoURL: video.src });
-      } else {
-        this.dispatchEvent({ type: 'stop', videoURL: URL.createObjectURL(blob) });
+    // Print control
+    this._printCtrl = new ol.control.Print({
+      target: ol.ext.element.create('DIV')
+    })
+  }
+  /**
+   * Remove the control from its current map and attach it to the new map.
+   * Subclasses may set up event handlers to get notified about changes to
+   * the map here.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this.getMap()) {
+      this.getMap().removeControl(this._printCtrl)
+      if (this._dialog)
+        this.getMap().removeControl(this._dialog)
+    }
+    ol.control.Control.prototype.setMap.call(this, map)
+    if (this.getMap()) {
+      this.getMap().addControl(this._printCtrl)
+      if (this._dialog)
+        this.getMap().addControl(this._dialog)
+    }
+  }
+  /** Start recording */
+  start() {
+    var print = this._printCtrl
+    var stop = false
+    function capture(canvas) {
+      if (stop)
+        return
+      print.fastPrint({
+        canvas: canvas
+      }, capture)
+    }
+    print.fastPrint({}, function (canvas) {
+      var videoStream
+      try {
+        videoStream = canvas.captureStream(this.get('framerate') || 30)
+      } catch (e) {
+        this.dispatchEvent({
+          type: 'error',
+          error: e
+        })
+        // console.warn(e);
+        return
       }
-    }.bind(this);
-    this._mediaRecorder.onpause = function() {
-      stop = true;
-      this.dispatchEvent({ type: 'pause' });
-    }.bind(this);
-    this._mediaRecorder.onresume = function() {
-      stop = false;
-      capture(canvas);
-      this.dispatchEvent({ type: 'resume' });
-    }.bind(this);
-    this._mediaRecorder.onerror = function(e) {
-      this.dispatchEvent({ type: 'error', error: e });
-    }.bind(this);
-    stop = false;
-    capture(canvas);
-    this._mediaRecorder.start();
-    this.dispatchEvent({ type: 'start', canvas: canvas });
-    this.element.setAttribute('data-state', 'rec');
-  }.bind(this))
-};
-/** Stop recording */
-ol.control.VideoRecorder.prototype.stop = function () {
-  if (this._mediaRecorder) {
-    this._mediaRecorder.stop();
-    this._mediaRecorder = null;
-    this.element.setAttribute('data-state', 'inactive');
+      this._mediaRecorder = new MediaRecorder(videoStream, {
+        videoBitsPerSecond: this.get('videoBitsPerSecond') || 5000000
+      })
+      var chunks = []
+      this._mediaRecorder.ondataavailable = function (e) {
+        chunks.push(e.data)
+      }
+      this._mediaRecorder.onstop = function () {
+        stop = true
+        var blob = new Blob(chunks, { 'type': 'video/mp4' }) // other types are available such as 'video/webm' for instance, see the doc for more info
+        chunks = []
+        if (this._videoTarget instanceof Element) {
+          var video
+          if (this._videoTarget.tagName === 'VIDEO') {
+            video = this._videoTarget
+          } else {
+            video = this._videoTarget.querySelector('video')
+            if (!video) {
+              video = ol.ext.element.create('VIDEO', {
+                controls: '',
+                parent: this._videoTarget
+              })
+            }
+          }
+          if (this._dialog)
+            this._dialog.show()
+          video.src = URL.createObjectURL(blob)
+          this.dispatchEvent({ type: 'stop', videoURL: video.src })
+        } else {
+          this.dispatchEvent({ type: 'stop', videoURL: URL.createObjectURL(blob) })
+        }
+      }.bind(this)
+      this._mediaRecorder.onpause = function () {
+        stop = true
+        this.dispatchEvent({ type: 'pause' })
+      }.bind(this)
+      this._mediaRecorder.onresume = function () {
+        stop = false
+        capture(canvas)
+        this.dispatchEvent({ type: 'resume' })
+      }.bind(this)
+      this._mediaRecorder.onerror = function (e) {
+        this.dispatchEvent({ type: 'error', error: e })
+      }.bind(this)
+      stop = false
+      capture(canvas)
+      this._mediaRecorder.start()
+      this.dispatchEvent({ type: 'start', canvas: canvas })
+      this.element.setAttribute('data-state', 'rec')
+    }.bind(this))
   }
-};
-/** Pause recording */
-ol.control.VideoRecorder.prototype.pause = function () {
-  if (this._mediaRecorder) {
-    this._mediaRecorder.pause();
-    this.element.setAttribute('data-state', 'pause');
+  /** Stop recording */
+  stop() {
+    if (this._mediaRecorder) {
+      this._mediaRecorder.stop()
+      this._mediaRecorder = null
+      this.element.setAttribute('data-state', 'inactive')
+    }
   }
-};
-/** Resume recording after pause */
-ol.control.VideoRecorder.prototype.resume = function () {
-  if (this._mediaRecorder) {
-    this._mediaRecorder.resume();
-    this.element.setAttribute('data-state', 'rec');
+  /** Pause recording */
+  pause() {
+    if (this._mediaRecorder) {
+      this._mediaRecorder.pause()
+      this.element.setAttribute('data-state', 'pause')
+    }
   }
-};
+  /** Resume recording after pause */
+  resume() {
+    if (this._mediaRecorder) {
+      this._mediaRecorder.resume()
+      this.element.setAttribute('data-state', 'rec')
+    }
+  }
+}
 
 /* 
   Using WMS Layer with EPSG:4326 projection.
@@ -22007,119 +22018,122 @@ ol.interaction.CurrentMap.prototype._currentMap = undefined;
  *	@param {number} [options.fuss] bob fussing factor
  *	@param {number} [options.amplitude=1] blob deformation amplitude factor
  */
-ol.interaction.Blob = function(options) {
-  ol.interaction.Clip.call(this, options);
-};
-ol.ext.inherits(ol.interaction.Blob, ol.interaction.Clip);
-/** Animate the blob
- * @private
- */
-ol.interaction.Blob.prototype.precompose_ = function(e) {
-  if (!this.getActive()) return;
-  var ctx = e.context;
-  var ratio = e.frameState.pixelRatio;
-  ctx.save();
-  if (!this.pos) {
-    ctx.beginPath();
-    ctx.moveTo (0,0);
-    ctx.clip();
-    return;
+ol.interaction.Blob = class olinteractionBlob extends ol.interaction.Clip {
+  constructor(options) {
+    super(options);
   }
-  var pt = [ this.pos[0], this.pos[1] ];
-  var tr = e.inversePixelTransform;
-  if (tr) {
-    pt = [
-      (pt[0]*tr[0] - pt[1]*tr[1] + tr[4]),
-      (-pt[0]*tr[2] + pt[1]*tr[3] + tr[5])
-    ];
-  } else {
-    pt[0] *= ratio;
-    pt[1] *= ratio;
-  }
-  // Time laps
-  if (!this.frame) this.frame = e.frameState.time;
-  var dt = e.frameState.time - this.frame;
-  this.frame = e.frameState.time;
-  // Blob position
-  pt = this._getCenter(pt, dt);
-  // Blob geom
-  var blob = this._calculate(dt);
-  // Draw
-  var p = blob[0];
-  ctx.beginPath();
-  ctx.moveTo (pt[0] + p[0], pt[1] + p[1]);
-  for (var i=1; p=blob[i]; i++) {
-    ctx.lineTo (pt[0] + p[0], pt[1] + p[1]);
-  }
-  ctx.clip();
-  e.frameState.animate = true;
-};
-/** Get blob center with kinetic
- * @param {number} dt0 time laps
- * @private
- */
-ol.interaction.Blob.prototype._getCenter = function(pt, dt0) {
-  if (!this._center) {
-    this._center = pt;
-    this._velocity = [0, 0];
-  } else {
-    var k = this.get('stiffness') || 20;     // stiffness
-    var d = -1* (this.get('damping') || 7);  // damping
-    var mass = Math.max(this.get('mass') || 1, .1);
-    var dt = Math.min(dt0/1000, 1/30);
-    var fSpring = [
-      k * (pt[0] - this._center[0]),
-      k * (pt[1] - this._center[1])
-    ];
-    var fDamping = [
-      d * this._velocity[0],
-      d * this._velocity[1]
-    ];
-    var accel = [
-      (fSpring[0] + fDamping[0]) / mass,
-      (fSpring[1] + fDamping[1]) / mass
-    ];
-    this._velocity[0] += accel[0] * dt;
-    this._velocity[1] += accel[1] * dt;
-    this._center[0] += this._velocity[0] * dt;
-    this._center[1] += this._velocity[1] * dt;
-  }
-  return this._center;
-};
-/** Calculate the blob geom
- * @param {number} dt time laps
- * @returns {Array<ol.coordinate>}
- * @private
- */
-ol.interaction.Blob.prototype._calculate = function(dt) {
-  var i, nb = this.get('points') || 10;
-  if (!this._waves || this._waves.length !== nb) {
-    this._waves = [];
-    for (i = 0; i < nb; i++) {
-      this._waves.push({
-        angle: Math.random()*Math.PI, 
-        noise: Math.random()
-      });
+  /** Animate the blob
+   * @private
+   */
+  precompose_(e) {
+    if (!this.getActive())
+      return;
+    var ctx = e.context;
+    var ratio = e.frameState.pixelRatio;
+    ctx.save();
+    if (!this.pos) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.clip();
+      return;
     }
+    var pt = [this.pos[0], this.pos[1]];
+    var tr = e.inversePixelTransform;
+    if (tr) {
+      pt = [
+        (pt[0] * tr[0] - pt[1] * tr[1] + tr[4]),
+        (-pt[0] * tr[2] + pt[1] * tr[3] + tr[5])
+      ];
+    } else {
+      pt[0] *= ratio;
+      pt[1] *= ratio;
+    }
+    // Time laps
+    if (!this.frame)
+      this.frame = e.frameState.time;
+    var dt = e.frameState.time - this.frame;
+    this.frame = e.frameState.time;
+    // Blob position
+    pt = this._getCenter(pt, dt);
+    // Blob geom
+    var blob = this._calculate(dt);
+    // Draw
+    var p = blob[0];
+    ctx.beginPath();
+    ctx.moveTo(pt[0] + p[0], pt[1] + p[1]);
+    for (var i = 1; p = blob[i]; i++) {
+      ctx.lineTo(pt[0] + p[0], pt[1] + p[1]);
+    }
+    ctx.clip();
+    e.frameState.animate = true;
   }
-  var blob = [];
-  var speed = (this._velocity[0]*this._velocity[0] + this._velocity[1]*this._velocity[1]) / 500;
-  this._rotation = (this._rotation||0) + (this._velocity[0]>0 ? 1 : -1) * Math.min(.015, speed/70000*dt);
-  for (i = 0; i < nb; i++) {
-    var angle = i * 2 * Math.PI / nb + this._rotation;
-    var radius = this.radius + Math.min(this.radius, speed);
-    var delta = Math.cos(this._waves[i].angle) * radius/4 * this._waves[i].noise * (this.get('amplitude') || 1);
-    blob.push([
-      (this.radius + delta) * Math.cos(angle),
-      (this.radius + delta) * Math.sin(angle)
-    ]);
-    // Add noise
-    this._waves[i].angle += (Math.PI + Math.random() + speed/200)/350 * dt * (this.get('fuss') || 1);
-    this._waves[i].noise = Math.min(1, Math.max(0, this._waves[i].noise + (Math.random() - .5) *.1 *(this.get('fuss') || 1)));
+  /** Get blob center with kinetic
+   * @param {number} dt0 time laps
+   * @private
+   */
+  _getCenter(pt, dt0) {
+    if (!this._center) {
+      this._center = pt;
+      this._velocity = [0, 0];
+    } else {
+      var k = this.get('stiffness') || 20; // stiffness
+      var d = -1 * (this.get('damping') || 7); // damping
+      var mass = Math.max(this.get('mass') || 1, .1);
+      var dt = Math.min(dt0 / 1000, 1 / 30);
+      var fSpring = [
+        k * (pt[0] - this._center[0]),
+        k * (pt[1] - this._center[1])
+      ];
+      var fDamping = [
+        d * this._velocity[0],
+        d * this._velocity[1]
+      ];
+      var accel = [
+        (fSpring[0] + fDamping[0]) / mass,
+        (fSpring[1] + fDamping[1]) / mass
+      ];
+      this._velocity[0] += accel[0] * dt;
+      this._velocity[1] += accel[1] * dt;
+      this._center[0] += this._velocity[0] * dt;
+      this._center[1] += this._velocity[1] * dt;
+    }
+    return this._center;
   }
-  blob.push(blob[0]);
-  return ol.coordinate.cspline(blob, { tension: this.get('tension') });
-};
+  /** Calculate the blob geom
+   * @param {number} dt time laps
+   * @returns {Array<ol.coordinate>}
+   * @private
+   */
+  _calculate(dt) {
+    var i, nb = this.get('points') || 10;
+    if (!this._waves || this._waves.length !== nb) {
+      this._waves = [];
+      for (i = 0; i < nb; i++) {
+        this._waves.push({
+          angle: Math.random() * Math.PI,
+          noise: Math.random()
+        });
+      }
+    }
+    var blob = [];
+    var speed = (this._velocity[0] * this._velocity[0] + this._velocity[1] * this._velocity[1]) / 500;
+    this._rotation = (this._rotation || 0) + (this._velocity[0] > 0 ? 1 : -1) * Math.min(.015, speed / 70000 * dt);
+    for (i = 0; i < nb; i++) {
+      var angle = i * 2 * Math.PI / nb + this._rotation;
+      var radius = this.radius + Math.min(this.radius, speed);
+      var delta = Math.cos(this._waves[i].angle) * radius / 4 * this._waves[i].noise * (this.get('amplitude') || 1);
+      blob.push([
+        (this.radius + delta) * Math.cos(angle),
+        (this.radius + delta) * Math.sin(angle)
+      ]);
+      // Add noise
+      this._waves[i].angle += (Math.PI + Math.random() + speed / 200) / 350 * dt * (this.get('fuss') || 1);
+      this._waves[i].noise = Math.min(1, Math.max(0, this._waves[i].noise + (Math.random() - .5) * .1 * (this.get('fuss') || 1)));
+    }
+    blob.push(blob[0]);
+    return ol.coordinate.cspline(blob, { tension: this.get('tension') });
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -27109,75 +27123,78 @@ ol.Map.prototype.hideTarget = function() {
 /**
  * @constructor
  * @extends {ol.interaction.Pointer}
- *	@param {ol.interaction.TinkerBell.options}  options flashlight param
-*		- color {ol.color} color of the sparkles
-*/
-ol.interaction.TinkerBell = function(options) {
-  options = options || {};
-  ol.interaction.Pointer.call(this, {
-    handleDownEvent: this.onMove,
-    handleMoveEvent: this.onMove
-  });
-  this.set('color', options.color ? ol.color.asString(options.color) : "#fff");
-  this.sparkle = [0,0];
-  this.sparkles = [];
-  this.lastSparkle = this.time = new Date();
-  var self = this;
-  this.out_ = function() { self.isout_=true; };
-  this.isout_ = true;
-};
-ol.ext.inherits(ol.interaction.TinkerBell, ol.interaction.Pointer);
-/** Set the map > start postcompose
-*/
-ol.interaction.TinkerBell.prototype.setMap = function(map) {
-  if (this._listener) ol.Observable.unByKey(this._listener);
-  this._listener = null;
-  if (this.getMap()) {
-    map.getViewport().removeEventListener('mouseout', this.out_, false);
-    this.getMap().render();
+ * @param {ol.interaction.TinkerBell.options}  options flashlight param
+ *  @param {ol.color} [options.color] color of the sparkles
+ */
+ol.interaction.TinkerBell = class olinteractionTinkerBell extends ol.interaction.Pointer {
+  constructor(options) {
+    options = options || {}
+    super({
+      handleDownEvent: function(e) { this.onMove(e) },
+      handleMoveEvent: function(e) { this.onMove(e) }
+    })
+    this.set('color', options.color ? ol.color.asString(options.color) : "#fff")
+    this.sparkle = [0, 0]
+    this.sparkles = []
+    this.lastSparkle = this.time = new Date()
+    var self = this
+    this.out_ = function () { self.isout_ = true }
+    this.isout_ = true
   }
-  ol.interaction.Pointer.prototype.setMap.call(this, map);
-  if (map) {
-    this._listener = map.on('postcompose', this.postcompose_.bind(this));
-    map.getViewport().addEventListener('mouseout', this.out_, false);
-  }
-};
-ol.interaction.TinkerBell.prototype.onMove = function(e) {
-  this.sparkle = e.pixel;
-  this.isout_ = false;
-  this.getMap().render();
-};
-/** Postcompose function
-*/
-ol.interaction.TinkerBell.prototype.postcompose_ = function(e) {
-  var delta = 15;
-  var ctx = e.context || ol.ext.getMapCanvas(this.getMap()).getContext('2d');
-  var dt = e.frameState.time - this.time;
-  this.time = e.frameState.time;
-  if (e.frameState.time-this.lastSparkle > 30 && !this.isout_) {
-    this.lastSparkle = e.frameState.time;
-    this.sparkles.push({ p:[this.sparkle[0]+Math.random()*delta-delta/2, this.sparkle[1]+Math.random()*delta], o:1 });
-  }
-  ctx.save();
-    ctx.scale(e.frameState.pixelRatio,e.frameState.pixelRatio);
-    ctx.fillStyle = this.get("color");
-    for (var i=this.sparkles.length-1, p; p=this.sparkles[i]; i--) {
-      if (p.o < 0.2) {
-        this.sparkles.splice(0,i+1);
-        break;
-      }
-      ctx.globalAlpha = p.o;
-      ctx.beginPath();
-      ctx.arc (p.p[0], p.p[1], 2.2, 0, 2 * Math.PI, false);
-      ctx.fill();
-      p.o *= 0.98;
-      p.p[0] += (Math.random()-0.5);
-      p.p[1] += dt*(1+Math.random())/30;
+  /** Set the map > start postcompose
+  */
+  setMap(map) {
+    if (this._listener)
+      ol.Observable.unByKey(this._listener)
+    this._listener = null
+    if (this.getMap()) {
+      map.getViewport().removeEventListener('mouseout', this.out_, false)
+      this.getMap().render()
     }
-  ctx.restore();
-  // continue postcompose animation
-  if (this.sparkles.length) this.getMap().render(); 
-};
+    ol.interaction.Pointer.prototype.setMap.call(this, map)
+    if (map) {
+      this._listener = map.on('postcompose', this.postcompose_.bind(this))
+      map.getViewport().addEventListener('mouseout', this.out_, false)
+    }
+  }
+  onMove(e) {
+    this.sparkle = e.pixel
+    this.isout_ = false
+    this.getMap().render()
+  }
+  /** Postcompose function
+  */
+  postcompose_(e) {
+    var delta = 15
+    var ctx = e.context || ol.ext.getMapCanvas(this.getMap()).getContext('2d')
+    var dt = e.frameState.time - this.time
+    this.time = e.frameState.time
+    if (e.frameState.time - this.lastSparkle > 30 && !this.isout_) {
+      this.lastSparkle = e.frameState.time
+      this.sparkles.push({ p: [this.sparkle[0] + Math.random() * delta - delta / 2, this.sparkle[1] + Math.random() * delta], o: 1 })
+    }
+    ctx.save()
+    ctx.scale(e.frameState.pixelRatio, e.frameState.pixelRatio)
+    ctx.fillStyle = this.get("color")
+    for (var i = this.sparkles.length - 1, p; p = this.sparkles[i]; i--) {
+      if (p.o < 0.2) {
+        this.sparkles.splice(0, i + 1)
+        break
+      }
+      ctx.globalAlpha = p.o
+      ctx.beginPath()
+      ctx.arc(p.p[0], p.p[1], 2.2, 0, 2 * Math.PI, false)
+      ctx.fill()
+      p.o *= 0.98
+      p.p[0] += (Math.random() - 0.5)
+      p.p[1] += dt * (1 + Math.random()) / 30
+    }
+    ctx.restore()
+    // continue postcompose animation
+    if (this.sparkles.length)
+      this.getMap().render()
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
