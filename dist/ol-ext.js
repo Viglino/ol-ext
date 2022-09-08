@@ -9407,334 +9407,352 @@ ol.control.GridReference = class olcontrolGridReference extends ol.control.Canva
  *	@param {boolean} options.hover select image on hover, default false
  *	@param {string|boolean} options.linkColor link color or false if no link, default false
  */
-ol.control.Imageline = function(options) {
-  var element = ol.ext.element.create('DIV', {
-    className: (options.className || '') + ' ol-imageline'
-      + (options.target ? '': ' ol-unselectable ol-control')
-      + (options.collapsed && options.collapsible ? 'ol-collapsed' : '')
-  });
-  if (!options.target && options.collapsible) {
-    ol.ext.element.create('BUTTON', {
-      type: 'button',
-      click: function() {
-        this.toggle();
-      }.bind(this),
-      parent: element
+ol.control.Imageline = class olcontrolImageline extends ol.control.Control {
+  constructor(options) {
+    var element = ol.ext.element.create('DIV', {
+      className: (options.className || '') + ' ol-imageline'
+        + (options.target ? '' : ' ol-unselectable ol-control')
+        + (options.collapsed && options.collapsible ? 'ol-collapsed' : '')
     });
-  }
-  // Source 
-  if (options.source) this._sources = options.source.forEach ? options.source : [options.source];
-  if (options.layers) {
-    this.setLayers(options.layers);
-  }
-  // Initialize
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  // Scroll imageline
-  this._setScrolling();
-  this._scrolldiv.addEventListener("scroll", function() {
-    if (this.getMap()) this.getMap().render();
-  }.bind(this));
-  // Parameters
-  if (typeof(options.getImage)==='function') this._getImage =  options.getImage;
-  if (typeof(options.getTitle)==='function') this._getTitle =  options.getTitle;
-  this.set('maxFeatures', options.maxFeatures || 100);
-  this.set('linkColor', options.linkColor || false);
-  this.set('hover', options.hover || false);
-  this.set('useExtent', options.useExtent || false);
-  this.refresh();
-};
-ol.ext.inherits(ol.control.Imageline, ol.control.Control);
-/**
- * Remove the control from its current map and attach it to the new map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.control.Imageline.prototype.setMap = function (map) {
-	if (this._listener) {
-    this._listener.forEach(function(l) {
-      ol.Observable.unByKey(l);
+    // Initialize
+    super({
+      element: element,
+      target: options.target
+    });
+    if (!options.target && options.collapsible) {
+      ol.ext.element.create('BUTTON', {
+        type: 'button',
+        click: function () {
+          this.toggle();
+        }.bind(this),
+        parent: element
+      });
+    }
+    // Source 
+    if (options.source)
+      this._sources = options.source.forEach ? options.source : [options.source];
+    if (options.layers) {
+      this.setLayers(options.layers);
+    }
+    // Scroll imageline
+    this._setScrolling();
+    this._scrolldiv.addEventListener("scroll", function () {
+      if (this.getMap())
+        this.getMap().render();
     }.bind(this));
-  }
-	this._listener = null;
-	ol.control.Control.prototype.setMap.call(this, map);
-  if (map) {	
-    this._listener = [
-      map.on('postcompose', this._drawLink.bind(this)),
-      map.on('moveend', function() { 
-        if (this.get('useExtent')) this.refresh();
-      }.bind(this))
-    ]
+    // Parameters
+    if (typeof (options.getImage) === 'function')
+      this._getImage = options.getImage;
+    if (typeof (options.getTitle) === 'function')
+      this._getTitle = options.getTitle;
+    this.set('maxFeatures', options.maxFeatures || 100);
+    this.set('linkColor', options.linkColor || false);
+    this.set('hover', options.hover || false);
+    this.set('useExtent', options.useExtent || false);
     this.refresh();
-	}
-};
-/** Set layers to use in the control
- * @param {Array<ol.Layer>} layers
- */
-ol.control.Imageline.prototype.setLayers = function (layers) {
-  this._sources = this._getSources(layers);
-};
-/** Get source from a set of layers
- * @param {Array<ol.Layer>} layers
- * @returns {Array<ol.source.Vector>}
- * @private
- */
-ol.control.Imageline.prototype._getSources = function (layers) {
-  var sources = [];
-  layers.forEach(function(l) {
-    if (l.getVisible()) {
-      if (l.getSource() && l.getSource().getFeatures) sources.push(l.getSource());
-      else if (l.getLayers) this._getSources(l.getLayers());
+  }
+  /**
+   * Remove the control from its current map and attach it to the new map.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this._listener) {
+      this._listener.forEach(function (l) {
+        ol.Observable.unByKey(l);
+      }.bind(this));
     }
-  }.bind(this));
-  return sources;
-};
-/** Set useExtent param and refresh the line
- * @param {boolean} b
- */
-ol.control.Imageline.prototype.useExtent = function(b) {
-  this.set('useExtent', b);
-  this.refresh();
-};
-/** Is the line collapsed
- * @return {boolean}
- */
-ol.control.Imageline.prototype.isCollapsed = function() {
-  return this.element.classList.contains('ol-collapsed');
-};
-/** Collapse the line
- * @param {boolean} b
- */
-ol.control.Imageline.prototype.collapse = function(b) {
-  if (b) this.element.classList.add('ol-collapsed');
-  else this.element.classList.remove('ol-collapsed');
-  if (this.getMap()) {
-    setTimeout ( function() {
-      this.getMap().render();
-    }.bind(this), this.isCollapsed() ? 0 : 250);
+    this._listener = null;
+    super.setMap(map);
+    if (map) {
+      this._listener = [
+        map.on('postcompose', this._drawLink.bind(this)),
+        map.on('moveend', function () {
+          if (this.get('useExtent'))
+            this.refresh();
+        }.bind(this))
+      ];
+      this.refresh();
+    }
   }
-  this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
-};
-/** Collapse the line
- */
-ol.control.Imageline.prototype.toggle = function() {
-  this.element.classList.toggle('ol-collapsed');
-  if (this.getMap()) {
-    setTimeout ( function() {
-      this.getMap().render();
-    }.bind(this), this.isCollapsed() ? 0 : 250);
+  /** Set layers to use in the control
+   * @param {Array<ol.Layer>} layers
+   */
+  setLayers(layers) {
+    this._sources = this._getSources(layers);
   }
-  this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
-};
-/** Default function to get an image of a feature
- * @param {ol.Feature} f
- * @private
- */
-ol.control.Imageline.prototype._getImage = function(f) {
-  return f.get('img');
-};
-/** Default function to get an image title
- * @param {ol.Feature} f
- * @private
- */
-ol.control.Imageline.prototype._getTitle = function(/* f */) {
-  return '';
-};
-/**
- * Get features
- * @return {Array<ol.Feature>}
- */
-ol.control.Imageline.prototype.getFeatures = function() {
-  var map = this.getMap();
-  if (!map) return [];
-  var features = [];
-  var sources = this._sources || this._getSources(map.getLayers());
-  sources.forEach(function(s) {
-    if (features.length < this.get('maxFeatures')) {
-      if (!this.get('useExtent') || !map) {
-        features.push(s.getFeatures());
-      } else {
-        var extent = map.getView().calculateExtent(map.getSize());
-        features.push(s.getFeaturesInExtent(extent));
+  /** Get source from a set of layers
+   * @param {Array<ol.Layer>} layers
+   * @returns {Array<ol.source.Vector>}
+   * @private
+   */
+  _getSources(layers) {
+    var sources = [];
+    layers.forEach(function (l) {
+      if (l.getVisible()) {
+        if (l.getSource() && l.getSource().getFeatures)
+          sources.push(l.getSource());
+        else if (l.getLayers)
+          this._getSources(l.getLayers());
       }
+    }.bind(this));
+    return sources;
+  }
+  /** Set useExtent param and refresh the line
+   * @param {boolean} b
+   */
+  useExtent(b) {
+    this.set('useExtent', b);
+    this.refresh();
+  }
+  /** Is the line collapsed
+   * @return {boolean}
+   */
+  isCollapsed() {
+    return this.element.classList.contains('ol-collapsed');
+  }
+  /** Collapse the line
+   * @param {boolean} b
+   */
+  collapse(b) {
+    if (b)
+      this.element.classList.add('ol-collapsed');
+    else
+      this.element.classList.remove('ol-collapsed');
+    if (this.getMap()) {
+      setTimeout(function () {
+        this.getMap().render();
+      }.bind(this), this.isCollapsed() ? 0 : 250);
     }
-  }.bind(this))
-  return features;
-};
-/** Set element scrolling with a acceleration effect on desktop
- * (on mobile it uses the scroll of the browser)
- * @private
- */
-ol.control.Imageline.prototype._setScrolling = function() {
-  var elt = this._scrolldiv = ol.ext.element.create('DIV', {
-    parent: this.element
-  });
-  ol.ext.element.scrollDiv(elt, {
-    // Prevent selection when moving
-    onmove: function(b) {
-      this._moving = b;
-    }.bind(this)
-  });
-  elt.addEventListener('scroll', this._updateScrollBounds.bind(this));
-  this._updateScrollBounds();
-};
-/** Set element scrolling with a acceleration effect on desktop
- * (on mobile it uses the scroll of the browser)
- * @private
- */
-ol.control.Imageline.prototype._updateScrollBounds = function() {
-  var elt = this._scrolldiv;
-  if (elt.scrollLeft < 5) {
-    this.element.classList.add('ol-scroll0')
-  } else {
-    this.element.classList.remove('ol-scroll0');
+    this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
   }
-  if (elt.scrollWidth - elt.scrollLeft - elt.offsetWidth < 5) {
-    this.element.classList.add('ol-scroll1');
-  } else {
-    this.element.classList.remove('ol-scroll1');
+  /** Collapse the line
+   */
+  toggle() {
+    this.element.classList.toggle('ol-collapsed');
+    if (this.getMap()) {
+      setTimeout(function () {
+        this.getMap().render();
+      }.bind(this), this.isCollapsed() ? 0 : 250);
+    }
+    this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
   }
-};
-/**
- * Refresh the imageline with new data
- */
-ol.control.Imageline.prototype.refresh = function() {
-  this._scrolldiv.innerHTML = '';
-  var allFeatures = this.getFeatures();
-  var current = this._select ? this._select.feature : null;
-  if (this._select) this._select.elt = null;
-  this._iline = [];
-  if (this.getMap()) this.getMap().render();
-  // Add a new image
-  var addImage = function(f) {
-    if (this._getImage(f)) {
-      var img = ol.ext.element.create('DIV', {
-        className: 'ol-image',
-        parent: this._scrolldiv
-      });
-      ol.ext.element.create('IMG', {
-        src: this._getImage(f),
-        parent: img
-      }).addEventListener('load', function(){
-        this.classList.add('ol-loaded');
-      });
-      ol.ext.element.create('SPAN', {
-        html: this._getTitle(f),
-        parent: img
-      });
-      // Current image
-      var sel = { elt: img, feature: f };
-      // On click > dispatch event
-      img.addEventListener('click', function(){
-        if (!this._moving) {
-          this.dispatchEvent({type: 'select', feature: f });
-          this._scrolldiv.scrollLeft = img.offsetLeft 
-            + ol.ext.element.getStyle(img, 'width')/2
-            - ol.ext.element.getStyle(this.element, 'width')/2;
-            if (this._select) this._select.elt.classList.remove('select');
+  /** Default function to get an image of a feature
+   * @param {ol.Feature} f
+   * @private
+   */
+  _getImage(f) {
+    return f.get('img');
+  }
+  /** Default function to get an image title
+   * @param {ol.Feature} f
+   * @private
+   */
+  _getTitle( /* f */) {
+    return '';
+  }
+  /**
+   * Get features
+   * @return {Array<ol.Feature>}
+   */
+  getFeatures() {
+    var map = this.getMap();
+    if (!map)
+      return [];
+    var features = [];
+    var sources = this._sources || this._getSources(map.getLayers());
+    sources.forEach(function (s) {
+      if (features.length < this.get('maxFeatures')) {
+        if (!this.get('useExtent') || !map) {
+          features.push(s.getFeatures());
+        } else {
+          var extent = map.getView().calculateExtent(map.getSize());
+          features.push(s.getFeaturesInExtent(extent));
+        }
+      }
+    }.bind(this));
+    return features;
+  }
+  /** Set element scrolling with a acceleration effect on desktop
+   * (on mobile it uses the scroll of the browser)
+   * @private
+   */
+  _setScrolling() {
+    var elt = this._scrolldiv = ol.ext.element.create('DIV', {
+      parent: this.element
+    });
+    ol.ext.element.scrollDiv(elt, {
+      // Prevent selection when moving
+      onmove: function (b) {
+        this._moving = b;
+      }.bind(this)
+    });
+    elt.addEventListener('scroll', this._updateScrollBounds.bind(this));
+    this._updateScrollBounds();
+  }
+  /** Set element scrolling with a acceleration effect on desktop
+   * (on mobile it uses the scroll of the browser)
+   * @private
+   */
+  _updateScrollBounds() {
+    var elt = this._scrolldiv;
+    if (elt.scrollLeft < 5) {
+      this.element.classList.add('ol-scroll0');
+    } else {
+      this.element.classList.remove('ol-scroll0');
+    }
+    if (elt.scrollWidth - elt.scrollLeft - elt.offsetWidth < 5) {
+      this.element.classList.add('ol-scroll1');
+    } else {
+      this.element.classList.remove('ol-scroll1');
+    }
+  }
+  /**
+   * Refresh the imageline with new data
+   */
+  refresh() {
+    this._scrolldiv.innerHTML = '';
+    var allFeatures = this.getFeatures();
+    var current = this._select ? this._select.feature : null;
+    if (this._select)
+      this._select.elt = null;
+    this._iline = [];
+    if (this.getMap())
+      this.getMap().render();
+    // Add a new image
+    var addImage = function (f) {
+      if (this._getImage(f)) {
+        var img = ol.ext.element.create('DIV', {
+          className: 'ol-image',
+          parent: this._scrolldiv
+        });
+        ol.ext.element.create('IMG', {
+          src: this._getImage(f),
+          parent: img
+        }).addEventListener('load', function () {
+          this.classList.add('ol-loaded');
+        });
+        ol.ext.element.create('SPAN', {
+          html: this._getTitle(f),
+          parent: img
+        });
+        // Current image
+        var sel = { elt: img, feature: f };
+        // On click > dispatch event
+        img.addEventListener('click', function () {
+          if (!this._moving) {
+            this.dispatchEvent({ type: 'select', feature: f });
+            this._scrolldiv.scrollLeft = img.offsetLeft
+              + ol.ext.element.getStyle(img, 'width') / 2
+              - ol.ext.element.getStyle(this.element, 'width') / 2;
+            if (this._select)
+              this._select.elt.classList.remove('select');
             this._select = sel;
             this._select.elt.classList.add('select');
           }
-      }.bind(this));
-      // Show link
-      img.addEventListener('mouseover', function(e) {
-        if (this.get('hover')) {
-          if (this._select) this._select.elt.classList.remove('select');
+        }.bind(this));
+        // Show link
+        img.addEventListener('mouseover', function (e) {
+          if (this.get('hover')) {
+            if (this._select)
+              this._select.elt.classList.remove('select');
+            this._select = sel;
+            this._select.elt.classList.add('select');
+            this.getMap().render();
+            e.stopPropagation();
+          }
+        }.bind(this));
+        // Remove link
+        img.addEventListener('mouseout', function (e) {
+          if (this.get('hover')) {
+            if (this._select)
+              this._select.elt.classList.remove('select');
+            this._select = false;
+            this.getMap().render();
+            e.stopPropagation();
+          }
+        }.bind(this));
+        // Prevent image dragging
+        img.ondragstart = function () { return false; };
+        // Add image
+        this._iline.push(sel);
+        if (current === f) {
           this._select = sel;
-          this._select.elt.classList.add('select');
-          this.getMap().render();
-          e.stopPropagation();
+          sel.elt.classList.add('select');
         }
-      }.bind(this));
-      // Remove link
-      img.addEventListener('mouseout', function(e) {
-        if (this.get('hover')) {
-          if (this._select) this._select.elt.classList.remove('select');
-          this._select = false;
-          this.getMap().render();
-          e.stopPropagation();
-        }
-      }.bind(this));
-      // Prevent image dragging
-      img.ondragstart = function(){ return false; };
-      // Add image
-      this._iline.push(sel);
-      if (current===f) {
-        this._select = sel;
-        sel.elt.classList.add('select');
       }
+    }.bind(this);
+    // Add images 
+    var nb = this.get('maxFeatures');
+    allFeatures.forEach(function (features) {
+      for (var i = 0, f; f = features[i]; i++) {
+        if (nb-- < 0)
+          break;
+        addImage(f);
+      }
+    }.bind(this));
+    // Add the selected one
+    if (this._select && this._select.feature && !this._select.elt) {
+      addImage(this._select.feature);
     }
-  }.bind(this);
-  // Add images 
-  var nb = this.get('maxFeatures');
-  allFeatures.forEach(function(features) {
-    for (var i=0, f; f=features[i]; i++) {
-      if (nb-- < 0) break;
-      addImage(f);
-    }
-  }.bind(this));
-  // Add the selected one
-  if (this._select && this._select.feature && !this._select.elt) {
-    addImage(this._select.feature);
+    this._updateScrollBounds();
   }
-  this._updateScrollBounds();
-};
-/** Center image line on a feature
- * @param {ol.feature} feature
- * @param {boolean} scroll scroll the line to center on the image, default true
- * @api
- */
-ol.control.Imageline.prototype.select = function(feature, scroll) {
-  this._select = false;
-  // Find the image
-  this._iline.forEach(function (f) {
-    if (f.feature === feature) {
-      f.elt.classList.add('select');
-      this._select = f;
-      if (scroll!==false) {
-        this._scrolldiv.scrollLeft = f.elt.offsetLeft 
-          + ol.ext.element.getStyle(f.elt, 'width')/2
-          - ol.ext.element.getStyle(this.element, 'width')/2;
-      }
-    } else {
-      f.elt.classList.remove('select');
-    }
-  }.bind(this));
-};
-/** Draw link on the map
- * @private
- */
-ol.control.Imageline.prototype._drawLink = function(e) {
-  if (!this.get('linkColor') | this.isCollapsed()) return;
-  var map = this.getMap();
-  if (map && this._select && this._select.elt) {
-    var ctx = e.context || ol.ext.getMapCanvas(this.getMap()).getContext('2d');
-    var ratio = e.frameState.pixelRatio;
-    var pt = [ 
-      this._select.elt.offsetLeft 
-      - this._scrolldiv.scrollLeft
-      + ol.ext.element.getStyle(this._select.elt, 'width')/2, 
-      parseFloat(ol.ext.element.getStyle(this.element, 'top')) || this.getMap().getSize()[1]
-    ];
-    var geom = this._select.feature.getGeometry().getFirstCoordinate();
-    geom = this.getMap().getPixelFromCoordinate(geom);
-    ctx.save();
-    ctx.fillStyle = this.get('linkColor');
-    ctx.beginPath();
-      if (geom[0]>pt[0]) {
-        ctx.moveTo((pt[0]-5)*ratio, pt[1]*ratio);
-        ctx.lineTo((pt[0]+5)*ratio, (pt[1]+5)*ratio);
+  /** Center image line on a feature
+   * @param {ol.feature} feature
+   * @param {boolean} scroll scroll the line to center on the image, default true
+   * @api
+   */
+  select(feature, scroll) {
+    this._select = false;
+    // Find the image
+    this._iline.forEach(function (f) {
+      if (f.feature === feature) {
+        f.elt.classList.add('select');
+        this._select = f;
+        if (scroll !== false) {
+          this._scrolldiv.scrollLeft = f.elt.offsetLeft
+            + ol.ext.element.getStyle(f.elt, 'width') / 2
+            - ol.ext.element.getStyle(this.element, 'width') / 2;
+        }
       } else {
-        ctx.moveTo((pt[0]-5)*ratio, (pt[1]+5)*ratio);
-        ctx.lineTo((pt[0]+5)*ratio, pt[1]*ratio);
+        f.elt.classList.remove('select');
       }
-      ctx.lineTo(geom[0]*ratio, geom[1]*ratio);
-    ctx.fill();
-    ctx.restore();
+    }.bind(this));
   }
-};
+  /** Draw link on the map
+   * @private
+   */
+  _drawLink(e) {
+    if (!this.get('linkColor') | this.isCollapsed())
+      return;
+    var map = this.getMap();
+    if (map && this._select && this._select.elt) {
+      var ctx = e.context || ol.ext.getMapCanvas(this.getMap()).getContext('2d');
+      var ratio = e.frameState.pixelRatio;
+      var pt = [
+        this._select.elt.offsetLeft
+        - this._scrolldiv.scrollLeft
+        + ol.ext.element.getStyle(this._select.elt, 'width') / 2,
+        parseFloat(ol.ext.element.getStyle(this.element, 'top')) || this.getMap().getSize()[1]
+      ];
+      var geom = this._select.feature.getGeometry().getFirstCoordinate();
+      geom = this.getMap().getPixelFromCoordinate(geom);
+      ctx.save();
+      ctx.fillStyle = this.get('linkColor');
+      ctx.beginPath();
+      if (geom[0] > pt[0]) {
+        ctx.moveTo((pt[0] - 5) * ratio, pt[1] * ratio);
+        ctx.lineTo((pt[0] + 5) * ratio, (pt[1] + 5) * ratio);
+      } else {
+        ctx.moveTo((pt[0] - 5) * ratio, (pt[1] + 5) * ratio);
+        ctx.lineTo((pt[0] + 5) * ratio, pt[1] * ratio);
+      }
+      ctx.lineTo(geom[0] * ratio, geom[1] * ratio);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+}
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
@@ -15936,162 +15954,165 @@ ol.control.Status.prototype.isShown = function() {
  *	@param {Element | string | undefined} [options.target] The target element to place the story. If no html is provided the content of the target will be used.
  *	@param {boolean} [options.minibar=false] add a mini scroll bar
  */
-ol.control.Storymap = function(options) {
-  // Remove or get target content 
-  if (options.target) {
-    if (!options.html) {
-      options.html = options.target.innerHTML;
-    } else if (options.html instanceof Element) {
-      options.html = options.html.innerHTML;
-    }
-    options.target.innerHTML = '';
-  }
-  // New element
-  var element = ol.ext.element.create('DIV', {
-    className: (options.className || '') + ' ol-storymap'
-      + (options.target ? '': ' ol-unselectable ol-control'),
-  });
-  this.content = ol.ext.element.create('DIV', {
-    parent: element
-  });
-  // Initialize
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  // Make a scroll div
-  ol.ext.element.scrollDiv (this.content, {
-    vertical: true,
-    mousewheel: true,
-    minibar: options.minibar
-  });
-  this.setStory(options.html);
-};
-ol.ext.inherits(ol.control.Storymap, ol.control.Control);
-/** Scroll to a chapter
- * @param {string} name Name of the chapter to scroll to
- */
-ol.control.Storymap.prototype.setChapter = function (name) {
-  var chapter = this.content.querySelectorAll('.chapter');
-  for (var i=0, s; s=chapter[i]; i++) {
-    if (s.getAttribute('name')===name) {
-      this.content.scrollTop = s.offsetTop - 30;
-    }
-  }
-};
-/** Scroll to a chapter
- * @param {string} name Name of the chapter to scroll to
- */
-ol.control.Storymap.prototype.setStory = function (html) {
-  if (html instanceof Element) {
-    this.content.innerHTML = '';
-    this.content.appendChild(html);
-  } else {
-    this.content.innerHTML = html;
-  }
-  this.content.querySelectorAll('.chapter').forEach(function(c) {
-    c.addEventListener('click', function(e) {
-      if (!c.classList.contains('ol-select')) {
-        this.content.scrollTop = c.offsetTop - 30;
-        e.preventDefault();
-      } else {
-        if (e.target.tagName==='IMG' && e.target.dataset.title) {
-          this.dispatchEvent({ 
-            coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX,e.layerY]) : null,
-            type: 'clickimage', 
-            img: e.target, 
-            title: e.target.dataset.title, 
-            element: c, 
-            name: c.getAttribute('name'),
-            originalEvent: e
-          });
-        }
+ol.control.Storymap = class olcontrolStorymap extends ol.control.Control {
+  constructor(options) {
+    // Remove or get target content 
+    if (options.target) {
+      if (!options.html) {
+        options.html = options.target.innerHTML
+      } else if (options.html instanceof Element) {
+        options.html = options.html.innerHTML
       }
-    }.bind(this));
-  }.bind(this));
-  // Scroll to the next chapter
-  var sc = this.content.querySelectorAll('.ol-scroll-next');
-  sc.forEach(function(s) {
-    s.addEventListener('click', function(e) { 
-      if (s.parentElement.classList.contains('ol-select')) {
-        var chapter = this.content.querySelectorAll('.chapter');
-        var scrollto = s.offsetTop;
-        for (var i=0, c; c=chapter[i]; i++) {
-          if (c.offsetTop > scrollto) {
-            scrollto = c.offsetTop;
-            break;
+      options.target.innerHTML = ''
+    }
+    // New element
+    var element = ol.ext.element.create('DIV', {
+      className: (options.className || '') + ' ol-storymap'
+        + (options.target ? '' : ' ol-unselectable ol-control'),
+    })
+    // Initialize
+    super({
+      element: element,
+      target: options.target
+    })
+    this.content = ol.ext.element.create('DIV', {
+      parent: element
+    })
+    // Make a scroll div
+    ol.ext.element.scrollDiv(this.content, {
+      vertical: true,
+      mousewheel: true,
+      minibar: options.minibar
+    })
+    this.setStory(options.html)
+  }
+  /** Scroll to a chapter
+   * @param {string} name Name of the chapter to scroll to
+   */
+  setChapter(name) {
+    var chapter = this.content.querySelectorAll('.chapter')
+    for (var i = 0, s; s = chapter[i]; i++) {
+      if (s.getAttribute('name') === name) {
+        this.content.scrollTop = s.offsetTop - 30
+      }
+    }
+  }
+  /** Scroll to a chapter
+   * @param {string} name Name of the chapter to scroll to
+   */
+  setStory(html) {
+    if (html instanceof Element) {
+      this.content.innerHTML = ''
+      this.content.appendChild(html)
+    } else {
+      this.content.innerHTML = html
+    }
+    this.content.querySelectorAll('.chapter').forEach(function (c) {
+      c.addEventListener('click', function (e) {
+        if (!c.classList.contains('ol-select')) {
+          this.content.scrollTop = c.offsetTop - 30
+          e.preventDefault()
+        } else {
+          if (e.target.tagName === 'IMG' && e.target.dataset.title) {
+            this.dispatchEvent({
+              coordinate: this.getMap() ? this.getMap().getCoordinateFromPixel([e.layerX, e.layerY]) : null,
+              type: 'clickimage',
+              img: e.target,
+              title: e.target.dataset.title,
+              element: c,
+              name: c.getAttribute('name'),
+              originalEvent: e
+            })
           }
         }
-        this.content.scrollTop = scrollto - 30;
-        e.stopPropagation();
-        e.preventDefault();
-      }
-    }.bind(this));
-  }.bind(this));
-  // Scroll top 
-  sc = this.content.querySelectorAll('.ol-scroll-top');
-  sc.forEach(function(i) {
-    i.addEventListener('click', function(e){ 
-      this.content.scrollTop = 0;
-      e.stopPropagation();
-      e.preventDefault();
-    }.bind(this));
-  }.bind(this));
-  var getEvent = function(currentDiv) {
-    var lonlat = [ parseFloat(currentDiv.getAttribute('data-lon')),
-      parseFloat(currentDiv.getAttribute('data-lat'))];
-    var coord = ol.proj.fromLonLat(lonlat, this.getMap().getView().getProjection());
-    var zoom = parseFloat(currentDiv.getAttribute('data-zoom'));
-    return { 
-      type: 'scrollto', 
-      element: currentDiv, 
-      name: currentDiv.getAttribute('name'),
-      coordinate: coord,
-      lon: lonlat,
-      zoom: zoom
-    };
-  }.bind(this);
-  // Handle scrolling
-  var currentDiv = this.content.querySelectorAll('.chapter')[0];
-  setTimeout (function (){
-    currentDiv.classList.add('ol-select');
-    this.dispatchEvent(getEvent(currentDiv));
-  }.bind(this));
-  // Trigger change event on scroll
-  this.content.addEventListener('scroll', function() {
-    var current, chapter = this.content.querySelectorAll('.chapter');
-    var height = ol.ext.element.getStyle(this.content, 'height');
-    if (!this.content.scrollTop) {
-      current = chapter[0];
-    } else {
-      for (var i=0, s; s=chapter[i]; i++) {
-        var p = s.offsetTop - this.content.scrollTop;
-        if (p > height/3) break;
-        current = s;
-      }
-    }
-    if (current && current!==currentDiv) {
-      if (currentDiv) currentDiv.classList.remove('ol-select');
-      currentDiv = current;
-      currentDiv.classList.add('ol-select');
-      var e = getEvent(currentDiv);
-      var view = this.getMap().getView();
-      view.cancelAnimations();
-      switch (currentDiv.getAttribute('data-animation')) {
-        case 'flyto': {
-          view.flyTo({
-            center: e.coordinate,
-            zoomAt: Math.min(view.getZoom(), e.zoom)-1,
-            zoom: e.zoom
-          });
-          break;
+      }.bind(this))
+    }.bind(this))
+    // Scroll to the next chapter
+    var sc = this.content.querySelectorAll('.ol-scroll-next')
+    sc.forEach(function (s) {
+      s.addEventListener('click', function (e) {
+        if (s.parentElement.classList.contains('ol-select')) {
+          var chapter = this.content.querySelectorAll('.chapter')
+          var scrollto = s.offsetTop
+          for (var i = 0, c; c = chapter[i]; i++) {
+            if (c.offsetTop > scrollto) {
+              scrollto = c.offsetTop
+              break
+            }
+          }
+          this.content.scrollTop = scrollto - 30
+          e.stopPropagation()
+          e.preventDefault()
         }
-        default: break;
+      }.bind(this))
+    }.bind(this))
+    // Scroll top 
+    sc = this.content.querySelectorAll('.ol-scroll-top')
+    sc.forEach(function (i) {
+      i.addEventListener('click', function (e) {
+        this.content.scrollTop = 0
+        e.stopPropagation()
+        e.preventDefault()
+      }.bind(this))
+    }.bind(this))
+    var getEvent = function (currentDiv) {
+      var lonlat = [parseFloat(currentDiv.getAttribute('data-lon')),
+      parseFloat(currentDiv.getAttribute('data-lat'))]
+      var coord = ol.proj.fromLonLat(lonlat, this.getMap().getView().getProjection())
+      var zoom = parseFloat(currentDiv.getAttribute('data-zoom'))
+      return {
+        type: 'scrollto',
+        element: currentDiv,
+        name: currentDiv.getAttribute('name'),
+        coordinate: coord,
+        lon: lonlat,
+        zoom: zoom
       }
-      this.dispatchEvent(e);
-    }
-  }.bind(this));
-};
+    }.bind(this)
+    // Handle scrolling
+    var currentDiv = this.content.querySelectorAll('.chapter')[0]
+    setTimeout(function () {
+      currentDiv.classList.add('ol-select')
+      this.dispatchEvent(getEvent(currentDiv))
+    }.bind(this))
+    // Trigger change event on scroll
+    this.content.addEventListener('scroll', function () {
+      var current, chapter = this.content.querySelectorAll('.chapter')
+      var height = ol.ext.element.getStyle(this.content, 'height')
+      if (!this.content.scrollTop) {
+        current = chapter[0]
+      } else {
+        for (var i = 0, s; s = chapter[i]; i++) {
+          var p = s.offsetTop - this.content.scrollTop
+          if (p > height / 3)
+            break
+          current = s
+        }
+      }
+      if (current && current !== currentDiv) {
+        if (currentDiv)
+          currentDiv.classList.remove('ol-select')
+        currentDiv = current
+        currentDiv.classList.add('ol-select')
+        var e = getEvent(currentDiv)
+        var view = this.getMap().getView()
+        view.cancelAnimations()
+        switch (currentDiv.getAttribute('data-animation')) {
+          case 'flyto': {
+            view.flyTo({
+              center: e.coordinate,
+              zoomAt: Math.min(view.getZoom(), e.zoom) - 1,
+              zoom: e.zoom
+            })
+            break
+          }
+          default: break
+        }
+        this.dispatchEvent(e)
+      }
+    }.bind(this))
+  }
+}
 
 /*
   Copyright (c) 2015 Jean-Marc VIGLINO,
@@ -16789,617 +16810,640 @@ ol.control.TextButton = class olcontrolTextButton extends ol.control.Button {
  *	@param {String} options.graduation day|month to show month or day graduation, default show only years
  *	@param {String} options.scrollTimeout Time in milliseconds to get a scroll event, default 15ms
  */
-ol.control.Timeline = function(options) {
-  var element = ol.ext.element.create('DIV', {
-    className: (options.className || '') + ' ol-timeline'
-      + (options.target ? '': ' ol-unselectable ol-control')
-      + (options.zoomButton ? ' ol-hasbutton':'')
-  });
-  // Initialize
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  // Scroll div
-  this._scrollDiv = ol.ext.element.create('DIV', {
-    className: 'ol-scroll',
-    parent: this.element
-  });
-  // Add a button bar
-  this._buttons = ol.ext.element.create('DIV', {
-    className: 'ol-buttons',
-    parent: this.element
-  });
-  // Zoom buttons
-  if (options.zoomButton) {
-    // Zoom in
-    this.addButton({
-      className: 'ol-zoom-in',
-      handleClick: function(){
-        var zoom = this.get('zoom');
-        if (zoom>=1) {
-          zoom++;
-        } else {
-          zoom = Math.min(1, zoom + 0.1);
-        }
-        zoom = Math.round(zoom*100)/100;
-        this.refresh(zoom);
-      }.bind(this)
+ol.control.Timeline = class olcontrolTimeline extends ol.control.Control {
+  constructor(options) {
+    var element = ol.ext.element.create('DIV', {
+      className: (options.className || '') + ' ol-timeline'
+        + (options.target ? '' : ' ol-unselectable ol-control')
+        + (options.zoomButton ? ' ol-hasbutton' : '')
     });
-    // Zoom out
-    this.addButton({
-      className: 'ol-zoom-out',
-      handleClick: function(){
-        var zoom = this.get('zoom');
-        if (zoom>1) {
-          zoom--;
-        } else {
-          zoom -= 0.1;
-        }
-        zoom = Math.round(zoom*100)/100;
-        this.refresh(zoom);
-      }.bind(this)
+    // Initialize
+    super({
+      element: element,
+      target: options.target
     });
-  }
-  // Draw center date
-  this._intervalDiv = ol.ext.element.create('DIV', {
-    className: 'ol-center-date',
-    parent: this.element
-  });
-  // Remove selection
-  this.element.addEventListener('mouseover', function(){
-    if (this._select) this._select.elt.classList.remove('ol-select');
-  }.bind(this));
-  // Trigger scroll event
-  var scrollListener = null;
-  this._scrollDiv.addEventListener('scroll', function() {
-    this._setScrollLeft();
-    if (scrollListener) {
-      clearTimeout(scrollListener);
-      scrollListener = null;
-    }
-    scrollListener = setTimeout(function() {
-      this.dispatchEvent({ 
-        type: 'scroll', 
-        date: this.getDate(), 
-        dateStart: this.getDate('start'), 
-        dateEnd: this.getDate('end')
+    // Scroll div
+    this._scrollDiv = ol.ext.element.create('DIV', {
+      className: 'ol-scroll',
+      parent: this.element
+    });
+    // Add a button bar
+    this._buttons = ol.ext.element.create('DIV', {
+      className: 'ol-buttons',
+      parent: this.element
+    });
+    // Zoom buttons
+    if (options.zoomButton) {
+      // Zoom in
+      this.addButton({
+        className: 'ol-zoom-in',
+        handleClick: function () {
+          var zoom = this.get('zoom');
+          if (zoom >= 1) {
+            zoom++;
+          } else {
+            zoom = Math.min(1, zoom + 0.1);
+          }
+          zoom = Math.round(zoom * 100) / 100;
+          this.refresh(zoom);
+        }.bind(this)
       });
-    }.bind(this), options.scrollTimeout || 15);
-  }.bind(this));
-  // Magic to give "live" scroll events on touch devices
-  // this._scrollDiv.addEventListener('gesturechange', function() {});
-  // Scroll timeline
-  ol.ext.element.scrollDiv(this._scrollDiv, {
-    onmove: function(b) {
-      // Prevent selection on moving
-      this._moving = b; 
-    }.bind(this)
-  });
-  this._tline = [];
-  // Parameters
-  this._scrollLeft = 0;
-  this.set('maxWidth', options.maxWidth || 2000);
-  this.set('minDate', options.minDate || Infinity);
-  this.set('maxDate', options.maxDate || -Infinity);
-  this.set('graduation', options.graduation);
-  this.set('minZoom', options.minZoom || .2);
-  this.set('maxZoom', options.maxZoom || 4);
-  this.setInterval(options.interval);
-  if (options.getHTML) this._getHTML =  options.getHTML;
-  if (options.getFeatureDate) this._getFeatureDate =  options.getFeatureDate;
-  if (options.endFeatureDate) this._endFeatureDate =  options.endFeatureDate;
-  // Feature source 
-  this.setFeatures(options.features || options.source, options.zoom);
-};
-ol.ext.inherits(ol.control.Timeline, ol.control.Control);
-/**
- * Set the map instance the control is associated with
- * and add interaction attached to it to this map.
- * @param {_ol_Map_} map The map instance.
- */
-ol.control.Timeline.prototype.setMap = function(map) {
-  ol.control.Control.prototype.setMap.call(this, map);
-  this.refresh(this.get('zoom')||1, true);
-};
-/** Add a button on the timeline
- * @param {*} button
- *  @param {string} button.className
- *  @param {title} button.className
- *  @param {Element|string} button.html Content of the element
- *  @param {function} button.click a function called when the button is clicked
- */
-ol.control.Timeline.prototype.addButton = function(button) {
-  this.element.classList.add('ol-hasbutton');
-  ol.ext.element.create('BUTTON', {
-    className: button.className || undefined,
-    title: button.title,
-    html : button.html,
-    click: button.handleClick,
-    parent: this._buttons
-  })
-};
-/** Set an interval
- * @param {number|string} length the interval length in ms or a farmatted text ie. end with y, 1d, h, mn, s (31 days = '31d'), default none
- */
-ol.control.Timeline.prototype.setInterval = function(length) {
-  if (typeof(length)==='string') {
-    if (/s$/.test(length)) {
-      length = parseFloat(length) * 1000;
-    } else if (/mn$/.test(length)) {
-      length = parseFloat(length) * 1000 * 60;
-    } else if (/h$/.test(length)) {
-      length = parseFloat(length) * 1000 * 3600;
-    } else if (/d$/.test(length)) {
-      length = parseFloat(length) * 1000 * 3600 * 24;
-    } else if (/y$/.test(length)) {
-      length = parseFloat(length) * 1000 * 3600 * 24 * 365;
-    } else {
-      length = 0;
+      // Zoom out
+      this.addButton({
+        className: 'ol-zoom-out',
+        handleClick: function () {
+          var zoom = this.get('zoom');
+          if (zoom > 1) {
+            zoom--;
+          } else {
+            zoom -= 0.1;
+          }
+          zoom = Math.round(zoom * 100) / 100;
+          this.refresh(zoom);
+        }.bind(this)
+      });
     }
-  }
-  this.set('interval', length || 0);
-  if (length) this.element.classList.add('ol-interval');
-  else this.element.classList.remove('ol-interval');
-  this.refresh(this.get('zoom'));
-}
-/** Default html to show in the line
- * @param {ol.Feature} feature
- * @return {DOMElement|string}
- * @private
- */
-ol.control.Timeline.prototype._getHTML = function(feature) {
-  return feature.get('name') || '';
-};
-/** Default function to get the date of a feature, returns the date attribute
- * @param {ol.Feature} feature
- * @return {Data|string}
- * @private
- */
-ol.control.Timeline.prototype._getFeatureDate = function(feature) {
-  return (feature && feature.get) ? feature.get('date') : null;
-};
-/** Default function to get the end date of a feature, return undefined
- * @param {ol.Feature} feature
- * @return {Data|string}
- * @private
- */
-ol.control.Timeline.prototype._endFeatureDate = function(/* feature */) {
-  return undefined;
-};
-/** Is the line collapsed
- * @return {boolean}
- */
-ol.control.Timeline.prototype.isCollapsed = function() {
-  return this.element.classList.contains('ol-collapsed');
-};
-/** Collapse the line
- * @param {boolean} b
- */
-ol.control.Timeline.prototype.collapse = function(b) {
-  if (b) this.element.classList.add('ol-collapsed');
-  else this.element.classList.remove('ol-collapsed');
-  this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
-};
-/** Collapse the line
- */
-ol.control.Timeline.prototype.toggle = function() {
-  this.element.classList.toggle('ol-collapsed');
-  this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
-};
-/** Set the features to display in the timeline
- * @param {Array<ol.Features>|ol.source.Vector} features An array of features or a vector source
- * @param {number} zoom zoom to draw the line default 1
- */
-ol.control.Timeline.prototype.setFeatures = function(features, zoom) {
-  this._features = this._source = null;
-  if (features instanceof ol.source.Vector) this._source = features;
-  else if (features instanceof Array) this._features = features;
-  else this._features = [];
-  this.refresh(zoom);
-};
-/**
- * Get features
- * @return {Array<ol.Feature>}
- */
-ol.control.Timeline.prototype.getFeatures = function() {
-  return this._features || this._source.getFeatures();
-}
-/**
- * Refresh the timeline with new data
- * @param {Number} zoom Zoom factor from 0.25 to 10, default 1
- */
-ol.control.Timeline.prototype.refresh = function(zoom, first) {
-  if (!this.getMap()) return;
-  if (!zoom) zoom = this.get('zoom');
-  zoom = Math.min(this.get('maxZoom'), Math.max(this.get('minZoom'), zoom || 1));
-  this.set('zoom', zoom);
-  this._scrollDiv.innerHTML = '';
-  var features = this.getFeatures();
-  var d, d2;
-  // Get features sorted by date
-  var tline = this._tline = [];
-  features.forEach(function(f) {
-    if (d = this._getFeatureDate(f)) {
-      if (!(d instanceof Date)) {
-        d = new Date(d)
+    // Draw center date
+    this._intervalDiv = ol.ext.element.create('DIV', {
+      className: 'ol-center-date',
+      parent: this.element
+    });
+    // Remove selection
+    this.element.addEventListener('mouseover', function () {
+      if (this._select)
+        this._select.elt.classList.remove('ol-select');
+    }.bind(this));
+    // Trigger scroll event
+    var scrollListener = null;
+    this._scrollDiv.addEventListener('scroll', function () {
+      this._setScrollLeft();
+      if (scrollListener) {
+        clearTimeout(scrollListener);
+        scrollListener = null;
       }
-      if (this._endFeatureDate) {
-        d2 = this._endFeatureDate(f);
-        if (!(d2 instanceof Date)) {
-          d2 = new Date(d2)
-        }
-      }
-      if (!isNaN(d)) {
-        tline.push({
-          date: d,
-          end: isNaN(d2) ? null : d2,
-          feature: f
+      scrollListener = setTimeout(function () {
+        this.dispatchEvent({
+          type: 'scroll',
+          date: this.getDate(),
+          dateStart: this.getDate('start'),
+          dateEnd: this.getDate('end')
         });
+      }.bind(this), options.scrollTimeout || 15);
+    }.bind(this));
+    // Magic to give "live" scroll events on touch devices
+    // this._scrollDiv.addEventListener('gesturechange', function() {});
+    // Scroll timeline
+    ol.ext.element.scrollDiv(this._scrollDiv, {
+      onmove: function (b) {
+        // Prevent selection on moving
+        this._moving = b;
+      }.bind(this)
+    });
+    this._tline = [];
+    // Parameters
+    this._scrollLeft = 0;
+    this.set('maxWidth', options.maxWidth || 2000);
+    this.set('minDate', options.minDate || Infinity);
+    this.set('maxDate', options.maxDate || -Infinity);
+    this.set('graduation', options.graduation);
+    this.set('minZoom', options.minZoom || .2);
+    this.set('maxZoom', options.maxZoom || 4);
+    this.setInterval(options.interval);
+    if (options.getHTML)
+      this._getHTML = options.getHTML;
+    if (options.getFeatureDate)
+      this._getFeatureDate = options.getFeatureDate;
+    if (options.endFeatureDate)
+      this._endFeatureDate = options.endFeatureDate;
+    // Feature source 
+    this.setFeatures(options.features || options.source, options.zoom);
+  }
+  /**
+   * Set the map instance the control is associated with
+   * and add interaction attached to it to this map.
+   * @param {_ol_Map_} map The map instance.
+   */
+  setMap(map) {
+    ol.control.Control.prototype.setMap.call(this, map);
+    this.refresh(this.get('zoom') || 1, true);
+  }
+  /** Add a button on the timeline
+   * @param {*} button
+   *  @param {string} button.className
+   *  @param {title} button.className
+   *  @param {Element|string} button.html Content of the element
+   *  @param {function} button.click a function called when the button is clicked
+   */
+  addButton(button) {
+    this.element.classList.add('ol-hasbutton');
+    ol.ext.element.create('BUTTON', {
+      className: button.className || undefined,
+      title: button.title,
+      html: button.html,
+      click: button.handleClick,
+      parent: this._buttons
+    });
+  }
+  /** Set an interval
+   * @param {number|string} length the interval length in ms or a farmatted text ie. end with y, 1d, h, mn, s (31 days = '31d'), default none
+   */
+  setInterval(length) {
+    if (typeof (length) === 'string') {
+      if (/s$/.test(length)) {
+        length = parseFloat(length) * 1000;
+      } else if (/mn$/.test(length)) {
+        length = parseFloat(length) * 1000 * 60;
+      } else if (/h$/.test(length)) {
+        length = parseFloat(length) * 1000 * 3600;
+      } else if (/d$/.test(length)) {
+        length = parseFloat(length) * 1000 * 3600 * 24;
+      } else if (/y$/.test(length)) {
+        length = parseFloat(length) * 1000 * 3600 * 24 * 365;
+      } else {
+        length = 0;
       }
     }
-  }.bind(this));
-  tline.sort(function(a,b) { 
-    return (a.date < b.date ? -1 : (a.date===b.date ? 0: 1))
-  });
-  // Draw
-  var div = ol.ext.element.create('DIV', {
-    parent: this._scrollDiv
-  });
-  // Calculate width
-  var min = this._minDate = Math.min(this.get('minDate'), tline.length ? tline[0].date : Infinity);
-  var max = this._maxDate = Math.max(this.get('maxDate'), tline.length ? tline[tline.length-1].date : -Infinity);
-  if (!isFinite(min)) this._minDate = min = new Date();
-  if (!isFinite(max)) this._maxDate = max = new Date();
-  var delta = (max-min);
-  var maxWidth = this.get('maxWidth');
-  var scale = this._scale = (delta > maxWidth ? maxWidth/delta : 1) * zoom;
-  // Leave 10px on right
-  min = this._minDate = this._minDate - 10/scale;
-  delta = (max-min) * scale;
-  ol.ext.element.setStyle(div, {
-    width: delta,
-    maxWidth: 'unset'
-  });
-  // Draw time's bar
-  this._drawTime(div, min, max, scale);
-  // Set interval
-  if (this.get('interval')) {
-    ol.ext.element.setStyle (this._intervalDiv, { width: this.get('interval') * scale });
-  } else {
-    ol.ext.element.setStyle (this._intervalDiv, { width: '' });
+    this.set('interval', length || 0);
+    if (length)
+      this.element.classList.add('ol-interval');
+    else
+      this.element.classList.remove('ol-interval');
+    this.refresh(this.get('zoom'));
   }
-  // Draw features
-  var line = [];
-  var lineHeight = ol.ext.element.getStyle(this._scrollDiv, 'lineHeight');
-  // Wrapper
-  var fdiv = ol.ext.element.create('DIV', {
-      className: 'ol-features',
-      parent: div
-  });
-  // Add features on the line
-  tline.forEach(function(f) {
-    var d = f.date;
-    var t = f.elt = ol.ext.element.create('DIV', {
-      className: 'ol-feature',
-      style: {
-        left: Math.round((d-min)*scale),
-      },
-      html: this._getHTML(f.feature),
-      parent: fdiv
-    });
-    // Prevent image dragging
-    var img = t.querySelectorAll('img');
-    for (var i=0; i<img.length; i++) {
-      img[i].ondragstart = function(){ return false; };
-    }
-    // Calculate image width
-    if (f.end) {
-      ol.ext.element.setStyle(t, { 
-        minWidth: (f.end-d) * scale, 
-        width: (f.end-d) * scale, 
-        maxWidth: 'unset'
-      });
-    }
-    var left = ol.ext.element.getStyle(t, 'left');
-    // Select on click
-    t.addEventListener('click', function() {
-      if (!this._moving) {
-        this.dispatchEvent({type: 'select', feature: f.feature });
+  /** Default html to show in the line
+   * @param {ol.Feature} feature
+   * @return {DOMElement|string}
+   * @private
+   */
+  _getHTML(feature) {
+    return feature.get('name') || '';
+  }
+  /** Default function to get the date of a feature, returns the date attribute
+   * @param {ol.Feature} feature
+   * @return {Data|string}
+   * @private
+   */
+  _getFeatureDate(feature) {
+    return (feature && feature.get) ? feature.get('date') : null;
+  }
+  /** Default function to get the end date of a feature, return undefined
+   * @param {ol.Feature} feature
+   * @return {Data|string}
+   * @private
+   */
+  _endFeatureDate( /* feature */) {
+    return undefined;
+  }
+  /** Is the line collapsed
+   * @return {boolean}
+   */
+  isCollapsed() {
+    return this.element.classList.contains('ol-collapsed');
+  }
+  /** Collapse the line
+   * @param {boolean} b
+   */
+  collapse(b) {
+    if (b)
+      this.element.classList.add('ol-collapsed');
+    else
+      this.element.classList.remove('ol-collapsed');
+    this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
+  }
+  /** Collapse the line
+   */
+  toggle() {
+    this.element.classList.toggle('ol-collapsed');
+    this.dispatchEvent({ type: 'collapse', collapsed: this.isCollapsed() });
+  }
+  /** Set the features to display in the timeline
+   * @param {Array<ol.Features>|ol.source.Vector} features An array of features or a vector source
+   * @param {number} zoom zoom to draw the line default 1
+   */
+  setFeatures(features, zoom) {
+    this._features = this._source = null;
+    if (features instanceof ol.source.Vector)
+      this._source = features;
+    else if (features instanceof Array)
+      this._features = features;
+    else
+      this._features = [];
+    this.refresh(zoom);
+  }
+  /**
+   * Get features
+   * @return {Array<ol.Feature>}
+   */
+  getFeatures() {
+    return this._features || this._source.getFeatures();
+  }
+  /**
+   * Refresh the timeline with new data
+   * @param {Number} zoom Zoom factor from 0.25 to 10, default 1
+   */
+  refresh(zoom, first) {
+    if (!this.getMap())
+      return;
+    if (!zoom)
+      zoom = this.get('zoom');
+    zoom = Math.min(this.get('maxZoom'), Math.max(this.get('minZoom'), zoom || 1));
+    this.set('zoom', zoom);
+    this._scrollDiv.innerHTML = '';
+    var features = this.getFeatures();
+    var d, d2;
+    // Get features sorted by date
+    var tline = this._tline = [];
+    features.forEach(function (f) {
+      if (d = this._getFeatureDate(f)) {
+        if (!(d instanceof Date)) {
+          d = new Date(d);
+        }
+        if (this._endFeatureDate) {
+          d2 = this._endFeatureDate(f);
+          if (!(d2 instanceof Date)) {
+            d2 = new Date(d2);
+          }
+        }
+        if (!isNaN(d)) {
+          tline.push({
+            date: d,
+            end: isNaN(d2) ? null : d2,
+            feature: f
+          });
+        }
       }
     }.bind(this));
-    // Find first free Y position
-    var pos, l;
-    for (pos=0; l=line[pos]; pos++) {
-      if (left > l) {
+    tline.sort(function (a, b) {
+      return (a.date < b.date ? -1 : (a.date === b.date ? 0 : 1));
+    });
+    // Draw
+    var div = ol.ext.element.create('DIV', {
+      parent: this._scrollDiv
+    });
+    // Calculate width
+    var min = this._minDate = Math.min(this.get('minDate'), tline.length ? tline[0].date : Infinity);
+    var max = this._maxDate = Math.max(this.get('maxDate'), tline.length ? tline[tline.length - 1].date : -Infinity);
+    if (!isFinite(min))
+      this._minDate = min = new Date();
+    if (!isFinite(max))
+      this._maxDate = max = new Date();
+    var delta = (max - min);
+    var maxWidth = this.get('maxWidth');
+    var scale = this._scale = (delta > maxWidth ? maxWidth / delta : 1) * zoom;
+    // Leave 10px on right
+    min = this._minDate = this._minDate - 10 / scale;
+    delta = (max - min) * scale;
+    ol.ext.element.setStyle(div, {
+      width: delta,
+      maxWidth: 'unset'
+    });
+    // Draw time's bar
+    this._drawTime(div, min, max, scale);
+    // Set interval
+    if (this.get('interval')) {
+      ol.ext.element.setStyle(this._intervalDiv, { width: this.get('interval') * scale });
+    } else {
+      ol.ext.element.setStyle(this._intervalDiv, { width: '' });
+    }
+    // Draw features
+    var line = [];
+    var lineHeight = ol.ext.element.getStyle(this._scrollDiv, 'lineHeight');
+    // Wrapper
+    var fdiv = ol.ext.element.create('DIV', {
+      className: 'ol-features',
+      parent: div
+    });
+    // Add features on the line
+    tline.forEach(function (f) {
+      var d = f.date;
+      var t = f.elt = ol.ext.element.create('DIV', {
+        className: 'ol-feature',
+        style: {
+          left: Math.round((d - min) * scale),
+        },
+        html: this._getHTML(f.feature),
+        parent: fdiv
+      });
+      // Prevent image dragging
+      var img = t.querySelectorAll('img');
+      for (var i = 0; i < img.length; i++) {
+        img[i].ondragstart = function () { return false; };
+      }
+      // Calculate image width
+      if (f.end) {
+        ol.ext.element.setStyle(t, {
+          minWidth: (f.end - d) * scale,
+          width: (f.end - d) * scale,
+          maxWidth: 'unset'
+        });
+      }
+      var left = ol.ext.element.getStyle(t, 'left');
+      // Select on click
+      t.addEventListener('click', function () {
+        if (!this._moving) {
+          this.dispatchEvent({ type: 'select', feature: f.feature });
+        }
+      }.bind(this));
+      // Find first free Y position
+      var pos, l;
+      for (pos = 0; l = line[pos]; pos++) {
+        if (left > l) {
+          break;
+        }
+      }
+      line[pos] = left + ol.ext.element.getStyle(t, 'width');
+      ol.ext.element.setStyle(t, { top: pos * lineHeight });
+    }.bind(this));
+    this._nbline = line.length;
+    if (first)
+      this.setDate(this._minDate, { anim: false, position: 'start' });
+    // Dispatch scroll event
+    this.dispatchEvent({
+      type: 'scroll',
+      date: this.getDate(),
+      dateStart: this.getDate('start'),
+      dateEnd: this.getDate('end')
+    });
+  }
+  /** Get offset given a date
+   * @param {Date} date
+   * @return {number}
+   * @private
+   */
+  _getOffsetFromDate(date) {
+    return (date - this._minDate) * this._scale;
+  }
+  /** Get date given an offset
+   * @param {Date} date
+   * @return {number}
+   * @private
+   */
+  _getDateFromOffset(offset) {
+    return offset / this._scale + this._minDate;
+  }
+  /** Set the current position
+   * @param {number} scrollLeft current position (undefined when scrolling)
+   * @returns {number}
+   * @private
+   */
+  _setScrollLeft(scrollLeft) {
+    this._scrollLeft = scrollLeft;
+    if (scrollLeft !== undefined) {
+      this._scrollDiv.scrollLeft = scrollLeft;
+    }
+  }
+  /** Get the current position
+   * @returns {number}
+   * @private
+   */
+  _getScrollLeft() {
+    // Unset when scrolling
+    if (this._scrollLeft === undefined) {
+      return this._scrollDiv.scrollLeft;
+    } else {
+      // St by user
+      return this._scrollLeft;
+    }
+  }
+  /**
+   * Draw dates on line
+   * @private
+   */
+  _drawTime(div, min, max, scale) {
+    // Times div
+    var tdiv = ol.ext.element.create('DIV', {
+      className: 'ol-times',
+      parent: div
+    });
+    var d, dt, month, dmonth;
+    var dx = ol.ext.element.getStyle(tdiv, 'left');
+    var heigth = ol.ext.element.getStyle(tdiv, 'height');
+    // Year
+    var year = (new Date(this._minDate)).getFullYear();
+    dt = ((new Date(0)).setFullYear(String(year)) - new Date(0).setFullYear(String(year - 1))) * scale;
+    var dyear = Math.round(2 * heigth / dt) + 1;
+    while (true) {
+      d = new Date(0).setFullYear(year);
+      if (d > this._maxDate)
+        break;
+      ol.ext.element.create('DIV', {
+        className: 'ol-time ol-year',
+        style: {
+          left: this._getOffsetFromDate(d) - dx
+        },
+        html: year,
+        parent: tdiv
+      });
+      year += dyear;
+    }
+    // Month
+    if (/day|month/.test(this.get('graduation'))) {
+      dt = ((new Date(0, 0, 1)).setFullYear(String(year)) - new Date(0, 0, 1).setFullYear(String(year - 1))) * scale;
+      dmonth = Math.max(1, Math.round(12 / Math.round(dt / heigth / 2)));
+      if (dmonth < 12) {
+        year = (new Date(this._minDate)).getFullYear();
+        month = dmonth + 1;
+        while (true) {
+          d = new Date(0, 0, 1);
+          d.setFullYear(year);
+          d.setMonth(month - 1);
+          if (d > this._maxDate)
+            break;
+          ol.ext.element.create('DIV', {
+            className: 'ol-time ol-month',
+            style: {
+              left: this._getOffsetFromDate(d) - dx
+            },
+            html: d.toLocaleDateString(undefined, { month: 'short' }),
+            parent: tdiv
+          });
+          month += dmonth;
+          if (month > 12) {
+            year++;
+            month = dmonth + 1;
+          }
+        }
+      }
+    }
+    // Day
+    if (this.get('graduation') === 'day') {
+      dt = (new Date(0, 1, 1) - new Date(0, 0, 1)) * scale;
+      var dday = Math.max(1, Math.round(31 / Math.round(dt / heigth / 2)));
+      if (dday < 31) {
+        year = (new Date(this._minDate)).getFullYear();
+        month = 0;
+        var day = dday;
+        while (true) {
+          d = new Date(0, 0, 1);
+          d.setFullYear(year);
+          d.setMonth(month);
+          d.setDate(day);
+          if (isNaN(d)) {
+            month++;
+            if (month > 12) {
+              month = 1;
+              year++;
+            }
+            day = dday;
+          } else {
+            if (d > this._maxDate)
+              break;
+            if (day > 1) {
+              var offdate = this._getOffsetFromDate(d);
+              if (this._getOffsetFromDate(new Date(year, month + 1, 1)) - offdate > heigth) {
+                ol.ext.element.create('DIV', {
+                  className: 'ol-time ol-day',
+                  style: {
+                    left: offdate - dx
+                  },
+                  html: day,
+                  parent: tdiv
+                });
+              }
+            }
+            year = d.getFullYear();
+            month = d.getMonth();
+            day = d.getDate() + dday;
+            if (day > new Date(year, month + 1, 0).getDate()) {
+              month++;
+              day = dday;
+            }
+          }
+        }
+      }
+    }
+  }
+  /** Center timeline on a date
+   * @param {Date|String|ol.feature} feature a date or a feature with a date
+   * @param {Object} options
+   *  @param {boolean} options.anim animate scroll
+   *  @param {string} options.position start, end or middle, default middle
+   */
+  setDate(feature, options) {
+    var date;
+    options = options || {};
+    // It's a date
+    if (feature instanceof Date) {
+      date = feature;
+    } else {
+      // Get date from Feature
+      if (this.getFeatures().indexOf(feature) >= 0) {
+        date = this._getFeatureDate(feature);
+      }
+      if (date && !(date instanceof Date)) {
+        date = new Date(date);
+      }
+      if (!date || isNaN(date)) {
+        date = new Date(String(feature));
+      }
+    }
+    if (!isNaN(date)) {
+      if (options.anim === false)
+        this._scrollDiv.classList.add('ol-move');
+      var scrollLeft = this._getOffsetFromDate(date);
+      if (options.position === 'start') {
+        scrollLeft += ol.ext.element.outerWidth(this._scrollDiv) / 2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft') / 2;
+      } else if (options.position === 'end') {
+        scrollLeft -= ol.ext.element.outerWidth(this._scrollDiv) / 2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft') / 2;
+      }
+      this._setScrollLeft(scrollLeft);
+      if (options.anim === false)
+        this._scrollDiv.classList.remove('ol-move');
+      if (feature) {
+        for (var i = 0, f; f = this._tline[i]; i++) {
+          if (f.feature === feature) {
+            f.elt.classList.add('ol-select');
+            this._select = f;
+          } else {
+            f.elt.classList.remove('ol-select');
+          }
+        }
+      }
+    }
+  }
+  /** Get round date (sticked to mn, hour day or month)
+   * @param {Date} d
+   * @param {string} stick sticking option to stick date to: 'mn', 'hour', 'day', 'month', default no stick
+   * @return {Date}
+   */
+  roundDate(d, stick) {
+    switch (stick) {
+      case 'mn': {
+        return new Date(this._roundTo(d, 60 * 1000));
+      }
+      case 'hour': {
+        return new Date(this._roundTo(d, 60 * 60 * 1000));
+      }
+      case 'day': {
+        return new Date(this._roundTo(d, 24 * 60 * 60 * 1000));
+      }
+      case 'month': {
+        d = new Date(this._roundTo(d, 24 * 60 * 60 * 1000));
+        if (d.getDate() > 15) {
+          d = new Date(d.setMonth(d.getMonth() + 1));
+        }
+        d = d.setDate(1);
+        return new Date(d);
+      }
+      default: return new Date(d);
+    }
+  }
+  /** Get the date of the center
+   * @param {string} position position to get 'start', 'end' or 'middle', default middle
+   * @param {string} stick sticking option to stick date to: 'mn', 'hour', 'day', 'month', default no stick
+   * @return {Date}
+   */
+  getDate(position, stick) {
+    var pos;
+    if (!stick)
+      stick = position;
+    switch (position) {
+      case 'start': {
+        if (this.get('interval')) {
+          pos = -ol.ext.element.getStyle(this._intervalDiv, 'width') / 2 + ol.ext.element.getStyle(this._scrollDiv, 'marginLeft') / 2;
+        } else {
+          pos = -ol.ext.element.outerWidth(this._scrollDiv) / 2 + ol.ext.element.getStyle(this._scrollDiv, 'marginLeft') / 2;
+        }
+        break;
+      }
+      case 'end': {
+        if (this.get('interval')) {
+          pos = ol.ext.element.getStyle(this._intervalDiv, 'width') / 2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft') / 2;
+        } else {
+          pos = ol.ext.element.outerWidth(this._scrollDiv) / 2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft') / 2;
+        }
+        break;
+      }
+      default: {
+        pos = 0;
         break;
       }
     }
-    line[pos] = left + ol.ext.element.getStyle(t, 'width');
-    ol.ext.element.setStyle(t, { top: pos*lineHeight });
-  }.bind(this));
-  this._nbline = line.length;
-  if (first) this.setDate(this._minDate, { anim: false, position: 'start' });
-  // Dispatch scroll event
-  this.dispatchEvent({ 
-    type: 'scroll', 
-    date: this.getDate(), 
-    dateStart: this.getDate('start'), 
-    dateEnd: this.getDate('end')
-  });
-};
-/** Get offset given a date
- * @param {Date} date
- * @return {number}
- * @private
- */
-ol.control.Timeline.prototype._getOffsetFromDate = function(date) {
-  return (date - this._minDate) * this._scale;
-};
-/** Get date given an offset
- * @param {Date} date
- * @return {number}
- * @private
- */
-ol.control.Timeline.prototype._getDateFromOffset = function(offset) {
-  return offset / this._scale + this._minDate;
-};
-/** Set the current position 
- * @param {number} scrollLeft current position (undefined when scrolling)
- * @returns {number}
- * @private
- */
-ol.control.Timeline.prototype._setScrollLeft = function(scrollLeft) {
-  this._scrollLeft = scrollLeft;
-  if (scrollLeft !== undefined) {
-    this._scrollDiv.scrollLeft = scrollLeft;
+    var d = this._getDateFromOffset(this._getScrollLeft() + pos);
+    d = this.roundDate(d, stick);
+    return new Date(d);
   }
-};
-/** Get the current position 
- * @returns {number}
- * @private
- */
-ol.control.Timeline.prototype._getScrollLeft = function() {
-  // Unset when scrolling
-  if (this._scrollLeft === undefined) {
-    return this._scrollDiv.scrollLeft;
-  } else {
-    // St by user
-    return this._scrollLeft;
+  /** Round number to
+   * @param {number} d
+   * @param {number} r
+   * @return {number}
+   * @private
+   */
+  _roundTo(d, r) {
+    return Math.round(d / r) * r;
   }
-};
-/**
- * Draw dates on line
- * @private
- */
-ol.control.Timeline.prototype._drawTime = function(div, min, max, scale) {
-  // Times div
-  var tdiv = ol.ext.element.create('DIV', {
-    className: 'ol-times',
-    parent: div
-  });
-  var d, dt, month, dmonth;
-  var dx = ol.ext.element.getStyle(tdiv, 'left');
-  var heigth = ol.ext.element.getStyle(tdiv, 'height');
-  // Year
-  var year = (new Date(this._minDate)).getFullYear();
-  dt = ((new Date(0)).setFullYear(String(year)) - new Date(0).setFullYear(String(year-1))) * scale;
-  var dyear = Math.round(2*heigth/dt)+1;
-  while(true) {
-    d = new Date(0).setFullYear(year);
-    if (d > this._maxDate) break;
-    ol.ext.element.create('DIV', {
-      className: 'ol-time ol-year',
-      style: {
-        left: this._getOffsetFromDate(d) - dx
-      },
-      html: year,
-      parent: tdiv
-    });
-    year += dyear;
+  /** Get the start date of the control
+   * @return {Date}
+   */
+  getStartDate() {
+    return new Date(this.get('minDate'));
   }
-  // Month
-  if (/day|month/.test(this.get('graduation'))) {
-    dt = ((new Date(0,0,1)).setFullYear(String(year)) - new Date(0,0,1).setFullYear(String(year-1))) * scale;
-    dmonth = Math.max(1, Math.round(12 / Math.round(dt/heigth/2)));
-    if (dmonth < 12) {
-      year = (new Date(this._minDate)).getFullYear();
-      month = dmonth+1;
-      while(true) {
-        d = new Date(0,0,1);
-        d.setFullYear(year);
-        d.setMonth(month-1);
-        if (d > this._maxDate) break;
-        ol.ext.element.create('DIV', {
-          className: 'ol-time ol-month',
-          style: {
-            left: this._getOffsetFromDate(d) - dx
-          },
-          html: d.toLocaleDateString(undefined, { month: 'short'}),
-          parent: tdiv
-        });
-        month += dmonth;
-        if (month > 12) {
-          year++;
-          month = dmonth+1;
-        }
-      }
-    }
+  /** Get the end date of the control
+   * @return {Date}
+   */
+  getEndDate() {
+    return new Date(this.get('maxDate'));
   }
-  // Day
-  if (this.get('graduation')==='day') {
-    dt = (new Date(0,1,1) - new Date(0,0,1)) * scale;
-    var dday = Math.max(1, Math.round(31 / Math.round(dt/heigth/2)));
-    if (dday < 31) {
-      year = (new Date(this._minDate)).getFullYear();
-      month = 0;
-      var day = dday;
-      while(true) {
-        d = new Date(0,0,1);
-        d.setFullYear(year);
-        d.setMonth(month);
-        d.setDate(day);
-        if (isNaN(d)) {
-          month++;
-          if (month>12) {
-            month = 1;
-            year++;
-          }
-          day = dday;
-        } else {
-          if (d > this._maxDate) break;
-          if (day>1) {
-            var offdate = this._getOffsetFromDate(d);
-            if (this._getOffsetFromDate(new Date(year, month+1, 1)) - offdate > heigth) {
-              ol.ext.element.create('DIV', {
-                className: 'ol-time ol-day',
-                style: {
-                  left: offdate - dx
-                },
-                html: day,
-                parent: tdiv
-              });
-            }
-          }
-          year = d.getFullYear();
-          month = d.getMonth();
-          day = d.getDate() + dday;
-          if (day > new Date(year, month+1, 0).getDate()) {
-            month++;
-            day = dday;
-          }
-        }
-      }
-    }
-  }
-};
-/** Center timeline on a date
- * @param {Date|String|ol.feature} feature a date or a feature with a date
- * @param {Object} options
- *  @param {boolean} options.anim animate scroll
- *  @param {string} options.position start, end or middle, default middle
- */
-ol.control.Timeline.prototype.setDate = function(feature, options) {
-  var date;
-  options = options || {};
-  // It's a date
-  if (feature instanceof Date) {
-    date = feature;
-  } else {
-    // Get date from Feature
-    if (this.getFeatures().indexOf(feature) >= 0) {
-      date = this._getFeatureDate(feature);
-    }
-    if (date && !(date instanceof Date)) {
-      date = new Date(date);
-    }
-    if (!date || isNaN(date)) {
-      date = new Date(String(feature));
-    }
-  }
-  if (!isNaN(date)) {
-    if (options.anim === false) this._scrollDiv.classList.add('ol-move');
-    var scrollLeft = this._getOffsetFromDate(date);
-    if (options.position==='start') {
-      scrollLeft += ol.ext.element.outerWidth(this._scrollDiv)/2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
-    } else if (options.position==='end') {
-      scrollLeft -= ol.ext.element.outerWidth(this._scrollDiv)/2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
-    }
-    this._setScrollLeft(scrollLeft);
-    if (options.anim === false) this._scrollDiv.classList.remove('ol-move');
-    if (feature) {
-      for (var i=0, f; f = this._tline[i]; i++) {
-        if (f.feature === feature) {
-          f.elt.classList.add('ol-select');
-          this._select = f;
-        } else {
-          f.elt.classList.remove('ol-select');
-        }
-      }
-    }
-  }
-};
-/** Get round date (sticked to mn, hour day or month)
- * @param {Date} d
- * @param {string} stick sticking option to stick date to: 'mn', 'hour', 'day', 'month', default no stick
- * @return {Date}
- */
-ol.control.Timeline.prototype.roundDate = function(d, stick) {
-  switch (stick) {
-    case 'mn': {
-      return new Date(this._roundTo(d, 60*1000));
-    }
-    case 'hour': {
-      return new Date(this._roundTo(d, 60*60*1000));
-    }
-    case 'day': {
-      return new Date(this._roundTo(d, 24*60*60*1000));
-    }
-    case 'month': {
-      d = new Date(this._roundTo(d, 24*60*60*1000));
-      if (d.getDate() > 15) {
-        d = new Date(d.setMonth(d.getMonth() + 1));
-      }
-      d = d.setDate(1);
-      return new Date(d);
-    }
-    default: return new Date(d);
-  }
-};
-/** Get the date of the center
- * @param {string} position position to get 'start', 'end' or 'middle', default middle
- * @param {string} stick sticking option to stick date to: 'mn', 'hour', 'day', 'month', default no stick
- * @return {Date}
- */
-ol.control.Timeline.prototype.getDate = function(position, stick) {
-  var pos;
-  if (!stick) stick = position;
-  switch (position) {
-    case 'start': {
-      if (this.get('interval')) {
-        pos = - ol.ext.element.getStyle(this._intervalDiv, 'width')/2 + ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
-      } else {
-        pos = - ol.ext.element.outerWidth(this._scrollDiv)/2 + ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
-      }
-      break;
-    }
-    case 'end': {
-      if (this.get('interval')) {
-        pos = ol.ext.element.getStyle(this._intervalDiv, 'width')/2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
-      } else {
-        pos = ol.ext.element.outerWidth(this._scrollDiv)/2 - ol.ext.element.getStyle(this._scrollDiv, 'marginLeft')/2;
-      }
-      break;
-    }
-    default: {
-      pos = 0;
-      break;
-    }
-  }
-  var d = this._getDateFromOffset(this._getScrollLeft() + pos);
-  d = this.roundDate(d, stick);
-  return new Date(d);
-};
-/** Round number to 
- * @param {number} d
- * @param {number} r
- * @return {number}
- * @private
- */
-ol.control.Timeline.prototype._roundTo = function(d, r) {
-  return Math.round(d/r) * r;
-};
-/** Get the start date of the control
- * @return {Date}
- */
-ol.control.Timeline.prototype.getStartDate = function() {
-  return new Date(this.get('minDate'));
-}
-/** Get the end date of the control
- * @return {Date}
- */
-ol.control.Timeline.prototype.getEndDate = function() {
-  return new Date(this.get('maxDate'));
 }
 
 /*

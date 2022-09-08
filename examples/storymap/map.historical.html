@@ -15,8 +15,8 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
@@ -118,16 +118,18 @@
   ol.layer.Geoportail.capabilities["ORTHOIMAGERY.ORTHO-SAT.PLEIADES.2020"] = {"server":"https://wxs.ign.fr/geoportail/wmts","layer":"ORTHOIMAGERY.ORTHO-SAT.PLEIADES.2020","title":"PLEIADES - 2020","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-63.17017,-13.016858,45.313553,51.111744],"desc":"Agrégation des images Pleiades de l'année 2020","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.17017,3.8265102,9.669795,50.926514]}]},"CNES":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES/CNES.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.17017,3.8265102,9.669795,50.926514]}]},"AIRBUS":{"href":"http://www.geo-airbusds.com/","attribution":"Airbus Defence and Space","logo":"https://wxs.ign.fr/static/logos/AIRBUS/AIRBUS.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.17017,3.8265102,9.669795,50.926514]}]}}};
 
   var histo = [
+    /* no more ?
     new ol.layer.Geoportail({ 
       name: '1970',
       title: '1965-1980',
-      key: 'h1osiyvfm7c4wu976jv6gpum',
+      key: 'orthohisto',
       layer: 'ORTHOIMAGERY.ORTHOPHOTOS.1965-1980' 
     }),
+    */
     new ol.layer.Geoportail({ 
       name: '1960',
       title: '1950-1965',
-      key: 'h1osiyvfm7c4wu976jv6gpum',
+      key: 'orthohisto',
       layer: 'ORTHOIMAGERY.ORTHOPHOTOS.1950-1965' 
     }),
     new ol.layer.Image({
@@ -191,7 +193,7 @@
     histo.unshift(new ol.layer.Geoportail({ 
       name: dates[d]+'',
       title: dates[d]+'',
-      gppKey: 'h1osiyvfm7c4wu976jv6gpum',
+      gppKey: 'orthohisto',
       layer: 'ORTHOIMAGERY.ORTHOPHOTOS' +dates[d]
     }));
   }

@@ -4031,6 +4031,7 @@ ul.ol-legend li div {
   border-radius: .5em;
   position: absolute;
   height: auto;
+  background-color: rgba(255,255,255,.5);
 }
 .ol-storymap {
   overflow: hidden;
@@ -4195,6 +4196,7 @@ ul.ol-legend li div {
   right: 0;
   -webkit-transition: .3s;
   transition: .3s;
+  background-color: rgba(255,255,255,.4);
 }
 .ol-control.ol-timeline.ol-collapsed {
   -webkit-transform: translateY(100%);
