@@ -3,7 +3,6 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_inherits from '../util/ext'
 import ol_control_Toggle from './Toggle'
 import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw'
 
@@ -19,47 +18,48 @@ import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw'
  *  @param {String} options.title title of the control to display as tooltip, default Geolocation
  *  @param {number} options.delay delay before removing the location in ms, delfaut 3000 (3s)
  */
-var ol_control_GeolocationButton = function(options) {
-  if (!options) options = {};
-  // Geolocation draw interaction
-  options.followTrack = options.followTrack || 'auto';
-  options.zoom = options.zoom || 16;
-  //options.minZoom = options.minZoom || 16;
-  var interaction = new ol_interaction_GeolocationDraw(options);
+var ol_control_GeolocationButton = class olcontrolGeolocationButton extends ol_control_Toggle {
+  constructor(options) {
+    options = options || {};
+    // Geolocation draw interaction
+    options.followTrack = options.followTrack || 'auto';
+    options.zoom = options.zoom || 16;
+    //options.minZoom = options.minZoom || 16;
+    var interaction = new ol_interaction_GeolocationDraw(options);
 
-  ol_control_Toggle.call (this, {
-    className: options.className = ((options.className || '') + ' ol-geobt').trim(),
-    interaction: interaction,
-    title: options.title || 'Geolocation',
-    onToggle: function() {
-      interaction.pause(true);
-      interaction.setFollowTrack(options.followTrack || 'auto');
-    }
-  });
-  this.setActive(false);
+    super({
+      className: options.className = ((options.className || '') + ' ol-geobt').trim(),
+      interaction: interaction,
+      title: options.title || 'Geolocation',
+      onToggle: function () {
+        interaction.pause(true);
+        interaction.setFollowTrack(options.followTrack || 'auto');
+      }
+    });
+    this.setActive(false);
 
-  interaction.on('tracking', function(e) {
-    this.dispatchEvent({ type: 'position', coordinate: e.geolocation.getPosition() });
-  }.bind(this));
+    interaction.on('tracking', function (e) {
+      this.dispatchEvent({ type: 'position', coordinate: e.geolocation.getPosition() });
+    }.bind(this));
 
 
-  // Timeout delay
-  var tout;
-  interaction.on('change:active', function() {
-    this.dispatchEvent({ type:'position' });
-    if (tout) {
-      clearTimeout(tout);
-      tout = null;
-    }
-    if (interaction.getActive()) {
-      tout = setTimeout(function() {
-        interaction.setActive(false);
+    // Timeout delay
+    var tout;
+    interaction.on('change:active', function () {
+      this.dispatchEvent({ type: 'position' });
+      if (tout) {
+        clearTimeout(tout);
         tout = null;
-      }.bind(this), options.delay || 3000);
-    }
-  }.bind(this));
-  
-};
-ol_ext_inherits(ol_control_GeolocationButton, ol_control_Toggle);
+      }
+      if (interaction.getActive()) {
+        tout = setTimeout(function () {
+          interaction.setActive(false);
+          tout = null;
+        }.bind(this), options.delay || 3000);
+      }
+    }.bind(this));
+
+  }
+}
 
 export default ol_control_GeolocationButton

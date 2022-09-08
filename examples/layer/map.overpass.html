@@ -1,66 +1,64 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	
------------------------------------------------------------->
-	<title>ol-ext: Overpass OSM layer</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Overpass OSM layer</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="DBPedia layer for OL3" />
-	<meta name="keywords" content="ol3, layer, source, vector, wikipedia, dbpedia" />
+  <meta name="description" content="DBPedia layer for OL3" />
+  <meta name="keywords" content="ol3, layer, source, vector, wikipedia, dbpedia" />
 
-	<!-- SparQL server only works on http -->
-	<script>
-		if (location.protocol == 'https:')
-		{	location.href = window.location.href.replace(/^https:/,"http:");
-		}
-	</script>
+  <!-- SparQL server only works on http -->
+  <script>
+    if (location.protocol == 'https:')
+    {	location.href = window.location.href.replace(/^https:/,"http:");
+    }
+  </script>
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-	<link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-	<link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
-	<script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
+  <!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
+  <script type="text/javascript" src="../../dist/extra/FontAwesomeDef.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	<style>
-		#select img
-		{	max-height: 300px;
-		}
-	</style>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    #select img
+    {	max-height: 300px;
+    }
+  </style>
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: DBPedia layer</h1>
-	</a>
-	<p class="info">
-		<i>ol.source.Overpass</i> is a vector source that use the 
+  <a href="../../index.html">
+    <h1>ol-ext: DBPedia layer</h1>
+  </a>
+  <p class="info">
+    <i>ol.source.Overpass</i> is a vector source that use the 
     <a href="https://wiki.openstreetmap.org/wiki/Overpass_API">Overpass API</a> to load <a href="">OSM</a> features.
     <br/>
     You can use filter to choose what kind of features you want to display on the map.
     <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Tag_request_clauses_.28or_.22tag_filters.22.29">See API filter tags documentation.</a>
-	</p>
+  </p>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
-	<div class="options">
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  <div class="options">
     <ul>
       <li>
         Filter: 
@@ -73,19 +71,18 @@
       </li>
     </ul>
   </div>
-	<div id="select" class="options" >Select an item.</div>
-	
+  <div id="select" class="options" >Select an item.</div>
+  
 <script type="text/javascript">
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 15,
-				center: [261204.43490751847, 6250258.191535994]
-			}),
-			interactions: ol.interaction.defaults(),
-			layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
-		});
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 15,
+      center: [261204.43490751847, 6250258.191535994]
+    }),
+    layers: [ new ol.layer.Tile({ name:"OSM", source: new ol.source.OSM() })]
+  });
 
   function setFilter(filter) {
     console.log('filter:',filter.split(','))
@@ -100,8 +97,8 @@
     vector.setSource(vectorSource);
   }
 
-	// DBPedia layer source
-	var vectorSource = new ol.source.Overpass({
+  // DBPedia layer source
+  var vectorSource = new ol.source.Overpass({
     //way: false,
     filter: [ 'highway=bus_stop' ], 
     //filter: [ 'leisure' ], 
@@ -109,49 +106,49 @@
     // filter: [ 'highway' ], 
     // Tile strategy load at zoom 14
     strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: 14, maxZoom: 14, tileSize:512  })),
-		// Bbox strategy : reload at each move
-		//strategy: ol.loadingstrategy.bbox,
-	});
+    // Bbox strategy : reload at each move
+    //strategy: ol.loadingstrategy.bbox,
+  });
 
-	// Force layer reload on resolution change 
-	map.getView().on('change:resolution', function(evt)
-  {	//vectorSource.clear();
+  // Force layer reload on resolution change 
+  map.getView().on('change:resolution', function(evt) {
+    //vectorSource.clear();
     select.getFeatures().clear();
-		if (map.getView().getZoom() < 14) $("#select").text("Zoom to load data...");
-		else $("#select").first().text("");
-	});
+    if (map.getView().getZoom() < 14) $("#select").text("Zoom to load data...");
+    else $("#select").first().text("");
+  });
 
-	var vector = new ol.layer.Vector({
+  var vector = new ol.layer.Vector({
     name: 'OSM',
-		source: vectorSource,
-		// Limit resolution to avoid large area request
-		maxResolution: 10, // > zoom 14
-	});
+    source: vectorSource,
+    // Limit resolution to avoid large area request
+    maxResolution: 10, // > zoom 14
+  });
 
-	map.addLayer(vector);
+  map.addLayer(vector);
 
-	// Control Select 
-	var select = new ol.interaction.Select({
-		hitTolerance: 3,
-		condition: ol.events.condition.click
-	});
-	map.addInteraction(select);
-	// On selected
-	select.getFeatures().on(['add','remove'], function(e) {
+  // Control Select 
+  var select = new ol.interaction.Select({
+    hitTolerance: 3,
+    condition: ol.events.condition.click
+  });
+  map.addInteraction(select);
+  // On selected
+  select.getFeatures().on(['add','remove'], function(e) {
     var info = $("#select").html("");
-		if (e.type=="add") {	
+    if (e.type=="add") {	
       var el = e.element;
-			var ul = $('<ul>').appendTo(info);
-			var prop = el.getProperties();
-			for (var i in prop) {
+      var ul = $('<ul>').appendTo(info);
+      var prop = el.getProperties();
+      for (var i in prop) {
         if (i!=='geometry') {
           li = $('<li>')
             .html('<i>'+i+"</i>: "+prop[i])
             .appendTo(ul);
         }
-			}
-		}
-	});
+      }
+    }
+  });
 
 </script>
 

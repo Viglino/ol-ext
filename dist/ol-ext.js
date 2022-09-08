@@ -8199,60 +8199,53 @@ ol.control.EditBar = class olcontrolEditBar extends ol.control.Bar {
  *  @param {number} options.max maximum value, default 100;
  *  @param {number} options.val the value, default 0
  */
-ol.control.Gauge = function(options) {
-  options = options || {};
-  var element = ol.ext.element.create('DIV', {
-    className: ((options.className||"") + ' ol-gauge ol-unselectable ol-control').trim()
-  });
-  this.title_ = ol.ext.element.create('SPAN', {
-    parent: element
-  });
-  var div =  ol.ext.element.create('DIV', {
-    parent: element
-  });
-  this.gauge_ = ol.ext.element.create('BUTTON', {
-    type: 'button',
-    style: { width: '0px' },
-    parent: div
-  });
-  /*
-  var element = document.createElement("div");
-  element.className = ((options.className||"") + ' ol-gauge ol-unselectable ol-control').trim();
-  this.title_ = document.createElement("span");
-  element.appendChild(this.title_);
-  this.gauge_ = document.createElement("button");
-  this.gauge_.setAttribute('type','button');
-  element.appendChild(document.createElement("div").appendChild(this.gauge_))
-  this.gauge_.style.width = '0px';
-  */
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this.setTitle(options.title);
-  this.set("max", options.max||100);
-  this.val(options.val);
-};
-ol.ext.inherits(ol.control.Gauge, ol.control.Control);
-/** Set the control title
-* @param {string} title
-*/
-ol.control.Gauge.prototype.setTitle = function(title) {
-  this.title_.innerHTML = title||"";
-  if (!title) this.title_.display = 'none';
-  else this.title_.display = '';
-};
-/** Set/get the gauge value
-* @param {number|undefined} v the value or undefined to get it
-* @return {number} the value
-*/
-ol.control.Gauge.prototype.val = function(v) {
-  if (v!==undefined) {
-    this.val_ = v;
-    this.gauge_.style.width = (v/this.get('max')*100)+"%";
+ol.control.Gauge = class olcontrolGauge extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    var element = ol.ext.element.create('DIV', {
+      className: ((options.className || "") + ' ol-gauge ol-unselectable ol-control').trim()
+    });
+    super({
+      element: element,
+      target: options.target
+    });
+    this.title_ = ol.ext.element.create('SPAN', {
+      parent: element
+    });
+    var div = ol.ext.element.create('DIV', {
+      parent: element
+    });
+    this.gauge_ = ol.ext.element.create('BUTTON', {
+      type: 'button',
+      style: { width: '0px' },
+      parent: div
+    });
+    this.setTitle(options.title);
+    this.set("max", options.max || 100);
+    this.val(options.val);
   }
-  return this.val_;
-};
+  /** Set the control title
+  * @param {string} title
+  */
+  setTitle(title) {
+    this.title_.innerHTML = title || "";
+    if (!title)
+      this.title_.display = 'none';
+    else
+      this.title_.display = '';
+  }
+  /** Set/get the gauge value
+  * @param {number|undefined} v the value or undefined to get it
+  * @return {number} the value
+  */
+  val(v) {
+    if (v !== undefined) {
+      this.val_ = v;
+      this.gauge_.style.width = (v / this.get('max') * 100) + "%";
+    }
+    return this.val_;
+  }
+}
 
 /** Bookmark positions on ol maps.
  *
@@ -8489,107 +8482,108 @@ ol.control.GeoBookmark = class olcontrolGeoBookmark extends ol.control.Control {
  *  @param {String} options.centerLabel label for center button, default center
  *  @param {String} options.position position of the control, default bottom-right
  */
-ol.control.GeolocationBar = function(options) {
-  if (!options) options = {};
-  options.className = options.className || 'ol-geobar';
-  ol.control.Bar.call(this, options);
-  this.setPosition(options.position || 'bottom-right');
-  var element = this.element;
-  // Geolocation draw interaction
-  var interaction = new ol.interaction.GeolocationDraw({
-    source: options.source,
-    zoom: options.zoom,
-    minZoom: options.minZoom,
-    tolerance: options.tolerance,
-    followTrack: options.followTrack,
-    minAccuracy: options.minAccuracy || 10000
-  });
-  this._geolocBt = new ol.control.Toggle ({
-    className: 'geolocBt',
-    interaction: interaction,
-    onToggle: function() {
-      interaction.pause(true);
-      interaction.setFollowTrack(options.followTrack);
-      element.classList.remove('pauseTrack');
-    }
-  });
-  this.addControl(this._geolocBt);
-  this._geolocBt.setActive(false);
-  // Buttons
-  var bar = new ol.control.Bar();
-  this.addControl(bar);
-  var centerBt = new ol.control.TextButton ({
-    className: 'centerBt',
-    html: options.centerLabel ||'center',
-    handleClick: function() {
-      interaction.setFollowTrack('auto');
-    }
-  });
-  bar.addControl(centerBt);
-  var startBt = new ol.control.Button ({
-    className: 'startBt',
-    handleClick: function(){
-      interaction.pause(false);
-      interaction.setFollowTrack('auto');
-      element.classList.add('pauseTrack');
-    }
-  });
-  bar.addControl(startBt);
-  var pauseBt = new ol.control.Button ({
-    className: 'pauseBt',
-    handleClick: function(){
-      interaction.pause(true);
-      interaction.setFollowTrack('auto');
-      element.classList.remove('pauseTrack');
-    }
-  });
-  bar.addControl(pauseBt);
-  interaction.on('follow', function(e) {
-    if (e.following) {
-      element.classList.remove('centerTrack');
-    } else {
-      element.classList.add('centerTrack');
-    }
-  });
-  // Activate
-  this._geolocBt.on('change:active', function(e) {
-    if (e.active) {
-      element.classList.add('ol-active');
-    } else {
-      element.classList.remove('ol-active');
-    }
-  });
-};
-ol.ext.inherits(ol.control.GeolocationBar, ol.control.Bar);
-/**
- * Remove the control from its current map and attach it to the new map.
- * Subclasses may set up event handlers to get notified about changes to
- * the map here.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.control.GeolocationBar.prototype.setMap = function (map) {
-  if (this._listener) ol.Observable.unByKey(this._listener);
-  this._listener = null;
-  ol.control.Bar.prototype.setMap.call(this, map);
-  // Get change (new layer added or removed)
-  if (map) {
-    this._listener = map.on('moveend', function() {
-      var geo = this.getInteraction();
-      if (geo.getActive() && geo.get('followTrack') === 'auto' && geo.path_.length) {
-        if (geo.path_[geo.path_.length-1][0] !== map.getView().getCenter()[0]) {
-          this.element.classList.add('centerTrack');
-        }
+ol.control.GeolocationBar = class olcontrolGeolocationBar extends ol.control.Bar {
+  constructor(options) {
+    options = options || {}
+    options.className = options.className || 'ol-geobar'
+    super(options)
+    this.setPosition(options.position || 'bottom-right')
+    var element = this.element
+    // Geolocation draw interaction
+    var interaction = new ol.interaction.GeolocationDraw({
+      source: options.source,
+      zoom: options.zoom,
+      minZoom: options.minZoom,
+      tolerance: options.tolerance,
+      followTrack: options.followTrack,
+      minAccuracy: options.minAccuracy || 10000
+    })
+    this._geolocBt = new ol.control.Toggle({
+      className: 'geolocBt',
+      interaction: interaction,
+      onToggle: function () {
+        interaction.pause(true)
+        interaction.setFollowTrack(options.followTrack)
+        element.classList.remove('pauseTrack')
       }
-    }.bind(this));
+    })
+    this.addControl(this._geolocBt)
+    this._geolocBt.setActive(false)
+    // Buttons
+    var bar = new ol.control.Bar()
+    this.addControl(bar)
+    var centerBt = new ol.control.TextButton({
+      className: 'centerBt',
+      html: options.centerLabel || 'center',
+      handleClick: function () {
+        interaction.setFollowTrack('auto')
+      }
+    })
+    bar.addControl(centerBt)
+    var startBt = new ol.control.Button({
+      className: 'startBt',
+      handleClick: function () {
+        interaction.pause(false)
+        interaction.setFollowTrack('auto')
+        element.classList.add('pauseTrack')
+      }
+    })
+    bar.addControl(startBt)
+    var pauseBt = new ol.control.Button({
+      className: 'pauseBt',
+      handleClick: function () {
+        interaction.pause(true)
+        interaction.setFollowTrack('auto')
+        element.classList.remove('pauseTrack')
+      }
+    })
+    bar.addControl(pauseBt)
+    interaction.on('follow', function (e) {
+      if (e.following) {
+        element.classList.remove('centerTrack')
+      } else {
+        element.classList.add('centerTrack')
+      }
+    })
+    // Activate
+    this._geolocBt.on('change:active', function (e) {
+      if (e.active) {
+        element.classList.add('ol-active')
+      } else {
+        element.classList.remove('ol-active')
+      }
+    })
   }
-};
-/** Get the ol.interaction.GeolocationDraw associatedwith the bar
- * @return {ol.interaction.GeolocationDraw}
- */
-ol.control.GeolocationBar.prototype.getInteraction = function () {
-  return this._geolocBt.getInteraction();
-};
+  /**
+   * Remove the control from its current map and attach it to the new map.
+   * Subclasses may set up event handlers to get notified about changes to
+   * the map here.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this._listener) ol.Observable.unByKey(this._listener)
+    this._listener = null
+    super.setMap(map)
+    // Get change (new layer added or removed)
+    if (map) {
+      this._listener = map.on('moveend', function () {
+        var geo = this.getInteraction()
+        if (geo.getActive() && geo.get('followTrack') === 'auto' && geo.path_.length) {
+          if (geo.path_[geo.path_.length - 1][0] !== map.getView().getCenter()[0]) {
+            this.element.classList.add('centerTrack')
+          }
+        }
+      }.bind(this))
+    }
+  }
+  /** Get the ol.interaction.GeolocationDraw associatedwith the bar
+   * @return {ol.interaction.GeolocationDraw}
+   */
+  getInteraction() {
+    return this._geolocBt.getInteraction()
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
 	released under the CeCILL-B license (French BSD license)
@@ -8607,43 +8601,44 @@ ol.control.GeolocationBar.prototype.getInteraction = function () {
  *  @param {String} options.title title of the control to display as tooltip, default Geolocation
  *  @param {number} options.delay delay before removing the location in ms, delfaut 3000 (3s)
  */
-ol.control.GeolocationButton = function(options) {
-  if (!options) options = {};
-  // Geolocation draw interaction
-  options.followTrack = options.followTrack || 'auto';
-  options.zoom = options.zoom || 16;
-  //options.minZoom = options.minZoom || 16;
-  var interaction = new ol.interaction.GeolocationDraw(options);
-  ol.control.Toggle.call (this, {
-    className: options.className = ((options.className || '') + ' ol-geobt').trim(),
-    interaction: interaction,
-    title: options.title || 'Geolocation',
-    onToggle: function() {
-      interaction.pause(true);
-      interaction.setFollowTrack(options.followTrack || 'auto');
-    }
-  });
-  this.setActive(false);
-  interaction.on('tracking', function(e) {
-    this.dispatchEvent({ type: 'position', coordinate: e.geolocation.getPosition() });
-  }.bind(this));
-  // Timeout delay
-  var tout;
-  interaction.on('change:active', function() {
-    this.dispatchEvent({ type:'position' });
-    if (tout) {
-      clearTimeout(tout);
-      tout = null;
-    }
-    if (interaction.getActive()) {
-      tout = setTimeout(function() {
-        interaction.setActive(false);
+ol.control.GeolocationButton = class olcontrolGeolocationButton extends ol.control.Toggle {
+  constructor(options) {
+    options = options || {};
+    // Geolocation draw interaction
+    options.followTrack = options.followTrack || 'auto';
+    options.zoom = options.zoom || 16;
+    //options.minZoom = options.minZoom || 16;
+    var interaction = new ol.interaction.GeolocationDraw(options);
+    super({
+      className: options.className = ((options.className || '') + ' ol-geobt').trim(),
+      interaction: interaction,
+      title: options.title || 'Geolocation',
+      onToggle: function () {
+        interaction.pause(true);
+        interaction.setFollowTrack(options.followTrack || 'auto');
+      }
+    });
+    this.setActive(false);
+    interaction.on('tracking', function (e) {
+      this.dispatchEvent({ type: 'position', coordinate: e.geolocation.getPosition() });
+    }.bind(this));
+    // Timeout delay
+    var tout;
+    interaction.on('change:active', function () {
+      this.dispatchEvent({ type: 'position' });
+      if (tout) {
+        clearTimeout(tout);
         tout = null;
-      }.bind(this), options.delay || 3000);
-    }
-  }.bind(this));
-};
-ol.ext.inherits(ol.control.GeolocationButton, ol.control.Toggle);
+      }
+      if (interaction.getActive()) {
+        tout = setTimeout(function () {
+          interaction.setActive(false);
+          tout = null;
+        }.bind(this), options.delay || 3000);
+      }
+    }.bind(this));
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -21557,109 +21552,111 @@ ol.format.GeoJSONP.prototype.decodeCoordinates = function(v) {
  *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
  *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
  */
-ol.format.GeoRSS = function(options) {
-  options = options || {};
-  ol.Object.call (this, options);
-};
-ol.ext.inherits(ol.format.GeoRSS, ol.Object);
-/**
- * Read a feature.  Only works for a single feature. Use `readFeatures` to
- * read a feature collection.
- *
- * @param {Node|string} source Source.
- * @param {*} options Read options.
- *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
- *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
- * @return {ol.Feature} Feature or null if no feature read
- * @api
- */
-ol.format.GeoRSS.prototype.readFeature = function(source, options) {
-  options = options || {};
-  var att, atts = source.children;
-  var f = new ol.Feature();
-  // Get attributes
-  for (var j=0; att = atts[j]; j++) {
-    f.set(att.tagName, att.innerHTML);
+ol.format.GeoRSS = class olformatGeoRSS extends ol.Object {
+  constructor(options) {
+    options = options || {}
+    super(options)
   }
-  var temp, g, coord=[];
-  // Get geometry
-  if (f.get('geo:long')) {
-    // LonLat
-    g = new ol.geom.Point([parseFloat(f.get('geo:long')), parseFloat(f.get('geo:lat'))]);
-    f.unset('geo:long');
-    f.unset('geo:lat');
-  } else if (f.get('georss:point')) {
-    // Point
-    coord = f.get('georss:point').trim().split(' ');
-    g = new ol.geom.Point([parseFloat(coord[1]), parseFloat(coord[0])]);
-    f.unset('georss:point');
-  } else if (f.get('georss:polygon')) {
-    // Polygon
-    temp = f.get('georss:polygon').trim().split(' ');
-    for (var i=0; i<temp.length; i += 2) {
-      coord.push([parseFloat(temp[i+1]), parseFloat(temp[i])]) 
+  /**
+   * Read a feature.  Only works for a single feature. Use `readFeatures` to
+   * read a feature collection.
+   *
+   * @param {Node|string} source Source.
+   * @param {*} options Read options.
+   *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
+   *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
+   * @return {ol.Feature} Feature or null if no feature read
+   * @api
+   */
+  readFeature(source, options) {
+    options = options || {}
+    var att, atts = source.children
+    var f = new ol.Feature()
+    // Get attributes
+    for (var j = 0; att = atts[j]; j++) {
+      f.set(att.tagName, att.innerHTML)
     }
-    g = new ol.geom.Polygon([coord]);
-    f.unset('georss:polygon');
-  } else if (f.get('georss:where')) {
-    // GML
-    console.warn('[GeoRSS] GML format not implemented')
-    f.unset('georss:where');
-    return null;
-  } else {
-    console.warn('[GeoRSS] unknown geometry')
-    return null;
+    var temp, g, coord = []
+    // Get geometry
+    if (f.get('geo:long')) {
+      // LonLat
+      g = new ol.geom.Point([parseFloat(f.get('geo:long')), parseFloat(f.get('geo:lat'))])
+      f.unset('geo:long')
+      f.unset('geo:lat')
+    } else if (f.get('georss:point')) {
+      // Point
+      coord = f.get('georss:point').trim().split(' ')
+      g = new ol.geom.Point([parseFloat(coord[1]), parseFloat(coord[0])])
+      f.unset('georss:point')
+    } else if (f.get('georss:polygon')) {
+      // Polygon
+      temp = f.get('georss:polygon').trim().split(' ')
+      for (var i = 0; i < temp.length; i += 2) {
+        coord.push([parseFloat(temp[i + 1]), parseFloat(temp[i])])
+      }
+      g = new ol.geom.Polygon([coord])
+      f.unset('georss:polygon')
+    } else if (f.get('georss:where')) {
+      // GML
+      console.warn('[GeoRSS] GML format not implemented')
+      f.unset('georss:where')
+      return null
+    } else {
+      console.warn('[GeoRSS] unknown geometry')
+      return null
+    }
+    if (options.featureProjection || this.get('featureProjection')) {
+      g.transform(options.dataProjection || this.get('dataProjection') || 'EPSG:4326', options.featureProjection || this.get('featureProjection'))
+    }
+    f.setGeometry(g)
+    return f
   }
-  if (options.featureProjection || this.get('featureProjection')) {
-    g.transform (options.dataProjection || this.get('dataProjection') || 'EPSG:4326', options.featureProjection || this.get('featureProjection'));
+  /**
+   * Read all features.  Works with both a single feature and a feature
+   * collection.
+   *
+   * @param {Document|Node|string} source Source.
+   * @param {*} options Read options.
+   *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
+   *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
+   * @return {Array<ol.Feature>} Features.
+   * @api
+   */
+  readFeatures(source, options) {
+    var items
+    if (typeof (source) === 'string') {
+      var parser = new DOMParser()
+      var xmlDoc = parser.parseFromString(source, "text/xml")
+      items = xmlDoc.getElementsByTagName(this.getDocumentItemsTagName(xmlDoc))
+    } else if (source instanceof Document) {
+      items = source.getElementsByTagName(this.getDocumentItemsTagName(source))
+    } else if (source instanceof Node) {
+      items = source
+    } else {
+      return []
+    }
+    var features = []
+    for (var i = 0, item; item = items[i]; i++) {
+      var f = this.readFeature(item, options)
+      if (f)
+        features.push(f)
+    }
+    return features
   }
-  f.setGeometry(g);
-  return f;
-};
-/**
- * Read all features.  Works with both a single feature and a feature
- * collection.
- *
- * @param {Document|Node|string} source Source.
- * @param {*} options Read options.
- *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
- *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
- * @return {Array<ol.Feature>} Features.
- * @api
- */
-ol.format.GeoRSS.prototype.readFeatures = function(source, options) {
-  var items;
-  if (typeof(source)==='string') {
-    var parser = new DOMParser();
-    var xmlDoc = parser.parseFromString(source,"text/xml");
-    items = xmlDoc.getElementsByTagName(this.getDocumentItemsTagName(xmlDoc));
-  } else if (source instanceof Document) {
-    items = source.getElementsByTagName(this.getDocumentItemsTagName(source));
-  } else if (source instanceof Node) {
-    items = source;
-  } else {
-    return [];
-  }
-  var features = []
-  for (var i=0, item; item = items[i]; i++) {
-    var f = this.readFeature(item, options);
-    if (f) features.push(f);
-  }
-  return features;
-};
-/**
- * Get the tag name for the items in the XML Document depending if we are
- * dealing with an atom base document or not.
- * @param {Document} xmlDoc document to extract the tag name for the items
- * @return {string} tag name
- * @private
- */
-ol.format.GeoRSS.prototype.getDocumentItemsTagName = function(xmlDoc) {
-  switch (xmlDoc.documentElement.tagName) {
-    case 'feed':
-      return 'entry';
-    default:
-      return 'item';
+  /**
+   * Get the tag name for the items in the XML Document depending if we are
+   * dealing with an atom base document or not.
+   * @param {Document} xmlDoc document to extract the tag name for the items
+   * @return {string} tag name
+   * @private
+   */
+  getDocumentItemsTagName(xmlDoc) {
+    switch (xmlDoc.documentElement.tagName) {
+      case 'feed':
+        return 'entry'
+      default:
+        return 'item'
+    }
   }
 }
 
@@ -23735,442 +23732,458 @@ ol.interaction.FocusMap.prototype.setMap = function(map) {
  *  @param {boolean|auto|position|visible} options.followTrack true if you want the interaction to follow the track on the map, default true
  *  @param { ol.style.Style | Array.<ol.style.Style> | ol.StyleFunction | undefined } options.style Style for sketch features.
  */
-ol.interaction.GeolocationDraw = function(options) {
-  if (!options) options={};
-  // Geolocation
-  this.geolocation = new ol.Geolocation(({ 
-    projection: "EPSG:4326",
-    trackingOptions: {
-      maximumAge: 10000,
-      enableHighAccuracy: true,
-      timeout: 600000
-    }
-  }));
-  this.geolocation.on('change', this.draw_.bind(this));
-  // Current path
-  this.path_ = [];
-  this.lastPosition_ = false;
-  // Default style
-  var white = [255, 255, 255, 1];
-  var blue = [0, 153, 255, 1];
-  var width = 3;
-  var circle = new ol.style.Circle({
-    radius: width * 2,
-    fill: new ol.style.Fill({ color: blue }),
-    stroke: new ol.style.Stroke({ color: white, width: width / 2 })
-  });
-  var style = [
-    new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: white, width: width + 2 })
-    }),
-    new ol.style.Style({
-      stroke: new ol.style.Stroke({ color: blue, width: width }),
-      fill: new ol.style.Fill({
-        color: [255, 255, 255, 0.5]
-      })
+ol.interaction.GeolocationDraw = class olinteractionGeolocationDraw extends ol.interaction.Interaction {
+  constructor(options) {
+    options = options || {}
+    super({
+      handleEvent: function () {
+        return (!this.get('followTrack') || this.get('followTrack') == 'auto') //  || !geoloc.getTracking());
+      }
     })
-  ];
-  var triangle = new ol.style.RegularShape({
-    radius: width * 3.5,
-    points: 3,
-    rotation: 0,
-    fill: new ol.style.Fill({ color: blue }),
-    stroke: new ol.style.Stroke({ color: white, width: width / 2 })
-  });
-  // stretch the symbol
-  var c = triangle.getImage();
-  var ctx = c.getContext("2d");
-  var c2 = document.createElement('canvas');
-  c2.width = c2.height = c.width;
-  c2.getContext("2d").drawImage(c, 0,0);
-  ctx.clearRect(0,0,c.width,c.height);
-  ctx.drawImage(c2, 0,0, c.width, c.height, width, 0, c.width-2*width, c.height);
-  var defaultStyle = function(f) {
-    if (f.get('heading')===undefined) {
-      style[1].setImage(circle);
+    // Geolocation
+    this.geolocation = new ol.Geolocation(({
+      projection: "EPSG:4326",
+      trackingOptions: {
+        maximumAge: 10000,
+        enableHighAccuracy: true,
+        timeout: 600000
+      }
+    }))
+    this.geolocation.on('change', this.draw_.bind(this))
+    // Current path
+    this.path_ = []
+    this.lastPosition_ = false
+    // Default style
+    var white = [255, 255, 255, 1]
+    var blue = [0, 153, 255, 1]
+    var width = 3
+    var circle = new ol.style.Circle({
+      radius: width * 2,
+      fill: new ol.style.Fill({ color: blue }),
+      stroke: new ol.style.Stroke({ color: white, width: width / 2 })
+    })
+    var style = [
+      new ol.style.Style({
+        stroke: new ol.style.Stroke({ color: white, width: width + 2 })
+      }),
+      new ol.style.Style({
+        stroke: new ol.style.Stroke({ color: blue, width: width }),
+        fill: new ol.style.Fill({
+          color: [255, 255, 255, 0.5]
+        })
+      })
+    ]
+    var triangle = new ol.style.RegularShape({
+      radius: width * 3.5,
+      points: 3,
+      rotation: 0,
+      fill: new ol.style.Fill({ color: blue }),
+      stroke: new ol.style.Stroke({ color: white, width: width / 2 })
+    })
+    // stretch the symbol
+    var c = triangle.getImage()
+    var ctx = c.getContext("2d")
+    var c2 = document.createElement('canvas')
+    c2.width = c2.height = c.width
+    c2.getContext("2d").drawImage(c, 0, 0)
+    ctx.clearRect(0, 0, c.width, c.height)
+    ctx.drawImage(c2, 0, 0, c.width, c.height, width, 0, c.width - 2 * width, c.height)
+    var defaultStyle = function (f) {
+      if (f.get('heading') === undefined) {
+        style[1].setImage(circle)
+      } else {
+        style[1].setImage(triangle)
+        triangle.setRotation(f.get('heading') || 0)
+      }
+      return style
+    }
+    // Style for the accuracy geometry
+    this.locStyle = {
+      error: new ol.style.Style({ fill: new ol.style.Fill({ color: [255, 0, 0, 0.2] }) }),
+      warn: new ol.style.Style({ fill: new ol.style.Fill({ color: [255, 192, 0, 0.2] }) }),
+      ok: new ol.style.Style({ fill: new ol.style.Fill({ color: [0, 255, 0, 0.2] }) }),
+    }
+    // Create a new overlay layer for the sketch
+    this.overlayLayer_ = new ol.layer.Vector({
+      source: new ol.source.Vector(),
+      name: 'GeolocationDraw overlay',
+      style: options.style || defaultStyle
+    })
+    this.sketch_ = [new ol.Feature(), new ol.Feature(), new ol.Feature()]
+    this.overlayLayer_.getSource().addFeatures(this.sketch_)
+    this.features_ = options.features
+    this.source_ = options.source
+    this.condition_ = options.condition || function (loc) {
+      return loc.getAccuracy() < this.get("minAccuracy")
+    }
+    this.set('type', options.type || "LineString")
+    this.set('attributes', options.attributes || {})
+    this.set('minAccuracy', options.minAccuracy || 20)
+    this.set('tolerance', options.tolerance || 5)
+    this.set('zoom', options.zoom)
+    this.set('minZoom', options.minZoom)
+    this.setFollowTrack(options.followTrack === undefined ? true : options.followTrack)
+    this.setActive(false)
+  }
+  /** Simplify 3D geometry
+   * @param {ol.geom.Geometry} geo
+   * @param {number} tolerance
+   */
+  simplify3D(geo, tolerance) {
+    var geom = geo.getCoordinates()
+    var proj = this.getMap().getView().getProjection()
+    if (this.get("type") === 'Polygon') {
+      geom = geom[0]
+    }
+    var simply = [geom[0]]
+    var pi, p = ol.proj.transform(geom[0], proj, 'EPSG:4326')
+    for (var i = 1; i < geom.length; i++) {
+      pi = ol.proj.transform(geom[i], proj, 'EPSG:4326')
+      var d = ol.sphere.getDistance(p, pi)
+      if (d > tolerance) {
+        simply.push(geom[i])
+        p = pi
+      }
+    }
+    if (simply[simply.length - 1] !== geom[geom.length - 1]) {
+      simply.push(geom[geom.length - 1])
+    }
+    /*
+    var simply = geo.simplify(tolerance).getCoordinates();
+    if (this.get("type")==='Polygon') {
+      simply = simply[0];
+    }
+    var step=0;
+    simply.forEach(function(p) {
+      for (; step<this.path_.length; step++) {
+        if (ol.coordinate.equal(p, this.path_[step])) {
+          p[2] = this.path_[step][2];
+          p[3] = this.path_[step][3];
+          break;
+        }
+      }
+    }.bind(this));
+    */
+    // Get 3D geom
+    if (this.get("type") === 'Polygon') {
+      geo = new ol.geom.Polygon([simply], 'XYZM')
     } else {
-      style[1].setImage(triangle);
-      triangle.setRotation( f.get('heading') || 0);
+      geo = new ol.geom.LineString(simply, 'XYZM')
     }
-    return style;
+    return geo
   }
-  // Style for the accuracy geometry
-  this.locStyle = {
-    error: new ol.style.Style({ fill: new ol.style.Fill({ color: [255, 0, 0, 0.2] }) }),
-    warn: new ol.style.Style({ fill: new ol.style.Fill({ color: [255, 192, 0, 0.2] }) }),
-    ok: new ol.style.Style({ fill: new ol.style.Fill({ color: [0, 255, 0, 0.2] }) }),
-  };
-  // Create a new overlay layer for the sketch
-  this.overlayLayer_ = new ol.layer.Vector({
-    source: new ol.source.Vector(),
-    name:'GeolocationDraw overlay',
-    style: options.style || defaultStyle
-  });
-  this.sketch_ = [new ol.Feature(), new ol.Feature(), new ol.Feature()];
-  this.overlayLayer_.getSource().addFeatures(this.sketch_);
-  this.features_ = options.features;
-  this.source_ = options.source;
-  this.condition_ = options.condition || function(loc) { 
-    return loc.getAccuracy() < this.get("minAccuracy") 
-  };
-  // Prevent interaction when tracking
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function() {
-      return (!this.get('followTrack') || this.get('followTrack')=='auto');//  || !geoloc.getTracking());
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_)
+    super.setMap(map)
+    this.overlayLayer_.setMap(map)
+    if (map) this.geolocation.setProjection(map.getView().getProjection())
+  }
+  /** Activate or deactivate the interaction.
+   * @param {boolean} active
+   */
+  setActive(active) {
+    if (active === this.getActive()) return
+    super.setActive(active)
+    if (this.getMap()) {
+      this.geolocation.setTracking(active)
+      try { this.getMap().renderSync()}  catch (e) { /* ok */ }
     }
-  });
-  this.set('type', options.type||"LineString");
-  this.set('attributes', options.attributes||{});
-  this.set('minAccuracy', options.minAccuracy||20);
-  this.set('tolerance', options.tolerance||5);
-  this.set('zoom', options.zoom);
-  this.set('minZoom', options.minZoom);
-  this.setFollowTrack (options.followTrack===undefined ? true : options.followTrack);
-  this.setActive(false);
-};
-ol.ext.inherits(ol.interaction.GeolocationDraw, ol.interaction.Interaction);
-/** Simplify 3D geometry
- * @param {ol.geom.Geometry} geo
- * @param {number} tolerance
- */
-ol.interaction.GeolocationDraw.prototype.simplify3D = function(geo, tolerance) {
-  var geom = geo.getCoordinates();
-  var proj = this.getMap().getView().getProjection();
-  if (this.get("type")==='Polygon') {
-    geom = geom[0];
-  }
-  var simply = [geom[0]];
-  var pi, p = ol.proj.transform(geom[0], proj, 'EPSG:4326')
-  for (var i=1; i<geom.length; i++) {
-    pi = ol.proj.transform(geom[i], proj, 'EPSG:4326')
-    var d = ol.sphere.getDistance(p, pi);
-    if (d > tolerance) {
-      simply.push(geom[i]);
-      p = pi;
-    }
-  }
-  if (simply[simply.length-1] !== geom[geom.length-1]) {
-    simply.push(geom[geom.length-1]);
-  }
-  /*
-  var simply = geo.simplify(tolerance).getCoordinates();
-  if (this.get("type")==='Polygon') {
-    simply = simply[0];
-  }
-  var step=0;
-  simply.forEach(function(p) {
-    for (; step<this.path_.length; step++) {
-      if (ol.coordinate.equal(p, this.path_[step])) {
-        p[2] = this.path_[step][2];
-        p[3] = this.path_[step][3];
-        break;
+    if (!this.overlayLayer_) return;
+    this.overlayLayer_.setVisible(active)
+    this.pause(!active)
+    if (active) {
+      // Start drawing
+      this.reset()
+      this.dispatchEvent({ type: 'drawstart', feature: this.sketch_[1] })
+    } else {
+      var f = this.sketch_[1].clone()
+      if (f.getGeometry()) {
+        if (this.features_)
+          this.features_.push(f)
+        if (this.source_)
+          this.source_.addFeature(f)
       }
+      this.dispatchEvent({ type: 'drawend', feature: f })
     }
-  }.bind(this));
+  }
+  /** Simulate a track and override current geolocation
+   * @param {Array<ol.coordinate>|boolean} track a list of point or false to stop
+   * @param {*} options
+   *  @param {number} delay delay in ms, default 1000 (1s)
+   *  @param {number} accuracy gps accuracy, default 10
+   *  @param {boolean} repeat repeat track, default true
+   */
+  simulate(track, options) {
+    if (this._track) {
+      clearTimeout(this._track.timeout)
+    }
+    if (!track) {
+      this._track = false
+      return
+    }
+    options = options || {}
+    var delay = options.delay || 1000
+    function handleTrack() {
+      if (this._track.pos >= this._track.track.length) {
+        this._track = false
+        return
+      }
+      var coord = this._track.track[this._track.pos]
+      coord[2] = coord[3] || 0
+      coord[3] = (new Date()).getTime()
+      this._track.pos++
+      if (options.repeat !== false) {
+        this._track.pos = this._track.pos % this._track.track.length
+      }
+      if (this.getActive())
+        this.draw_(true, coord, options.accuracy)
+      this._track.timeout = setTimeout(handleTrack.bind(this), delay)
+    }
+    this._track = {
+      track: track,
+      pos: 0,
+      timeout: setTimeout(handleTrack.bind(this), 0)
+    }
+  }
+  /** Is simulation on ?
+   * @returns {boolean}
+   */
+  simulating() {
+    return !!this._track
+  }
+  /** Reset drawing
   */
-  // Get 3D geom
-  if (this.get("type")==='Polygon') {
-    geo = new ol.geom.Polygon([simply], 'XYZM');
-  } else {
-    geo = new ol.geom.LineString(simply, 'XYZM');
+  reset() {
+    this.sketch_[1].setGeometry()
+    this.path_ = []
+    this.lastPosition_ = false
   }
-  return geo;
-};
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.GeolocationDraw.prototype.setMap = function(map) {
-  if (this.getMap()) this.getMap().removeLayer(this.overlayLayer_);
-  ol.interaction.Pointer.prototype.setMap.call (this, map);
-  this.overlayLayer_.setMap(map);
-  if (map) this.geolocation.setProjection(map.getView().getProjection());
-};
-/** Activate or deactivate the interaction.
- * @param {boolean} active
- */
-ol.interaction.GeolocationDraw.prototype.setActive = function(active) {
-  if (active === this.getActive()) return;
-  ol.interaction.Interaction.prototype.setActive.call(this, active);
-  this.overlayLayer_.setVisible(active);
-  if (this.getMap()) {
-    this.geolocation.setTracking(active);
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  /** Start tracking = setActive(true)
+   */
+  start() {
+    this.setActive(true)
   }
-  this.pause(!active);
-  if (active) {
-    // Start drawing
-    this.reset();
-    this.dispatchEvent({ type:'drawstart', feature: this.sketch_[1]});
-  } else {
-    var f = this.sketch_[1].clone();
-    if (f.getGeometry()) {
-      if (this.features_) this.features_.push(f);
-      if (this.source_) this.source_.addFeature(f);
-    }
-    this.dispatchEvent({ type:'drawend', feature: f});
+  /** Stop tracking = setActive(false)
+   */
+  stop() {
+    this.setActive(false)
   }
-};
-/** Simulate a track and override current geolocation
- * @param {Array<ol.coordinate>|boolean} track a list of point or false to stop
- * @param {*} options
- *  @param {number} delay delay in ms, default 1000 (1s)
- *  @param {number} accuracy gps accuracy, default 10
- *  @param {boolean} repeat repeat track, default true
- */
-ol.interaction.GeolocationDraw.prototype.simulate = function(track, options) {
-  if (this._track) {
-    clearTimeout(this._track.timeout);
+  /** Pause drawing
+   * @param {boolean} b
+   */
+  pause(b) {
+    this.pause_ = (b !== false)
   }
-  if (!track) {
-    this._track = false;
-    return;
+  /** Is paused
+   * @return {boolean} b
+   */
+  isPaused() {
+    return this.pause_
   }
-  options = options || {};
-  var delay = options.delay || 1000;
-  function handleTrack() {
-    if (this._track.pos >= this._track.track.length) {
-      this._track = false;
-      return;
-    }
-    var coord = this._track.track[this._track.pos];
-    coord[2] = coord[3] || 0;
-    coord[3] = (new Date()).getTime();
-    this._track.pos++;
-    if (options.repeat !== false) {
-      this._track.pos = this._track.pos % this._track.track.length;
-    } 
-    if (this.getActive()) this.draw_(true, coord, options.accuracy);
-    this._track.timeout = setTimeout(handleTrack.bind(this), delay);
-  }
-  this._track = {
-    track: track,
-    pos: 0,
-    timeout: setTimeout(handleTrack.bind(this), 0)
-  }
-};
-/** Is simulation on ?
- * @returns {boolean}
- */
-ol.interaction.GeolocationDraw.prototype.simulating = function() {
-  return !!this._track;
-};
-/** Reset drawing
-*/
-ol.interaction.GeolocationDraw.prototype.reset = function() {
-  this.sketch_[1].setGeometry();
-  this.path_ = [];
-  this.lastPosition_ = false;
-};
-/** Start tracking = setActive(true)
- */
-ol.interaction.GeolocationDraw.prototype.start = function() {
-  this.setActive(true);
-};
-/** Stop tracking = setActive(false)
- */
-ol.interaction.GeolocationDraw.prototype.stop = function() {
-  this.setActive(false);
-};
-/** Pause drawing
- * @param {boolean} b 
- */
-ol.interaction.GeolocationDraw.prototype.pause = function(b) {
-  this.pause_ = (b!==false);
-};
-/** Is paused
- * @return {boolean} b 
- */
-ol.interaction.GeolocationDraw.prototype.isPaused = function() {
-  return this.pause_;
-};
-/** Enable following the track on the map
-* @param {boolean|auto|position|visible} follow, 
-*	false: don't follow, 
-*	true: follow (position+zoom), 
-*	'position': follow only position,
-*	'auto': start following until user move the map,
-*	'visible': center when position gets out of the visible extent
-*/
-ol.interaction.GeolocationDraw.prototype.setFollowTrack = function(follow) {
-  this.set('followTrack', follow);
-  var map = this.getMap();
-  // Center if wanted
-  if (this.getActive() && map) {
-    var zoom;
-    if (follow !== 'position') {
-      if (this.get('minZoom')) {
-        zoom = Math.max(this.get('minZoom'), map.getView().getZoom());
-      } else {
-        zoom = this.get('zoom');
+  /** Enable following the track on the map
+  * @param {boolean|auto|position|visible} follow,
+  *	false: don't follow,
+  *	true: follow (position+zoom),
+  *	'position': follow only position,
+  *	'auto': start following until user move the map,
+  *	'visible': center when position gets out of the visible extent
+  */
+  setFollowTrack(follow) {
+    this.set('followTrack', follow)
+    var map = this.getMap()
+    // Center if wanted
+    if (this.getActive() && map) {
+      var zoom
+      if (follow !== 'position') {
+        if (this.get('minZoom')) {
+          zoom = Math.max(this.get('minZoom'), map.getView().getZoom())
+        } else {
+          zoom = this.get('zoom')
+        }
       }
-    }
-    if (follow !== false && !this.lastPosition_) {
-      var pos = this.path_[this.path_.length-1];
-      if (pos) {
+      if (follow !== false && !this.lastPosition_) {
+        var pos = this.path_[this.path_.length - 1]
+        if (pos) {
+          map.getView().animate({
+            center: pos,
+            zoom: zoom
+          })
+        }
+      } else if (follow === 'auto' && this.lastPosition_) {
         map.getView().animate({
-          center: pos,
+          center: this.lastPosition_,
           zoom: zoom
-        });
+        })
       }
-    } else if (follow==='auto' && this.lastPosition_) {
-      map.getView().animate({
-        center: this.lastPosition_,
-        zoom: zoom
-      });
     }
+    this.lastPosition_ = false
+    this.dispatchEvent({ type: 'follow', following: follow !== false })
   }
-  this.lastPosition_ = false;				
-  this.dispatchEvent({ type:'follow', following: follow!==false });
-};
-/** Add a new point to the current path
- * @private
- */
-ol.interaction.GeolocationDraw.prototype.draw_ = function(simulate, coord, accuracy) {
-  var map = this.getMap();
-  if (!map) return;
-  var accu, pos, p, loc, heading;
-  // Simulation mode
-  if (this._track) {
-    if (simulate!==true) return;
-    pos = coord;
-    accu = accuracy || 10;
-    if (this.path_ && this.path_.length) {
-      var pt = this.path_[this.path_.length-1];
-      heading = Math.atan2(coord[0]-pt[0],coord[1]-pt[1])
+  /** Add a new point to the current path
+   * @private
+   */
+  draw_(simulate, coord, accuracy) {
+    var map = this.getMap()
+    if (!map)
+      return
+    var accu, pos, p, loc, heading
+    // Simulation mode
+    if (this._track) {
+      if (simulate !== true)
+        return
+      pos = coord
+      accu = accuracy || 10
+      if (this.path_ && this.path_.length) {
+        var pt = this.path_[this.path_.length - 1]
+        heading = Math.atan2(coord[0] - pt[0], coord[1] - pt[1])
+      }
+      var circle = new ol.geom.Circle(pos, map.getView().getResolution() * accu)
+      p = ol.geom.Polygon.fromCircle(circle)
+    } else {
+      // Current location
+      loc = this.geolocation
+      accu = loc.getAccuracy()
+      pos = this.getPosition(loc)
+      p = loc.getAccuracyGeometry()
+      heading = loc.getHeading()
     }
-    var circle = new ol.geom.Circle(pos, map.getView().getResolution()*accu);
-    p = ol.geom.Polygon.fromCircle(circle);
-  } else {
-    // Current location
-    loc = this.geolocation;
-    accu = loc.getAccuracy();
-    pos = this.getPosition(loc);
-    p = loc.getAccuracyGeometry();
-    heading = loc.getHeading();
-  }
-  // Center on point
-  // console.log(this.get('followTrack'))
-  switch (this.get('followTrack')) {
-    // Follow center + zoom
-    case true: {
-      // modify zoom
-      if (this.get('followTrack') == true) {
-        if (this.get('minZoom')) {
-          if (this.get('minZoom') > map.getView().getZoom()) {
-            map.getView().setZoom(this.get('minZoom'));
+    // Center on point
+    // console.log(this.get('followTrack'))
+    switch (this.get('followTrack')) {
+      // Follow center + zoom
+      case true: {
+        // modify zoom
+        if (this.get('followTrack') == true) {
+          if (this.get('minZoom')) {
+            if (this.get('minZoom') > map.getView().getZoom()) {
+              map.getView().setZoom(this.get('minZoom'))
+            }
+          } else {
+            map.getView().setZoom(this.get('zoom') || 16)
+          }
+          if (!ol.extent.containsExtent(map.getView().calculateExtent(map.getSize()), p.getExtent())) {
+            map.getView().fit(p.getExtent())
+          }
+        }
+        map.getView().setCenter(pos)
+        break
+      }
+      // Follow  position 
+      case 'position': {
+        // modify center
+        map.getView().setCenter(pos)
+        break
+      }
+      // Keep on following 
+      case 'auto': {
+        if (this.lastPosition_) {
+          var center = map.getView().getCenter()
+          // console.log(center,this.lastPosition_)
+          if (center[0] != this.lastPosition_[0] || center[1] != this.lastPosition_[1]) {
+            //this.dispatchEvent({ type:'follow', following: false });
+            this.setFollowTrack(false)
+          } else {
+            map.getView().setCenter(pos)
+            this.lastPosition_ = pos
           }
         } else {
-          map.getView().setZoom( this.get('zoom') || 16 );
-        }
-        if (!ol.extent.containsExtent(map.getView().calculateExtent(map.getSize()), p.getExtent())) {
-          map.getView().fit(p.getExtent());
-        }
-      }
-      map.getView().setCenter( pos );
-      break;
-    }
-    // Follow  position 
-    case 'position': {
-      // modify center
-      map.getView().setCenter( pos );
-      break;
-    }
-    // Keep on following 
-    case 'auto': {
-      if (this.lastPosition_) {
-        var center = map.getView().getCenter();
-        // console.log(center,this.lastPosition_)
-        if (center[0]!=this.lastPosition_[0] || center[1]!=this.lastPosition_[1]) {
-          //this.dispatchEvent({ type:'follow', following: false });
-          this.setFollowTrack (false);
-        } else {
-          map.getView().setCenter( pos );	
-          this.lastPosition_ = pos;
-        }
-      } else {
-        map.getView().setCenter( pos );	
-        if (this.get('minZoom')) {
-          if (this.get('minZoom') > map.getView().getZoom()) {
-            map.getView().setZoom(this.get('minZoom'));
+          map.getView().setCenter(pos)
+          if (this.get('minZoom')) {
+            if (this.get('minZoom') > map.getView().getZoom()) {
+              map.getView().setZoom(this.get('minZoom'))
+            }
+          } else if (this.get('zoom')) {
+            map.getView().setZoom(this.get('zoom'))
           }
-        } else if (this.get('zoom')) {
-          map.getView().setZoom( this.get('zoom'));
+          this.lastPosition_ = pos
         }
-        this.lastPosition_ = pos;
+        break
       }
-      break;
-    }
-    // Force to stay on the map
-    case 'visible': {
-      if (!ol.extent.containsCoordinate(map.getView().calculateExtent(map.getSize()), pos)) {
-        map.getView().setCenter (pos);
+      // Force to stay on the map
+      case 'visible': {
+        if (!ol.extent.containsCoordinate(map.getView().calculateExtent(map.getSize()), pos)) {
+          map.getView().setCenter(pos)
+        }
+        break
       }
-      break;
+      // Don't follow
+      default: break
     }
-    // Don't follow
-    default: break;
-  }
-  // Draw occuracy
-  var f = this.sketch_[0];
-  f.setGeometry(p);
-  if (accu < this.get("minAccuracy")/2) f.setStyle(this.locStyle.ok);
-  else if (accu < this.get("minAccuracy")) f.setStyle(this.locStyle.warn);
-  else f.setStyle(this.locStyle.error);
-  var geo;
-  if (this.pause_) {
-    this.lastPosition_ = pos;
-  }
-  if (!this.pause_ && (!loc || this.condition_.call(this, loc))) {
-    f = this.sketch_[1];
-    this.path_.push(pos);
-    switch (this.get("type")) {
-      case "Point":
-        this.path_ = [pos];
-        f.setGeometry(new ol.geom.Point(pos, 'XYZM'));
-        var attr = this.get('attributes');
-        if (attr.heading) f.set("heading",loc.getHeading());
-        if (attr.accuracy) f.set("accuracy",loc.getAccuracy());
-        if (attr.altitudeAccuracy) f.set("altitudeAccuracy", loc.getAltitudeAccuracy());
-        if (attr.speed) f.set("speed",loc.getSpeed());
-        break;
-      case "LineString":
-        if (this.path_.length>1) {
-          geo = new ol.geom.LineString(this.path_, 'XYZM');
-          if (this.get("tolerance")) geo = this.simplify3D (geo, this.get("tolerance"));
-          f.setGeometry(geo);
-        } else {
-          f.setGeometry();
-        }
-        break;
-      case "Polygon":
-        if (this.path_.length>2) {
-          geo = new ol.geom.Polygon([this.path_], 'XYZM');
-          if (this.get("tolerance")) geo = this.simplify3D (geo, this.get("tolerance"));
-          f.setGeometry(geo);
-        }
-        else f.setGeometry();
-        break;
+    // Draw occuracy
+    var f = this.sketch_[0]
+    f.setGeometry(p)
+    if (accu < this.get("minAccuracy") / 2)
+      f.setStyle(this.locStyle.ok)
+    else if (accu < this.get("minAccuracy"))
+      f.setStyle(this.locStyle.warn)
+    else
+      f.setStyle(this.locStyle.error)
+    var geo
+    if (this.pause_) {
+      this.lastPosition_ = pos
     }
-    this.dispatchEvent({ type:'drawing', feature: this.sketch_[1], geolocation: loc });
+    if (!this.pause_ && (!loc || this.condition_.call(this, loc))) {
+      f = this.sketch_[1]
+      this.path_.push(pos)
+      switch (this.get("type")) {
+        case "Point":
+          this.path_ = [pos]
+          f.setGeometry(new ol.geom.Point(pos, 'XYZM'))
+          var attr = this.get('attributes')
+          if (attr.heading)
+            f.set("heading", loc.getHeading())
+          if (attr.accuracy)
+            f.set("accuracy", loc.getAccuracy())
+          if (attr.altitudeAccuracy)
+            f.set("altitudeAccuracy", loc.getAltitudeAccuracy())
+          if (attr.speed)
+            f.set("speed", loc.getSpeed())
+          break
+        case "LineString":
+          if (this.path_.length > 1) {
+            geo = new ol.geom.LineString(this.path_, 'XYZM')
+            if (this.get("tolerance"))
+              geo = this.simplify3D(geo, this.get("tolerance"))
+            f.setGeometry(geo)
+          } else {
+            f.setGeometry()
+          }
+          break
+        case "Polygon":
+          if (this.path_.length > 2) {
+            geo = new ol.geom.Polygon([this.path_], 'XYZM')
+            if (this.get("tolerance"))
+              geo = this.simplify3D(geo, this.get("tolerance"))
+            f.setGeometry(geo)
+          }
+          else
+            f.setGeometry()
+          break
+      }
+      this.dispatchEvent({ type: 'drawing', feature: this.sketch_[1], geolocation: loc })
+    }
+    this.sketch_[2].setGeometry(new ol.geom.Point(pos))
+    this.sketch_[2].set("heading", heading)
+    // Drawing
+    this.dispatchEvent({ type: 'tracking', feature: this.sketch_[1], geolocation: loc })
   }
-  this.sketch_[2].setGeometry(new ol.geom.Point(pos));
-  this.sketch_[2].set("heading", heading);
-  // Drawing
-  this.dispatchEvent({ type:'tracking', feature: this.sketch_[1], geolocation: loc });
-};
-/** Get a position according to the geolocation
- * @param {Geolocation} loc
- * @returns {Array<any>} an array of measure X,Y,Z,T
- * @api
- */
-ol.interaction.GeolocationDraw.prototype.getPosition = function (loc) {
-  var pos = loc.getPosition();
-  pos.push (Math.round((loc.getAltitude()||0)*100)/100);
-  pos.push (Math.round((new Date()).getTime()/1000));
-  return pos;
+  /** Get a position according to the geolocation
+   * @param {Geolocation} loc
+   * @returns {Array<any>} an array of measure X,Y,Z,T
+   * @api
+   */
+  getPosition(loc) {
+    var pos = loc.getPosition()
+    pos.push(Math.round((loc.getAltitude() || 0) * 100) / 100)
+    pos.push(Math.round((new Date()).getTime() / 1000))
+    return pos
+  }
 }
 
 /** Interaction hover do to something when hovering a feature
@@ -27118,155 +27131,156 @@ ol.interaction.TinkerBell.prototype.postcompose_ = function(e) {
 /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
  * @constructor
  * @extends {ol.interaction.Pointer}
- * @param {olx.interaction.TouchCompass} 
- *	- onDrag {function|undefined} Function handling "drag" events. It provides a dpixel and a traction (in projection) vector form the center of the compas
- *	- size {Number} size of the compass in px, default 80
- *	- alpha {Number} opacity of the compass, default 0.5
+ * @param {Object} options
+ * 	@param {function|undefined} onDrag Function handling "drag" events. It provides a dpixel and a traction (in projection) vector form the center of the compas
+ *	@param {Number} options.size size of the compass in px, default 80
+ *	@param {Number} options.alpha opacity of the compass, default 0.5
  */
-ol.interaction.TouchCompass = function(options) {
-	options = options||{};
-	var opt = {};
-	// Click on the compass
-	opt.handleDownEvent = function(e)
-	{	var s = this.getCenter_();
-		var dx = e.pixel[0]-s[0];
-		var dy = e.pixel[1]-s[1];
-		this.start = e;
-		return (Math.sqrt(dx*dx+dy*dy) < this.size/2);
-	};
-	// Pn drag
-	opt.handleDragEvent = function(e) {
-		if (!this.pos) {
-			this.pos = this.start;
-			try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+ol.interaction.TouchCompass = class olinteractionTouchCompass extends ol.interaction.Pointer {
+	constructor(options) {
+		options = options || {};
+		var opt = {};
+		// Click on the compass
+		opt.handleDownEvent = function (e) {
+			var s = this.getCenter_();
+			var dx = e.pixel[0] - s[0];
+			var dy = e.pixel[1] - s[1];
+			this.start = e;
+			return (Math.sqrt(dx * dx + dy * dy) < this.size / 2);
+		};
+		// Pn drag
+		opt.handleDragEvent = function (e) {
+			if (!this.pos) {
+				this.pos = this.start;
+				try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+			}
+			this.pos = e;
+		};
+		// Stop drag
+		opt.handleUpEvent = function () {
+			this.pos = false;
+			return true;
+		};
+		super(opt);
+		this.ondrag_ = options.onDrag;
+		this.size = options.size || 80;
+		this.alpha = options.alpha || 0.5;
+		if (!ol.interaction.TouchCompass.prototype.compass) {
+			var canvas = ol.interaction.TouchCompass.prototype.compass = document.createElement('canvas');
+			var ctx = canvas.getContext("2d");
+			var s = canvas.width = canvas.height = this.size;
+			var w = s / 10;
+			var r = s / 2;
+			var r2 = 0.22 * r;
+			ctx.translate(r, r);
+			ctx.fillStyle = "#999";
+			ctx.strokeStyle = "#ccc";
+			ctx.lineWidth = w;
+			ctx.beginPath();
+			ctx.arc(0, 0, s * 0.42, 0, 2 * Math.PI);
+			ctx.fill();
+			ctx.stroke();
+			ctx.fillStyle = "#99f";
+			ctx.beginPath();
+			ctx.moveTo(0, 0);
+			ctx.lineTo(r, 0); ctx.lineTo(r2, r2); ctx.moveTo(0, 0);
+			ctx.lineTo(-r, 0); ctx.lineTo(-r2, -r2); ctx.moveTo(0, 0);
+			ctx.lineTo(0, r); ctx.lineTo(-r2, r2); ctx.moveTo(0, 0);
+			ctx.lineTo(0, -r); ctx.lineTo(r2, -r2); ctx.moveTo(0, 0);
+			ctx.fill();
+			ctx.fillStyle = "#eee";
+			ctx.beginPath();
+			ctx.moveTo(0, 0);
+			ctx.lineTo(r, 0); ctx.lineTo(r2, -r2); ctx.moveTo(0, 0);
+			ctx.lineTo(-r, 0); ctx.lineTo(-r2, r2); ctx.moveTo(0, 0);
+			ctx.lineTo(0, r); ctx.lineTo(r2, r2); ctx.moveTo(0, 0);
+			ctx.lineTo(0, -r); ctx.lineTo(-r2, -r2); ctx.moveTo(0, 0);
+			ctx.fill();
 		}
-		this.pos = e;
-	};
-	// Stop drag
-	opt.handleUpEvent = function()
-	{	this.pos = false;
-		return true;
-	};
-	ol.interaction.Pointer.call(this, opt);
-	this.ondrag_ = options.onDrag;
-	this.size = options.size || 80;
-	this.alpha = options.alpha || 0.5;
-	if (!ol.interaction.TouchCompass.prototype.compass)
-	{	var canvas = ol.interaction.TouchCompass.prototype.compass = document.createElement('canvas');
-		var ctx = canvas.getContext("2d");
-		var s = canvas.width = canvas.height = this.size;
-		var w = s/10;
-		var r = s/2;
-		var r2 = 0.22*r;
-		ctx.translate(r,r);
-		ctx.fillStyle = "#999";
-		ctx.strokeStyle = "#ccc";
-		ctx.lineWidth = w;
-		ctx.beginPath();
-		ctx.arc (0,0, s*0.42, 0, 2*Math.PI);
-		ctx.fill();
-		ctx.stroke();
-		ctx.fillStyle = "#99f";
-		ctx.beginPath();
-		ctx.moveTo (0,0); 
-		ctx.lineTo (r,0); ctx.lineTo (r2,r2); ctx.moveTo (0,0);
-		ctx.lineTo (-r,0); ctx.lineTo (-r2,-r2); ctx.moveTo (0,0);
-		ctx.lineTo (0,r); ctx.lineTo (-r2,r2); ctx.moveTo (0,0);
-		ctx.lineTo (0,-r); ctx.lineTo (r2,-r2); ctx.moveTo (0,0);
-		ctx.fill();
-		ctx.fillStyle = "#eee";
-		ctx.beginPath();
-		ctx.moveTo (0,0); 
-		ctx.lineTo (r,0); ctx.lineTo (r2,-r2); ctx.moveTo (0,0);
-		ctx.lineTo (-r,0); ctx.lineTo (-r2,r2); ctx.moveTo (0,0);
-		ctx.lineTo (0,r); ctx.lineTo (r2,r2); ctx.moveTo (0,0);
-		ctx.lineTo (0,-r); ctx.lineTo (-r2,-r2); ctx.moveTo (0,0);
-		ctx.fill();
 	}
-};
-ol.ext.inherits(ol.interaction.TouchCompass, ol.interaction.Pointer);
+	/**
+	 * Remove the interaction from its current map, if any,  and attach it to a new
+	 * map, if any. Pass `null` to just remove the interaction from the current map.
+	 * @param {_ol_Map_} map Map.
+	 * @api stable
+	 */
+	setMap(map) {
+		if (this._listener) ol.Observable.unByKey(this._listener);
+		this._listener = null;
+		super.setMap(map);
+		if (map) {
+			this._listener = map.on('postcompose', this.drawCompass_.bind(this));
+			ol.ext.getMapCanvas(map);
+		}
+	}
+	/**
+	 * Activate or deactivate the interaction.
+	 * @param {boolean} active Active.
+	 * @observable
+	 * @api
+	 */
+	setActive(b) {
+		super.setActive(b);
+		if (this.getMap()) {
+			try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+		}
+	}
+	/**
+	 * Get the center of the compass
+	 * @param {_ol_coordinate_}
+	 * @private
+	 */
+	getCenter_() {
+		var margin = 10;
+		var s = this.size;
+		var c = this.getMap().getSize();
+		return [c[0] / 2, c[1] - margin - s / 2];
+	}
+	/**
+	 * Draw the compass on post compose
+	 * @private
+	 */
+	drawCompass_(e) {
+		if (!this.getActive())
+			return;
+		var ctx = e.context || ol.ext.getMapCanvas(this.getMap()).getContext('2d');
+		var ratio = e.frameState.pixelRatio;
+		ctx.save();
+		ctx.scale(ratio, ratio);
+		ctx.globalAlpha = this.alpha;
+		ctx.strokeStyle = "#fff";
+		ctx.lineWidth = 5;
+		var s = this.size;
+		var c = this.getCenter_();
+		ctx.drawImage(this.compass, 0, 0, this.compass.width, this.compass.height, c[0] - s / 2, c[1] - s / 2, s, s);
+		if (this.pos) {
+			var dx = this.pos.pixel[0] - this.start.pixel[0];
+			var dy = this.pos.pixel[1] - this.start.pixel[1];
+			for (var i = 1; i <= 4; i++) {
+				ctx.beginPath();
+				ctx.arc(c[0] + dx / 4 * i, c[1] + dy / 4 * i, s / 2 * (0.6 + 0.4 * i / 4), 0, 2 * Math.PI);
+				ctx.stroke();
+			}
+		}
+		ctx.restore();
+		if (this.pos) { // Get delta
+			if (this.ondrag_) {
+				var r = this.getMap().getView().getResolution();
+				var delta = {
+					dpixel: [this.pos.pixel[0] - this.start.pixel[0], this.pos.pixel[1] - this.start.pixel[1]]
+				};
+				delta.traction = [delta.dpixel[0] * r, -delta.dpixel[1] * r];
+				this.ondrag_(delta, this.pos);
+			}
+			// Continue animation
+			e.frameState.animate = true;
+		}
+	}
+}
 /** Compass Image as a JS Image object
 * @api
 */
 ol.interaction.TouchCompass.prototype.compass = null;
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {_ol_Map_} map Map.
- * @api stable
- */
-ol.interaction.TouchCompass.prototype.setMap = function(map) {
-	if (this._listener) ol.Observable.unByKey(this._listener);
-	this._listener = null;
-	ol.interaction.Pointer.prototype.setMap.call (this, map);
-	if (map) {
-		this._listener = map.on('postcompose', this.drawCompass_.bind(this));
-		ol.ext.getMapCanvas(map);
-	}
-};
-/**
- * Activate or deactivate the interaction.
- * @param {boolean} active Active.
- * @observable
- * @api
- */
-ol.interaction.TouchCompass.prototype.setActive = function(b)
-{	ol.interaction.Pointer.prototype.setActive.call (this, b);
-	if (this.getMap()) {
-		try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-	}
-}
-/**
- * Get the center of the compass
- * @param {_ol_coordinate_}
- * @private
- */
-ol.interaction.TouchCompass.prototype.getCenter_ = function()
-{	var margin = 10;
-	var s = this.size;
-	var c = this.getMap().getSize(); 
-	return [c[0]/2, c[1]-margin-s/2];
-}
-/**
- * Draw the compass on post compose
- * @private
- */
-ol.interaction.TouchCompass.prototype.drawCompass_ = function(e)
-{	if (!this.getActive()) return;
-	var ctx = e.context || ol.ext.getMapCanvas(this.getMap()).getContext('2d');
-	var ratio = e.frameState.pixelRatio;
-	ctx.save();
-	ctx.scale(ratio,ratio);
-	ctx.globalAlpha = this.alpha;
-	ctx.strokeStyle = "#fff";
-	ctx.lineWidth = 5;
-	var s = this.size;
-	var c = this.getCenter_();
-	ctx.drawImage(this.compass, 0,0,this.compass.width,this.compass.height, c[0]-s/2, c[1]-s/2, s,s);
-	if (this.pos)
-	{	var dx = this.pos.pixel[0]-this.start.pixel[0];
-		var dy = this.pos.pixel[1]-this.start.pixel[1];
-		for (var i=1; i<=4; i++)
-		{	ctx.beginPath();
-			ctx.arc (c[0] +dx/4*i, c[1] +dy/4*i, s/2*(0.6+0.4*i/4), 0, 2*Math.PI);
-			ctx.stroke();
-		}
-	}
-	ctx.restore();
-	if (this.pos)
-	{	// Get delta
-		if (this.ondrag_) 
-		{	var r = this.getMap().getView().getResolution();
-			var delta = 
-				{	dpixel: [ this.pos.pixel[0] - this.start.pixel[0], this.pos.pixel[1] - this.start.pixel[1] ]
-				}
-			delta.traction = [ delta.dpixel[0]*r, -delta.dpixel[1]*r];
-			this.ondrag_(delta, this.pos);
-		}
-		// Continue animation
-		e.frameState.animate = true;
-	}
-};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -29540,8 +29554,8 @@ ol.source.BinBase = class olsourceBinBase extends ol.source.Vector {
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
   @classdesc
   ol.source.DBPedia is a DBPedia layer source that load DBPedia located content in a vector layer.
-  olx.source.DBPedia: olx.source.Vector
-  {	url: {string} Url for DBPedia SPARQL 
+  olx.source.DBPedia: olx.source.Vector {
+    url: {string} Url for DBPedia SPARQL 
   }
   Inherits from:
   <ol.source.Vector>
@@ -29555,13 +29569,13 @@ ol.source.DBPedia = class olsourceDBPedia extends ol.source.Vector {
   constructor(opt_options) {
     var options = opt_options || {}
     /** Default attribution */
-    if (!options.attributions) options.attributions = ["&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA"]
+    if (!options.attributions) options.attributions = [ '&copy; <a href="http://dbpedia.org/"">DBpedia</a> CC-by-SA']
     // Bbox strategy : reload at each move
     if (!options.strategy) options.strategy = ol.loadingstrategy.bbox
     super(options)
     this.setLoader(this._loaderFn)
     /** Url for DBPedia SPARQL */
-    this._url = options.url || "http://fr.dbpedia.org/sparql"
+    this._url = options.url || 'http://fr.dbpedia.org/sparql'
     /** Max resolution to load features  */
     this._maxResolution = options.maxResolution || 100
     /** Result language */
@@ -29599,8 +29613,8 @@ ol.source.DBPedia = class olsourceDBPedia extends ol.source.Vector {
   */
   querySubject() {
     return "?subject rdfs:label ?label. "
-      + "OPTIONAL {?subject dbpedia-owl:thumbnail ?thumbnail}."
-      + "OPTIONAL {?subject dbpedia-owl:abstract ?abstract} . "
+      + "OPTIONAL {?subject dbo:thumbnail ?thumbnail}."
+      + "OPTIONAL {?subject dbo:abstract ?abstract} . "
       + "OPTIONAL {?subject rdf:type ?type}"
   }
   /** Set RDF query filter, default: select language
@@ -30063,466 +30077,483 @@ ol.source.DayNight = class olsourceDayNight extends ol.source.Vector {
  * @param {*} options extend ol/source/Vector options
  *  @param {ol/source/Vector} options.source the source that contains the points
  */
-ol.source.Delaunay = function(options) {
-  options = options || {};
-  this._nodes = options.source;
-  delete options.source;
-  ol.source.Vector.call (this, options);
-  // Convex hull
-  this.hull = [];
-  // A new node is added to the source node: calculate the new triangulation
-  this._nodes.on('addfeature', this._onAddNode.bind(this));
-  // A new node is removed from the source node: calculate the new triangulation
-  this._nodes.on('removefeature', this._onRemoveNode.bind(this));
-  this.set ('epsilon', options.epsilon || .0001)
-};
-ol.ext.inherits(ol.source.Delaunay, ol.source.Vector);
-/** Clear source (and points)
- * @param {boolean} opt_fast
- */
-ol.source.Delaunay.prototype.clear = function(opt_fast) {
-  ol.source.Vector.prototype.clear.call(this, opt_fast);
-  this.getNodeSource().clear(opt_fast);
-};
-/** Add a new triangle in the source
- * @param {Array<ol/coordinates>} pts
- */
-ol.source.Delaunay.prototype._addTriangle = function(pts) {
-  pts.push(pts[0]);
-  var triangle = new ol.Feature(new ol.geom.Polygon([pts]));
-  this.addFeature(triangle);
-  this.flip.push(triangle);
-  return triangle;
-};
-/** Get nodes 
- */
-ol.source.Delaunay.prototype.getNodes = function () {
-  return this._nodes.getFeatures();
-};
-/** Get nodes source
- */
-ol.source.Delaunay.prototype.getNodeSource = function () {
-  return this._nodes;
-};
-/**
- * A point has been removed
- * @param {ol/source/Vector.Event} evt 
- */
-ol.source.Delaunay.prototype._onRemoveNode = function(evt) {
-  // console.log(evt)
-  var pt = evt.feature.getGeometry().getCoordinates();
-  if (!pt) return;
-  // Still there (when removing duplicated points)
-  if (this.getNodesAt(pt).length) return;
-  // console.log('removenode', evt.feature)
-  // Get associated triangles
-  var triangles = this.getTrianglesAt(pt);
-  this.flip=[];
-  // Get hole
-  var i;
-  var edges = [];
-  while (triangles.length) {
-    var tr = triangles.pop()
-    this.removeFeature(tr);
-    tr = tr.getGeometry().getCoordinates()[0];
-    var pts = [];
-    for (i=0; i<3; i++) {
-      p = tr[i];
-      if (!ol.coordinate.equal(p,pt)) {
-        pts.push(p);
-      }
-    }
-    edges.push(pts);
+ol.source.Delaunay = class olsourceDelaunay extends ol.source.Vector {
+  constructor(options) {
+    options = options || {}
+    var source = options.source
+    delete options.source
+    super(options)
+    // Source
+    this._nodes = source;
+    // Convex hull
+    this.hull = []
+    // A new node is added to the source node: calculate the new triangulation
+    this._nodes.on('addfeature', this._onAddNode.bind(this))
+    // A new node is removed from the source node: calculate the new triangulation
+    this._nodes.on('removefeature', this._onRemoveNode.bind(this))
+    this.set('epsilon', options.epsilon || .0001)
   }
-  pts = edges.pop();
-/* DEBUG
-var se = '';
-edges.forEach(function(e){
-  se += ' - '+this.listpt(e);
-}.bind(this));
-console.log('EDGES', se);
-*/
-  i = 0;
-  function testEdge(p0, p1, index) {
-    if (ol.coordinate.equal(p0, pts[index])) {
-      if (index) pts.push(p1);
-      else pts.unshift(p1);
-      return true
-    }
-    return false;
+  /** Clear source (and points)
+   * @param {boolean} opt_fast
+   */
+  clear(opt_fast) {
+    super.clear(opt_fast)
+    this.getNodeSource().clear(opt_fast)
   }
-  while (true) {
-    var e = edges[i];
-    if ( testEdge(e[0], e[1], 0) 
-      || testEdge(e[1], e[0], 0)
-      || testEdge(e[0], e[1], pts.length-1)
-      || testEdge(e[1], e[0], pts.length-1)
-    ) {
-      edges.splice(i,1);
-      i = 0;
-    } else {
-      i++
-    }
-    if (!edges.length) break;
-    if (i>=edges.length) {
-//      console.log(this.listpt(pts), this.listpt(edges));
-      throw '[DELAUNAY:removePoint] No edge found';
-    }
+  /** Add a new triangle in the source
+   * @param {Array<ol/coordinates>} pts
+   */
+  _addTriangle(pts) {
+    pts.push(pts[0])
+    var triangle = new ol.Feature(new ol.geom.Polygon([pts]))
+    this.addFeature(triangle)
+    this.flip.push(triangle)
+    return triangle
   }
-  // Closed = interior
-// console.log('PTS', this.listpt(pts))
-  var closed = ol.coordinate.equal(pts[0], pts[pts.length-1]);
-  if (closed) pts.pop();
-  // Update convex hull: remove pt + add new ones
-  var p;
-  for (i; p=this.hull[i]; i++) {
-    if (ol.coordinate.equal(pt,p)) {
-      this.hull.splice(i,1);
-      break;
-    }
+  /** Get nodes
+   */
+  getNodes() {
+    return this._nodes.getFeatures()
   }
-  this.hull = ol.coordinate.convexHull(this.hull.concat(pts));
-// select.getFeatures().clear();
-  // 
-  var clockwise = function (t) {
-    var i1, s = 0;
-    for (var i=0; i<t.length; i++) {
-      i1 = (i+1) % t.length;
-      s += (t[i1][0] - t[i][0]) * (t[i1][1] + t[i][1]);
-    }
-//    console.log(s)
-    return (s>=0 ? 1:-1)
-  };
-  // Add ears
-  // interior point : ear area and object area have the same sign
-  // extrior point : add a new point and close
-  var clock;
-  var enveloppe = pts.slice();
-  if (closed) {
-    clock = clockwise(pts);
-  } else {
-//    console.log('ouvert', pts, pts.slice().push(pt))
-    enveloppe.push(pt);
-    clock = clockwise(enveloppe);
+  /** Get nodes source
+   */
+  getNodeSource() {
+    return this._nodes
   }
-// console.log('S=',clock,'CLOSED',closed)
-// console.log('E=',this.listpt(enveloppe))
-  for (i=0; i<=pts.length+1; i++) {
-    if (pts.length<3) break;
-    var t = [
-      pts[i % pts.length],
-      pts[(i+1) % pts.length],
-      pts[(i+2) % pts.length] 
-    ];
-    if (clockwise(t)===clock) {
-      var ok = true;
-      for (var k=i+3; k<i+pts.length; k++) {
-//        console.log('test '+k, this.listpt([pts[k % pts.length]]))
-        if (this.inCircle(pts[k % pts.length], t)) {
-          ok = false;
-          break;
+  /**
+   * A point has been removed
+   * @param {ol/source/Vector.Event} evt
+   */
+  _onRemoveNode(evt) {
+    // console.log(evt)
+    var pt = evt.feature.getGeometry().getCoordinates()
+    if (!pt)
+      return
+    // Still there (when removing duplicated points)
+    if (this.getNodesAt(pt).length)
+      return
+    // console.log('removenode', evt.feature)
+    // Get associated triangles
+    var triangles = this.getTrianglesAt(pt)
+    this.flip = []
+    // Get hole
+    var i
+    var edges = []
+    while (triangles.length) {
+      var tr = triangles.pop()
+      this.removeFeature(tr)
+      tr = tr.getGeometry().getCoordinates()[0]
+      var pts = []
+      for (i = 0; i < 3; i++) {
+        p = tr[i]
+        if (!ol.coordinate.equal(p, pt)) {
+          pts.push(p)
         }
       }
-      if (ok) {
-// console.log(this.listpt(t),'ok');
-        this._addTriangle(t);
-        // remove
-        pts.splice((i+1) % pts.length, 1);
-        // and restart
-        i = -1;
+      edges.push(pts)
+    }
+    pts = edges.pop()
+    /* DEBUG
+    var se = '';
+    edges.forEach(function(e){
+      se += ' - '+this.listpt(e);
+    }.bind(this));
+    console.log('EDGES', se);
+    */
+    i = 0
+    function testEdge(p0, p1, index) {
+      if (ol.coordinate.equal(p0, pts[index])) {
+        if (index)
+          pts.push(p1)
+        else
+          pts.unshift(p1)
+        return true
+      }
+      return false
+    }
+    while (true) {
+      var e = edges[i]
+      if (testEdge(e[0], e[1], 0)
+        || testEdge(e[1], e[0], 0)
+        || testEdge(e[0], e[1], pts.length - 1)
+        || testEdge(e[1], e[0], pts.length - 1)) {
+        edges.splice(i, 1)
+        i = 0
+      } else {
+        i++
+      }
+      if (!edges.length)
+        break
+      if (i >= edges.length) {
+        //      console.log(this.listpt(pts), this.listpt(edges));
+        throw '[DELAUNAY:removePoint] No edge found'
       }
     }
-// else console.log(this.listpt(t),'nok');
-  }
-/* DEBUG * /
-if (pts.length>3) console.log('oops');
-console.log('LEAV',this.listpt(pts));
-var ul = $('ul.triangles').html('');
-$('<li>')
-.text('E:'+this.listpt(enveloppe)+' - '+clock+' - '+closed)
-.data('triangle', new ol.Feature(new ol.geom.Polygon([enveloppe])))
-.click(function(){
-  var t = $(this).data('triangle');
-  select.getFeatures().clear();
-  select.getFeatures().push(t);
-})
-.appendTo(ul);
-for (var i=0; i<this.flip.length; i++) {
-  $('<li>')
-    .text(this.listpt(this.flip[i].getGeometry().getCoordinates()[0])
-        +' - ' + clockwise(this.flip[i].getGeometry().getCoordinates()[0]))
-    .data('triangle', this.flip[i])
+    // Closed = interior
+    // console.log('PTS', this.listpt(pts))
+    var closed = ol.coordinate.equal(pts[0], pts[pts.length - 1])
+    if (closed)
+      pts.pop()
+    // Update convex hull: remove pt + add new ones
+    var p
+    for (i; p = this.hull[i]; i++) {
+      if (ol.coordinate.equal(pt, p)) {
+        this.hull.splice(i, 1)
+        break
+      }
+    }
+    this.hull = ol.coordinate.convexHull(this.hull.concat(pts))
+    // select.getFeatures().clear();
+    // 
+    var clockwise = function (t) {
+      var i1, s = 0
+      for (var i = 0; i < t.length; i++) {
+        i1 = (i + 1) % t.length
+        s += (t[i1][0] - t[i][0]) * (t[i1][1] + t[i][1])
+      }
+      //    console.log(s)
+      return (s >= 0 ? 1 : -1)
+    }
+    // Add ears
+    // interior point : ear area and object area have the same sign
+    // extrior point : add a new point and close
+    var clock
+    var enveloppe = pts.slice()
+    if (closed) {
+      clock = clockwise(pts)
+    } else {
+      //    console.log('ouvert', pts, pts.slice().push(pt))
+      enveloppe.push(pt)
+      clock = clockwise(enveloppe)
+    }
+    // console.log('S=',clock,'CLOSED',closed)
+    // console.log('E=',this.listpt(enveloppe))
+    for (i = 0; i <= pts.length + 1; i++) {
+      if (pts.length < 3)
+        break
+      var t = [
+        pts[i % pts.length],
+        pts[(i + 1) % pts.length],
+        pts[(i + 2) % pts.length]
+      ]
+      if (clockwise(t) === clock) {
+        var ok = true
+        for (var k = i + 3; k < i + pts.length; k++) {
+          //        console.log('test '+k, this.listpt([pts[k % pts.length]]))
+          if (this.inCircle(pts[k % pts.length], t)) {
+            ok = false
+            break
+          }
+        }
+        if (ok) {
+          // console.log(this.listpt(t),'ok');
+          this._addTriangle(t)
+          // remove
+          pts.splice((i + 1) % pts.length, 1)
+          // and restart
+          i = -1
+        }
+      }
+      // else console.log(this.listpt(t),'nok');
+    }
+    /* DEBUG * /
+    if (pts.length>3) console.log('oops');
+    console.log('LEAV',this.listpt(pts));
+    var ul = $('ul.triangles').html('');
+    $('<li>')
+    .text('E:'+this.listpt(enveloppe)+' - '+clock+' - '+closed)
+    .data('triangle', new ol.Feature(new ol.geom.Polygon([enveloppe])))
     .click(function(){
       var t = $(this).data('triangle');
       select.getFeatures().clear();
       select.getFeatures().push(t);
     })
     .appendTo(ul);
-}
-/**/
-  // Flip?
-  this.flipTriangles();
-};
-/**
- * A new point has been added
- * @param {ol/source/VectorEvent} e 
- */
-ol.source.Delaunay.prototype._onAddNode = function(e) {
-  var finserted = e.feature;
-  var i, p;
-  // Not a point!
-  if (finserted.getGeometry().getType() !== 'Point') {
-    this._nodes.removeFeature(finserted);
-    return;
-  }
-  // Reset flip table
-  this.flip = [];
-  var nodes = this.getNodes();
-  // The point
-  var pt = finserted.getGeometry().getCoordinates();
-  // Test existing point
-  if (this.getNodesAt(pt).length > 1) {
-    // console.log('remove duplicated points')
-    this._nodes.removeFeature(finserted);
-    return;
-  }
-  // Triangle needs at least 3 points
-  if (nodes.length <= 3) {
-    if (nodes.length===3) {
-      var pts = [];
-      for (i=0; i<3; i++) pts.push(nodes[i].getGeometry().getCoordinates());
-      this._addTriangle(pts);
-      this.hull = ol.coordinate.convexHull(pts);
-    }
-    return;
-  }
-  // Get the triangle
-  var t = this.getFeaturesAtCoordinate(pt)[0];
-  if (t) {
-    this.removeFeature(t);
-    t.set('del', true);
-    var c = t.getGeometry().getCoordinates()[0];
-    for (i=0; i<3; i++) {
-      this._addTriangle([ pt, c[i], c[(i+1)%3]]);
-    }
-  } else {
-    // Calculate new convex hull
-    var hull2 = this.hull.slice();
-    hull2.push(pt);
-    hull2 = ol.coordinate.convexHull(hull2);
-    // Search for points
-    for (i=0; p=hull2[i]; i++) {
-      if (ol.coordinate.equal(p,pt)) break;
-    }
-    i = (i!==0 ? i-1 : hull2.length-1);
-    var p0 = hull2[i];
-    var stop = hull2[(i+2) % hull2.length];
-    for (i=0; p=this.hull[i]; i++) {
-      if (ol.coordinate.equal(p,p0)) break;
-    }
-    // Connect to the hull
-    while (true) {
-      // DEBUG: prevent infinit loop
-      if (i>1000) {
-        console.error('[DELAUNAY:addPoint] Too many iterations')
-        break;
-      }
-      i++;
-      p = this.hull[i % this.hull.length];
-      this._addTriangle([pt, p, p0]);
-      p0 = p;
-      if (p[0] === stop[0] && p[1] === stop[1]) break;
-    }
-    this.hull = hull2;
-  }
-  this.flipTriangles();
-};
-/** Flipping algorithme: test new inserted triangle and flip
- */
-ol.source.Delaunay.prototype.flipTriangles = function ()	{
-  var count = 1000; // Count to prevent too many iterations
-  var pi;
-  while (this.flip.length) {
-    // DEBUG: prevent infinite loop
-    if (count--<0) {
-      console.error('[DELAUNAY:flipTriangles] Too many iterations')
-      break;
-    }
-    var tri = this.flip.pop();
-    if (tri.get('del')) continue;
-    var ti = tri.getGeometry().getCoordinates()[0];
-    for (var k=0; k<3; k++) {
-      // Get facing triangles
-      var mid = [(ti[(k+1)%3][0]+ti[k][0])/2, (ti[(k+1)%3][1]+ti[k][1])/2];
-      var triangles = this.getTrianglesAt(mid);
-      var pt1 = null;
-      // Get opposite point
-      if (triangles.length>1) {
-        var t0 = triangles[0].getGeometry().getCoordinates()[0];
-        var t1 = triangles[1].getGeometry().getCoordinates()[0];
-        for (pi=0; pi<t1.length; pi++) {
-          if (!this._ptInTriangle(t1[pi], t0)) {
-            pt1 = t1[pi];
-            break;
-          }
-        }
-      }
-      if (pt1) {
-        // Is in circle ?
-        if (this.inCircle(pt1, t0)) {
-          var pt2;
-          // Get opposite point
-          for (pi=0; pi<t0.length; pi++) {
-            if (!this._ptInTriangle(t0[pi], t1)) {
-              pt2 = t0.splice(pi,1)[0];
-              break;
-            }
-          }
-          // Flip triangles
-          if (this.intersectSegs([pt1, pt2], t0)) {
-            while (triangles.length) {
-              var tmp = triangles.pop();
-              tmp.set('del', true);
-              this.removeFeature(tmp);
-            }
-            this._addTriangle([pt1, pt2, t0[0]]);
-            this._addTriangle([pt1, pt2, t0[1]]);
-          }
-        }
-      }
-    }
-  }
-};
-/** Test intersection beetween 2 segs
- * @param {Array<ol.coordinates>} d1
- * @param {Array<ol.coordinates>} d2
- * @return {bbolean}
- */
-ol.source.Delaunay.prototype.intersectSegs = function (d1, d2)	{
-  var d1x = d1[1][0] - d1[0][0];
-  var d1y = d1[1][1] - d1[0][1];
-  var d2x = d2[1][0] - d2[0][0];
-  var d2y = d2[1][1] - d2[0][1];
-  var det = d1x * d2y - d1y * d2x;
-  if (det != 0) {
-    var k = (d1x * d1[0][1] - d1x * d2[0][1] - d1y * d1[0][0] + d1y * d2[0][0]) / det;
-    // Intersection: return [d2[0][0] + k*d2x, d2[0][1] + k*d2y];
-    return (0<k && k<1);
-  }
-  else return false;
-};
-/** Test pt is a triangle's node
- * @param {ol.coordinate} pt
- * @param {Array<ol.coordinate>} triangle
- * @return {boolean}
- */
-ol.source.Delaunay.prototype._ptInTriangle = function(pt, triangle) {
-  for (var i=0, p; p=triangle[i]; i++) {
-    if (ol.coordinate.equal(pt,p)) return true;
-  }
-  return false;
-};
-/** List points in a triangle (assume points get an id) for debug purposes
- * @param {Array<ol.coordinate>} pts
- * @return {String} ids list
- */
-ol.source.Delaunay.prototype.listpt = function (pts) {
-  var s = '';
-  for (var i=0, p; p = pts[i]; i++) {
-    var c = this._nodes.getClosestFeatureToCoordinate(p);
-    if (!ol.coordinate.equal(c.getGeometry().getCoordinates(), p)) c=null;
-    s += (s?', ':'') + (c ? c.get('id') : '?');
-  }
-  return s;
-};
-/** Test if coord is within triangle's circumcircle 
- * @param {ol.coordinate} coord
- * @param {Array<ol.coordinate>} triangle
- * @return {boolean}
- */
-ol.source.Delaunay.prototype.inCircle = function (coord, triangle) {
-  var c = this.getCircumCircle(triangle);
-  return ol.coordinate.dist2d(coord, c.center) < c.radius;
-}
-/** Calculate the circumcircle of a triangle
- * @param {Array<ol.coordinate>} triangle
- * @return {*}
- */
-ol.source.Delaunay.prototype.getCircumCircle = function (triangle) {
-  var x1 = triangle[0][0];
-  var y1 = triangle[0][1];
-  var x2 = triangle[1][0];
-  var y2 = triangle[1][1];
-  var x3 = triangle[2][0];
-  var y3 = triangle[2][1];
-  var m1 = (x1-x2)/(y2-y1);
-  var m2 = (x1-x3)/(y3-y1);
-  var b1 = ((y1+y2)/2) - m1*(x1+x2)/2;
-  var b2 = ((y1+y3)/2) - m2*(x1+x3)/2;
-  var cx = (b2-b1)/(m1-m2);
-  var cy = m1*cx + b1;
-  var center = [cx, cy];
-  return  { 
-    center: center, 
-    radius: ol.coordinate.dist2d(center,triangle[0])
-  };
-};
-/** Get triangles at a point
- */
-ol.source.Delaunay.prototype.getTrianglesAt = function(coord) {
-  var extent = ol.extent.buffer (ol.extent.boundingExtent([coord]), this.get('epsilon'));
-  var result = [];
-  this.forEachFeatureIntersectingExtent(extent, function(f){
-    result.push(f);
-  });
-  return result;
-};
-/** Get nodes at a point
- */
-ol.source.Delaunay.prototype.getNodesAt = function(coord) {
-  var extent = ol.extent.buffer (ol.extent.boundingExtent([coord]), this.get('epsilon'));
-  return this._nodes.getFeaturesInExtent(extent);
-};
-/** Get Voronoi
- * @param {boolean} border include border, default false
- * @return { Array< ol.geom.Polygon > }
- */
-ol.source.Delaunay.prototype.calculateVoronoi = function(border) {
-  var voronoi = [];
-  this.getNodes().forEach(function(f) {
-    var pt = f.getGeometry().getCoordinates();
-    var isborder = false;
-    if (border !== true) {
-      for (var i=0; i<this.hull.length; i++) {
-        if (ol.coordinate.equal(pt, this.hull[i])) {
-          isborder = true;
-          break;
-        }
-      }
-    }
-    if (!isborder) {
-      var tr = this.getTrianglesAt(pt);
-      var pts = [];
-      tr.forEach(function(triangle) {
-        var c = this.getCircumCircle(triangle.getGeometry().getCoordinates()[0]);
-        pts.push({
-          pt: c.center,
-          d: Math.atan2(c.center[1]-pt[1],c.center[0]-pt[0])
+    for (var i=0; i<this.flip.length; i++) {
+      $('<li>')
+        .text(this.listpt(this.flip[i].getGeometry().getCoordinates()[0])
+            +' - ' + clockwise(this.flip[i].getGeometry().getCoordinates()[0]))
+        .data('triangle', this.flip[i])
+        .click(function(){
+          var t = $(this).data('triangle');
+          select.getFeatures().clear();
+          select.getFeatures().push(t);
         })
-      }.bind(this));
-      pts.sort(function(a,b) { return a.d - b.d });
-      var poly = [];
-      pts.forEach(function(p) {
-        poly.push(p.pt);
-      });
-      poly.push(poly[0]);
-      var prop = f.getProperties();
-      prop.geometry = new ol.geom.Polygon([poly]);
-      voronoi.push(new ol.Feature(prop));
+        .appendTo(ul);
     }
-  }.bind(this));
-  return voronoi;
-};
+    /**/
+    // Flip?
+    this.flipTriangles()
+  }
+  /**
+   * A new point has been added
+   * @param {ol/source/VectorEvent} e
+   */
+  _onAddNode(e) {
+    var finserted = e.feature
+    var i, p
+    // Not a point!
+    if (finserted.getGeometry().getType() !== 'Point') {
+      this._nodes.removeFeature(finserted)
+      return
+    }
+    // Reset flip table
+    this.flip = []
+    var nodes = this.getNodes()
+    // The point
+    var pt = finserted.getGeometry().getCoordinates()
+    // Test existing point
+    if (this.getNodesAt(pt).length > 1) {
+      // console.log('remove duplicated points')
+      this._nodes.removeFeature(finserted)
+      return
+    }
+    // Triangle needs at least 3 points
+    if (nodes.length <= 3) {
+      if (nodes.length === 3) {
+        var pts = []
+        for (i = 0; i < 3; i++)
+          pts.push(nodes[i].getGeometry().getCoordinates())
+        this._addTriangle(pts)
+        this.hull = ol.coordinate.convexHull(pts)
+      }
+      return
+    }
+    // Get the triangle
+    var t = this.getFeaturesAtCoordinate(pt)[0]
+    if (t) {
+      this.removeFeature(t)
+      t.set('del', true)
+      var c = t.getGeometry().getCoordinates()[0]
+      for (i = 0; i < 3; i++) {
+        this._addTriangle([pt, c[i], c[(i + 1) % 3]])
+      }
+    } else {
+      // Calculate new convex hull
+      var hull2 = this.hull.slice()
+      hull2.push(pt)
+      hull2 = ol.coordinate.convexHull(hull2)
+      // Search for points
+      for (i = 0; p = hull2[i]; i++) {
+        if (ol.coordinate.equal(p, pt))
+          break
+      }
+      i = (i !== 0 ? i - 1 : hull2.length - 1)
+      var p0 = hull2[i]
+      var stop = hull2[(i + 2) % hull2.length]
+      for (i = 0; p = this.hull[i]; i++) {
+        if (ol.coordinate.equal(p, p0))
+          break
+      }
+      // Connect to the hull
+      while (true) {
+        // DEBUG: prevent infinit loop
+        if (i > 1000) {
+          console.error('[DELAUNAY:addPoint] Too many iterations')
+          break
+        }
+        i++
+        p = this.hull[i % this.hull.length]
+        this._addTriangle([pt, p, p0])
+        p0 = p
+        if (p[0] === stop[0] && p[1] === stop[1])
+          break
+      }
+      this.hull = hull2
+    }
+    this.flipTriangles()
+  }
+  /** Flipping algorithme: test new inserted triangle and flip
+   */
+  flipTriangles() {
+    var count = 1000 // Count to prevent too many iterations
+    var pi
+    while (this.flip.length) {
+      // DEBUG: prevent infinite loop
+      if (count-- < 0) {
+        console.error('[DELAUNAY:flipTriangles] Too many iterations')
+        break
+      }
+      var tri = this.flip.pop()
+      if (tri.get('del'))
+        continue
+      var ti = tri.getGeometry().getCoordinates()[0]
+      for (var k = 0; k < 3; k++) {
+        // Get facing triangles
+        var mid = [(ti[(k + 1) % 3][0] + ti[k][0]) / 2, (ti[(k + 1) % 3][1] + ti[k][1]) / 2]
+        var triangles = this.getTrianglesAt(mid)
+        var pt1 = null
+        // Get opposite point
+        if (triangles.length > 1) {
+          var t0 = triangles[0].getGeometry().getCoordinates()[0]
+          var t1 = triangles[1].getGeometry().getCoordinates()[0]
+          for (pi = 0; pi < t1.length; pi++) {
+            if (!this._ptInTriangle(t1[pi], t0)) {
+              pt1 = t1[pi]
+              break
+            }
+          }
+        }
+        if (pt1) {
+          // Is in circle ?
+          if (this.inCircle(pt1, t0)) {
+            var pt2
+            // Get opposite point
+            for (pi = 0; pi < t0.length; pi++) {
+              if (!this._ptInTriangle(t0[pi], t1)) {
+                pt2 = t0.splice(pi, 1)[0]
+                break
+              }
+            }
+            // Flip triangles
+            if (this.intersectSegs([pt1, pt2], t0)) {
+              while (triangles.length) {
+                var tmp = triangles.pop()
+                tmp.set('del', true)
+                this.removeFeature(tmp)
+              }
+              this._addTriangle([pt1, pt2, t0[0]])
+              this._addTriangle([pt1, pt2, t0[1]])
+            }
+          }
+        }
+      }
+    }
+  }
+  /** Test intersection beetween 2 segs
+   * @param {Array<ol.coordinates>} d1
+   * @param {Array<ol.coordinates>} d2
+   * @return {bbolean}
+   */
+  intersectSegs(d1, d2) {
+    var d1x = d1[1][0] - d1[0][0]
+    var d1y = d1[1][1] - d1[0][1]
+    var d2x = d2[1][0] - d2[0][0]
+    var d2y = d2[1][1] - d2[0][1]
+    var det = d1x * d2y - d1y * d2x
+    if (det != 0) {
+      var k = (d1x * d1[0][1] - d1x * d2[0][1] - d1y * d1[0][0] + d1y * d2[0][0]) / det
+      // Intersection: return [d2[0][0] + k*d2x, d2[0][1] + k*d2y];
+      return (0 < k && k < 1)
+    }
+    else
+      return false
+  }
+  /** Test pt is a triangle's node
+   * @param {ol.coordinate} pt
+   * @param {Array<ol.coordinate>} triangle
+   * @return {boolean}
+   */
+  _ptInTriangle(pt, triangle) {
+    for (var i = 0, p; p = triangle[i]; i++) {
+      if (ol.coordinate.equal(pt, p))
+        return true
+    }
+    return false
+  }
+  /** List points in a triangle (assume points get an id) for debug purposes
+   * @param {Array<ol.coordinate>} pts
+   * @return {String} ids list
+   */
+  listpt(pts) {
+    var s = ''
+    for (var i = 0, p; p = pts[i]; i++) {
+      var c = this._nodes.getClosestFeatureToCoordinate(p)
+      if (!ol.coordinate.equal(c.getGeometry().getCoordinates(), p))
+        c = null
+      s += (s ? ', ' : '') + (c ? c.get('id') : '?')
+    }
+    return s
+  }
+  /** Test if coord is within triangle's circumcircle
+   * @param {ol.coordinate} coord
+   * @param {Array<ol.coordinate>} triangle
+   * @return {boolean}
+   */
+  inCircle(coord, triangle) {
+    var c = this.getCircumCircle(triangle)
+    return ol.coordinate.dist2d(coord, c.center) < c.radius
+  }
+  /** Calculate the circumcircle of a triangle
+   * @param {Array<ol.coordinate>} triangle
+   * @return {*}
+   */
+  getCircumCircle(triangle) {
+    var x1 = triangle[0][0]
+    var y1 = triangle[0][1]
+    var x2 = triangle[1][0]
+    var y2 = triangle[1][1]
+    var x3 = triangle[2][0]
+    var y3 = triangle[2][1]
+    var m1 = (x1 - x2) / (y2 - y1)
+    var m2 = (x1 - x3) / (y3 - y1)
+    var b1 = ((y1 + y2) / 2) - m1 * (x1 + x2) / 2
+    var b2 = ((y1 + y3) / 2) - m2 * (x1 + x3) / 2
+    var cx = (b2 - b1) / (m1 - m2)
+    var cy = m1 * cx + b1
+    var center = [cx, cy]
+    return {
+      center: center,
+      radius: ol.coordinate.dist2d(center, triangle[0])
+    }
+  }
+  /** Get triangles at a point
+   */
+  getTrianglesAt(coord) {
+    var extent = ol.extent.buffer(ol.extent.boundingExtent([coord]), this.get('epsilon'))
+    var result = []
+    this.forEachFeatureIntersectingExtent(extent, function (f) {
+      result.push(f)
+    })
+    return result
+  }
+  /** Get nodes at a point
+   */
+  getNodesAt(coord) {
+    var extent = ol.extent.buffer(ol.extent.boundingExtent([coord]), this.get('epsilon'))
+    return this._nodes.getFeaturesInExtent(extent)
+  }
+  /** Get Voronoi
+   * @param {boolean} border include border, default false
+   * @return { Array< ol.geom.Polygon > }
+   */
+  calculateVoronoi(border) {
+    var voronoi = []
+    this.getNodes().forEach(function (f) {
+      var pt = f.getGeometry().getCoordinates()
+      var isborder = false
+      if (border !== true) {
+        for (var i = 0; i < this.hull.length; i++) {
+          if (ol.coordinate.equal(pt, this.hull[i])) {
+            isborder = true
+            break
+          }
+        }
+      }
+      if (!isborder) {
+        var tr = this.getTrianglesAt(pt)
+        var pts = []
+        tr.forEach(function (triangle) {
+          var c = this.getCircumCircle(triangle.getGeometry().getCoordinates()[0])
+          pts.push({
+            pt: c.center,
+            d: Math.atan2(c.center[1] - pt[1], c.center[0] - pt[0])
+          })
+        }.bind(this))
+        pts.sort(function (a, b) { return a.d - b.d })
+        var poly = []
+        pts.forEach(function (p) {
+          poly.push(p.pt)
+        })
+        poly.push(poly[0])
+        var prop = f.getProperties()
+        prop.geometry = new ol.geom.Polygon([poly])
+        voronoi.push(new ol.Feature(prop))
+      }
+    }.bind(this))
+    return voronoi
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -30870,27 +30901,30 @@ ol.source.GeoImage = class olsourceGeoImage extends ol.source.ImageCanvas {
  * @param {*} options source options
  *  @param {string} options.url GeoRSS feed url
  */
-ol.source.GeoRSS = function(options) {
-  options = options || {};
-  options.loader = this._loaderFn;
-  ol.source.Vector.call (this, options);
-};
-ol.ext.inherits(ol.source.GeoRSS, ol.source.Vector);
-/** Loader function used to load features.
-* @private
-*/
-ol.source.GeoRSS.prototype._loaderFn = function(extent, resolution, projection){
-  // Ajax request to get source
-  ol.ext.Ajax.get({
-    url: this.getUrl(),
-    dataType: 'XML',
-    error: function(){ console.log('oops'); },
-    success: function(xml) {
-      var features = (new ol.format.GeoRSS()).readFeatures(xml, { featureProjection: projection });
-      this.addFeatures(features);
-    }.bind(this)
-  });
-};
+ol.source.GeoRSS = class olsourceGeoRSS extends ol.source.Vector {
+  constructor(options) {
+    options = options || {};
+    options.loader = function(extent, resolution, projection) {
+      return this._loaderFn(extent, resolution, projection);
+    } 
+    super(options);
+  }
+  /** Loader function used to load features.
+  * @private
+  */
+  _loaderFn(extent, resolution, projection) {
+    // Ajax request to get source
+    ol.ext.Ajax.get({
+      url: this.getUrl(),
+      dataType: 'XML',
+      error: function () { console.log('oops'); },
+      success: function (xml) {
+        var features = (new ol.format.GeoRSS()).readFeatures(xml, { featureProjection: projection });
+        this.addFeatures(features);
+      }.bind(this)
+    });
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -31721,83 +31755,88 @@ ol.source.OilPainting.prototype._operation = function(pixels, data) {
  *  @param {string|ol.Attribution|Array<string>} options.attributions source attribution, default OSM attribution
  *  @param {ol.loadingstrategy} options.strategy loading strategy, default ol.loadingstrategy.bbox
  */
-ol.source.Overpass = function(options) {
-	options = options || {};
-	options.loader = this._loaderFn;
-	/** Ovepass API Url */
-	this._url = options.url || 'https://overpass-api.de/api/interpreter';
-	/** Max resolution to load features  */
-	this._maxResolution = options.maxResolution || 100;
-	/** Default attribution */
-	if (!options.attributions) {
-    options.attributions = ol.source.OSM.ATTRIBUTION;
+ol.source.Overpass = class olsourceOverpass extends ol.source.Vector {
+  constructor(options) {
+    options = options || {}
+    options.loader = function(extent, resolution, projection) {
+      return this._loaderFn(extent, resolution, projection)
+    }
+    /** Default attribution */
+    if (!options.attributions) {
+      options.attributions = ol.source.OSM.ATTRIBUTION
+    }
+    // Bbox strategy : reload at each move
+    if (!options.strategy)
+      options.strategy = ol.loadingstrategy.bbox
+    super(options)
+    /** Ovepass API Url */
+    this._url = options.url || 'https://overpass-api.de/api/interpreter'
+    /** Max resolution to load features  */
+    this._maxResolution = options.maxResolution || 100
+    this._types = {
+      node: options.node !== false,
+      way: options.way !== false,
+      rel: options.rel === true
+    }
+    this._filter = options.filter
   }
-	// Bbox strategy : reload at each move
-  if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
-  ol.source.Vector.call (this, options);
-  this._types = {
-    node: options.node!==false,
-    way: options.way!==false,
-    rel: options.rel===true
-  };
-  this._filter = options.filter;
-};
-ol.ext.inherits(ol.source.Overpass, ol.source.Vector);
-/** Loader function used to load features.
-* @private
-*/
-ol.source.Overpass.prototype._loaderFn = function(extent, resolution, projection) {
-  if (resolution > this._maxResolution) return;
-	var self = this;
-  var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
-  bbox = bbox[1] + ',' + bbox[0] + ',' + bbox[3] + ',' + bbox[2];
-  // Overpass QL
-  var query = '[bbox:'+bbox+'][out:xml][timeout:25];';
-  query += '(';
-  // Search attributes
-  for (var t in this._types) {
-    if (this._types[t]) {
-      query += t;
-      for (var n=0, filter; filter = this._filter[n]; n++) {
-        query += '['+filter+']';
+  /** Loader function used to load features.
+  * @private
+  */
+  _loaderFn(extent, resolution, projection) {
+    if (resolution > this._maxResolution) return
+    var self = this
+    var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326")
+    bbox = bbox[1] + ',' + bbox[0] + ',' + bbox[3] + ',' + bbox[2]
+    // Overpass QL
+    var query = '[bbox:' + bbox + '][out:xml][timeout:25];'
+    query += '('
+    // Search attributes
+    for (var t in this._types) {
+      if (this._types[t]) {
+        query += t
+        for (var n = 0, filter; filter = this._filter[n]; n++) {
+          query += '[' + filter + ']'
+        }
+        query += ';'
       }
-      query += ';'
     }
+    query += ');out;>;out skel qt;'
+    var ajax = new XMLHttpRequest()
+    ajax.open('POST', this._url, true)
+    ajax.onload = function () {
+      var features = new ol.format.OSMXML().readFeatures(this.responseText, { featureProjection: projection })
+      var result = []
+      // Remove duplicated features
+      for (var i = 0, f; f = features[i]; i++) {
+        if (!self.hasFeature(f))
+          result.push(f)
+      }
+      self.addFeatures(result)
+    }
+    ajax.onerror = function () {
+      console.log(arguments)
+    }
+    ajax.send('data=' + query)
   }
-  query +=');out;>;out skel qt;'
-  var ajax = new XMLHttpRequest();
-	ajax.open('POST', this._url, true);
-	ajax.onload = function () {
-    var features = new ol.format.OSMXML().readFeatures(this.responseText,{featureProjection: projection});
-    var result = [];
-    // Remove duplicated features
-    for (var i=0, f; f=features[i]; i++) {
-      if (!self.hasFeature(f)) result.push(f);
+  /**
+   * Search if feature is allready loaded
+   * @param {ol.Feature} feature
+   * @return {boolean}
+   * @private
+   */
+  hasFeature(feature) {
+    var p = feature.getGeometry().getFirstCoordinate()
+    var id = feature.getId()
+    var existing = this.getFeaturesInExtent([p[0] - 0.1, p[1] - 0.1, p[0] + 0.1, p[1] + 0.1])
+    for (var i = 0, f; f = existing[i]; i++) {
+      if (id === f.getId()) {
+        return true
+      }
     }
-    self.addFeatures(result);
-	};
-	ajax.onerror = function () {
-		console.log(arguments);
-	};
-  ajax.send('data='+query);
-};
-/**
- * Search if feature is allready loaded
- * @param {ol.Feature} feature
- * @return {boolean} 
- * @private
- */
-ol.source.Overpass.prototype.hasFeature = function(feature) {
-	var p = feature.getGeometry().getFirstCoordinate();
-	var id = feature.getId();
-	var existing = this.getFeaturesInExtent([p[0]-0.1, p[1]-0.1, p[0]+0.1, p[1]+0.1]);
-	for (var i=0, f; f=existing[i]; i++) {
-		if (id===f.getId()) {
-      return true;
-    }
-	}
-	return false;
-};
+    return false
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -32259,95 +32298,103 @@ ol.layer.Vector3D.prototype.drawFeature3D_ = function(ctx, build) {
 * @extends {ol.source.Vector}
 * @param {olx.source.WikiCommons=} options
 */
-ol.source.WikiCommons = function(opt_options) {
-  var options = opt_options || {};
-  options.loader = this._loaderFn;
-  /** Max resolution to load features  */
-  this._maxResolution = options.maxResolution || 100;
-  /** Result language */
-  this._lang = options.lang || "fr";
-  /** Query limit */
-  this._limit = options.limit || 100;
-  /** Default attribution */
-  if (!options.attributions) options.attributions = [ "&copy; <a href='https://commons.wikimedia.org/'>Wikimedia Commons</a>" ];
-  // Bbox strategy : reload at each move
-    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
-  ol.source.Vector.call (this, options);
-};
-ol.ext.inherits(ol.source.WikiCommons, ol.source.Vector);
-/** Decode wiki attributes and choose to add feature to the layer
-* @param {feature} the feature
-* @param {attributes} wiki attributes
-* @return {boolean} true: add the feature to the layer
-* @API stable
-*/
-ol.source.WikiCommons.prototype.readFeature = function (feature, attributes){
-  feature.set("descriptionurl", attributes.descriptionurl);
-  feature.set("url", attributes.url);
-  feature.set("title", attributes.title.replace(/^file:|.jpg$/ig,""));
-  feature.set("thumbnail", attributes.url.replace(/^(.+wikipedia\/commons)\/([a-zA-Z0-9]\/[a-zA-Z0-9]{2})\/(.+)$/,"$1/thumb/$2/$3/200px-$3"));
-  feature.set("user", attributes.user);
-  if (attributes.extmetadata && attributes.extmetadata.LicenseShortName) feature.set("copy", attributes.extmetadata.LicenseShortName.value);
-  return true;
-};
-/** Loader function used to load features.
-* @private
-*/
-ol.source.WikiCommons.prototype._loaderFn = function(extent, resolution, projection){
-  if (resolution > this._maxResolution) return;
-  var self = this;
-  var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
-  // Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
-  var url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=coordinates|imageinfo"
-    + "&generator=geosearch&iiprop=timestamp|user|url|extmetadata|metadata|size&iiextmetadatafilter=LicenseShortName"
-    + "&ggsbbox=" + bbox[3] + "|" + bbox[0] + "|" + bbox[1] + "|" + bbox[2]
-    + "&ggslimit="+this._limit
-    + "&iilimit="+(this._limit-1)
-    + "&ggsnamespace=6";
-  // Ajax request to get the tile
-  ol.ext.Ajax.get({
-    url: url,
-    success: function(data) {
-      //console.log(data);
-      var features = [];
-      var att, pt, feature;
-      if (!data.query || !data.query.pages) return;
-      for ( var i in data.query.pages){
-        att = data.query.pages[i];
-        if (att.coordinates && att.coordinates.length ) {
-          pt = [att.coordinates[0].lon, att.coordinates[0].lat];
-        } else {
-          var meta = att.imageinfo[0].metadata;
-          if (!meta) {
-            //console.log(att);
-            continue;
-          }
-          pt = [];
-          var found=0;
-          for (var k=0; k<meta.length; k++) {
-            if (meta[k].name=="GPSLongitude") {
-              pt[0] = meta[k].value;
-              found++;
+ol.source.WikiCommons = class olsourceWikiCommons extends ol.source.Vector {
+  constructor(opt_options) {
+    var options = opt_options || {}
+    options.loader = function(extent, resolution, projection) {
+      return this._loaderFn(extent, resolution, projection)
+    } 
+    /** Default attribution */
+    if (!options.attributions) options.attributions = [ '&copy; <a href="https://commons.wikimedia.org/">Wikimedia Commons</a>']
+    // Bbox strategy : reload at each move
+    if (!options.strategy) options.strategy = ol.loadingstrategy.bbox
+    super(options)
+    /** Max resolution to load features  */
+    this._maxResolution = options.maxResolution || 100
+    /** Result language */
+    this._lang = options.lang || "fr"
+    /** Query limit */
+    this._limit = options.limit || 100
+  }
+  /** Decode wiki attributes and choose to add feature to the layer
+  * @param {feature} the feature
+  * @param {attributes} wiki attributes
+  * @return {boolean} true: add the feature to the layer
+  * @API stable
+  */
+  readFeature(feature, attributes) {
+    feature.set("descriptionurl", attributes.descriptionurl)
+    feature.set("url", attributes.url)
+    feature.set("title", attributes.title.replace(/^file:|.jpg$/ig, ""))
+    feature.set("thumbnail", attributes.url.replace(/^(.+wikipedia\/commons)\/([a-zA-Z0-9]\/[a-zA-Z0-9]{2})\/(.+)$/, "$1/thumb/$2/$3/200px-$3"))
+    feature.set("user", attributes.user)
+    if (attributes.extmetadata && attributes.extmetadata.LicenseShortName) {
+      feature.set("copy", attributes.extmetadata.LicenseShortName.value)
+    }
+    return true
+  }
+  /** Loader function used to load features.
+  * @private
+  */
+  _loaderFn(extent, resolution, projection) {
+    if (resolution > this._maxResolution)
+      return
+    var self = this
+    var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326")
+    // Commons API: for more info @see https://commons.wikimedia.org/wiki/Commons:API/MediaWiki
+    var url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=coordinates|imageinfo"
+      + "&generator=geosearch&iiprop=timestamp|user|url|extmetadata|metadata|size&iiextmetadatafilter=LicenseShortName"
+      + "&ggsbbox=" + bbox[3] + "|" + bbox[0] + "|" + bbox[1] + "|" + bbox[2]
+      + "&ggslimit=" + this._limit
+      + "&iilimit=" + (this._limit - 1)
+      + "&ggsnamespace=6"
+    // Ajax request to get the tile
+    ol.ext.Ajax.get({
+      url: url,
+      success: function (data) {
+        //console.log(data);
+        var features = []
+        var att, pt, feature
+        if (!data.query || !data.query.pages)
+          return
+        for (var i in data.query.pages) {
+          att = data.query.pages[i]
+          if (att.coordinates && att.coordinates.length) {
+            pt = [att.coordinates[0].lon, att.coordinates[0].lat]
+          } else {
+            var meta = att.imageinfo[0].metadata
+            if (!meta) {
+              //console.log(att);
+              continue
             }
-            if (meta[k].name=="GPSLatitude") {
-              pt[1] = meta[k].value;
-              found++;
+            pt = []
+            var found = 0
+            for (var k = 0; k < meta.length; k++) {
+              if (meta[k].name == "GPSLongitude") {
+                pt[0] = meta[k].value
+                found++
+              }
+              if (meta[k].name == "GPSLatitude") {
+                pt[1] = meta[k].value
+                found++
+              }
+            }
+            if (found != 2) {
+              //console.log(att);
+              continue
             }
           }
-          if (found!=2) {
-            //console.log(att);
-            continue;
+          feature = new ol.Feature(new ol.geom.Point(ol.proj.transform(pt, "EPSG:4326", projection)))
+          att.imageinfo[0].title = att.title
+          if (self.readFeature(feature, att.imageinfo[0])) {
+            features.push(feature)
           }
         }
-        feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
-        att.imageinfo[0].title = att.title;
-        if (self.readFeature(feature, att.imageinfo[0])) {
-          features.push(feature);
-        }
+        self.addFeatures(features)
       }
-      self.addFeatures(features);
-  }});
-};
+    })
+  }
+}
 
 /*
   Copyright (c) 2015 Jean-Marc VIGLINO,
@@ -33052,7 +33099,9 @@ ol.layer.Base.prototype.getPreview = function(lonlat, resolution, projection) {
   if (e && !ol.extent.containsCoordinate(e,lonlat)) lonlat = [ (e[0]+e[2])/2, (e[1]+e[3])/2 ];
   if (projection) lonlat = ol.proj.transform (lonlat, projection, this.getSource().getProjection());
   if (this.getSource && this.getSource()) {
-    return [ this.getSource().getPreview(lonlat, resolution) ];
+    try {
+      return [ this.getSource().getPreview(lonlat, resolution) ];
+    } catch(e) { /* nothing to do */ }
   }
   return [];
 };

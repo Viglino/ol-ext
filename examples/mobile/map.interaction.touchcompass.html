@@ -3,113 +3,113 @@
 
 <head>
 <!--
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-	<title>ol-ext: Touch compass interaction</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+  <title>ol-ext: Touch compass interaction</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
-	<meta name="description" content="A touch interaction with a compass." />
-	<meta name="keywords" content="ol3, interaction, touch, drag, compass" />
+  <meta name="description" content="A touch interaction with a compass." />
+  <meta name="keywords" content="ol3, interaction, touch, drag, compass" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
+  <!-- Openlayers -->
     <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Touch compass interaction</h1>
-	</a>
-	<div class="info">
-		The <i>TouchCompass</i> interaction is intended to be use on touch devices.
-		<br />
-		It lets you handle movement by dragging a touch compass.
-		<br/>
-		This example shows how to move a point on the map by dragging the compass thus the finger don't mask the point it  is moving.
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: Touch compass interaction</h1>
+  </a>
+  <div class="info">
+    The <i>TouchCompass</i> interaction is intended to be use on touch devices.
+    <br />
+    It lets you handle movement by dragging a touch compass.
+    <br/>
+    This example shows how to move a point on the map by dragging the compass thus the finger don't mask the point it  is moving.
+  </div>
 
-	<!-- Map div -->
-	<div id="map" style="width:600px; height:400px;"></div>
-	
-	<div class="options">
-		Select a point then drag the compass to move it!
-	</div>
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+  
+  <div class="options">
+    Select a point then drag the compass to move it!
+  </div>
 
-	<script type="text/javascript">
+  <script type="text/javascript">
 
-	// Two base layers
-	var stamen = new ol.layer.Tile(
-				{	title: "Watercolor",
-					baseLayer: true,
-					source: new ol.source.Stamen({
-						layer: 'watercolor'
-					})
-				});
+  // Two base layers
+  var stamen = new ol.layer.Tile({
+    title: "Watercolor",
+    baseLayer: true,
+    source: new ol.source.Stamen({
+      layer: 'watercolor'
+    })
+  });
 
-	// GeoJSON layer with a preview attribute
-	var vectorSource = new ol.source.Vector(
-	{	url: '../data/fond_guerre.geojson',
-		projection: 'EPSG:3857',
-		format: new ol.format.GeoJSON(),
-		attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-		logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
-	});
+  // GeoJSON layer with a preview attribute
+  var vectorSource = new ol.source.Vector({
+    url: '../data/fond_guerre.geojson',
+    projection: 'EPSG:3857',
+    format: new ol.format.GeoJSON(),
+    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
+    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+  });
 
-	var vector = new ol.layer.Vector(
-	{	name: '1914-18',
-		source: vectorSource
-	});
+  var vector = new ol.layer.Vector({
+    name: '1914-18',
+    source: vectorSource
+  });
 
 
-	// The map
-	var map = new ol.Map
-		({	target: 'map',
-			view: new ol.View
-			({	zoom: 6,
-				center: [173664, 6166327]
-			}),
-			layers: [stamen, vector]
-		});
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 6,
+      center: [173664, 6166327]
+    }),
+    layers: [stamen, vector]
+  });
 
-	// Select interaction
-	var sel = new ol.interaction.Select()
-	map.addInteraction(sel);
+  // Select interaction
+  var sel = new ol.interaction.Select()
+  map.addInteraction(sel);
 
-	// Add touch compass interaction
-	var tcompass = new ol.interaction.TouchCompass(
-		{	onDrag: function(delta, e)
-			{	/* Move the map * /
-				var c = map.getView().getCenter();
-				map.getView().setCenter([ c[0] + delta.traction[0]/50, c[1] + delta.traction[1]/50 ]);
-				/* or move a selected feature */
-				var f = sel.getFeatures().item(0);
-				f.getGeometry().translate(delta.traction[0]/50, delta.traction[1]/50);
-				/**/
-			}
-		});
-	map.addInteraction(tcompass);
-	tcompass.setActive(false);
+  // Add touch compass interaction
+  var tcompass = new ol.interaction.TouchCompass({
+    onDrag: function(delta, e){
+      /* Move the map * /
+      var c = map.getView().getCenter();
+      map.getView().setCenter([ c[0] + delta.traction[0]/50, c[1] + delta.traction[1]/50 ]);
+      /* or move a selected feature */
+      var f = sel.getFeatures().item(0);
+      f.getGeometry().translate(delta.traction[0]/50, delta.traction[1]/50);
+      /**/
+    }
+  });
+  map.addInteraction(tcompass);
+  tcompass.setActive(false);
 
-	sel.getFeatures().on(["add","remove"], function()
-	{	tcompass.setActive(sel.getFeatures().getLength() > 0);
-	});
+  sel.getFeatures().on(["add","remove"], function() {
+    tcompass.setActive(sel.getFeatures().getLength() > 0);
+  });
 
-	</script>
-	
+  </script>
+  
 </body>
 </html>

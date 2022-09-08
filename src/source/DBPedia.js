@@ -5,8 +5,8 @@
   @classdesc
   ol_source_DBPedia is a DBPedia layer source that load DBPedia located content in a vector layer.
   
-  olx.source.DBPedia: olx.source.Vector
-  {	url: {string} Url for DBPedia SPARQL 
+  olx.source.DBPedia: olx.source.Vector {
+    url: {string} Url for DBPedia SPARQL 
   }
 
   Inherits from:
@@ -34,7 +34,7 @@ var ol_source_DBPedia = class olsourceDBPedia extends ol_source_Vector {
     var options = opt_options || {}
 
     /** Default attribution */
-    if (!options.attributions) options.attributions = ["&copy; <a href='http://dbpedia.org/'>DBpedia</a> CC-by-SA"]
+    if (!options.attributions) options.attributions = [ '&copy; <a href="http://dbpedia.org/"">DBpedia</a> CC-by-SA']
 
     // Bbox strategy : reload at each move
     if (!options.strategy) options.strategy = ol_loadingstrategy_bbox
@@ -44,7 +44,7 @@ var ol_source_DBPedia = class olsourceDBPedia extends ol_source_Vector {
     this.setLoader(this._loaderFn)
 
     /** Url for DBPedia SPARQL */
-    this._url = options.url || "http://fr.dbpedia.org/sparql"
+    this._url = options.url || 'http://fr.dbpedia.org/sparql'
 
     /** Max resolution to load features  */
     this._maxResolution = options.maxResolution || 100
@@ -86,8 +86,8 @@ var ol_source_DBPedia = class olsourceDBPedia extends ol_source_Vector {
   */
   querySubject() {
     return "?subject rdfs:label ?label. "
-      + "OPTIONAL {?subject dbpedia-owl:thumbnail ?thumbnail}."
-      + "OPTIONAL {?subject dbpedia-owl:abstract ?abstract} . "
+      + "OPTIONAL {?subject dbo:thumbnail ?thumbnail}."
+      + "OPTIONAL {?subject dbo:abstract ?abstract} . "
       + "OPTIONAL {?subject rdf:type ?type}"
   }
   /** Set RDF query filter, default: select language

@@ -10,6 +10,7 @@ import ol_layer_Base from 'ol/layer/Layer'
 import {containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_layer_Group from 'ol/layer/Group'
+import { toContext } from 'ol/render'
 
 /**
  * Return a preview image of the source.
@@ -38,7 +39,6 @@ ol_source_Tile.prototype.getPreview = function(lonlat, resolution) {
   return fn.call(this, coord, this.getProjection());
 };
 
-
 /**
  * Return the tile image of the source.
  * @param {ol.Coordinate|undefined} lonlat The center of the preview.
@@ -64,7 +64,6 @@ ol_source_TileWMS.prototype.getPreview = function(lonlat, resolution) {
   url = url.replace(/getfeatureinfo/i,"GetMap");
   return url;
 };
-
 
 /**
  * Return a preview for the layer.
@@ -96,7 +95,9 @@ ol_layer_Base.prototype.getPreview = function(lonlat, resolution, projection) {
   if (projection) lonlat = ol_proj_transform (lonlat, projection, this.getSource().getProjection());
 
   if (this.getSource && this.getSource()) {
-    return [ this.getSource().getPreview(lonlat, resolution) ];
+    try {
+      return [ this.getSource().getPreview(lonlat, resolution) ];
+    } catch(e) { /* nothing to do */ }
   }
   return [];
 };

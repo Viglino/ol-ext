@@ -15,8 +15,8 @@
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
 	<!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
 	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 	
 	<!-- ol-ext -->
@@ -228,44 +228,49 @@
   map.addOverlay(popup);
   map.on('click', function(e) {
     popup.hide();
-    map.forEachLayerAtPixel(e.pixel, function(l, pixel) {
-      vector.getSource().clear();
-      if (l.get('queryable')) {
-        var layers = map.getLayers().getArray();
-        // Get info in a popup
-        if (/INSEE|ORTHOIMAGERY|GEOGRAPHICALGRIDSYSTEMS|PARCELLE/.test(l.get('name'))) {
-          l.getSource().getFeatureInfo(
-            e.coordinate, 
-            map.getView().getResolution(), {
-              INFO_FORMAT: 'text/html', // 'application/json',
-              callback: function(resp) {
-                if (resp) popup.show(e.coordinate, resp);
+    var layers = map.getLayers().getArray();
+    for (var i = layers.length-1; i >= 0; i--) {
+      l = layers[i];
+      var pix = l.getData(e.pixel);
+      if (pix && pix[3]) {
+        vector.getSource().clear();
+        if (l.get('queryable')) {
+          var layers = map.getLayers().getArray();
+          // Get info in a popup
+          if (/INSEE|ORTHOIMAGERY|GEOGRAPHICALGRIDSYSTEMS|PARCELLE/.test(l.get('name'))) {
+            l.getSource().getFeatureInfo(
+              e.coordinate, 
+              map.getView().getResolution(), {
+                INFO_FORMAT: 'text/html', // 'application/json',
+                callback: function(resp) {
+                  if (resp) popup.show(e.coordinate, resp);
+                }
               }
-            }
-          );
-        } else {
-          // Create new object
-          l.getSource().getFeatureInfo(
-            e.coordinate, 
-            map.getView().getResolution(), {
-              INFO_FORMAT: 'application/json',
-              callback: function(resp) {
-                if (resp) {
-                  resp = JSON.parse(resp);
-                  if (resp.features[0]) {
-                    var format = new ol.format.GeoJSON();
-                    var features = format.readFeatures(resp);
-                    vector.getSource().addFeatures(features);
-                    console.log(resp.features[0].properties);
+            );
+          } else {
+            // Create new object
+            l.getSource().getFeatureInfo(
+              e.coordinate, 
+              map.getView().getResolution(), {
+                INFO_FORMAT: 'application/json',
+                callback: function(resp) {
+                  if (resp) {
+                    resp = JSON.parse(resp);
+                    if (resp.features[0]) {
+                      var format = new ol.format.GeoJSON();
+                      var features = format.readFeatures(resp);
+                      vector.getSource().addFeatures(features);
+                      console.log(resp.features[0].properties);
+                    }
                   }
                 }
               }
-            }
-          );
+            );
+          }
+          break;
         }
       }
-      return true;
-    });
+    };
   });
 
   var currentLayer, currentCap=[];

@@ -50,7 +50,7 @@
   position: absolute;
   border: 1px solid transparent;
   border-width: 0.3em 0.8em 0 0.2em;
-  border-color: #fff transparent transparent;
+  border-color: currentColor transparent transparent;
   -webkit-transform: rotate(-30deg);
   transform: rotate(-30deg);
   top: .45em;
@@ -59,7 +59,7 @@
 }
 .ol-bar.ol-geobar .geolocBt button:after {
   border-width: 0 0.8em .3em 0.2em;
-  border-color: transparent transparent #fff;
+  border-color: transparent transparent currentColor;
 	-webkit-transform: rotate(-61deg);
 	transform: rotate(-61deg);
 }
@@ -84,7 +84,7 @@
   position: absolute;
   width: .25em;
   height: 1em;
-  background-color: #fff;
+  background-color: currentColor;
   top: 50%;
   left: 35%;
   -webkit-transform: translate(-50%,-50%);
