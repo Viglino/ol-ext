@@ -2,10 +2,16 @@
 *Cool extensions for [OpenLayers](https://github.com/openlayers/openlayers) (ol)*.
 
 [![](https://img.shields.io/npm/v/ol-ext.svg)](https://www.npmjs.com/package/ol-ext)
-![](https://img.shields.io/github/stars/viglino/ol-ext.svg)
-![](https://img.shields.io/npm/dt/ol-ext.svg)
+![](https://img.shields.io/github/stars/viglino/ol-ext)
+![](https://img.shields.io/github/commit-activity/m/viglino/ol-ext)
+![](https://img.shields.io/github/issues/viglino/ol-ext)
+![](https://img.shields.io/github/issues-closed/viglino/ol-ext)
+![](https://img.shields.io/github/v/release/viglino/ol-ext)    
+![](https://img.shields.io/github/contributors/viglino/ol-ext)
+![](https://img.shields.io/npm/dt/ol-ext)
 ![](https://img.shields.io/npm/dw/ol-ext)
-![](https://img.shields.io/npm/l/ol-ext.svg)
+![](https://img.shields.io/npm/l/ol-ext?color=orange)
+![](https://img.shields.io/twitter/follow/jmviglino?style=social)
 
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions, popup to use with Openlayers.    
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
