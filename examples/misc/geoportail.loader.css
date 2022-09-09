@@ -99,7 +99,7 @@ button i {
   transform: translateX(-50%);
   max-width: calc(100%);
   border-radius: 0 0 2em 2em;
-  background: #337ab7;
+  background: #333;
   color: #fff;
   padding: .2em 1.5em;
   max-width: calc(67% - 13em);

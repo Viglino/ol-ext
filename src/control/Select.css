@@ -1,6 +1,10 @@
 .ol-control.ol-select {
   top: .5em;
   left: 3em;
+  background-color: rgba(255,255,255,.5);
+}
+.ol-control.ol-select:hover {
+  background-color: rgba(255,255,255,.7);
 }
 .ol-touch .ol-control.ol-select {
   left: 3.5em;
@@ -34,10 +38,12 @@
   box-shadow: -0.18em 0 0 -0.03em;
 }
 .ol-select > div button {
-    width: auto;
-    padding: 0 .5em;
-    float: right;
-    font-weight: normal;
+  width: auto;
+  padding: 0 .5em;
+  float: right;
+  font-weight: normal;
+  height: 1.2em;
+  line-height: 1.2em;
 }
 .ol-select .ol-delete {
     width: 1.5em;
@@ -70,6 +76,7 @@
 }
 .ol-control.ol-select > div {
   display: block;
+  margin: .25em;
 }
 .ol-control.ol-select.ol-collapsed > div {
   display: none;

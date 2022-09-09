@@ -1,4 +1,3 @@
-import ol_ext_inherits from '../ext'
 import ol_ext_element from '../element';
 import ol_ext_input_List from './List'
 
@@ -11,34 +10,35 @@ import ol_ext_input_List from './List'
  *  @param {Element} [options.parent] parent element, if create an input
  *  @param {Array<number>} [options.size] a list of size (default 0,2,3,5,8,13,21,34,55)
  */
-var ol_ext_input_Size = function(options) {
-  options = options || {};
+var ol_ext_input_Size = class olextinputSize extends ol_ext_input_List {
+  constructor(options) {
+    options = options || {};
 
-  options.options = [];
-  (options.size || [0,2,3,5,8,13,21,34,55]).forEach(function(i) {
-    options.options.push({
-      value: i,
-      html: ol_ext_element.create('DIV', {
-        className: 'ol-option-'+i,
-        style: {
-          fontSize: i ? i+'px' : undefined
-        }
-      })
-    })
-  })
-  ol_ext_input_List.call(this, options);
-  this._content.remove();
+    options.options = [];
+    (options.size || [0, 2, 3, 5, 8, 13, 21, 34, 55]).forEach(function (i) {
+      options.options.push({
+        value: i,
+        html: ol_ext_element.create('DIV', {
+          className: 'ol-option-' + i,
+          style: {
+            fontSize: i ? i + 'px' : undefined
+          }
+        })
+      });
+    });
+    super(options);
 
-  this.element.classList.add('ol-size');
+    this._content.remove();
 
-};
-ol_ext_inherits(ol_ext_input_Size, ol_ext_input_List);
-  
-/** Get the current value
- * @returns {number}
- */
-ol_ext_input_Size.prototype.getValue = function() {
-  return parseFloat(ol_ext_input_List.prototype.getValue.call(this));
-};
+    this.element.classList.add('ol-size');
+
+  }
+  /** Get the current value
+   * @returns {number}
+   */
+  getValue() {
+    return parseFloat(ol_ext_input_List.prototype.getValue.call(this));
+  }
+}
 
 export default ol_ext_input_Size

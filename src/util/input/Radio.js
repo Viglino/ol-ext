@@ -1,4 +1,3 @@
-import ol_ext_inherits from '../ext'
 import ol_ext_input_Checkbox from './Checkbox'
 
 /** Switch input
@@ -10,13 +9,14 @@ import ol_ext_input_Checkbox from './Checkbox'
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
  */
-var ol_ext_input_Radio = function(options) {
-  options = options || {};
+var ol_ext_input_Radio = class olextinputRadio extends ol_ext_input_Checkbox {
+  constructor(options) {
+    options = options || {};
 
-  ol_ext_input_Checkbox.call(this, options);
+    super(options);
 
-  this.element.className = ('ol-ext-check ol-ext-radio ' + (options.className || '')).trim();
-};
-ol_ext_inherits(ol_ext_input_Radio, ol_ext_input_Checkbox);
+    this.element.className = ('ol-ext-check ol-ext-radio ' + (options.className || '')).trim();
+  }
+}
   
 export default ol_ext_input_Radio

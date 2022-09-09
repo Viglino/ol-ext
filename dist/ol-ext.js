@@ -2457,109 +2457,113 @@ ol.ext.input.Slider = class olextinputSlider extends ol.ext.input.Base {
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=false] display the input
  */
-ol.ext.input.PopupBase = function(options) {
-  options = options || {};
-  options.hidden = options.hidden!==false;
-  ol.ext.input.Base.call(this, options);
-  this.set('autoClose', options.autoClose !== false);
-  this.element = ol.ext.element.create('DIV', {
-    className: ('ol-ext-popup-input '  + (options.className || '')).trim(),
-  });
-  switch (options.position) {
-    case 'inline': break;
-    case 'static':
-    case 'fixed': {
-      this.element.classList.add('ol-popup');
-      this.element.classList.add('ol-popup-fixed');
-      this._fixed = (options.position === 'fixed');
-      break;
-    }
-    default: {
-      this.element.classList.add('ol-popup');
-      break;
-    }
-  }
-  var input = this.input;
-  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
-  // Show on element click
-  this.element.addEventListener('click', function() {
-    if (this.isCollapsed()) setTimeout( function() { this.collapse(false); }.bind(this) );
-  }.bind(this));
-  this._elt = {};
-  // Popup container
-  this._elt.popup = ol.ext.element.create('DIV', { className: 'ol-popup', parent: this.element });
-  this._elt.popup.addEventListener('click', function(e) { e.stopPropagation(); });
-  // Hide on click outside
-  var down = false;
-  this._elt.popup.addEventListener('pointerdown', function() { 
-    down = true;
-  })
-  this._elt.popup.addEventListener('click', function() { 
-    down = false;
-  })
-  document.addEventListener('click', function() { 
-    if (!this.moving && !down) this.collapse(true);
-    down = false;
-  }.bind(this))
-  // Hide on window resize
-  window.addEventListener('resize', function() {
-    this.collapse(true);
-  }.bind(this));
-};
-ol.ext.inherits(ol.ext.input.PopupBase, ol.ext.input.Base);
-/** show/hide color picker
- * @param {boolean} [b=false]
- */
-ol.ext.input.PopupBase.prototype.collapse = function(b) {
-  if (b != this.isCollapsed()) {
-    this.dispatchEvent({
-      type: 'change:visible', 
-      visible: !this.isCollapsed()
+ol.ext.input.PopupBase = class olextinputPopupBase extends ol.ext.input.Base {
+  constructor(options) {
+    options = options || {};
+    options.hidden = options.hidden !== false;
+    super(options);
+    this.set('autoClose', options.autoClose !== false);
+    this.element = ol.ext.element.create('DIV', {
+      className: ('ol-ext-popup-input ' + (options.className || '')).trim(),
     });
+    switch (options.position) {
+      case 'inline': break;
+      case 'static':
+      case 'fixed': {
+        this.element.classList.add('ol-popup');
+        this.element.classList.add('ol-popup-fixed');
+        this._fixed = (options.position === 'fixed');
+        break;
+      }
+      default: {
+        this.element.classList.add('ol-popup');
+        break;
+      }
+    }
+    var input = this.input;
+    if (input.parentNode)
+      input.parentNode.insertBefore(this.element, input);
+    // Show on element click
+    this.element.addEventListener('click', function () {
+      if (this.isCollapsed())
+        setTimeout(function () { this.collapse(false); }.bind(this));
+    }.bind(this));
+    this._elt = {};
+    // Popup container
+    this._elt.popup = ol.ext.element.create('DIV', { className: 'ol-popup', parent: this.element });
+    this._elt.popup.addEventListener('click', function (e) { e.stopPropagation(); });
+    // Hide on click outside
+    var down = false;
+    this._elt.popup.addEventListener('pointerdown', function () {
+      down = true;
+    });
+    this._elt.popup.addEventListener('click', function () {
+      down = false;
+    });
+    document.addEventListener('click', function () {
+      if (!this.moving && !down)
+        this.collapse(true);
+      down = false;
+    }.bind(this));
+    // Hide on window resize
+    window.addEventListener('resize', function () {
+      this.collapse(true);
+    }.bind(this));
   }
-  this.dispatchEvent({
-    type: 'collapse', 
-    visible: !b
-  });
-  if (b) {
-    this._elt.popup.classList.remove('ol-visible');
-  } else {
-    this._elt.popup.classList.add('ol-visible');
-    if (this._fixed) {
-      // Get fixed position
-      var pos = this.element.getBoundingClientRect();
-      var offset = ol.ext.element.getFixedOffset(this.element);
-      pos = {
-        bottom: pos.bottom - offset.top,
-        left: pos.left - offset.left
-      }
-      // Test window overflow + recenter
-      var dh = pos.bottom + this._elt.popup.offsetHeight + offset.top;
-      if (dh > document.documentElement.clientHeight) {
-        this._elt.popup.style.top = Math.max(document.documentElement.clientHeight - this._elt.popup.offsetHeight - offset.top, 0) + 'px';
-      } else {
-        this._elt.popup.style.top = pos.bottom + 'px';
-      }
-      var dw = pos.left + this._elt.popup.offsetWidth + offset.left;
-      if (dw > document.documentElement.clientWidth) {
-        this._elt.popup.style.left = Math.max(document.documentElement.clientWidth - this._elt.popup.offsetWidth - offset.left, 0) + 'px';
-      } else {
-        this._elt.popup.style.left = pos.left + 'px';
+  /** show/hide color picker
+   * @param {boolean} [b=false]
+   */
+  collapse(b) {
+    if (b != this.isCollapsed()) {
+      this.dispatchEvent({
+        type: 'change:visible',
+        visible: !this.isCollapsed()
+      });
+    }
+    this.dispatchEvent({
+      type: 'collapse',
+      visible: !b
+    });
+    if (b) {
+      this._elt.popup.classList.remove('ol-visible');
+    } else {
+      this._elt.popup.classList.add('ol-visible');
+      if (this._fixed) {
+        // Get fixed position
+        var pos = this.element.getBoundingClientRect();
+        var offset = ol.ext.element.getFixedOffset(this.element);
+        pos = {
+          bottom: pos.bottom - offset.top,
+          left: pos.left - offset.left
+        };
+        // Test window overflow + recenter
+        var dh = pos.bottom + this._elt.popup.offsetHeight + offset.top;
+        if (dh > document.documentElement.clientHeight) {
+          this._elt.popup.style.top = Math.max(document.documentElement.clientHeight - this._elt.popup.offsetHeight - offset.top, 0) + 'px';
+        } else {
+          this._elt.popup.style.top = pos.bottom + 'px';
+        }
+        var dw = pos.left + this._elt.popup.offsetWidth + offset.left;
+        if (dw > document.documentElement.clientWidth) {
+          this._elt.popup.style.left = Math.max(document.documentElement.clientWidth - this._elt.popup.offsetWidth - offset.left, 0) + 'px';
+        } else {
+          this._elt.popup.style.left = pos.left + 'px';
+        }
       }
     }
   }
-};
-/** Is the popup collapsed ?
- * @returns {boolean}
- */
-ol.ext.input.PopupBase.prototype.isCollapsed = function() {
-  return !this._elt.popup.classList.contains('ol-visible');
-};
-/** Toggle the popup
- */
-ol.ext.input.PopupBase.prototype.toggle = function() {
-  this.collapse(!this.isCollapsed());
-};
+  /** Is the popup collapsed ?
+   * @returns {boolean}
+   */
+  isCollapsed() {
+    return !this._elt.popup.classList.contains('ol-visible');
+  }
+  /** Toggle the popup
+   */
+  toggle() {
+    this.collapse(!this.isCollapsed());
+  }
+}
 
 /** Checkbox input
  * @constructor
@@ -2777,346 +2781,357 @@ ol.ext.input.Collection = class olextinputCollection extends ol.Object {
  *  @param {boolean} [options.autoClose=true] close when click on color
  *  @param {boolean} [options.hidden=true] display the input
  */
-ol.ext.input.Color = function(options) {
-  options = options || {};
-  options.hidden = options.hidden!==false;
-  options.className = ('ol-ext-colorpicker ' + (options.hastab ? 'ol-tab ' : '') + (options.className || '')).trim();
-  ol.ext.input.PopupBase.call(this, options);
-  if (options.opacity===false) {
-    this.element.classList.add('ol-nopacity');
-  }
-  this._cursor = {};
-  var hsv = this._hsv = {};
-  // Vignet
-  this._elt.vignet = ol.ext.element.create('DIV', { className: 'ol-vignet', parent: this.element });
-  // Bar 
-  var bar = ol.ext.element.create('DIV', { className: 'ol-tabbar', parent: this._elt.popup });
-  ol.ext.element.create('DIV', { 
-    className: 'ol-tab', 
-    html: options.paletteLabel || 'palette',
-    click: function() {
-      this.element.classList.remove('ol-picker-tab');
-    }.bind(this),
-    parent: bar
-  });
-  ol.ext.element.create('DIV', { 
-    className: 'ol-tab', 
-    html: options.pickerLabel || 'picker',
-    click: function() {
-      this.element.classList.add('ol-picker-tab');
-    }.bind(this),
-    parent: bar
-  });
-  // Popup container
-  var container = ol.ext.element.create('DIV', { className: 'ol-container', parent: this._elt.popup });
-  // Color picker
-  var picker = this._elt.picker = ol.ext.element.create('DIV', { className: 'ol-picker', parent: container });
-  var pickerCursor = this._cursor.picker = ol.ext.element.create('DIV', { className: 'ol-cursor', parent: picker });
-  this._listenDrag(picker, function(e) {
-    var tx = Math.max(0, Math.min(e.offsetX / picker.clientWidth, 1));
-    var ty = Math.max(0, Math.min(e.offsetY / picker.clientHeight, 1));
-    pickerCursor.style.left = Math.round(tx*100) + '%';
-    pickerCursor.style.top = Math.round(ty*100) + '%';
-    hsv.s = tx * 100;
-    hsv.v = 100 - ty * 100;
-    this.setColor();
-  }.bind(this));
-  // Opacity cursor
-  var slider = ol.ext.element.create('DIV', { className: 'ol-slider', parent: container });
-  this._elt.slider = ol.ext.element.create('DIV', { parent: slider });
-  var sliderCursor = this._cursor.slide = ol.ext.element.create('DIV', { className: 'ol-cursor', parent: slider });
-  this._listenDrag(slider, function(e) {
-    var t = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
-    hsv.a = t*100;
-    sliderCursor.style.left = Math.round(t*100) + '%';
-    this.setColor();
-  }.bind(this));
-  // Tint cursor
-  var tint = ol.ext.element.create('DIV', { className: 'ol-tint', parent: container });
-  var tintCursor = this._cursor.tint = ol.ext.element.create('DIV', { className: 'ol-cursor', parent: tint });
-  this._listenDrag(tint, function(e) {
-    var t = Math.max(0, Math.min(e.offsetY / tint.clientHeight, 1));
-    hsv.h = t*360;
-    tintCursor.style.top = Math.round(t*100) + '%';
-    this.setColor();
-  }.bind(this));
-  // Clear button
-  ol.ext.element.create('DIV', { 
-    className: 'ol-clear', 
-    click: function() {
-      this.setColor([0,0,0,0]);
-    }.bind(this),
-    parent: container
-  });
-  // RVB input
-  var rgb = ol.ext.element.create('DIV', { 
-    className: 'ol-rgb', 
-    parent: container
-  });
-  var changergb = function() {
-    var r = Math.max(0, Math.min(255, parseInt(this._elt.r.value)));
-    var g = Math.max(0, Math.min(255, parseInt(this._elt.g.value)));
-    var b = Math.max(0, Math.min(255, parseInt(this._elt.b.value)));
-    var a = Math.max(0, Math.min(1, parseFloat(this._elt.a.value)));
-    this.setColor([r, g, b, a]);
-  }.bind(this);
-  this._elt.r = ol.ext.element.create('INPUT', { type: 'number', lang:'en-GB', change: changergb, min:0, max:255, parent: rgb });
-  this._elt.g = ol.ext.element.create('INPUT', { type: 'number', lang:'en-GB', change: changergb, min:0, max:255, parent: rgb });
-  this._elt.b = ol.ext.element.create('INPUT', { type: 'number', lang:'en-GB', change: changergb, min:0, max:255, parent: rgb });
-  this._elt.a = ol.ext.element.create('INPUT', { type: 'number', lang:'en-GB', change: changergb, min:0, max:1, step:.1, parent: rgb });
-  // Text color input
-  this._elt.txtColor = ol.ext.element.create('INPUT', { 
-    type: 'text', 
-    className: 'ol-txt-color',
-    change: function(){
-      var color;
-      this._elt.txtColor.classList.remove('ol-error')
-      try {
-        color = ol.color.asArray(this._elt.txtColor.value);
-      } catch(e) {
-        this._elt.txtColor.classList.add('ol-error');
-      }
-      if (color) this.setColor(color)
-    }.bind(this), 
-    parent: container
-  });
-  ol.ext.element.create('BUTTON', { 
-    html: 'OK',
-    click: function() {
+ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
+  constructor(options) {
+    options = options || {};
+    options.hidden = options.hidden !== false;
+    options.className = ('ol-ext-colorpicker ' + (options.hastab ? 'ol-tab ' : '') + (options.className || '')).trim();
+    super(options);
+    if (options.opacity === false) {
+      this.element.classList.add('ol-nopacity');
+    }
+    this._cursor = {};
+    var hsv = this._hsv = {};
+    // Vignet
+    this._elt.vignet = ol.ext.element.create('DIV', { className: 'ol-vignet', parent: this.element });
+    // Bar 
+    var bar = ol.ext.element.create('DIV', { className: 'ol-tabbar', parent: this._elt.popup });
+    ol.ext.element.create('DIV', {
+      className: 'ol-tab',
+      html: options.paletteLabel || 'palette',
+      click: function () {
+        this.element.classList.remove('ol-picker-tab');
+      }.bind(this),
+      parent: bar
+    });
+    ol.ext.element.create('DIV', {
+      className: 'ol-tab',
+      html: options.pickerLabel || 'picker',
+      click: function () {
+        this.element.classList.add('ol-picker-tab');
+      }.bind(this),
+      parent: bar
+    });
+    // Popup container
+    var container = ol.ext.element.create('DIV', { className: 'ol-container', parent: this._elt.popup });
+    // Color picker
+    var picker = this._elt.picker = ol.ext.element.create('DIV', { className: 'ol-picker', parent: container });
+    var pickerCursor = this._cursor.picker = ol.ext.element.create('DIV', { className: 'ol-cursor', parent: picker });
+    this._listenDrag(picker, function (e) {
+      var tx = Math.max(0, Math.min(e.offsetX / picker.clientWidth, 1));
+      var ty = Math.max(0, Math.min(e.offsetY / picker.clientHeight, 1));
+      pickerCursor.style.left = Math.round(tx * 100) + '%';
+      pickerCursor.style.top = Math.round(ty * 100) + '%';
+      hsv.s = tx * 100;
+      hsv.v = 100 - ty * 100;
+      this.setColor();
+    }.bind(this));
+    // Opacity cursor
+    var slider = ol.ext.element.create('DIV', { className: 'ol-slider', parent: container });
+    this._elt.slider = ol.ext.element.create('DIV', { parent: slider });
+    var sliderCursor = this._cursor.slide = ol.ext.element.create('DIV', { className: 'ol-cursor', parent: slider });
+    this._listenDrag(slider, function (e) {
+      var t = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
+      hsv.a = t * 100;
+      sliderCursor.style.left = Math.round(t * 100) + '%';
+      this.setColor();
+    }.bind(this));
+    // Tint cursor
+    var tint = ol.ext.element.create('DIV', { className: 'ol-tint', parent: container });
+    var tintCursor = this._cursor.tint = ol.ext.element.create('DIV', { className: 'ol-cursor', parent: tint });
+    this._listenDrag(tint, function (e) {
+      var t = Math.max(0, Math.min(e.offsetY / tint.clientHeight, 1));
+      hsv.h = t * 360;
+      tintCursor.style.top = Math.round(t * 100) + '%';
+      this.setColor();
+    }.bind(this));
+    // Clear button
+    ol.ext.element.create('DIV', {
+      className: 'ol-clear',
+      click: function () {
+        this.setColor([0, 0, 0, 0]);
+      }.bind(this),
+      parent: container
+    });
+    // RVB input
+    var rgb = ol.ext.element.create('DIV', {
+      className: 'ol-rgb',
+      parent: container
+    });
+    var changergb = function () {
+      var r = Math.max(0, Math.min(255, parseInt(this._elt.r.value)));
+      var g = Math.max(0, Math.min(255, parseInt(this._elt.g.value)));
+      var b = Math.max(0, Math.min(255, parseInt(this._elt.b.value)));
+      var a = Math.max(0, Math.min(1, parseFloat(this._elt.a.value)));
+      this.setColor([r, g, b, a]);
+    }.bind(this);
+    this._elt.r = ol.ext.element.create('INPUT', { type: 'number', lang: 'en-GB', change: changergb, min: 0, max: 255, parent: rgb });
+    this._elt.g = ol.ext.element.create('INPUT', { type: 'number', lang: 'en-GB', change: changergb, min: 0, max: 255, parent: rgb });
+    this._elt.b = ol.ext.element.create('INPUT', { type: 'number', lang: 'en-GB', change: changergb, min: 0, max: 255, parent: rgb });
+    this._elt.a = ol.ext.element.create('INPUT', { type: 'number', lang: 'en-GB', change: changergb, min: 0, max: 1, step: .1, parent: rgb });
+    // Text color input
+    this._elt.txtColor = ol.ext.element.create('INPUT', {
+      type: 'text',
+      className: 'ol-txt-color',
+      change: function () {
+        var color;
+        this._elt.txtColor.classList.remove('ol-error');
+        try {
+          color = ol.color.asArray(this._elt.txtColor.value);
+        } catch (e) {
+          this._elt.txtColor.classList.add('ol-error');
+        }
+        if (color)
+          this.setColor(color);
+      }.bind(this),
+      parent: container
+    });
+    ol.ext.element.create('BUTTON', {
+      html: 'OK',
+      click: function () {
+        this._addCustomColor(this.getColor());
+        this.collapse(true);
+      }.bind(this),
+      parent: container
+    });
+    var i;
+    // Color palette
+    this._paletteColor = {};
+    this._elt.palette = ol.ext.element.create('DIV', {
+      className: 'ol-palette',
+      parent: this._elt.popup
+    });
+    for (i = 0; i < 8; i++) {
+      var c = Math.round(255 - 255 * i / 7);
+      this.addPaletteColor([c, c, c], c); //ol.color.toHexa([c,c,c]));
+    }
+    var colors = ['#f00', '#f90', '#ff0', '#0f0', '#0ff', '#48e', '#00f', '#f0f'];
+    colors.forEach(function (c) {
+      this.addPaletteColor(c, ol.color.toHexa(ol.color.asArray(c)));
+    }.bind(this));
+    for (i = 0; i < 5; i++) {
+      colors.forEach(function (c) {
+        c = ol.color.toHSV(ol.color.asArray(c));
+        c = [c[0], i / 4 * 80 + 20, 100 - i / 4 * 60];
+        c = ol.color.fromHSV(c, 1);
+        this.addPaletteColor(c, ol.color.toHexa(c));
+      }.bind(this));
+    }
+    // Custom colors
+    ol.ext.element.create('HR', { parent: this._elt.palette });
+    // Create custom color list
+    if (!ol.ext.input.Color.customColorList) {
+      ol.ext.input.Color.customColorList = new ol.Collection();
+      var ccolor = JSON.parse(localStorage.getItem('ol-ext@colorpicker') || '[]');
+      ccolor.forEach(function (c) {
+        ol.ext.input.Color.customColorList.push(c);
+      });
+      ol.ext.input.Color.customColorList.on(['add', 'remove'], function () {
+        localStorage.setItem('ol-ext@colorpicker', JSON.stringify(ol.ext.input.Color.customColorList.getArray()));
+      });
+    }
+    // Handle custom color
+    ol.ext.input.Color.customColorList.on('add', function (e) {
+      this.addPaletteColor(this.getColorFromID(e.element));
+    }.bind(this));
+    ol.ext.input.Color.customColorList.on('remove', function (e) {
+      if (this._paletteColor[e.element])
+        this._paletteColor[e.element].element.remove();
+      delete this._paletteColor[e.element];
+    }.bind(this));
+    // Add new one
+    ol.ext.input.Color.customColorList.forEach(function (c) {
+      this._addCustomColor(this.getColorFromID(c));
+    }.bind(this));
+    // Current color
+    this.setColor(options.color || [0, 0, 0, 0]);
+    this._currentColor = this.getColorID(this.getColor());
+    // Add new palette color
+    this.on('color', function () {
       this._addCustomColor(this.getColor());
-      this.collapse(true);
-    }.bind(this),
-    parent: container
-  });
-  var i;
-  // Color palette
-  this._paletteColor = {};
-  this._elt.palette = ol.ext.element.create('DIV', {
-    className: 'ol-palette',
-    parent: this._elt.popup
-  })
-  for (i=0; i<8; i++) {
-    var c = Math.round(255 - 255*i/7);
-    this.addPaletteColor([c,c,c], c);//ol.color.toHexa([c,c,c]));
-  }
-  var colors = ['#f00', '#f90', '#ff0', '#0f0', '#0ff', '#48e', '#00f', '#f0f']
-  colors.forEach(function(c){
-    this.addPaletteColor(c, ol.color.toHexa(ol.color.asArray(c)));
-  }.bind(this));
-  for (i=0; i<5; i++) {
-    colors.forEach(function(c){
-      c = ol.color.toHSV(ol.color.asArray(c));
-      c = [c[0], i/4*80+20, 100 - i/4*60];
-      c = ol.color.fromHSV(c,1)
-      this.addPaletteColor(c, ol.color.toHexa(c));
+      this._currentColor = this.getColorID(this.getColor());
+      this.setColor();
+    }.bind(this));
+    // Update color on hide
+    this.on('collapse', function (e) {
+      if (!e.visible) {
+        var c = this.getColor();
+        if (this._currentColor !== this.getColorID(c)) {
+          this.dispatchEvent({ type: 'color', color: c });
+        }
+      } else {
+        this._currentColor = this.getColorID(this.getColor());
+      }
     }.bind(this));
   }
-  // Custom colors
-  ol.ext.element.create('HR', { parent: this._elt.palette });
-  // Create custom color list
-  if (!ol.ext.input.Color.customColorList) {
-    ol.ext.input.Color.customColorList = new ol.Collection();
-    var ccolor = JSON.parse(localStorage.getItem('ol-ext@colorpicker') || '[]');
-    ccolor.forEach(function(c) {
-      ol.ext.input.Color.customColorList.push(c);
-    })
-    ol.ext.input.Color.customColorList.on(['add','remove'], function(){
-      localStorage.setItem('ol-ext@colorpicker', JSON.stringify(ol.ext.input.Color.customColorList.getArray()));
-    });
+  /** Add color to palette
+   * @param {ol.colorLike} color
+   * @param {string} title
+   * @param {boolean} select
+   */
+  addPaletteColor(color, title, select) {
+    // Get color id
+    try {
+      color = ol.color.asArray(color);
+    } catch (e) {
+      return;
+    }
+    var id = this.getColorID(color);
+    // Add new one
+    if (!this._paletteColor[id] && color[3]) {
+      this._paletteColor[id] = {
+        color: color,
+        element: ol.ext.element.create('DIV', {
+          title: title || '',
+          className: (color[3] < 1 ? 'ol-alpha' : ''),
+          style: {
+            color: 'rgb(' + (color.join(',')) + ')'
+          },
+          click: function () {
+            this.setColor(color);
+            if (this.get('autoClose'))
+              this.collapse(true);
+          }.bind(this),
+          parent: this._elt.palette
+        })
+      };
+    }
+    if (select) {
+      this._selectPalette(color);
+    }
   }
-  // Handle custom color
-  ol.ext.input.Color.customColorList.on('add', function(e) {
-    this.addPaletteColor(this.getColorFromID(e.element));
-  }.bind(this));
-  ol.ext.input.Color.customColorList.on('remove', function(e) {
-    if (this._paletteColor[e.element]) this._paletteColor[e.element].element.remove();
-    delete this._paletteColor[e.element];
-  }.bind(this));
-  // Add new one
-  ol.ext.input.Color.customColorList.forEach(function(c) {
-    this._addCustomColor(this.getColorFromID(c));
-  }.bind(this));
-  // Current color
-  this.setColor(options.color || [0,0,0,0]);
-  this._currentColor = this.getColorID(this.getColor());
-  // Add new palette color
-  this.on('color', function() {
-    this._addCustomColor(this.getColor());
-    this._currentColor = this.getColorID(this.getColor());
-    this.setColor();
-  }.bind(this));
-  // Update color on hide
-  this.on('collapse', function(e) {
-    if (!e.visible) {
-      var c = this.getColor();
-      if (this._currentColor !== this.getColorID(c)) {
-        this.dispatchEvent({ type: 'color', color: c });
+  /** Show palette or picker tab
+   * @param {string} what palette or picker
+   */
+  showTab(what) {
+    if (what === 'palette')
+      this.element.classList.remove('ol-picker-tab');
+    else
+      this.element.classList.add('ol-picker-tab');
+  }
+  /** Show palette or picker tab
+   * @returns {string} palette or picker
+   */
+  getTab() {
+    return this.element.classList.contains('ol-picker-tab') ? 'picker' : 'palette';
+  }
+  /** Select a color in the palette
+   * @private
+   */
+  _selectPalette(color) {
+    var id = this.getColorID(color);
+    Object.keys(this._paletteColor).forEach(function (c) {
+      this._paletteColor[c].element.classList.remove('ol-select');
+    }.bind(this));
+    if (this._paletteColor[id]) {
+      this._paletteColor[id].element.classList.add('ol-select');
+    }
+  }
+  /** Set Color
+   * @param { Array<number> }
+   */
+  setColor(color) {
+    var hsv = this._hsv;
+    if (color) {
+      color = ol.color.asArray(color);
+      var hsv2 = ol.color.toHSV(color);
+      hsv.h = hsv2[0];
+      hsv.s = hsv2[1];
+      hsv.v = hsv2[2];
+      if (hsv2.length > 3)
+        hsv.a = hsv2[3] * 100;
+      else
+        hsv.a = 100;
+      this._cursor.picker.style.left = hsv.s + '%';
+      this._cursor.picker.style.top = (100 - hsv.v) + '%';
+      this._cursor.tint.style.top = (hsv.h / 360 * 100) + '%';
+      this._cursor.slide.style.left = hsv.a + '%';
+      if (this.isCollapsed()) {
+        this.dispatchEvent({ type: 'color', color: color });
       }
     } else {
-      this._currentColor = this.getColorID(this.getColor());
+      /*
+      hsv.h = Math.round(hsv.h) % 360;
+      hsv.s = Math.round(hsv.s);
+      hsv.v = Math.round(hsv.v);
+      */
+      hsv.a = Math.round(hsv.a);
+      color = this.getColor();
     }
-  }.bind(this));
-};
-ol.ext.inherits(ol.ext.input.Color, ol.ext.input.PopupBase);
+    var val = 'rgba(' + color.join(', ') + ')';
+    // Show color
+    this._elt.picker.style.color = 'hsl(' + hsv.h + ', 100%, 50%)';
+    this._elt.slider.style.backgroundImage = 'linear-gradient(45deg, transparent, rgba(' + this.getColor(false).join(',') + '))';
+    this._elt.vignet.style.color = val;
+    // RGB
+    this._elt.r.value = color[0];
+    this._elt.g.value = color[1];
+    this._elt.b.value = color[2];
+    this._elt.a.value = color[3];
+    // Txt color
+    this._elt.txtColor.classList.remove('ol-error');
+    if (color[3] === 1) {
+      this._elt.txtColor.value = ol.color.toHexa(color);
+    } else {
+      this._elt.txtColor.value = val;
+    }
+    this._selectPalette(color);
+    // Set input value
+    if (this.input.value !== val) {
+      this.input.value = val;
+      this.input.dispatchEvent(new Event('change'));
+    }
+  }
+  /** Get current color
+   * @param {boolean} [opacity=true]
+   * @return {Array<number>}
+   */
+  getColor(opacity) {
+    return ol.color.fromHSV([this._hsv.h, this._hsv.s, this._hsv.v, (opacity !== false) ? this._hsv.a / 100 : 1], 1);
+  }
+  /**
+   * @private
+   */
+  _addCustomColor(color) {
+    var id = this.getColorID(color);
+    if (this._paletteColor[id])
+      return;
+    if (!color[3])
+      return;
+    if (ol.ext.input.Color.customColorList.getArray().indexOf(id) < 0) {
+      ol.ext.input.Color.customColorList.push(id);
+      if (ol.ext.input.Color.customColorList.getLength() > 24) {
+        ol.ext.input.Color.customColorList.removeAt(0);
+      }
+    }
+    this.addPaletteColor(color);
+  }
+  clearCustomColor() {
+    ol.ext.input.Color.customColorList.clear();
+  }
+  /** Convert color to id
+   * @param {ol.colorLike} Color
+   * @returns {number}
+   */
+  getColorID(color) {
+    color = ol.color.asArray(color);
+    if (color[3] === undefined)
+      color[3] = 1;
+    return color.join('-');
+  }
+  /** Convert color to id
+   * @param {number} id
+   * @returns {Array<number>} Color
+   */
+  getColorFromID(id) {
+    var c = id.split('-');
+    return ([parseFloat(c[0]), parseFloat(c[1]), parseFloat(c[2]), parseFloat(c[3])]);
+  }
+}
 /** Custom color list
  * @private
  */
 ol.ext.input.Color.customColorList = null;
-/** Add color to palette
- * @param {ol.colorLike} color
- * @param {string} title
- * @param {boolean} select
- */
-ol.ext.input.Color.prototype.addPaletteColor = function(color, title, select) {
-  // Get color id
-  try {
-    color = ol.color.asArray(color);
-  } catch(e) {
-    return;
-  }
-  var id = this.getColorID(color);
-  // Add new one
-  if (!this._paletteColor[id] && color[3]) {
-    this._paletteColor[id] = {
-      color: color,
-      element: ol.ext.element.create('DIV', {
-        title: title || '',
-        className: (color[3]<1 ? 'ol-alpha' : ''),
-        style: {
-          color: 'rgb('+(color.join(','))+')'
-        },
-        click: function() {
-          this.setColor(color);
-          if (this.get('autoClose')) this.collapse(true);
-        }.bind(this),
-        parent: this._elt.palette
-      })
-    }
-  }
-  if (select) {
-    this._selectPalette(color);
-  }
-};
-/** Show palette or picker tab
- * @param {string} what palette or picker
- */
-ol.ext.input.Color.prototype.showTab = function(what) {
-  if (what==='palette') this.element.classList.remove('ol-picker-tab');
-  else this.element.classList.add('ol-picker-tab');
-};
-/** Show palette or picker tab
- * @returns {string} palette or picker
- */
-ol.ext.input.Color.prototype.getTab = function() {
-  return this.element.classList.contains('ol-picker-tab') ? 'picker' : 'palette';
-};
-/** Select a color in the palette
- * @private
- */
-ol.ext.input.Color.prototype._selectPalette = function(color) {
-  var id = this.getColorID(color);
-  Object.keys(this._paletteColor).forEach(function(c) {
-    this._paletteColor[c].element.classList.remove('ol-select')
-  }.bind(this))
-  if (this._paletteColor[id]) {
-    this._paletteColor[id].element.classList.add('ol-select');
-  }
-}
-/** Set Color 
- * @param { Array<number> }
- */
-ol.ext.input.Color.prototype.setColor = function(color) {
-  var hsv = this._hsv;
-  if (color) {
-    color = ol.color.asArray(color);
-    var hsv2 = ol.color.toHSV(color);
-    hsv.h = hsv2[0];
-    hsv.s = hsv2[1];
-    hsv.v = hsv2[2];
-    if (hsv2.length > 3) hsv.a = hsv2[3]*100;
-    else hsv.a = 100;
-    this._cursor.picker.style.left = hsv.s + '%';
-    this._cursor.picker.style.top = (100-hsv.v) + '%';
-    this._cursor.tint.style.top = (hsv.h / 360 * 100) + '%';
-    this._cursor.slide.style.left = hsv.a + '%';
-    if (this.isCollapsed()) {
-      this.dispatchEvent({ type: 'color', color: color });
-    }
-  } else {
-    /*
-    hsv.h = Math.round(hsv.h) % 360;
-    hsv.s = Math.round(hsv.s);
-    hsv.v = Math.round(hsv.v);
-    */
-    hsv.a = Math.round(hsv.a);
-    color = this.getColor();
-  }
-  var val = 'rgba('+color.join(', ')+')';
-  // Show color
-  this._elt.picker.style.color = 'hsl(' + hsv.h + ', 100%, 50%)';
-  this._elt.slider.style.backgroundImage = 'linear-gradient(45deg, transparent, rgba('+this.getColor(false).join(',')+'))';
-  this._elt.vignet.style.color = val;
-  // RGB
-  this._elt.r.value = color[0];
-  this._elt.g.value = color[1];
-  this._elt.b.value = color[2];
-  this._elt.a.value = color[3];
-  // Txt color
-  this._elt.txtColor.classList.remove('ol-error')
-  if (color[3]===1) {
-    this._elt.txtColor.value = ol.color.toHexa(color);
-  } else {
-    this._elt.txtColor.value = val;
-  }
-  this._selectPalette(color);
-  // Set input value
-  if (this.input.value !== val) {
-    this.input.value = val;
-    this.input.dispatchEvent(new Event('change'));
-  }
-};
-/** Get current color
- * @param {boolean} [opacity=true]
- * @return {Array<number>}
- */
-ol.ext.input.Color.prototype.getColor = function(opacity) {
-  return ol.color.fromHSV([this._hsv.h, this._hsv.s, this._hsv.v, (opacity !== false) ? this._hsv.a/100 : 1], 1);
-}
-/** 
- * @private
- */
-ol.ext.input.Color.prototype._addCustomColor = function(color) {
-  var id = this.getColorID(color);
-  if (this._paletteColor[id]) return;
-  if (!color[3]) return;
-  if (ol.ext.input.Color.customColorList.getArray().indexOf(id) < 0) {
-    ol.ext.input.Color.customColorList.push(id);
-    if (ol.ext.input.Color.customColorList.getLength() > 24) {
-      ol.ext.input.Color.customColorList.removeAt(0)
-    }
-  }
-  this.addPaletteColor(color);
-};
-ol.ext.input.Color.prototype.clearCustomColor = function() {
-  ol.ext.input.Color.customColorList.clear();
-};
-/** Convert color to id
- * @param {ol.colorLike} Color
- * @returns {number}
- */
-ol.ext.input.Color.prototype.getColorID = function(color) {
-  color = ol.color.asArray(color);
-  if (color[3]===undefined) color[3] = 1;
-  return color.join('-');
-};
-/** Convert color to id
- * @param {number} id
- * @returns {Array<number>} Color
- */
- ol.ext.input.Color.prototype.getColorFromID = function(id) {
-  var c = id.split('-');
-  return ([parseFloat(c[0]), parseFloat(c[1]), parseFloat(c[2]), parseFloat(c[3])]);
-};
 
 /** Checkbox input
  * @constructor
@@ -3132,78 +3147,82 @@ ol.ext.input.Color.prototype.getColorID = function(color) {
  *  @param {boolean} [options.fixed=false] don't use a popup, default use a popup
  *  @param {string} [options.align=left] align popup left/right/middle
  */
-ol.ext.input.List = function(options) {
-  options = options || {};
-  ol.ext.input.Base.call(this, options);
-  this._content = ol.ext.element.create('DIV');
-  if (options.hidden || options.disabled) options.hover = true;
-  this.element = ol.ext.element.create('DIV', {
-    html: this._content,
-    className: 'ol-input-popup' + (options.hover ? ' ol-hover' : '' )
-  });
-  this.set('hideOnClick', options.hideOnClick !== false);
-  if (options.className) this.element.classList.add(options.className);
-  if (options.fixed) {
-    this.element.classList.add('ol-fixed');
-    this.set('hideOnClick', false);
-  }
-  switch (options.align) {
-    case 'middle':
-      this.set('hideOnClick', false);
-    // fall through
-    case 'rigth':
-      this.element.classList.add('ol-' + options.align);
-      break;
-    default: 
-      break;
-  }
-  var input = this.input;
-  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
-  this.element.appendChild(input);
-  var popup = this.popup = ol.ext.element.create('UL', {
-    className: 'ol-popup',
-    parent: this.element
-  });
-  var opts = [];
-  options.options.forEach(option => {
-    opts.push({
-      value: option.value,
-      element: ol.ext.element.create('LI', {
-        html: option.html,
-        title: option.title || option.value,
-        className: 'ol-option',
-        on: { 
-          pointerdown: function() {
-            this.setValue(option.value);
-            if (this.get('hideOnClick')) {
-              popup.style.display = 'none';
-              setTimeout(function() { popup.style.display = ''; }, 200);
-            }
-          }.bind(this)
-        },
-        parent: this.popup
-      })
-    })
-  });
-  this.input.addEventListener('change', function() {
-    var v = this.input.value;
-    var val;
-    opts.forEach(function(o) {
-      if (o.value == v) {
-        o.element.classList.add('ol-selected');
-        val = o.element;
-      } else {
-        o.element.classList.remove('ol-selected');
-      }
+ol.ext.input.List = class olextinputList extends ol.ext.input.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this._content = ol.ext.element.create('DIV');
+    if (options.hidden || options.disabled)
+      options.hover = true;
+    this.element = ol.ext.element.create('DIV', {
+      html: this._content,
+      className: 'ol-input-popup' + (options.hover ? ' ol-hover' : '')
     });
-    this.dispatchEvent({ type: 'change:value', value: this.getValue() });
-    this._content.innerHTML = val ? val.innerHTML : '';
-  }.bind(this));
-  // Initial value
-  var event = new Event('change');
-  setTimeout(function() { this.input.dispatchEvent(event); }.bind(this));
-};
-ol.ext.inherits(ol.ext.input.List, ol.ext.input.Base);
+    this.set('hideOnClick', options.hideOnClick !== false);
+    if (options.className)
+      this.element.classList.add(options.className);
+    if (options.fixed) {
+      this.element.classList.add('ol-fixed');
+      this.set('hideOnClick', false);
+    }
+    switch (options.align) {
+      case 'middle':
+        this.set('hideOnClick', false);
+      // fall through
+      case 'rigth':
+        this.element.classList.add('ol-' + options.align);
+        break;
+      default:
+        break;
+    }
+    var input = this.input;
+    if (input.parentNode)
+      input.parentNode.insertBefore(this.element, input);
+    this.element.appendChild(input);
+    var popup = this.popup = ol.ext.element.create('UL', {
+      className: 'ol-popup',
+      parent: this.element
+    });
+    var opts = [];
+    options.options.forEach(option => {
+      opts.push({
+        value: option.value,
+        element: ol.ext.element.create('LI', {
+          html: option.html,
+          title: option.title || option.value,
+          className: 'ol-option',
+          on: {
+            pointerdown: function () {
+              this.setValue(option.value);
+              if (this.get('hideOnClick')) {
+                popup.style.display = 'none';
+                setTimeout(function () { popup.style.display = ''; }, 200);
+              }
+            }.bind(this)
+          },
+          parent: this.popup
+        })
+      });
+    });
+    this.input.addEventListener('change', function () {
+      var v = this.input.value;
+      var val;
+      opts.forEach(function (o) {
+        if (o.value == v) {
+          o.element.classList.add('ol-selected');
+          val = o.element;
+        } else {
+          o.element.classList.remove('ol-selected');
+        }
+      });
+      this.dispatchEvent({ type: 'change:value', value: this.getValue() });
+      this._content.innerHTML = val ? val.innerHTML : '';
+    }.bind(this));
+    // Initial value
+    var event = new Event('change');
+    setTimeout(function () { this.input.dispatchEvent(event); }.bind(this));
+  }
+}
 
 /** Switch input
  * @constructor
@@ -3214,12 +3233,13 @@ ol.ext.inherits(ol.ext.input.List, ol.ext.input.Base);
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
  */
-ol.ext.input.Radio = function(options) {
-  options = options || {};
-  ol.ext.input.Checkbox.call(this, options);
-  this.element.className = ('ol-ext-check ol-ext-radio ' + (options.className || '')).trim();
-};
-ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
+ol.ext.input.Radio = class olextinputRadio extends ol.ext.input.Checkbox {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.element.className = ('ol-ext-check ol-ext-radio ' + (options.className || '')).trim();
+  }
+}
 
 /** Checkbox input
  * @constructor
@@ -3235,124 +3255,134 @@ ol.ext.inherits(ol.ext.input.Radio, ol.ext.input.Checkbox);
  *  @param {number} [options.step] step value, default use input step
  *  @param {boolean} [options.overflow=false] enable values over min/max
  */
-ol.ext.input.Range = function(options) {
-  options = options || {};
-  ol.ext.input.Base.call(this, options);
-  this.set('overflow', !!options.overflow);
-  this.element = ol.ext.element.create('DIV', {
-    className: 'ol-input-slider ol-input-range' 
-      + (options.className ? ' ' + options.className : '')
-  });
-  var input = this.input;
-  if (input.parentNode) input.parentNode.insertBefore(this.element, input);
-  this.element.appendChild(input);
-  // Slider
-  var slider = this.slider = ol.ext.element.create('DIV', {
-    className: 'ol-slider',
-    parent: this.element
-  });
-  var back = ol.ext.element.create('DIV', {
-    className: 'ol-back',
-    parent: this.slider
-  })
-  var input2 = this.input2 = options.input2;
-  if(input2) this.element.appendChild(input2);
-  // Cursors
-  var cursor = ol.ext.element.create('DIV', {
-    className: 'ol-cursor',
-    parent: slider
-  })
-  var cursor2 = ol.ext.element.create('DIV', {
-    className: 'ol-cursor',
-    parent: input2 ? slider : undefined
-  })
-  var currentCursor = cursor;
-  function setCursor(e) {
-    currentCursor = e.target;
-  }
-  cursor.addEventListener('mousedown', setCursor, false);
-  cursor.addEventListener('touchstart', setCursor, false);
-  cursor2.addEventListener('mousedown', setCursor, false);
-  cursor2.addEventListener('touchstart', setCursor, false);
-  var min = (options.min !== undefined) ? options.min : parseFloat(input.min) || 0;
-  var max = (options.max !== undefined) ? options.max : parseFloat(input.max) || 1;
-  var step = (options.step !== undefined) ? options.step : parseFloat(input.step) || 1;
-  var dstep = 1/step;
-  function setRange() {
-    // range
-    if (input2) {
-      var l1 = parseFloat(cursor.style.left) || 0;
-      var l2 = parseFloat(cursor2.style.left) || 0;
-      back.style.left = Math.min(l1, l2) + '%';
-      back.style.right = (100 - Math.max(l1, l2)) + '%';
-    } else {
-      back.style.left = 0;
-      back.style.right = (100 - parseFloat(cursor.style.left) || 0) + '%';
+ol.ext.input.Range = class olextinputRange extends ol.ext.input.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.set('overflow', !!options.overflow);
+    this.element = ol.ext.element.create('DIV', {
+      className: 'ol-input-slider ol-input-range'
+        + (options.className ? ' ' + options.className : '')
+    });
+    var input = this.input;
+    if (input.parentNode)
+      input.parentNode.insertBefore(this.element, input);
+    this.element.appendChild(input);
+    // Slider
+    var slider = this.slider = ol.ext.element.create('DIV', {
+      className: 'ol-slider',
+      parent: this.element
+    });
+    var back = ol.ext.element.create('DIV', {
+      className: 'ol-back',
+      parent: this.slider
+    });
+    var input2 = this.input2 = options.input2;
+    if (input2)
+      this.element.appendChild(input2);
+    // Cursors
+    var cursor = ol.ext.element.create('DIV', {
+      className: 'ol-cursor',
+      parent: slider
+    });
+    var cursor2 = ol.ext.element.create('DIV', {
+      className: 'ol-cursor',
+      parent: input2 ? slider : undefined
+    });
+    var currentCursor = cursor;
+    function setCursor(e) {
+      currentCursor = e.target;
     }
-  }
-  function checkMinMax() {
-    if (input2 && parseFloat(input.value) > parseFloat(input2.value)) {
-      var v = input.value;
-      input.value = input2.value;
-      input2.value = v;
-      setValue({ target: input });
-      if (input2) setValue({ target: input2 });
+    cursor.addEventListener('mousedown', setCursor, false);
+    cursor.addEventListener('touchstart', setCursor, false);
+    cursor2.addEventListener('mousedown', setCursor, false);
+    cursor2.addEventListener('touchstart', setCursor, false);
+    var min = (options.min !== undefined) ? options.min : parseFloat(input.min) || 0;
+    var max = (options.max !== undefined) ? options.max : parseFloat(input.max) || 1;
+    var step = (options.step !== undefined) ? options.step : parseFloat(input.step) || 1;
+    var dstep = 1 / step;
+    function setRange() {
+      // range
+      if (input2) {
+        var l1 = parseFloat(cursor.style.left) || 0;
+        var l2 = parseFloat(cursor2.style.left) || 0;
+        back.style.left = Math.min(l1, l2) + '%';
+        back.style.right = (100 - Math.max(l1, l2)) + '%';
+      } else {
+        back.style.left = 0;
+        back.style.right = (100 - parseFloat(cursor.style.left) || 0) + '%';
+      }
     }
-  }
-  // Handle popup drag
-  this._listenDrag(slider, function(e) {
-    var current = (currentCursor===cursor ? input : input2);
-    var tx = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
-    currentCursor.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
-    var v = current.value = Math.round((tx * (max - min) + min) * dstep) / dstep;
-    setRange();
-    this.dispatchEvent({ type: 'change:value', value: v });
-    if (e.type==='pointerup') {
+    function checkMinMax() {
+      if (input2 && parseFloat(input.value) > parseFloat(input2.value)) {
+        var v = input.value;
+        input.value = input2.value;
+        input2.value = v;
+        setValue({ target: input });
+        if (input2)
+          setValue({ target: input2 });
+      }
+    }
+    // Handle popup drag
+    this._listenDrag(slider, function (e) {
+      var current = (currentCursor === cursor ? input : input2);
+      var tx = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
+      currentCursor.style.left = Math.max(0, Math.min(100, Math.round(tx * 100))) + '%';
+      var v = current.value = Math.round((tx * (max - min) + min) * dstep) / dstep;
+      setRange();
+      this.dispatchEvent({ type: 'change:value', value: v });
+      if (e.type === 'pointerup') {
+        checkMinMax();
+      }
+    }.bind(this));
+    // Set value
+    var setValue = function (e) {
+      var current = e.target;
+      var curs = (current === input ? cursor : cursor2);
+      var v = parseFloat(current.value) || 0;
+      if (!this.get('overflow'))
+        v = Math.max(min, Math.min(max, v));
+      if (v != current.value)
+        current.value = v;
+      var tx = (v - min) / (max - min);
+      curs.style.left = Math.max(0, Math.min(100, Math.round(tx * 100))) + '%';
+      setRange();
+      this.dispatchEvent({ type: 'change:value', value: v });
       checkMinMax();
-    }
-  }.bind(this));
-  // Set value
-  var setValue = function(e) {
-    var current = e.target;
-    var curs = (current===input ? cursor : cursor2);
-    var v = parseFloat(current.value) || 0;
-    if (!this.get('overflow')) v = Math.max(min, Math.min(max, v));
-    if (v != current.value) current.value = v;
-    var tx = (v - min) / (max - min);
-    curs.style.left = Math.max(0, Math.min(100, Math.round(tx*100) )) + '%';
-    setRange();
-    this.dispatchEvent({ type: 'change:value', value: v });
-    checkMinMax();
-  }.bind(this);
-  input.addEventListener('change', setValue);
-  if (input2) input2.addEventListener('change', setValue);
-  setValue({ target: input });
-  if (input2) setValue({ target: input2 });
-};
-ol.ext.inherits(ol.ext.input.Range, ol.ext.input.Base);
-/** Set the current value (second input)
- */
-ol.ext.input.Range.prototype.setValue2 = function(v) {
-  if (!this.input2) return;
-  if (v !== undefined) this.input2.value = v;
-  this.input2.dispatchEvent(new Event('change'));
-};
-/** Get the current value (second input)
- */
-ol.ext.input.Range.prototype.getValue2 = function() {
-  return this.input2 ? this.input2.value : null;
-}
-/** Get the current min value
- * @return {number}
- */
- ol.ext.input.Range.prototype.getMin = function() {
-  return Math.min(parseFloat(this.getValue()), parseFloat(this.getValue2()));
-}
-/** Get the current max value
- * @return {number}
- */
-ol.ext.input.Range.prototype.getMax = function() {
-  return Math.max(parseFloat(this.getValue()), parseFloat(this.getValue2()));
+    }.bind(this);
+    input.addEventListener('change', setValue);
+    if (input2)
+      input2.addEventListener('change', setValue);
+    setValue({ target: input });
+    if (input2)
+      setValue({ target: input2 });
+  }
+  /** Set the current value (second input)
+   */
+  setValue2(v) {
+    if (!this.input2)
+      return;
+    if (v !== undefined)
+      this.input2.value = v;
+    this.input2.dispatchEvent(new Event('change'));
+  }
+  /** Get the current value (second input)
+   */
+  getValue2() {
+    return this.input2 ? this.input2.value : null;
+  }
+  /** Get the current min value
+   * @return {number}
+   */
+  getMin() {
+    return Math.min(parseFloat(this.getValue()), parseFloat(this.getValue2()));
+  }
+  /** Get the current max value
+   * @return {number}
+   */
+  getMax() {
+    return Math.max(parseFloat(this.getValue()), parseFloat(this.getValue2()));
+  }
 }
 
 /** Checkbox input
@@ -3364,31 +3394,32 @@ ol.ext.input.Range.prototype.getMax = function() {
  *  @param {Element} [options.parent] parent element, if create an input
  *  @param {Array<number>} [options.size] a list of size (default 0,2,3,5,8,13,21,34,55)
  */
-ol.ext.input.Size = function(options) {
-  options = options || {};
-  options.options = [];
-  (options.size || [0,2,3,5,8,13,21,34,55]).forEach(function(i) {
-    options.options.push({
-      value: i,
-      html: ol.ext.element.create('DIV', {
-        className: 'ol-option-'+i,
-        style: {
-          fontSize: i ? i+'px' : undefined
-        }
-      })
-    })
-  })
-  ol.ext.input.List.call(this, options);
-  this._content.remove();
-  this.element.classList.add('ol-size');
-};
-ol.ext.inherits(ol.ext.input.Size, ol.ext.input.List);
-/** Get the current value
- * @returns {number}
- */
-ol.ext.input.Size.prototype.getValue = function() {
-  return parseFloat(ol.ext.input.List.prototype.getValue.call(this));
-};
+ol.ext.input.Size = class olextinputSize extends ol.ext.input.List {
+  constructor(options) {
+    options = options || {};
+    options.options = [];
+    (options.size || [0, 2, 3, 5, 8, 13, 21, 34, 55]).forEach(function (i) {
+      options.options.push({
+        value: i,
+        html: ol.ext.element.create('DIV', {
+          className: 'ol-option-' + i,
+          style: {
+            fontSize: i ? i + 'px' : undefined
+          }
+        })
+      });
+    });
+    super(options);
+    this._content.remove();
+    this.element.classList.add('ol-size');
+  }
+  /** Get the current value
+   * @returns {number}
+   */
+  getValue() {
+    return parseFloat(ol.ext.input.List.prototype.getValue.call(this));
+  }
+}
 
 /** Switch input
  * @constructor
@@ -3416,30 +3447,31 @@ ol.ext.input.Switch = class olextinputSwitch extends ol.ext.input.Checkbox {
  *  @param {Element} [options.parent] parent element, if create an input
  *  @param {Array<number>} [options.size] a list of size (default 0,1,2,3,5,10,15,20)
  */
-ol.ext.input.Width = function(options) {
-  options = options || {};
-  options.options = [];
-  (options.size || [0,1,2,3,5,10,15,20]).forEach(function(i) {
-    options.options.push({
-      value: i,
-      html: ol.ext.element.create('DIV', {
-        className: 'ol-option-'+i,
-        style: {
-          height: i || undefined
-        }
-      })
-    })
-  });
-  ol.ext.input.List.call(this, options);
-  this._content.remove();
-  this.element.classList.add('ol-width');
-};
-ol.ext.inherits(ol.ext.input.Width, ol.ext.input.List);
-/** Get the current value
- * @returns {number}
- */
-ol.ext.input.Width.prototype.getValue = function() {
-  return parseFloat(ol.ext.input.List.prototype.getValue.call(this));
+ol.ext.input.Width = class olextinputWidth extends ol.ext.input.List {
+  constructor(options) {
+    options = options || {};
+    options.options = [];
+    (options.size || [0, 1, 2, 3, 5, 10, 15, 20]).forEach(function (i) {
+      options.options.push({
+        value: i,
+        html: ol.ext.element.create('DIV', {
+          className: 'ol-option-' + i,
+          style: {
+            height: i || undefined
+          }
+        })
+      });
+    });
+    super(options);
+    this._content.remove();
+    this.element.classList.add('ol-width');
+  }
+  /** Get the current value
+   * @returns {number}
+   */
+  getValue() {
+    return parseFloat(ol.ext.input.List.prototype.getValue.call(this));
+  }
 }
 
 /** @namespace  ol.legend
@@ -16547,146 +16579,152 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
  *  @param {number} options.position position propertie of the swipe [0,1], default 0.5
  *  @param {string} options.orientation orientation propertie (vertical|horizontal), default vertical
  */
-ol.control.SwipeMap = function(options) {
-  options = options || {};
-  var button = document.createElement('button');
-  var element = document.createElement('div');
-  element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
-  element.appendChild(button);
-  element.addEventListener("mousedown", this.move.bind(this));
-  element.addEventListener("touchstart", this.move.bind(this));
-  ol.control.Control.call(this, {
-    element: element
-  });
-  this.on('propertychange', function(e) {
-    if (this.get('orientation') === "horizontal") {
-      this.element.style.top = this.get('position')*100+"%";
-      this.element.style.left = "";
-    } else {
-      if (this.get('orientation') !== "vertical") this.set('orientation', "vertical");
-      this.element.style.left = this.get('position')*100+"%";
-      this.element.style.top = "";
-    }
-    if (e.key === 'orientation') {
-      this.element.classList.remove("horizontal", "vertical");
-      this.element.classList.add(this.get('orientation'));
-    }
-    this._clip();
-  }.bind(this));
-  this.on('change:active', this._clip.bind(this));
-  this.set('position', options.position || 0.5);
-  this.set('orientation', options.orientation || 'vertical');
-  this.set('right', options.right);
-};
-ol.ext.inherits(ol.control.SwipeMap, ol.control.Control);
-/** Set the map instance the control associated with.
- * @param {ol.Map} map The map instance.
- */
-ol.control.SwipeMap.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    if (this._listener) ol.Observable.unByKey(this._listener);
-    var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
-    layerDiv.style.clip = ''; 
-  }
-  ol.control.Control.prototype.setMap.call(this, map);
-  if (map) {
-    this._listener = map.on('change:size', this._clip.bind(this));
-  }
-};
-/** Clip
- * @private
- */
-ol.control.SwipeMap.prototype._clip = function() {
-  if (this.getMap()) {
-    var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
-    var rect = this.getRectangle();
-    layerDiv.style.clip = 'rect(' 
-      + rect[1]+'px,' // top
-      + rect[2]+'px,' // right
-      + rect[3]+'px,' // bottom
-      + rect[0]+'px'  //left
-      + ')';
-  }
-};
-/** Get visible rectangle
- * @returns {ol.extent}
- */
-ol.control.SwipeMap.prototype.getRectangle = function() {
-  var s = this.getMap().getSize();
-  if (this.get('orientation') === 'vertical') {
-    if (this.get('right')) {
-      return [ s[0]*this.get('position'), 0, s[0], s[1]];
-    } else {
-      return [ 0, 0, s[0]*this.get('position'), s[1]];
-    }
-  } else {
-    if (this.get('right')) {
-      return [ 0, s[1]*this.get('position'), s[0], s[1]];
-    } else {
-      return [ 0, 0, s[0], s[1]*this.get('position')];
-    }
-  }
-};
-/** @private
-*/
-ol.control.SwipeMap.prototype.move = function(e) {
-  var self = this;
-  var l;
-  if (!this._movefn) this._movefn = this.move.bind(this);
-  switch (e.type) {
-    case 'touchcancel':
-    case 'touchend':
-    case 'mouseup': {
-      self.isMoving = false;
-      ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
-        .forEach(function(eventName) {
-          document.removeEventListener(eventName, self._movefn);
-        });
-      break;
-    }
-    case 'mousedown':
-    case 'touchstart': {
-      self.isMoving = true;
-      ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
-        .forEach(function(eventName) {
-          document.addEventListener(eventName, self._movefn);
-        });
-    }
-    // fallthrough
-    case 'mousemove':
-    case 'touchmove': {
-      if (self.isMoving) {
-        if (self.get('orientation') === 'vertical') {
-          var pageX = e.pageX
-            || (e.touches && e.touches.length && e.touches[0].pageX)
-            || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
-          if (!pageX) break;
-          pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
-            window.pageXOffset - document.documentElement.clientLeft;
-          l = self.getMap().getSize()[0];
-          var w = l - Math.min(Math.max(0, l-pageX), l);
-          l = w/l;
-          self.set('position', l);
-          self.dispatchEvent({ type: 'moving', size: [w, self.getMap().getSize()[1]], position: [l,0] });
-        } else {
-          var pageY = e.pageY
-            || (e.touches && e.touches.length && e.touches[0].pageY)
-            || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
-          if (!pageY) break;
-          pageY -= self.getMap().getTargetElement().getBoundingClientRect().top +
-            window.pageYOffset - document.documentElement.clientTop;
-          l = self.getMap().getSize()[1];
-          var h = l - Math.min(Math.max(0, l-pageY), l);
-          l = h/l;
-          self.set('position', l);
-          self.dispatchEvent({ type: 'moving', size: [self.getMap().getSize()[0],h], position: [0,l] });
-        }
+ol.control.SwipeMap = class olcontrolSwipeMap extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    var button = document.createElement('button');
+    var element = document.createElement('div');
+    element.className = (options.className || "ol-swipe") + " ol-unselectable ol-control";
+    super({
+      element: element
+    });
+    element.appendChild(button);
+    element.addEventListener("mousedown", this.move.bind(this));
+    element.addEventListener("touchstart", this.move.bind(this));
+    this.on('propertychange', function (e) {
+      if (this.get('orientation') === "horizontal") {
+        this.element.style.top = this.get('position') * 100 + "%";
+        this.element.style.left = "";
+      } else {
+        if (this.get('orientation') !== "vertical")
+          this.set('orientation', "vertical");
+        this.element.style.left = this.get('position') * 100 + "%";
+        this.element.style.top = "";
       }
-      break;
-    }
-    default: break;
+      if (e.key === 'orientation') {
+        this.element.classList.remove("horizontal", "vertical");
+        this.element.classList.add(this.get('orientation'));
+      }
+      this._clip();
+    }.bind(this));
+    this.on('change:active', this._clip.bind(this));
+    this.set('position', options.position || 0.5);
+    this.set('orientation', options.orientation || 'vertical');
+    this.set('right', options.right);
   }
-};
+  /** Set the map instance the control associated with.
+   * @param {ol.Map} map The map instance.
+   */
+  setMap(map) {
+    if (this.getMap()) {
+      if (this._listener)
+        ol.Observable.unByKey(this._listener);
+      var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
+      layerDiv.style.clip = '';
+    }
+    ol.control.Control.prototype.setMap.call(this, map);
+    if (map) {
+      this._listener = map.on('change:size', this._clip.bind(this));
+    }
+  }
+  /** Clip
+   * @private
+   */
+  _clip() {
+    if (this.getMap()) {
+      var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
+      var rect = this.getRectangle();
+      layerDiv.style.clip = 'rect('
+        + rect[1] + 'px,' // top
+        + rect[2] + 'px,' // right
+        + rect[3] + 'px,' // bottom
+        + rect[0] + 'px' //left
+        + ')';
+    }
+  }
+  /** Get visible rectangle
+   * @returns {ol.extent}
+   */
+  getRectangle() {
+    var s = this.getMap().getSize();
+    if (this.get('orientation') === 'vertical') {
+      if (this.get('right')) {
+        return [s[0] * this.get('position'), 0, s[0], s[1]];
+      } else {
+        return [0, 0, s[0] * this.get('position'), s[1]];
+      }
+    } else {
+      if (this.get('right')) {
+        return [0, s[1] * this.get('position'), s[0], s[1]];
+      } else {
+        return [0, 0, s[0], s[1] * this.get('position')];
+      }
+    }
+  }
+  /** @private
+  */
+  move(e) {
+    var self = this;
+    var l;
+    if (!this._movefn)
+      this._movefn = this.move.bind(this);
+    switch (e.type) {
+      case 'touchcancel':
+      case 'touchend':
+      case 'mouseup': {
+        self.isMoving = false;
+        ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
+          .forEach(function (eventName) {
+            document.removeEventListener(eventName, self._movefn);
+          });
+        break;
+      }
+      case 'mousedown':
+      case 'touchstart': {
+        self.isMoving = true;
+        ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
+          .forEach(function (eventName) {
+            document.addEventListener(eventName, self._movefn);
+          });
+      }
+      // fallthrough
+      case 'mousemove':
+      case 'touchmove': {
+        if (self.isMoving) {
+          if (self.get('orientation') === 'vertical') {
+            var pageX = e.pageX
+              || (e.touches && e.touches.length && e.touches[0].pageX)
+              || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageX);
+            if (!pageX)
+              break;
+            pageX -= self.getMap().getTargetElement().getBoundingClientRect().left +
+              window.pageXOffset - document.documentElement.clientLeft;
+            l = self.getMap().getSize()[0];
+            var w = l - Math.min(Math.max(0, l - pageX), l);
+            l = w / l;
+            self.set('position', l);
+            self.dispatchEvent({ type: 'moving', size: [w, self.getMap().getSize()[1]], position: [l, 0] });
+          } else {
+            var pageY = e.pageY
+              || (e.touches && e.touches.length && e.touches[0].pageY)
+              || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
+            if (!pageY)
+              break;
+            pageY -= self.getMap().getTargetElement().getBoundingClientRect().top +
+              window.pageYOffset - document.documentElement.clientTop;
+            l = self.getMap().getSize()[1];
+            var h = l - Math.min(Math.max(0, l - pageY), l);
+            l = h / l;
+            self.set('position', l);
+            self.dispatchEvent({ type: 'moving', size: [self.getMap().getSize()[0], h], position: [0, l] });
+          }
+        }
+        break;
+      }
+      default: break;
+    }
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -22252,103 +22290,107 @@ ol.interaction.CenterTouch = class olinteractionCenterTouch extends ol.interacti
  * @param {ol.interaction.ClipMap.options} options flashlight  param
  *  @param {number} options.radius radius of the clip, default 100 (px)
  */
-ol.interaction.ClipMap = function(options) {
-  this.layers_ = [];
-  ol.interaction.Pointer.call(this, {
-    handleDownEvent: this._clip,
-    handleMoveEvent: this._clip
-  });
-  // Default options
-  options = options || {};
-  this.pos = false;
-  this.radius = (options.radius||100);
-  this.pos = [-1000, -1000];
-};
-ol.ext.inherits(ol.interaction.ClipMap, ol.interaction.Pointer);
-/** Set the map > start postcompose
-*/
-ol.interaction.ClipMap.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    if (this._listener) ol.Observable.unByKey(this._listener);
-    var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
-    layerDiv.style.clipPath = ''; 
+ol.interaction.ClipMap = class olinteractionClipMap extends ol.interaction.Pointer {
+  constructor(options) {
+    super({
+      handleDownEvent: function(e) { return this._clip(e) },
+      handleMoveEvent: function(e) { return this._clip(e) },
+    });
+    // Default options
+    options = options || {};
+    this.layers_ = [];
+    this.pos = false;
+    this.radius = (options.radius || 100);
+    this.pos = [-1000, -1000];
   }
-  ol.interaction.Pointer.prototype.setMap.call(this, map);
-  if (map) {
-    this._listener = map.on('change:size', this._clip.bind(this));
+  /** Set the map > start postcompose
+  */
+  setMap(map) {
+    if (this.getMap()) {
+      if (this._listener)
+        ol.Observable.unByKey(this._listener);
+      var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
+      layerDiv.style.clipPath = '';
+    }
+    ol.interaction.Pointer.prototype.setMap.call(this, map);
+    if (map) {
+      this._listener = map.on('change:size', this._clip.bind(this));
+    }
   }
-};
-/** Set clip radius
- *	@param {integer} radius
- */
-ol.interaction.ClipMap.prototype.setRadius = function(radius) {
-  this.radius = radius;
-  this._clip();
-};
-/** Get clip radius
- *	@returns {integer} radius
- */
-ol.interaction.ClipMap.prototype.getRadius = function() {
-  return this.radius;
-};
-/** Set position of the clip
- * @param {ol.coordinate} coord
- */
-ol.interaction.ClipMap.prototype.setPosition = function(coord) {
-  if (this.getMap()) {
-    this.pos = this.getMap().getPixelFromCoordinate(coord);
+  /** Set clip radius
+   *	@param {integer} radius
+   */
+  setRadius(radius) {
+    this.radius = radius;
     this._clip();
   }
-};
-/** Get position of the clip
- * @returns {ol.coordinate}
- */
-ol.interaction.ClipMap.prototype.getPosition = function() {
-  if (this.pos) return this.getMap().getCoordinateFromPixel(this.pos);
-  return null;
-};
-/** Set position of the clip
- * @param {ol.Pixel} pixel
- */
- ol.interaction.ClipMap.prototype.setPixelPosition = function(pixel) {
-  this.pos = pixel;
-  this._clip();
-};
-/** Get position of the clip
- * @returns {ol.Pixel} pixel
- */
- ol.interaction.ClipMap.prototype.getPixelPosition = function() {
-  return this.pos;
-};
-/** Set position of the clip
- * @param {ol.MapBrowserEvent} e
- * @privata
- */
-ol.interaction.ClipMap.prototype._setPosition = function(e) {
-  if (e.type==='pointermove' && this.get('action')==='onclick') return;
-  if (e.pixel) {
-    this.pos = e.pixel;
+  /** Get clip radius
+   *	@returns {integer} radius
+   */
+  getRadius() {
+    return this.radius;
   }
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
+  /** Set position of the clip
+   * @param {ol.coordinate} coord
+   */
+  setPosition(coord) {
+    if (this.getMap()) {
+      this.pos = this.getMap().getPixelFromCoordinate(coord);
+      this._clip();
+    }
   }
-};
-/** Clip
- * @private
- */
- ol.interaction.ClipMap.prototype._clip = function(e) {
-  if (e && e.pixel) {
-    this.pos = e.pixel;
+  /** Get position of the clip
+   * @returns {ol.coordinate}
+   */
+  getPosition() {
+    if (this.pos)
+      return this.getMap().getCoordinateFromPixel(this.pos);
+    return null;
   }
-  if (this.pos && this.getMap()) {
-    var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
-    layerDiv.style.clipPath = 'circle(' 
-      + this.getRadius() + 'px' // radius
-      + ' at ' 
-      + this.pos[0] + 'px '
-      + this.pos[1] + 'px)';
+  /** Set position of the clip
+   * @param {ol.Pixel} pixel
+   */
+  setPixelPosition(pixel) {
+    this.pos = pixel;
+    this._clip();
   }
-};
+  /** Get position of the clip
+   * @returns {ol.Pixel} pixel
+   */
+  getPixelPosition() {
+    return this.pos;
+  }
+  /** Set position of the clip
+   * @param {ol.MapBrowserEvent} e
+   * @privata
+   */
+  _setPosition(e) {
+    if (e.type === 'pointermove' && this.get('action') === 'onclick')
+      return;
+    if (e.pixel) {
+      this.pos = e.pixel;
+    }
+    if (this.getMap()) {
+      try { this.getMap().renderSync(); } catch (e) { /* ok */ }
+    }
+  }
+  /** Clip
+   * @private
+   */
+  _clip(e) {
+    if (e && e.pixel) {
+      this.pos = e.pixel;
+    }
+    if (this.pos && this.getMap()) {
+      var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
+      layerDiv.style.clipPath = 'circle('
+        + this.getRadius() + 'px' // radius
+        + ' at '
+        + this.pos[0] + 'px '
+        + this.pos[1] + 'px)';
+    }
+  }
+}
 
 /** An interaction to copy/paste features on a map. 
  * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
