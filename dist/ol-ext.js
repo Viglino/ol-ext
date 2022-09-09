@@ -20591,136 +20591,141 @@ ol.filter.Halftone = class olfilterHalftone extends ol.filter.Base {
  *  @param {number} [options.brickSize] size of te brick, default 30
  *  @param {null | string | undefined} [options.crossOrigin] crossOrigin attribute for loaded images.
  */
-ol.filter.Lego = function(options) {
-  if (!options) options = {};
-  ol.filter.Base.call(this, options);
-  var img = new Image();
-  // Default image
-  img.src = this.img[options.img] || this.img.ol3;
-  img.crossOrigin = options.crossOrigin || null;
-  // and pattern 
-  this.pattern = {
-    canvas: document.createElement('canvas')
-  };
-  this.setBrick (options.brickSize, img);
-  this.internal_ = document.createElement('canvas');
+ol.filter.Lego = class olfilterLego extends ol.filter.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    var img = new Image();
+    // Default image
+    img.src = this.img[options.img] || this.img.ol3;
+    img.crossOrigin = options.crossOrigin || null;
+    // and pattern 
+    this.pattern = {
+      canvas: document.createElement('canvas')
+    };
+    this.setBrick(options.brickSize, img);
+    this.internal_ = document.createElement('canvas');
+  }
+  /** Overwrite to handle brickSize
+  * @param {string} key
+  * @param {any} val
+  */
+  set(key, val) {
+    super.set(key, val);
+    if (key == "brickSize" && this.pattern && this.pattern.canvas.width != val) {
+      this.setBrick(val);
+    }
+  }
+  /** Set the current brick
+  *	@param {number} width the pattern width, default 30
+  *	@param {'brick'|'ol3'|'lego'|undefined} img the pattern, default ol3
+  *	@param {string} crossOrigin
+  */
+  setBrick(width, img, crossOrigin) {
+    width = Number(width) || 30;
+    if (typeof (img) === 'string') {
+      var i = new Image;
+      i.src = this.img[img] || this.img.ol3;
+      i.crossOrigin = crossOrigin || null;
+      img = i;
+    }
+    if (img)
+      this.pattern.img = img;
+    if (!this.pattern.img.width) {
+      var self = this;
+      this.pattern.img.onload = function () {
+        self.setBrick(width, img);
+      };
+      return;
+    }
+    this.pattern.canvas.width = this.pattern.canvas.height = width;
+    this.pattern.ctx = this.pattern.canvas.getContext("2d");
+    this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern(this.pattern.img, 'repeat');
+    this.set("brickSize", width);
+    if (img)
+      this.set("img", img.src);
+  }
+  /** Get translated pattern
+  *	@param {number} offsetX x offset
+  *	@param {number} offsetY y offset
+  */
+  getPattern(offsetX, offsetY) {
+    if (!this.pattern.ctx)
+      return "transparent";
+    //return this.pattern.ctx.fillStyle
+    var c = this.pattern.canvas;
+    var ctx = this.pattern.ctx;
+    var sc = c.width / this.pattern.img.width;
+    ctx.save();
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.scale(sc, sc);
+    offsetX /= sc;
+    offsetY /= sc;
+    ctx.translate(offsetX, offsetY);
+    ctx.beginPath();
+    ctx.clearRect(-2 * c.width, -2 * c.height, 4 * c.width, 4 * c.height);
+    ctx.rect(-offsetX, -offsetY, 2 * c.width / sc, 2 * c.height / sc);
+    ctx.fill();
+    ctx.restore();
+    return ctx.createPattern(c, 'repeat');
+  }
+  /** Postcompose operation
+  */
+  postcompose(e) {
+    // Set back color hue
+    var ctx = e.context;
+    var canvas = ctx.canvas;
+    var ratio = e.frameState.pixelRatio;
+    /* ol v6+
+    if (e.type === 'postrender') {
+      ratio = 1;
+    }
+    */
+    ctx.save();
+    // resize 
+    var step = this.pattern.canvas.width * ratio;
+    var p = e.frameState.extent;
+    var res = e.frameState.viewState.resolution / ratio;
+    var offset = [-Math.round((p[0] / res) % step), Math.round((p[1] / res) % step)];
+    var ctx2 = this.internal_.getContext("2d");
+    var w = this.internal_.width = canvas.width;
+    var h = this.internal_.height = canvas.height;
+    // No smoothing please
+    ctx2.webkitImageSmoothingEnabled =
+      ctx2.mozImageSmoothingEnabled =
+      ctx2.msImageSmoothingEnabled =
+      ctx2.imageSmoothingEnabled = false;
+    var w2 = Math.floor((w - offset[0]) / step);
+    var h2 = Math.floor((h - offset[1]) / step);
+    ctx2.drawImage(canvas, offset[0], offset[1], w2 * step, h2 * step, 0, 0, w2, h2);
+    //
+    ctx.webkitImageSmoothingEnabled =
+      ctx.mozImageSmoothingEnabled =
+      ctx.msImageSmoothingEnabled =
+      ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(this.internal_, 0, 0, w2, h2, offset[0], offset[1], w2 * step, h2 * step);
+    /*
+        for (var x=offset[0]; x<w; x+=step) for (var y=offset[1]; y<h; y+=step)
+        {	if (x>=0 && y<h) ctx2.drawImage (canvas, x, y, 1, 1, x, y, step, step);
+        }
+        ctx.clearRect (0, 0, w,h);
+        ctx.drawImage (c, 0, 0);
+    */
+    // Draw brick stud
+    ctx.scale(ratio, ratio);
+    ctx.fillStyle = this.getPattern(offset[0] / ratio, offset[1] / ratio);
+    ctx.rect(0, 0, w, h);
+    ctx.fill();
+    ctx.restore();
+  }
 }
-ol.ext.inherits(ol.filter.Lego, ol.filter.Base);
 /** Image definition
 */
 ol.filter.Lego.prototype.img = {
   brick: "data:image/png;base64,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",
   ol3: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAQAAAAAYLlVAAAAAnNCSVQICFXsRgQAAAAJcEhZcwAAD10AAA9dAah0GUAAAAAZdEVYdFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAHtUlEQVRo3sWZTWxcVxXHf/d9zIztcTz+pE6cOHXiyLJJadKgKE2oCBLlQwIWSCxYI0WiGxZZIYRAArFAYoEEi0hIsGBBURd0g4iK2lJAaWlaojZVKkU0H26cxB8Zz/f7uPeweHdebDLPnqlQ5l2N5/mN7tz/+Z//OffcM4rPUKCPl0eBAqqfAEAt5Ia1LwCuAg93CyCnAzgj7TstEKMluW+/x0AsWmKBmFggTu4lIpYome2Qw0kA8I2xL9T2Bp5COY6ncJRSDkopFEolANowBEAEATGIGBEkFjEiYkQbI0ZrMaFobYwxkY51pOumpSNTiau6bm7oZX1NP4Ai+ylYADkmGqUPxwSUQsG2ZbcDsBAA2QoGkeSvSZ4kr/alDcRGSyyxbJqqvG5+pHAwbRegVMz+leTBY7qcbTee8vsmQycRmnL6CkD1G4DXFl0fGegvANfpnws8+947AwqFg2MDSjAYzJY80QuAHl2gcPDJF3PiDLiimtIQC0ETEhD3klE8AJeuASg8CgeHir7vLBVOjwypQK3plyoromRNtzSamJg6QbcgvJ7C0J0YnCweG/jek/Ozw5q6bEiFiIHz+wNWBv68+rPNmlQjYnKE1Ai6cYfXA/W5Q6Uvl84f3zel3vH+SIDYoVAeofOdqa9PvbHn/PoDHYZ4eDSpE3fJgLs79YXToz858uxJ5+/en4jQ6hHr5OPZlZHhpcM/4BUv9PFw8agQdQVg1+UHnx/75fG5Gf83lFWGVUrQsmmu/HBsbN8f3Mi1MVLeGUJ3Lig8P/a7s5MN97c01I5+VUIk91err0/fLqFwgBHKOzmimzyQPzX2q1OTZfeianUVKCLNr93EZxiFIOyhnB0Tu6vf/XTp54uzY+4r3S1veYj5CEPBjqFsA3cDoEaLXy199rj/Is0eM2XILXzy5MkzSO6TAvAOFF84qf5KRfWYYhE2aJCzI5MDbxf7B58pTpf89x8qX1yWGKXKFaUBZIF1tWo/KzJPiYi3VAgYbrFEnpiYiBzBTgx0ts99YvDcvHr7YSBJka/Q4k1u3jz5eQ/EYebkXvL241NUeZN/31gkDwibhHjk8PGzTh+OrWw7X/6g/+TB8nuJrQCc4Z/KU08rb+1f/1gCSqy9NUNoP72txtXRb40dfJ+nkgMEZTw78riZLhDRndNP3vGG9GBKnRzhrppmilfhmcWoRYkxyuxv86euUaT24h4W2WN53WQmheB1ygc7MaCKuc+N5LeW6wfOXeUorwFQZIV5RlnbNqcGjBMyaAFUcfHwcHHxOznBakA6JQq34B4dkXtt+8QjvnCQa/Z/jxpFCmdbpPSJI7NyhMVzK/j2UQuFi4OLkz57FECcIcGCU8yZeirQvdxjjuvpTKGAem2EcjpjkjnUC5cvfIm/bRG3Y4e7AwOmEwPKOJotfhvlPj61dGaBEChtAdD88Yeq9et1LqWOUTj2lYzOItSmcxi2ZDXUw+k0n0bqDoXDJBsMM8rHKeIKFbxgIV9nL3cSFlPpZQBoa6AjgCYXK2YkndbckkxmWWfu2D00ozzYNinOlagwbRct/k92zNJARxFK01yur/mX2wDWGE0jfuHyNfa+Y6hQYNsmJQ45hqwwFaPpOVo6s2zDsCMDgsBq2sBR9xj8ZvX70+LJc9w+scA1Sjz49rjMy7zMywE5IY64PMcNDlkHKCbt9xhMZwhOooGODGhMzVyqTUxIm4Pll9797ixnWFZ3WORdSqz//hI+Pv7LT5dXOcNZltUa49y3qplC0Hb5uBMAbwcGDKYS/eLu6YMfrSZCUhWY+QCfGZ7iZYRbarSdYMfd0bvXazh8ii/yF2vcAVwitB1hZirWnROREFLYjN4uLQ5QTZ/WmeA2VwDUHbBks351HRxK3OaqtTTHEQwxmpjkxJApQh111kBAvBH+9O7y/KveFsfcYyNj82qywqZdxmWBAjEREbHdkrNEqNE6o6qJiVeiC4UPHuqg20PvExxGE6YAWp2jwEvabmIyqpoGuTB4ozEwd6lKvYflRzgBBIQWQrQjAG2MZABoEeJH4UU3N8f1rC/psPyz+AQWQEhIK6s09wACk+EC0NTwcCM3KrDAf6ihd6ui2ccxcrRoEaQg6lnQPYDYSLZlAS1cXBzyLHGfW0SZPDgMscgBDK10BARUs48mVgNxtl2GKh6ObVpOM8Uy94hsZpe0nakoMMdhPGJreRtAg9YuJ6NIwp18G7OJsilVyHGIQ2yySZ0WIYocQ+xhknEUhiYRoQUQ0KJBbSfleAChjvQuh4wypbQLovEpMWHrnPY2K0RoG/eR5SCgQXVn1SQAJNpNWiFlhm0+i8jZIrMNoN0j0jbhJMoPaOwu2sQFJt69oRKyadNqTGQBOFsAiM34CQchIdVuwtYyEOgu4jumQosiEX5a6aq0S9Z2T2zTThfdkS0MRN21lISAiBwD5KwDnLReStp0MZomrc4bTyaAhql131gztAhw8cnhWxeIBRASEWbVPju5wAS9/VYgdnthGwPSe5uynYqlpun9EuCTzHt0O67r5uP8teRRAC25H/cXgNmQvgKomhXdLwB2M7pu0pTyeK70mJYUm251sLfo/T8AGEoKes8eIGZ43E5wk36BBwhO2mbqgwZa9C0CAP4LFLGzNDDzmrAAAAAASUVORK5CYII=",
   lego: "data:image/png;base64,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"
-};
-/** Overwrite to handle brickSize
-* @param {string} key
-* @param {any} val
-*/
-ol.filter.Lego.prototype.set = function (key, val) {
-  ol.filter.Base.prototype.set.call(this, key, val);
-  if (key=="brickSize" && this.pattern && this.pattern.canvas.width!=val) {
-    this.setBrick(val);
-  }
-}
-/** Set the current brick
-*	@param {number} width the pattern width, default 30
-*	@param {'brick'|'ol3'|'lego'|undefined} img the pattern, default ol3
-*	@param {string} crossOrigin
-*/
-ol.filter.Lego.prototype.setBrick = function (width, img, crossOrigin) {
-  width = Number(width) || 30;
-  if (typeof(img) === 'string') {
-    var i = new Image;
-    i.src = this.img[img] || this.img.ol3;
-    i.crossOrigin = crossOrigin || null;
-    img = i;
-  }
-  if (img) this.pattern.img = img;
-  if (!this.pattern.img.width) {
-    var self = this;
-    this.pattern.img.onload = function() {
-      self.setBrick(width,img);
-    }
-    return;
-  }
-  this.pattern.canvas.width = this.pattern.canvas.height = width;
-  this.pattern.ctx = this.pattern.canvas.getContext("2d");
-  this.pattern.ctx.fillStyle = this.pattern.ctx.createPattern (this.pattern.img, 'repeat');
-  this.set("brickSize", width);
-  if (img) this.set("img", img.src);
-};
-/** Get translated pattern
-*	@param {number} offsetX x offset
-*	@param {number} offsetY y offset
-*/
-ol.filter.Lego.prototype.getPattern = function (offsetX, offsetY) {	
-  if (!this.pattern.ctx) return "transparent";
-  //return this.pattern.ctx.fillStyle
-  var c = this.pattern.canvas;
-  var ctx = this.pattern.ctx;
-  var sc = c.width / this.pattern.img.width;
-  ctx.save();
-    ctx.clearRect(0,0,c.width,c.height);
-    ctx.scale(sc,sc);
-    offsetX /= sc;
-    offsetY /= sc;
-    ctx.translate(offsetX, offsetY);
-    ctx.beginPath();
-    ctx.clearRect(-2*c.width, -2*c.height, 4*c.width, 4*c.height);
-    ctx.rect(-offsetX, -offsetY, 2*c.width/sc, 2*c.height/sc);
-    ctx.fill(); 
-  ctx.restore();
-  return ctx.createPattern(c, 'repeat');
-};
-/** Postcompose operation
-*/
-ol.filter.Lego.prototype.postcompose = function(e) {
-  // Set back color hue
-  var ctx = e.context;
-  var canvas = ctx.canvas;
-  var ratio = e.frameState.pixelRatio;
-  // ol v6+
-  if (e.type==='postrender') {
-    ratio = 1;
-  }
-  ctx.save();
-    // resize 
-    var step = this.pattern.canvas.width*ratio;
-    var p = e.frameState.extent;
-    var res = e.frameState.viewState.resolution/ratio;
-    var offset = [ -Math.round((p[0]/res)%step), Math.round((p[1]/res)%step) ];
-    var ctx2 = this.internal_.getContext("2d");
-    var w = this.internal_.width = canvas.width;
-    var h = this.internal_.height = canvas.height;
-    // No smoothing please
-    ctx2.webkitImageSmoothingEnabled =
-    ctx2.mozImageSmoothingEnabled =
-    ctx2.msImageSmoothingEnabled =
-    ctx2.imageSmoothingEnabled = false;
-    var w2 = Math.floor((w-offset[0])/step);
-    var h2 = Math.floor((h-offset[1])/step);
-    ctx2.drawImage (canvas, offset[0], offset[1], w2*step, h2*step, 0, 0, w2, h2);
-    //
-    ctx.webkitImageSmoothingEnabled =
-    ctx.mozImageSmoothingEnabled =
-    ctx.msImageSmoothingEnabled =
-    ctx.imageSmoothingEnabled = false;
-    ctx.clearRect (0, 0, w,h);
-    ctx.drawImage (this.internal_, 0,0, w2,h2, offset[0],offset[1], w2*step, h2*step);
-/*
-    for (var x=offset[0]; x<w; x+=step) for (var y=offset[1]; y<h; y+=step)
-    {	if (x>=0 && y<h) ctx2.drawImage (canvas, x, y, 1, 1, x, y, step, step);
-    }
-    ctx.clearRect (0, 0, w,h);
-    ctx.drawImage (c, 0, 0);
-*/
-    // Draw brick stud
-    ctx.scale(ratio,ratio);
-    ctx.fillStyle = this.getPattern (offset[0]/ratio, offset[1]/ratio);
-    ctx.rect(0,0, w, h);
-    ctx.fill(); 
-  ctx.restore();
 };
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -20836,63 +20841,64 @@ ol.filter.PencilSketch = class olfilterPencilSketch extends ol.filter.Base {
  * @extends {ol.filter.Base}
  * @param {FilterPointillismOptions} options
  */
-ol.filter.Pointillism = function(options) {
-  options = options || {};
-  ol.filter.Base.call(this, options);
-  this.set('saturate', Number(options.saturate) || 2);
-  this.pixels = [];
-};
-ol.ext.inherits(ol.filter.Pointillism, ol.filter.Base);
-/** Create points to place on the map
- * @private
- */
-ol.filter.Pointillism.prototype._getPixels = function(nb) {
-  if (nb > this.pixels.length) {
-    while (this.pixels.length < nb) {
-      this.pixels.push([Math.random(), Math.random(), Math.random()*4+2]);
-    }
+ol.filter.Pointillism = class olfilterPointillism extends ol.filter.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.set('saturate', Number(options.saturate) || 2);
+    this.pixels = [];
   }
-  return nb;
-};
-/** @private 
- */
-ol.filter.Pointillism.prototype.precompose = function(/* e */) {
-};
-/** @private 
- */
-ol.filter.Pointillism.prototype.postcompose = function(e) {
-  // var ratio = e.frameState.pixelRatio;
-  // Set back color hue
-  var ctx = e.context;
-  var canvas = ctx.canvas;
-  var w = canvas.width;
-  var h = canvas.height;
-  // Grayscale image
-  var img = document.createElement('canvas');
-  img.width = w;
-  img.height = h;
-  var ictx = img.getContext('2d');
-  ictx.filter = 'saturate('+Math.round(2*this.get('saturate')*100)+'%)';
-  ictx.drawImage(canvas, 0,0);
-  ctx.save();
+  /** Create points to place on the map
+   * @private
+   */
+  _getPixels(nb) {
+    if (nb > this.pixels.length) {
+      while (this.pixels.length < nb) {
+        this.pixels.push([Math.random(), Math.random(), Math.random() * 4 + 2]);
+      }
+    }
+    return nb;
+  }
+  /** @private
+   */
+  precompose( /* e */) {
+  }
+  /** @private
+   */
+  postcompose(e) {
+    // var ratio = e.frameState.pixelRatio;
+    // Set back color hue
+    var ctx = e.context;
+    var canvas = ctx.canvas;
+    var w = canvas.width;
+    var h = canvas.height;
+    // Grayscale image
+    var img = document.createElement('canvas');
+    img.width = w;
+    img.height = h;
+    var ictx = img.getContext('2d');
+    ictx.filter = 'saturate(' + Math.round(2 * this.get('saturate') * 100) + '%)';
+    ictx.drawImage(canvas, 0, 0);
+    ctx.save();
     // Saturate and blur
-    ctx.filter = 'blur(3px) saturate('+(this.get('saturate')*100)+'%)';
-    ctx.drawImage(canvas, 0,0);
+    ctx.filter = 'blur(3px) saturate(' + (this.get('saturate') * 100) + '%)';
+    ctx.drawImage(canvas, 0, 0);
     // ctx.clearRect(0,0,w,h); // debug
     // Draw points
     ctx.filter = 'none';
     ctx.opacity = .5;
-    var max = this._getPixels(w*h/50);
-    for (var i=0; i<max; i++) {
-      var x = Math.floor(this.pixels[i][0]*w);
-      var y = Math.floor(this.pixels[i][1]*h);
+    var max = this._getPixels(w * h / 50);
+    for (var i = 0; i < max; i++) {
+      var x = Math.floor(this.pixels[i][0] * w);
+      var y = Math.floor(this.pixels[i][1] * h);
       ctx.fillStyle = ol.color.asString(ictx.getImageData(x, y, 1, 1).data);
       ctx.beginPath();
-      ctx.arc(x,y, this.pixels[i][2], 0, 2*Math.PI);
+      ctx.arc(x, y, this.pixels[i][2], 0, 2 * Math.PI);
       ctx.fill();
     }
-  ctx.restore();
-};
+    ctx.restore();
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -23645,97 +23651,102 @@ ol.interaction.FillAttribute = class olinteractionFillAttribute extends ol.inter
  *  @param {ol.Color} options.fill fill color, default rgba(0,0,0,0.8)
  *  @param {number} options.radius radius of the flash
  */
-ol.interaction.Flashlight = function(options) {
-  ol.interaction.Pointer.call(this, {
-    handleDownEvent: this.setPosition,
-    handleMoveEvent: this.setPosition
-  });
-  // Default options
-  options = options||{};
-  this.pos = false;
-  this.radius = (options.radius||100);
-  this.setColor(options);
-};
-ol.ext.inherits(ol.interaction.Flashlight, ol.interaction.Pointer);
-/** Set the map > start postcompose
-*/
-ol.interaction.Flashlight.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    this.getMap().render();
+ol.interaction.Flashlight = class olinteractionFlashlight extends ol.interaction.Pointer {
+  constructor(options) {
+    super({
+      handleDownEvent: function(e) { return this.setPosition(e) },
+      handleMoveEvent: function(e) { return this.setPosition(e) },
+    })
+    // Default options
+    options = options || {}
+    this.pos = false
+    this.radius = (options.radius || 100)
+    this.setColor(options)
   }
-  if (this._listener) ol.Observable.unByKey(this._listener);
-  this._listener = null;
-  ol.interaction.Pointer.prototype.setMap.call(this, map);
-  if (map) {
-    this._listener = map.on('postcompose', this.postcompose_.bind(this));
+  /** Set the map > start postcompose
+  */
+  setMap(map) {
+    if (this.getMap()) {
+      this.getMap().render()
+    }
+    if (this._listener) ol.Observable.unByKey(this._listener)
+    this._listener = null
+    super.setMap(map)
+    if (map) {
+      this._listener = map.on('postcompose', this.postcompose_.bind(this))
+    }
+  }
+  /** Set flashlight radius
+   *	@param {integer} radius
+  */
+  setRadius(radius) {
+    this.radius = radius
+    if (this.getMap()) {
+      try { this.getMap().renderSync()}  catch (e) { /* ok */ }
+    }
+  }
+  /** Set flashlight color
+   * @param {ol.flashlight.options} flashlight options param
+   *  @param {ol.Color} [options.color] light color, default transparent
+   *  @param {ol.Color} [options.fill] fill color, default rgba(0,0,0,0.8)
+   */
+  setColor(options) {
+    // Backcolor
+    var color = (options.fill ? options.fill : [0, 0, 0, 0.8])
+    var c = ol.color.asArray(color)
+    // var op = c[3]
+    this.startColor = ol.color.asString(c)
+    // Halo color
+    if (options.color) {
+      this.endColor = ol.color.asString(ol.color.asArray(options.color) || options.color)
+      c = ol.color.asArray(this.endColor);
+    } else {
+      c[3] = 0
+      this.endColor = ol.color.asString(c)
+    }
+    //c[3] = (op + c[3] * 9) / 10;
+    this.midColor = ol.color.asString(c)
+    if (this.getMap()) {
+      try { this.getMap().renderSync()}  catch (e) { /* ok */ }
+    }
+  }
+  /** Set position of the flashlight
+  *	@param {ol.Pixel|ol.MapBrowserEvent}
+  */
+  setPosition(e) {
+    if (e.pixel)
+      this.pos = e.pixel
+    else
+      this.pos = e
+    if (this.getMap()) {
+      try { this.getMap().renderSync()}  catch (e) { /* ok */ }
+    }
+  }
+  /** Postcompose function
+  */
+  postcompose_(e) {
+    var ctx = ol.ext.getMapCanvas(this.getMap()).getContext('2d')
+    var ratio = e.frameState.pixelRatio
+    var w = ctx.canvas.width
+    var h = ctx.canvas.height
+    ctx.save()
+    ctx.scale(ratio, ratio)
+    if (!this.pos) {
+      ctx.fillStyle = this.startColor
+      ctx.fillRect(0, 0, w, h)
+    } else {
+      var d = Math.max(w, h)
+      // reveal wherever we drag
+      var radGrd = ctx.createRadialGradient(this.pos[0], this.pos[1], w * this.radius / d, this.pos[0], this.pos[1], h * this.radius / d)
+      radGrd.addColorStop(0, this.startColor)
+      radGrd.addColorStop(0.8, this.midColor)
+      radGrd.addColorStop(1, this.endColor)
+      ctx.fillStyle = radGrd
+      ctx.fillRect(this.pos[0] - d, this.pos[1] - d, 2 * d, 2 * d)
+    }
+    ctx.restore()
   }
 }
-/** Set flashlight radius
- *	@param {integer} radius
-*/
-ol.interaction.Flashlight.prototype.setRadius = function(radius) {
-  this.radius = radius
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
-}
-/** Set flashlight color
- *	@param {ol.flashlight.options} flashlight options param
-*		- color {ol.Color} light color, default transparent
-*		- fill {ol.Color} fill color, default rgba(0,0,0,0.8)
-*/
-ol.interaction.Flashlight.prototype.setColor = function(options) {
-  // Backcolor
-  var color = (options.fill ? options.fill : [0,0,0,0.8]);
-  var c = ol.color.asArray(color);
-  this.startColor = ol.color.asString(c);
-  // Halo color
-  if (options.color) {
-    c = this.endColor = ol.color.asString(ol.color.asArray(options.color)||options.color);
-  } else  {
-    c[3] = 0
-    this.endColor = ol.color.asString(c);
-  }
-  c[3] = 0.1;
-  this.midColor = ol.color.asString(c);
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
-}
-/** Set position of the flashlight
-*	@param {ol.Pixel|ol.MapBrowserEvent}
-*/
-ol.interaction.Flashlight.prototype.setPosition = function(e) {
-  if (e.pixel) this.pos = e.pixel;
-  else this.pos = e;
-  if (this.getMap()) {
-    try { this.getMap().renderSync(); } catch(e) { /* ok */ }
-  }
-}
-/** Postcompose function
-*/
-ol.interaction.Flashlight.prototype.postcompose_ = function(e) {
-  var ctx = ol.ext.getMapCanvas(this.getMap()).getContext('2d');
-  var ratio = e.frameState.pixelRatio;
-  var w = ctx.canvas.width;
-  var h = ctx.canvas.height;
-  ctx.save();
-  ctx.scale(ratio,ratio);
-  if (!this.pos) {
-    ctx.fillStyle = this.startColor;
-    ctx.fillRect( 0,0,w,h );
-  } else {
-    var d = Math.max(w, h);
-    // reveal wherever we drag
-    var radGrd = ctx.createRadialGradient( this.pos[0], this.pos[1], w*this.radius/d, this.pos[0], this.pos[1], h*this.radius/d );
-    radGrd.addColorStop(   0, this.startColor );
-    radGrd.addColorStop( 0.8, this.midColor );
-    radGrd.addColorStop(   1, this.endColor );
-    ctx.fillStyle = radGrd;
-    ctx.fillRect( this.pos[0] - d, this.pos[1] - d, 2*d, 2*d );
-  }
-  ctx.restore();
-};
 
 /** An interaction to focus on the map on click. Usefull when using keyboard event on the map.
  * @constructor
@@ -25653,134 +25664,141 @@ ol.interaction.Offset = class olinteractionOffset extends ol.interaction.Pointer
  *  @param {number} options.radius raindrop radius
  *  @param {number} options.interval raindrop interval (in ms), default 1000
  */
-ol.interaction.Ripple = function(options) {
-  ol.interaction.Pointer.call(this, {
-    handleDownEvent: this.rainDrop,
-    handleMoveEvent: this.rainDrop
-  });
-  // Default options
-  options = options||{};
-  this.riprad = options.radius || 3;
-  this.ripplemap = [];
-  this.last_map = [];
-  // Generate random ripples
-  this.rains (this.interval);
-  options.layer.on(['postcompose', 'postrender'], this.postcompose_.bind(this));
-};
-ol.ext.inherits(ol.interaction.Ripple, ol.interaction.Pointer);
-/** Generate random rain drop
-*	@param {integer} interval
-*/
-ol.interaction.Ripple.prototype.rains = function(interval) {
-  if (this.onrain) clearTimeout (this.onrain);
-  var self = this;
-  var vdelay = (typeof(interval)=="number" ? interval : 1000)/2;
-  var delay = 3*vdelay/2;
-  var rnd = Math.random;
-  function rain() {
-    if (self.width) self.rainDrop([rnd() * self.width, rnd() * self.height]);
-    self.onrain = setTimeout (rain, rnd()*vdelay + delay);
+ol.interaction.Ripple = class olinteractionRipple extends ol.interaction.Pointer {
+  constructor(options) {
+    super({
+      handleDownEvent: function(e) { return this.rainDrop(e) },
+      handleMoveEvent: function(e) { return this.rainDrop(e) },
+    });
+    // Default options
+    options = options || {};
+    this.riprad = options.radius || 3;
+    this.ripplemap = [];
+    this.last_map = [];
+    // Generate random ripples
+    this.rains(this.interval);
+    options.layer.on(['postcompose', 'postrender'], this.postcompose_.bind(this));
   }
-  // Start raining
-  if (delay) rain();
-}
-/** Disturb water at specified point
-*	@param {ol.Pixel|ol.MapBrowserEvent}
-*/
-ol.interaction.Ripple.prototype.rainDrop = function(e) {
-  if (!this.width) return;
-  var dx,dy;
-  if (e.pixel) {
-    dx = e.pixel[0]*this.ratio;
-    dy = e.pixel[1]*this.ratio;
-  } else {
-    dx = e[0]*this.ratio;
-    dy = e[1]*this.ratio;
+  /** Generate random rain drop
+  *	@param {integer} interval
+  */
+  rains(interval) {
+    if (this.onrain)
+      clearTimeout(this.onrain);
+    var self = this;
+    var vdelay = (typeof (interval) == "number" ? interval : 1000) / 2;
+    var delay = 3 * vdelay / 2;
+    var rnd = Math.random;
+    function rain() {
+      if (self.width)
+        self.rainDrop([rnd() * self.width, rnd() * self.height]);
+      self.onrain = setTimeout(rain, rnd() * vdelay + delay);
+    }
+    // Start raining
+    if (delay)
+      rain();
   }
-  dx <<= 0;
-  dy <<= 0;
-  for (var j = dy - this.riprad*this.ratio; j < dy + this.riprad*this.ratio; j++) {
-    for (var k = dx - this.riprad*this.ratio; k < dx + this.riprad*this.ratio; k++) {
-      this.ripplemap[this.oldind + (j * this.width) + k] += 128;
+  /** Disturb water at specified point
+  *	@param {ol.Pixel|ol.MapBrowserEvent}
+  */
+  rainDrop(e) {
+    if (!this.width)
+      return;
+    var dx, dy;
+    if (e.pixel) {
+      dx = e.pixel[0] * this.ratio;
+      dy = e.pixel[1] * this.ratio;
+    } else {
+      dx = e[0] * this.ratio;
+      dy = e[1] * this.ratio;
+    }
+    dx <<= 0;
+    dy <<= 0;
+    for (var j = dy - this.riprad * this.ratio; j < dy + this.riprad * this.ratio; j++) {
+      for (var k = dx - this.riprad * this.ratio; k < dx + this.riprad * this.ratio; k++) {
+        this.ripplemap[this.oldind + (j * this.width) + k] += 128;
+      }
     }
   }
-}
-/** Postcompose function
-*/
-ol.interaction.Ripple.prototype.postcompose_ = function(e) {
-  var ctx = e.context;
-  var canvas = ctx.canvas;
-  // Initialize when canvas is ready / modified
-  if (this.width != canvas.width || this.height != canvas.height) {
-    this.width = canvas.width;
-    this.height = canvas.height;
-    this.ratio = e.frameState.pixelRatio;
-    this.half_width = this.width >> 1;
-    this.half_height = this.height >> 1;
-    this.size = this.width * (this.height + 2) * 2;
-    this.oldind = this.width;
-    this.newind = this.width * (this.height + 3);
-    for (var i = 0; i < this.size; i++) {
-      this.last_map[i] = this.ripplemap[i] = 0;
+  /** Postcompose function
+  */
+  postcompose_(e) {
+    var ctx = e.context;
+    var canvas = ctx.canvas;
+    // Initialize when canvas is ready / modified
+    if (this.width != canvas.width || this.height != canvas.height) {
+      this.width = canvas.width;
+      this.height = canvas.height;
+      this.ratio = e.frameState.pixelRatio;
+      this.half_width = this.width >> 1;
+      this.half_height = this.height >> 1;
+      this.size = this.width * (this.height + 2) * 2;
+      this.oldind = this.width;
+      this.newind = this.width * (this.height + 3);
+      for (var i = 0; i < this.size; i++) {
+        this.last_map[i] = this.ripplemap[i] = 0;
+      }
     }
-  }
-  this.texture = ctx.getImageData(0, 0, this.width, this.height);
-  this.ripple = ctx.getImageData(0, 0, this.width, this.height);	
-  // Run animation
-  var a, b, data, cur_pixel, new_pixel;
+    this.texture = ctx.getImageData(0, 0, this.width, this.height);
+    this.ripple = ctx.getImageData(0, 0, this.width, this.height);
+    // Run animation
+    var a, b, data, cur_pixel, new_pixel;
     var t = this.oldind; this.oldind = this.newind; this.newind = t;
     i = 0;
-    var _rd = this.ripple.data,
-        _td = this.texture.data;
+    var _rd = this.ripple.data, _td = this.texture.data;
     for (var y = 0; y < this.height; y++) {
       for (var x = 0; x < this.width; x++) {
-          var _newind = this.newind + i,
-      _mapind = this.oldind + i;
-      data = (
-          this.ripplemap[_mapind - this.width] + 
-          this.ripplemap[_mapind + this.width] + 
-          this.ripplemap[_mapind - 1] + 
+        var _newind = this.newind + i, _mapind = this.oldind + i;
+        data = (
+          this.ripplemap[_mapind - this.width] +
+          this.ripplemap[_mapind + this.width] +
+          this.ripplemap[_mapind - 1] +
           this.ripplemap[_mapind + 1]) >> 1;
-      data -= this.ripplemap[_newind];
-      data -= data >> 5;
-      this.ripplemap[_newind] = data;
-      //where data=0 then still, where data>0 then wave
-      data = 1024 - data;
-      if (this.last_map[i] != data) {
-        this.last_map[i] = data;
-        //offsets
-        a = (((x - this.half_width) * data / 1024) << 0) + this.half_width;
-        b = (((y - this.half_height) * data / 1024) << 0) + this.half_height;
-        //bounds check
-        if (a >= this.width) a = this.width - 1;
-        if (a < 0) a = 0;
-        if (b >= this.height) b = this.height - 1;
-        if (b < 0) b = 0;
-        new_pixel = (a + (b * this.width)) * 4;
-        cur_pixel = i * 4;
-        /**/
-        _rd[cur_pixel] = _td[new_pixel];
-        _rd[cur_pixel + 1] = _td[new_pixel + 1];
-        _rd[cur_pixel + 2] = _td[new_pixel + 2];
-        /*/
-        // only in blue pixels 
-                if (_td[new_pixel + 2]>_td[new_pixel + 1]
-          && _td[new_pixel + 2]>_td[new_pixel])
-        {
-                _rd[cur_pixel] = _td[new_pixel];
-                _rd[cur_pixel + 1] = _td[new_pixel + 1];
-                _rd[cur_pixel + 2] = _td[new_pixel + 2];
+        data -= this.ripplemap[_newind];
+        data -= data >> 5;
+        this.ripplemap[_newind] = data;
+        //where data=0 then still, where data>0 then wave
+        data = 1024 - data;
+        if (this.last_map[i] != data) {
+          this.last_map[i] = data;
+          //offsets
+          a = (((x - this.half_width) * data / 1024) << 0) + this.half_width;
+          b = (((y - this.half_height) * data / 1024) << 0) + this.half_height;
+          //bounds check
+          if (a >= this.width)
+            a = this.width - 1;
+          if (a < 0)
+            a = 0;
+          if (b >= this.height)
+            b = this.height - 1;
+          if (b < 0)
+            b = 0;
+          new_pixel = (a + (b * this.width)) * 4;
+          cur_pixel = i * 4;
+          /**/
+          _rd[cur_pixel] = _td[new_pixel];
+          _rd[cur_pixel + 1] = _td[new_pixel + 1];
+          _rd[cur_pixel + 2] = _td[new_pixel + 2];
+          /*/
+          // only in blue pixels
+                  if (_td[new_pixel + 2]>_td[new_pixel + 1]
+            && _td[new_pixel + 2]>_td[new_pixel])
+          {
+                  _rd[cur_pixel] = _td[new_pixel];
+                  _rd[cur_pixel + 1] = _td[new_pixel + 1];
+                  _rd[cur_pixel + 2] = _td[new_pixel + 2];
+          }
+          else this.ripplemap[_newind] = 0;
+          /**/
         }
-        else this.ripplemap[_newind] = 0;
-        /**/
+        ++i;
       }
-      ++i;
     }
+    ctx.putImageData(this.ripple, 0, 0);
+    // tell OL3 to continue postcompose animation
+    this.getMap().render();
   }
-  ctx.putImageData(this.ripple, 0, 0);
-  // tell OL3 to continue postcompose animation
-  this.getMap().render(); 
-};
+}
 
 /*
   Copyright (c) 2015 Jean-Marc VIGLINO, 
@@ -31732,59 +31750,50 @@ ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projectio
  *  @param {number} radius default 4
  *  @param {number} intensity default 25
  */
-ol.source.OilPainting = function (options) {
-  options.operation = this._operation;
-  options.operationType = 'image';
-  ol.source.Raster.call(this, options);
-  this.set('radius', options.radius || 4);
-  this.set('intensity', options.intensity || 25);
-  this.on('beforeoperations', function (event) {
-    var w = Math.round((event.extent[2]-event.extent[0])/event.resolution);
-    var h = Math.round((event.extent[3]-event.extent[1])/event.resolution);
-    event.data.image = new ImageData(w,h);
-    event.data.radius = Number(this.get('radius')) || 1;
-    event.data.intensity = Number(this.get('intensity'));
-  }.bind(this));
-};
-ol.ext.inherits(ol.source.OilPainting, ol.source.Raster);
-/** Set value and force change
- */
-ol.source.OilPainting.prototype.set = function(key, val) {
-  if (val) {
-    switch (key) {
-      case 'intensity': 
-      case 'radius': {
-        val = Number(val);
-        if (val<1) val = 1;
-        this.changed();
-        break;
+ol.source.OilPainting = class olsourceOilPainting extends ol.source.Raster {
+  constructor(options) {
+    options.operation = ol.source.OilPainting._operation
+    options.operationType = 'image';
+    super(options);
+    this.set('radius', options.radius || 4);
+    this.set('intensity', options.intensity || 25);
+    this.on('beforeoperations', function (event) {
+      var w = Math.round((event.extent[2] - event.extent[0]) / event.resolution);
+      var h = Math.round((event.extent[3] - event.extent[1]) / event.resolution);
+      event.data.image = new ImageData(w, h);
+      event.data.radius = Number(this.get('radius')) || 1;
+      event.data.intensity = Number(this.get('intensity'));
+    }.bind(this));
+  }
+  /** Set value and force change
+   */
+  set(key, val) {
+    if (val) {
+      switch (key) {
+        case 'intensity':
+        case 'radius': {
+          val = Number(val);
+          if (val < 1)
+            val = 1;
+          this.changed();
+          break;
+        }
       }
     }
+    return ol.source.Raster.prototype.set.call(this, key, val);
   }
-  return ol.source.Raster.prototype.set.call(this, key, val);
-};
+}
 /**
  * @private
  */
-ol.source.OilPainting.prototype._operation = function(pixels, data) {
-  var width = pixels[0].width,
-    height = pixels[0].height,
-    imgData = pixels[0],
-    pixData = imgData.data,
-    pixelIntensityCount = [];
-  var destImageData = data.image,
-    destPixData = destImageData.data,
-    intensityLUT = [],
-    rgbLUT = [];
+ol.source.OilPainting._operation = function(pixels, data) {
+  var width = pixels[0].width, height = pixels[0].height, imgData = pixels[0], pixData = imgData.data, pixelIntensityCount = [];
+  var destImageData = data.image, destPixData = destImageData.data, intensityLUT = [], rgbLUT = [];
   for (var y = 0; y < height; y++) {
     intensityLUT[y] = [];
     rgbLUT[y] = [];
     for (var x = 0; x < width; x++) {
-      var idx = (y * width + x) * 4,
-        r = pixData[idx],
-        g = pixData[idx + 1],
-        b = pixData[idx + 2],
-        avg = (r + g + b) / 3;
+      var idx = (y * width + x) * 4, r = pixData[idx], g = pixData[idx + 1], b = pixData[idx + 2], avg = (r + g + b) / 3;
       intensityLUT[y][x] = Math.round((avg * data.intensity) / 255);
       rgbLUT[y][x] = {
         r: r,
@@ -31808,7 +31817,7 @@ ol.source.OilPainting.prototype._operation = function(pixels, data) {
                 r: rgbLUT[y + yy][x + xx].r,
                 g: rgbLUT[y + yy][x + xx].g,
                 b: rgbLUT[y + yy][x + xx].b
-              }
+              };
             } else {
               pixelIntensityCount[intensityVal].val++;
               pixelIntensityCount[intensityVal].r += rgbLUT[y + yy][x + xx].r;
@@ -31821,16 +31830,15 @@ ol.source.OilPainting.prototype._operation = function(pixels, data) {
       pixelIntensityCount.sort(function (a, b) {
         return b.val - a.val;
       });
-      var curMax = pixelIntensityCount[0].val,
-        dIdx = (y * width + x) * 4;
-      destPixData[dIdx] = ~~ (pixelIntensityCount[0].r / curMax);
-      destPixData[dIdx + 1] = ~~ (pixelIntensityCount[0].g / curMax);
-      destPixData[dIdx + 2] = ~~ (pixelIntensityCount[0].b / curMax);
+      var curMax = pixelIntensityCount[0].val, dIdx = (y * width + x) * 4;
+      destPixData[dIdx] = ~~(pixelIntensityCount[0].r / curMax);
+      destPixData[dIdx + 1] = ~~(pixelIntensityCount[0].g / curMax);
+      destPixData[dIdx + 2] = ~~(pixelIntensityCount[0].b / curMax);
       destPixData[dIdx + 3] = 255;
     }
   }
   return destImageData;
-};
+}
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
@@ -34230,44 +34238,47 @@ if (window.ol && !ol.particule) {
  * @extends {ol.Object}
  * @param {*} options
  *  @param {ol.Overlay} options.overlay
- *  @param {ol.pixel} coordinate the position of the particule
+ *  @param {ol.pixel} options.coordinate the position of the particule
  */
-ol.particule.Base = function(options) {
-  if (!options) options = {};
-  ol.Object.call(this);
-  this.setOverlay(options.overlay) ;
-  this.coordinate = options.coordinate || [0,0];
-};
-ol.ext.inherits(ol.particule.Base, ol.Object);
-/** Set the particule overlay
- * @param {ol.Overlay} overl
- */
-ol.particule.Base.prototype.setOverlay = function(overlay) {
-  this._overlay = overlay;
-};
-/** Get the particule overlay
- * @return {ol.Overlay}
- */
-ol.particule.Base.prototype.getOverlay = function() {
-  return this._overlay;
-};
-/** Draw the particule
- * @param { CanvasRenderingContext2D } ctx
- */
-ol.particule.Base.prototype.draw = function(/* ctx */) {
-};
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol.particule.Base.prototype.update = function(/* dt */) {
-};
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol.particule.Base.prototype.getRandomCoord = function(dt) {
-  if (this.getOverlay().randomCoord) return this.getOverlay().randomCoord();
-  else return [dt,0];
-};
+ol.particule.Base = class olparticuleBase extends ol.Object {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.setOverlay(options.overlay);
+    this.coordinate = options.coordinate || [0, 0];
+  }
+  /** Set the particule overlay
+   * @param {ol.Overlay} overl
+   */
+  setOverlay(overlay) {
+    this._overlay = overlay;
+  }
+  /** Get the particule overlay
+   * @return {ol.Overlay}
+   */
+  getOverlay() {
+    return this._overlay;
+  }
+  /** Draw the particule
+   * @param { CanvasRenderingContext2D } ctx
+   */
+  draw( /* ctx */) {
+  }
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  update( /* dt */) {
+  }
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  getRandomCoord(dt) {
+    if (this.getOverlay().randomCoord)
+      return this.getOverlay().randomCoord();
+    else
+      return [dt, 0];
+  }
+}
 
 /*
   Copyright (c) 2020 Jean-Marc VIGLINO,
@@ -34279,93 +34290,100 @@ ol.particule.Base.prototype.getRandomCoord = function(dt) {
  * @extends {ol.particule.Base}
  * @param {*} options
  *  @param {ol.Overlay} options.overlay
- *  @param {ol.pixel} coordinate the position of the particule
+ *  @param {ol.pixel} options.coordinate the position of the particule
+ *  @param {string} [options.src] bird image src
  */
-ol.particule.Bird = function(options) {
-  if (!options) options = {};
-  ol.particule.Base.call(this, options);
-  this.bird = new Image();
-  this.bird.src = "data:image/png;base64,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";
-  this.set('size', [this.bird.width || 50, this.bird.height || 50]);
-};
-ol.ext.inherits(ol.particule.Bird, ol.particule.Base);
-/** Draw the particule
- * @param {CanvasRenderingContext2D } ctx
- */
-ol.particule.Bird.prototype.draw = function(ctx) {
-  //ctx.drawImage(this.bird, this.coordinate[0], this.coordinate[1]);
-  var angle = this.getOverlay().get('angle');
-  ctx.save();
-    ctx.translate (this.coordinate[0], this.coordinate[1]);
-    ctx.rotate(angle+Math.PI/2);
-    ctx.scale(.5,.5);
-    ctx.drawImage( this.bird, -this.bird.width/2, -this.bird.height/2 );
-  ctx.restore();
-};
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol.particule.Bird.prototype.update = function(dt) {
-  var speed = this.getOverlay().get('speed') * dt / this.getOverlay()._fps;
-  var angle = this.getOverlay().get('angle');
-  this.coordinate[0] += speed * Math.cos(angle);
-  this.coordinate[1] += speed * Math.sin(angle);
-};
-
-/*
-  Copyright (c) 2020 Jean-Marc VIGLINO,
-  released under the CeCILL-B license (French BSD license)
-  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-*/
-/** A cloud particule to display clouds over the map
- * @constructor
- * @extends {ol.particule.Base}
- * @param {*} options
- *  @param {ol.Overlay} options.overlay
- *  @param {ol.pixel} coordinate the position of the particule
- */
-ol.particule.Cloud = function(options) {
-  if (!options) options = {};
-  ol.particule.Base.call(this, options);
-  this.set('size', [100,100])
-  var canvas = document.createElement('CANVAS');
-  canvas.width = 200;
-  canvas.height = 200;
-  var ctx = canvas.getContext('2d');
-  var grd = this.gradient = ctx.createRadialGradient(50,50, 0, 50,50, 50);
-  grd.addColorStop(0, 'rgba(255,255,255,.2');
-  grd.addColorStop(1, 'rgba(255,255,255,0');
-  // Create cloud image
-  this.image = canvas;
-  for (var k=0; k<7; k++) {
+ol.particule.Bird = class olparticuleBird extends ol.particule.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.bird = new Image();
+    this.bird.addEventListener('load', function() {
+      this.set('size', [this.bird.width || 50, this.bird.height || 50]);
+      console.log(this.bird.width, this.bird.height)
+    }.bind(this))
+    this.bird.src = options.src || 'data:image/png;base64,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';
+    this.set('size', [this.bird.width || 50, this.bird.height || 50]);
+  }
+  /** Draw the particule
+   * @param {CanvasRenderingContext2D } ctx
+   */
+  draw(ctx) {
+    //ctx.drawImage(this.bird, this.coordinate[0], this.coordinate[1]);
+    var angle = this.getOverlay().get('angle');
     ctx.save();
-      var x = Math.random()*100;
-      var y = Math.random()*100;
-      ctx.translate (x,y);
-      ctx.fillStyle = grd;
-      ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.translate(this.coordinate[0], this.coordinate[1]);
+    ctx.rotate(angle + Math.PI / 2);
+    ctx.scale(.5, .5);
+    ctx.drawImage(this.bird, -this.bird.width / 2, -this.bird.height / 2);
     ctx.restore();
   }
-};
-ol.ext.inherits(ol.particule.Cloud, ol.particule.Base);
-/** Draw the particule
- * @param {CanvasRenderingContext2D } ctx
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  update(dt) {
+    var speed = this.getOverlay().get('speed') * dt / this.getOverlay()._fps;
+    var angle = this.getOverlay().get('angle');
+    this.coordinate[0] += speed * Math.cos(angle);
+    this.coordinate[1] += speed * Math.sin(angle);
+  }
+}
+
+/*
+  Copyright (c) 2020 Jean-Marc VIGLINO,
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/** A cloud particule to display clouds over the map
+ * @constructor
+ * @extends {ol.particule.Base}
+ * @param {*} options
+ *  @param {ol.Overlay} options.overlay
+ *  @param {ol.pixel} options.coordinate the position of the particule
  */
-ol.particule.Cloud.prototype.draw = function(ctx) {
-  ctx.save();
-    ctx.translate (this.coordinate[0], this.coordinate[1]);
-    ctx.drawImage(this.image, -this.image.width/2, -this.image.width/2);
-  ctx.restore();
-};
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol.particule.Cloud.prototype.update = function(dt) {
-  var speed = this.getOverlay().get('speed') * dt / this.getOverlay()._fps;
-  var angle = this.getOverlay().get('angle');
-  this.coordinate[0] += speed * Math.cos(angle);
-  this.coordinate[1] += speed * Math.sin(angle);
-};
+ol.particule.Cloud = class olparticuleCloud extends ol.particule.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.set('size', [100, 100]);
+    var canvas = document.createElement('CANVAS');
+    canvas.width = 200;
+    canvas.height = 200;
+    var ctx = canvas.getContext('2d');
+    var grd = this.gradient = ctx.createRadialGradient(50, 50, 0, 50, 50, 50);
+    grd.addColorStop(0, 'rgba(255,255,255,.2');
+    grd.addColorStop(1, 'rgba(255,255,255,0');
+    // Create cloud image
+    this.image = canvas;
+    for (var k = 0; k < 7; k++) {
+      ctx.save();
+      var x = Math.random() * 100;
+      var y = Math.random() * 100;
+      ctx.translate(x, y);
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+  }
+  /** Draw the particule
+   * @param {CanvasRenderingContext2D } ctx
+   */
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.coordinate[0], this.coordinate[1]);
+    ctx.drawImage(this.image, -this.image.width / 2, -this.image.width / 2);
+    ctx.restore();
+  }
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  update(dt) {
+    var speed = this.getOverlay().get('speed') * dt / this.getOverlay()._fps;
+    var angle = this.getOverlay().get('angle');
+    this.coordinate[0] += speed * Math.cos(angle);
+    this.coordinate[1] += speed * Math.sin(angle);
+  }
+}
 
 /*
   Copyright (c) 2020 Jean-Marc VIGLINO,
@@ -34377,47 +34395,48 @@ ol.particule.Cloud.prototype.update = function(dt) {
  * @extends {ol.particule.Base}
  * @param {*} options
  *  @param {ol.Overlay} options.overlay
- *  @param {ol.pixel} coordinate the position of the particule
+ *  @param {ol.pixel} options.coordinate the position of the particule
  */
-ol.particule.Rain = function(options) {
-  if (!options) options = {};
-  ol.particule.Base.call(this, options);
-  this.z = Math.floor(Math.random()*5) + 1;
-  var canvas = document.createElement('CANVAS');
-  canvas.width = 50;
-  canvas.height = 50;
-  var ctx = canvas.getContext('2d');
-  this.gradient = ctx.createRadialGradient(0,0, 0, 0,0, 25);
-  this.gradient.addColorStop(0, 'rgba(0,0,80,0)');
-  this.gradient.addColorStop(1, 'rgba(0,0,80,.3)');
-};
-ol.ext.inherits(ol.particule.Rain, ol.particule.Base);
-/** Draw the particule
- * @param {CanvasRenderingContext2D } ctx
- */
-ol.particule.Rain.prototype.draw = function(ctx) {
-  ctx.save();
+ol.particule.Rain = class olparticuleRain extends ol.particule.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.z = Math.floor(Math.random() * 5) + 1;
+    var canvas = document.createElement('CANVAS');
+    canvas.width = 50;
+    canvas.height = 50;
+    var ctx = canvas.getContext('2d');
+    this.gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 25);
+    this.gradient.addColorStop(0, 'rgba(0,0,80,0)');
+    this.gradient.addColorStop(1, 'rgba(0,0,80,.3)');
+  }
+  /** Draw the particule
+   * @param {CanvasRenderingContext2D } ctx
+   */
+  draw(ctx) {
+    ctx.save();
     var angle = this.getOverlay().get('angle');
     ctx.beginPath();
-    var x1 = Math.cos(angle) * 10 * (1+this.z/2);
-    var y1 = Math.sin(angle) * 10 * (1+this.z/2);
-    ctx.lineWidth = Math.round(this.z/2);
+    var x1 = Math.cos(angle) * 10 * (1 + this.z / 2);
+    var y1 = Math.sin(angle) * 10 * (1 + this.z / 2);
+    ctx.lineWidth = Math.round(this.z / 2);
     ctx.strokeStyle = this.gradient;
-    ctx.translate (this.coordinate[0], this.coordinate[1]);
-    ctx.moveTo(0,0);
+    ctx.translate(this.coordinate[0], this.coordinate[1]);
+    ctx.moveTo(0, 0);
     ctx.lineTo(x1, y1);
     ctx.stroke();
-  ctx.restore();
-};
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol.particule.Rain.prototype.update = function(dt) {
-  var dl = this.getOverlay().get('speed') * dt / this.getOverlay()._fps * this.z;
-  var angle = this.getOverlay().get('angle');
-  this.coordinate[0] += dl * Math.cos(angle);
-  this.coordinate[1] += dl * Math.sin(angle);
-};
+    ctx.restore();
+  }
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  update(dt) {
+    var dl = this.getOverlay().get('speed') * dt / this.getOverlay()._fps * this.z;
+    var angle = this.getOverlay().get('angle');
+    this.coordinate[0] += dl * Math.cos(angle);
+    this.coordinate[1] += dl * Math.sin(angle);
+  }
+}
 
 /*
   Copyright (c) 2020 Jean-Marc VIGLINO,
@@ -34429,50 +34448,51 @@ ol.particule.Rain.prototype.update = function(dt) {
  * @extends {ol.particule.Base}
  * @param {*} options
  *  @param {ol.Overlay} options.overlay
- *  @param {ol.pixel} coordinate the position of the particule
+ *  @param {ol.pixel} options.coordinate the position of the particule
  */
-ol.particule.RainDrop = function(options) {
-  if (!options) options = {};
-  ol.particule.Base.call(this, options);
-  this.size = 0;
-  // Drops
-  var canvas = document.createElement('CANVAS');
-  canvas.width = 100;
-  canvas.height = 100;
-  var ctx = canvas.getContext('2d');
-  var grd = ctx.createRadialGradient(50,50, 0, 50,50, 50);
-  grd.addColorStop(0, 'rgba(128,128,192,.8');
-  grd.addColorStop(1, 'rgba(128,128,192,0');
-  this.image = canvas;
-  ctx.fillStyle = grd;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-};
-ol.ext.inherits(ol.particule.RainDrop, ol.particule.Base);
-/** Draw the particule
- * @param {CanvasRenderingContext2D } ctx
- */
-ol.particule.RainDrop.prototype.draw = function(ctx) {
-  if (this.size>0) {
-    ctx.save();
-      ctx.translate (this.coordinate[0], this.coordinate[1]);
-      ctx.globalAlpha = this.size/50;
-      ctx.scale(1-this.size/50,1-this.size/50);
-      ctx.drawImage(this.image, -50,-50);
-    ctx.restore();
+ol.particule.RainDrop =class olparticuleRainDrop extends ol.particule.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.size = 0;
+    // Drops
+    var canvas = document.createElement('CANVAS');
+    canvas.width = 100;
+    canvas.height = 100;
+    var ctx = canvas.getContext('2d');
+    var grd = ctx.createRadialGradient(50, 50, 0, 50, 50, 50);
+    grd.addColorStop(0, 'rgba(128,128,192,.8');
+    grd.addColorStop(1, 'rgba(128,128,192,0');
+    this.image = canvas;
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
-};
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol.particule.RainDrop.prototype.update = function(dt) {
-  if (this.size>0 || Math.random() < .01) {
-    if (this.size<=0) {
-      this.size = 50;
-      this.coordinates = this.getRandomCoord();
+  /** Draw the particule
+   * @param {CanvasRenderingContext2D } ctx
+   */
+  draw(ctx) {
+    if (this.size > 0) {
+      ctx.save();
+      ctx.translate(this.coordinate[0], this.coordinate[1]);
+      ctx.globalAlpha = this.size / 50;
+      ctx.scale(1 - this.size / 50, 1 - this.size / 50);
+      ctx.drawImage(this.image, -50, -50);
+      ctx.restore();
     }
-    this.size = this.size - Math.round(dt/20);
   }
-};
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  update(dt) {
+    if (this.size > 0 || Math.random() < .01) {
+      if (this.size <= 0) {
+        this.size = 50;
+        this.coordinates = this.getRandomCoord();
+      }
+      this.size = this.size - Math.round(dt / 20);
+    }
+  }
+}
 
 /*
   Copyright (c) 2020 Jean-Marc VIGLINO,
@@ -34484,48 +34504,49 @@ ol.particule.RainDrop.prototype.update = function(dt) {
  * @extends {ol.particule.Base}
  * @param {*} options
  *  @param {ol.Overlay} options.overlay
- *  @param {ol.pixel} coordinate the position of the particule
+ *  @param {ol.pixel} options.coordinate the position of the particule
  */
-ol.particule.Snow = function(options) {
-  if (!options) options = {};
-  ol.particule.Base.call(this, options);
-  this.z = (Math.floor(Math.random()*5) + 1) / 5;
-  this.angle = Math.random() * Math.PI;
-  // Snow fakes
-  var canvas = document.createElement('CANVAS');
-  canvas.width = 20;
-  canvas.height = 20;
-  var ctx = canvas.getContext('2d');
-  var grd = ctx.createRadialGradient(10,10, 0, 10,10, 10);
-  grd.addColorStop(0, "rgba(255, 255, 255,1)");  // white
-  grd.addColorStop(.8, "rgba(210, 236, 242,.8)");  // bluish
-  grd.addColorStop(1, "rgba(237, 247, 249,0)");   // lighter bluish
-  this.image = canvas;
-  ctx.fillStyle = grd;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-};
-ol.ext.inherits(ol.particule.Snow, ol.particule.Base);
-/** Draw the particule
- * @param {CanvasRenderingContext2D } ctx
- */
-ol.particule.Snow.prototype.draw = function(ctx) {
-  ctx.save();
-    ctx.translate (this.coordinate[0], this.coordinate[1]);
-    ctx.globalAlpha = .4 + this.z/2;
-    ctx.scale(this.z,this.z);
-    ctx.drawImage(this.image, -10,-10);
-  ctx.restore();
-};
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol.particule.Snow.prototype.update = function(dt) {
-  var speed = this.getOverlay().get('speed') * dt / this.getOverlay()._fps * this.z * 5;
-  var angle = this.getOverlay().get('angle');
-  this.angle = this.angle + dt / this.getOverlay()._fps / 100;
-  this.coordinate[0] += Math.sin(this.angle + this.z) * 2 + speed * Math.cos(angle);
-  this.coordinate[1] += Math.cos(this.angle) + speed * Math.sin(angle);
-};
+ol.particule.Snow = class olparticuleSnow extends ol.particule.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.z = (Math.floor(Math.random() * 5) + 1) / 5;
+    this.angle = Math.random() * Math.PI;
+    // Snow fakes
+    var canvas = document.createElement('CANVAS');
+    canvas.width = 20;
+    canvas.height = 20;
+    var ctx = canvas.getContext('2d');
+    var grd = ctx.createRadialGradient(10, 10, 0, 10, 10, 10);
+    grd.addColorStop(0, "rgba(255, 255, 255,1)"); // white
+    grd.addColorStop(.8, "rgba(210, 236, 242,.8)"); // bluish
+    grd.addColorStop(1, "rgba(237, 247, 249,0)"); // lighter bluish
+    this.image = canvas;
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  /** Draw the particule
+   * @param {CanvasRenderingContext2D } ctx
+   */
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.coordinate[0], this.coordinate[1]);
+    ctx.globalAlpha = .4 + this.z / 2;
+    ctx.scale(this.z, this.z);
+    ctx.drawImage(this.image, -10, -10);
+    ctx.restore();
+  }
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  update(dt) {
+    var speed = this.getOverlay().get('speed') * dt / this.getOverlay()._fps * this.z * 5;
+    var angle = this.getOverlay().get('angle');
+    this.angle = this.angle + dt / this.getOverlay()._fps / 100;
+    this.coordinate[0] += Math.sin(this.angle + this.z) * 2 + speed * Math.cos(angle);
+    this.coordinate[1] += Math.cos(this.angle) + speed * Math.sin(angle);
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -34858,194 +34879,200 @@ ol.Overlay.Popup = class olOverlayPopup extends ol.Overlay {
  *  @param {boolean} options.animate start animation, default true
  *  @param {number} options.fps frame per second, default 25
  */
-ol.Overlay.AnimatedCanvas = function(options) {
-  if (!options) options = {};
-  this._canvas = ol.ext.element.create('CANVAS', {
-    className: ((options.className || '') + ' ol-animated-overlay').trim()
-  });
-  this._ctx = this._canvas.getContext('2d');
-  ol.Overlay.call(this, {
-    element: this._canvas,
-    stopEvent: false
-  });
-  this._listener = [];
-  this._time = 0;
-  this._particuleClass = options.particule || ol.particule.Base;
-  if (options.createParticule) this._createParticule = options.createParticule;
-  // 25fps
-  this._fps = 1000 / (options.fps || 25);
-  // Default particules properties
-  var p = this._createParticule();
-  this._psize = p.get('size') || [50,50];
-  this.set('density', options.density || .5);
-  this.set('speed', options.speed || 4);
-  this.set('angle', typeof(options.angle) === 'number' ? options.angle : Math.PI / 4);
-  if (options.animate !== false) this.setAnimation(true);
-  // Prevent animation when window on background
-  document.addEventListener("visibilitychange", function() {
-    this._pause = true;
-  }.bind(this));
-};
-ol.ext.inherits(ol.Overlay.AnimatedCanvas, ol.Overlay);
-/** Set the visibility
- * @param {boolean} b
- */
-ol.Overlay.AnimatedCanvas.prototype.setVisible = function (b) {
-  this.element.style.display = b ? 'block' : 'none';
-  if (b) this.setAnimation(this.get('animation'));
-}
-/** Get the visibility
- * @return {boolean} b
- */
-ol.Overlay.AnimatedCanvas.prototype.getVisible = function () {
-  return this.element.style.display != 'none';
-}
-/** No update for this overlay
- */
-ol.Overlay.AnimatedCanvas.prototype.updatePixelPosition = function () {};
-/**
- * Set the map instance the overlay is associated with
- * @param {ol.Map} map The map instance.
- */
-ol.Overlay.AnimatedCanvas.prototype.setMap = function (map) {
-  if (this.getMap()) {
-    this.getMap().getViewport().querySelector('.ol-overlaycontainer').removeChild(this._canvas);
+ol.Overlay.AnimatedCanvas = class olOverlayAnimatedCanvas extends ol.Overlay {
+  constructor(options) {
+    options = options || {};
+    var canvas = ol.ext.element.create('CANVAS', {
+      className: ((options.className || '') + ' ol-animated-overlay').trim()
+    });
+    super({
+      element: canvas,
+      stopEvent: false
+    });
+    this._canvas = canvas;
+    this._ctx = this._canvas.getContext('2d');
+    this._listener = [];
+    this._time = 0;
+    this._particuleClass = options.particule || ol.particule.Base;
+    if (options.createParticule)
+      this._createParticule = options.createParticule;
+    // 25fps
+    this._fps = 1000 / (options.fps || 25);
+    // Default particules properties
+    var p = this._createParticule();
+    this._psize = p.get('size') || [50, 50];
+    this.set('density', options.density || .5);
+    this.set('speed', options.speed || 4);
+    this.set('angle', typeof (options.angle) === 'number' ? options.angle : Math.PI / 4);
+    if (options.animate !== false)
+      this.setAnimation(true);
+    // Prevent animation when window on background
+    document.addEventListener("visibilitychange", function () {
+      this._pause = true;
+    }.bind(this));
   }
-  this._listener.forEach(function(l) {
-    ol.Observable.unByKey(l);
-  });
-  this._listener = [];
-  ol.Overlay.prototype.setMap.call(this, map);
-  if (map) {
-    var size = map.getSize();
-    this._canvas.width = size[0];
-    this._canvas.height = size[1];
-    this.draw();
-    this._listener.push (map.on('change:size', function()  {
+  /** Set the visibility
+   * @param {boolean} b
+   */
+  setVisible(b) {
+    this.element.style.display = b ? 'block' : 'none';
+    if (b)
+      this.setAnimation(this.get('animation'));
+  }
+  /** Get the visibility
+   * @return {boolean} b
+   */
+  getVisible() {
+    return this.element.style.display != 'none';
+  }
+  /** No update for this overlay
+   */
+  updatePixelPosition() { }
+  /**
+   * Set the map instance the overlay is associated with
+   * @param {ol.Map} map The map instance.
+   */
+  setMap(map) {
+    if (this.getMap()) {
+      this.getMap().getViewport().querySelector('.ol-overlaycontainer').removeChild(this._canvas);
+    }
+    this._listener.forEach(function (l) {
+      ol.Observable.unByKey(l);
+    });
+    this._listener = [];
+    super.setMap(map);
+    if (map) {
       var size = map.getSize();
-      if (this._canvas.width !== size[0] || this._canvas.height !== size[1]) {
-        this._canvas.width = size[0];
-        this._canvas.height = size[1];
-        this.draw();
-      }
-    }.bind(this)));
-  }
-};
-/** Create particules or return exiting ones
- */
-ol.Overlay.AnimatedCanvas.prototype.getParticules = function() {
-  var w = this._psize[0];
-  var h = this._psize[1];
-  var d = (this.get('density') * this._canvas.width * this._canvas.height / w / h) << 0;
-  if (!this._particules) this._particules = [];
-  if (d > this._particules.length) {
-    for (var i=this._particules.length; i<d; i++) {
-      this._particules.push(this._createParticule(this, this.randomCoord()));
-    } 
-  } else {
-    this._particules.length = d;
-  }
-  return this._particules;
-};
-/** Create a particule
- * @private
- */
-ol.Overlay.AnimatedCanvas.prototype._createParticule = function(overlay, coordinate) {
-  return new this._particuleClass({
-    overlay: overlay, 
-    coordinate: coordinate
-  });
-};
-/** Get random coordinates on canvas
- */
-ol.Overlay.AnimatedCanvas.prototype.randomCoord = function() {
-  return [ 
-    Math.random()*(this._canvas.width + this._psize[0]) - this._psize[0]/2 , 
-    Math.random()*(this._canvas.height + this._psize[1]) - this._psize[1]/2 
-  ];
-};
-/** Draw canvas overlay (draw each particules)
- * @param {number} dt timelapes since last call
- */
-ol.Overlay.AnimatedCanvas.prototype.draw = function(dt) {
-  var ctx = this._ctx;
-  this.clear();
-  ctx.beginPath();
-  this.getParticules().forEach(function(p) {
-    if (dt) {
-      p.update(dt);
-      this.testExit(p);
+      this._canvas.width = size[0];
+      this._canvas.height = size[1];
+      this.draw();
+      this._listener.push(map.on('change:size', function () {
+        var size = map.getSize();
+        if (this._canvas.width !== size[0] || this._canvas.height !== size[1]) {
+          this._canvas.width = size[0];
+          this._canvas.height = size[1];
+          this.draw();
+        }
+      }.bind(this)));
     }
-    p.draw(this._ctx);
-  }.bind(this));
-};
-/** Test if particule exit the canvas and add it on other side
- * @param {*} p the point to test
- * @param {ol.size} size size of the overlap
- */
-ol.Overlay.AnimatedCanvas.prototype.testExit = function(p) {
-  var size = this._psize;
-  if (p.coordinate[0] < -size[0]) {
-    p.coordinate[0] = this._canvas.width + size[0];
-    p.coordinate[1] = Math.random() * (this._canvas.height+size[1]) - size[1]/2;
-  } else if (p.coordinate[0] > this._canvas.width +size[0]) {
-    p.coordinate[0] = -size[0];
-    p.coordinate[1] = Math.random() * (this._canvas.height+size[1]) - size[1]/2;
-  } else if (p.coordinate[1] < -size[1]) {
-    p.coordinate[0] = Math.random() * (this._canvas.width+size[0]) - size[0]/2;
-    p.coordinate[1] = this._canvas.height + size[1];
-  } else if (p.coordinate[1] > this._canvas.height +size[1]) {
-    p.coordinate[0] = Math.random() * (this._canvas.width+size[0]) - size[0]/2;
-    p.coordinate[1] = -size[1];
   }
-};
-/** Clear canvas
- */
-ol.Overlay.AnimatedCanvas.prototype.clear = function() {
-  this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-};
-/** Get overlay canvas
- * @return {CanvasElement}
- */
-ol.Overlay.AnimatedCanvas.prototype.getCanvas = function() {
-  return this._canvas;
-};
-/** Set canvas animation
- * @param {boolean} anim, default true
- * @api
- */
-ol.Overlay.AnimatedCanvas.prototype.setAnimation = function(anim) {
-  anim = (anim!==false);
-  this.set('animation', anim);
-  if (anim) {
-    this._pause = true;
-    requestAnimationFrame(this._animate.bind(this));
-  } else {
-    this.dispatchEvent({ type:'animation:stop', time: this._time });
-  }
-};
-/**
- * @private
- */
-ol.Overlay.AnimatedCanvas.prototype._animate = function(time) {
-  if (this.getVisible() && this.get('animation')) {
-    if (this._pause) {
-      // reset time
-      requestAnimationFrame(function(time){
-        this._time = time;
-        requestAnimationFrame(this._animate.bind(this));
-      }.bind(this));  
+  /** Create particules or return exiting ones
+   */
+  getParticules() {
+    var w = this._psize[0];
+    var h = this._psize[1];
+    var d = (this.get('density') * this._canvas.width * this._canvas.height / w / h) << 0;
+    if (!this._particules)
+      this._particules = [];
+    if (d > this._particules.length) {
+      for (var i = this._particules.length; i < d; i++) {
+        this._particules.push(this._createParticule(this, this.randomCoord()));
+      }
     } else {
-      // Test fps
-      if (time - this._time > this._fps) {
-        this.draw(time - this._time);
-        this._time = time;
+      this._particules.length = d;
+    }
+    return this._particules;
+  }
+  /** Create a particule
+   * @private
+   */
+  _createParticule(overlay, coordinate) {
+    return new this._particuleClass({
+      overlay: overlay,
+      coordinate: coordinate
+    });
+  }
+  /** Get random coordinates on canvas
+   */
+  randomCoord() {
+    return [
+      Math.random() * (this._canvas.width + this._psize[0]) - this._psize[0] / 2,
+      Math.random() * (this._canvas.height + this._psize[1]) - this._psize[1] / 2
+    ];
+  }
+  /** Draw canvas overlay (draw each particules)
+   * @param {number} dt timelapes since last call
+   */
+  draw(dt) {
+    var ctx = this._ctx;
+    this.clear();
+    ctx.beginPath();
+    this.getParticules().forEach(function (p) {
+      if (dt) {
+        p.update(dt);
+        this.testExit(p);
       }
-      requestAnimationFrame(this._animate.bind(this));
+      p.draw(this._ctx);
+    }.bind(this));
+  }
+  /** Test if particule exit the canvas and add it on other side
+   * @param {*} p the point to test
+   * @param {ol.size} size size of the overlap
+   */
+  testExit(p) {
+    var size = this._psize;
+    if (p.coordinate[0] < -size[0]) {
+      p.coordinate[0] = this._canvas.width + size[0];
+      p.coordinate[1] = Math.random() * (this._canvas.height + size[1]) - size[1] / 2;
+    } else if (p.coordinate[0] > this._canvas.width + size[0]) {
+      p.coordinate[0] = -size[0];
+      p.coordinate[1] = Math.random() * (this._canvas.height + size[1]) - size[1] / 2;
+    } else if (p.coordinate[1] < -size[1]) {
+      p.coordinate[0] = Math.random() * (this._canvas.width + size[0]) - size[0] / 2;
+      p.coordinate[1] = this._canvas.height + size[1];
+    } else if (p.coordinate[1] > this._canvas.height + size[1]) {
+      p.coordinate[0] = Math.random() * (this._canvas.width + size[0]) - size[0] / 2;
+      p.coordinate[1] = -size[1];
     }
   }
-  this._pause = false;
-};
+  /** Clear canvas
+   */
+  clear() {
+    this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+  }
+  /** Get overlay canvas
+   * @return {CanvasElement}
+   */
+  getCanvas() {
+    return this._canvas;
+  }
+  /** Set canvas animation
+   * @param {boolean} anim, default true
+   * @api
+   */
+  setAnimation(anim) {
+    anim = (anim !== false);
+    this.set('animation', anim);
+    if (anim) {
+      this._pause = true;
+      requestAnimationFrame(this._animate.bind(this));
+    } else {
+      this.dispatchEvent({ type: 'animation:stop', time: this._time });
+    }
+  }
+  /**
+   * @private
+   */
+  _animate(time) {
+    if (this.getVisible() && this.get('animation')) {
+      if (this._pause) {
+        // reset time
+        requestAnimationFrame(function (time) {
+          this._time = time;
+          requestAnimationFrame(this._animate.bind(this));
+        }.bind(this));
+      } else {
+        // Test fps
+        if (time - this._time > this._fps) {
+          this.draw(time - this._time);
+          this._time = time;
+        }
+        requestAnimationFrame(this._animate.bind(this));
+      }
+    }
+    this._pause = false;
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -35472,105 +35499,107 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
 * @param {olx.OverlayOptions} options Overlay options 
 * @api stable
 */
-ol.Overlay.Magnify = function (options) {
-  var elt = document.createElement("div");
-      elt.className = "ol-magnify";
-  this._elt = elt;
-  ol.Overlay.call(this, {
-    positioning: options.positioning || "center-center",
-    element: this._elt,
-    stopEvent: false
-  });
-  // Create magnify map
-  this.mgmap_ = new ol.Map({
-    controls: new ol.Collection(),
-    interactions: new ol.Collection(),
-    target: options.target || this._elt,
-    view: new ol.View({ projection: options.projection }),
-    layers: options.layers
-  });
-  this.mgview_ = this.mgmap_.getView();
-  this.external_ = options.target?true:false;
-  this.set("zoomOffset", options.zoomOffset||1);
-  this.set("active", true);
-  this.on("propertychange", this.setView_.bind(this));
-};
-ol.ext.inherits(ol.Overlay.Magnify, ol.Overlay);
-/**
- * Set the map instance the overlay is associated with.
- * @param {ol.Map} map The map instance.
- */
-ol.Overlay.Magnify.prototype.setMap = function(map) {
-  if (this.getMap()) {
-    this.getMap().getViewport().removeEventListener("mousemove", this.onMouseMove_);
+ol.Overlay.Magnify = class olOverlayMagnify extends ol.Overlay {
+  constructor(options) {
+    var elt = document.createElement("div")
+    elt.className = "ol-magnify"
+    super({
+      positioning: options.positioning || "center-center",
+      element: elt,
+      stopEvent: false
+    })
+    this._elt = elt
+    // Create magnify map
+    this.mgmap_ = new ol.Map({
+      controls: new ol.Collection(),
+      interactions: new ol.Collection(),
+      target: options.target || this._elt,
+      view: new ol.View({ projection: options.projection }),
+      layers: options.layers
+    })
+    this.mgview_ = this.mgmap_.getView()
+    this.external_ = options.target ? true : false
+    this.set("zoomOffset", options.zoomOffset || 1)
+    this.set("active", true)
+    this.on("propertychange", this.setView_.bind(this))
   }
-  if (this._listener) ol.Observable.unByKey(this._listener);
-  this._listener = null;
-  ol.Overlay.prototype.setMap.call(this, map);
-  map.getViewport().addEventListener("mousemove", this.onMouseMove_.bind(this));
-  this._listener = map.getView().on('propertychange', this.setView_.bind(this));
-  this.setView_();
-};
-/** Get the magnifier map
-*	@return {_ol_Map_}
-*/
-ol.Overlay.Magnify.prototype.getMagMap = function() {
-  return this.mgmap_;
-};
-/** Magnify is active
-*	@return {boolean}
-*/
-ol.Overlay.Magnify.prototype.getActive = function() {
-  return this.get("active");
-};
-/** Activate or deactivate
-*	@param {boolean} active
-*/
-ol.Overlay.Magnify.prototype.setActive = function(active) {
-  return this.set("active", active);
-};
-/** Mouse move
- * @private
- */
-ol.Overlay.Magnify.prototype.onMouseMove_ = function(e) {
-  var self = this;
-  if (!self.get("active")) {
-    self.setPosition();
-  } else {
-    var px = self.getMap().getEventCoordinate(e);
-    if (!self.external_) self.setPosition(px);
-    self.mgview_.setCenter(px);
-    if (!self._elt.querySelector('canvas') || self._elt.querySelector('canvas').style.display =="none") self.mgmap_.updateSize();
-  }
-};
-/** View has changed
- * @private
- */
-ol.Overlay.Magnify.prototype.setView_ = function(e) {
-  if (!this.get("active")) {
-    this.setPosition();
-    return;
-  }
-  if (!e) {
-    // refresh all
-    this.setView_({key:'rotation'});
-    this.setView_({key:'resolution'});
-    return;
-  }
-  // Set the view params
-  switch (e.key) {
-    case 'rotation':
-      this.mgview_.setRotation(this.getMap().getView().getRotation());
-      break;
-    case 'zoomOffset':
-    case 'resolution': {
-      var z = Math.max(0,this.getMap().getView().getZoom()+Number(this.get("zoomOffset")));
-      this.mgview_.setZoom(z);
-      break;
+  /**
+   * Set the map instance the overlay is associated with.
+   * @param {ol.Map} map The map instance.
+   */
+  setMap(map) {
+    if (this.getMap()) {
+      this.getMap().getViewport().removeEventListener("mousemove", this.onMouseMove_)
     }
-    default: break;
+    if (this._listener) ol.Observable.unByKey(this._listener)
+    this._listener = null
+    super.setMap(map)
+    map.getViewport().addEventListener("mousemove", this.onMouseMove_.bind(this))
+    this._listener = map.getView().on('propertychange', this.setView_.bind(this))
+    this.setView_()
   }
-};
+  /** Get the magnifier map
+  *	@return {_ol_Map_}
+  */
+  getMagMap() {
+    return this.mgmap_
+  }
+  /** Magnify is active
+  *	@return {boolean}
+  */
+  getActive() {
+    return this.get("active")
+  }
+  /** Activate or deactivate
+  *	@param {boolean} active
+  */
+  setActive(active) {
+    return this.set("active", active)
+  }
+  /** Mouse move
+   * @private
+   */
+  onMouseMove_(e) {
+    if (!this.get("active")) {
+      this.setPosition()
+    } else {
+      var px = this.getMap().getEventCoordinate(e)
+      if (!this.external_) this.setPosition(px)
+      this.mgview_.setCenter(px)
+      if (!this._elt.querySelector('canvas') || this._elt.querySelector('canvas').style.display == "none"){
+        this.mgmap_.updateSize()
+      }
+    }
+  }
+  /** View has changed
+   * @private
+   */
+  setView_(e) {
+    if (!this.get("active")) {
+      this.setPosition()
+      return
+    }
+    if (!e) {
+      // refresh all
+      this.setView_({ key: 'rotation' })
+      this.setView_({ key: 'resolution' })
+      return
+    }
+    // Set the view params
+    switch (e.key) {
+      case 'rotation':
+        this.mgview_.setRotation(this.getMap().getView().getRotation())
+        break
+      case 'zoomOffset':
+      case 'resolution': {
+        var z = Math.max(0, this.getMap().getView().getZoom() + Number(this.get("zoomOffset")))
+        this.mgview_.setZoom(z)
+        break
+      }
+      default: break
+    }
+  }
+}
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)

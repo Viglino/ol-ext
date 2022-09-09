@@ -3,7 +3,6 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_ext_inherits from '../util/ext'
 import ol_Object from 'ol/Object'
 
 /*global ol*/
@@ -17,49 +16,48 @@ if (window.ol && !ol.particule) {
  * @extends {ol_Object}
  * @param {*} options
  *  @param {ol.Overlay} options.overlay
- *  @param {ol.pixel} coordinate the position of the particule
+ *  @param {ol.pixel} options.coordinate the position of the particule
  */
-var ol_particule_Base = function(options) {
-  if (!options) options = {};
-  
-  ol_Object.call(this);
-  this.setOverlay(options.overlay) ;
-  this.coordinate = options.coordinate || [0,0];
-};
-ol_ext_inherits(ol_particule_Base, ol_Object);
+var ol_particule_Base = class olparticuleBase extends ol_Object {
+  constructor(options) {
+    options = options || {};
 
-/** Set the particule overlay
- * @param {ol.Overlay} overl
- */
-ol_particule_Base.prototype.setOverlay = function(overlay) {
-  this._overlay = overlay;
-};
+    super(options);
 
-/** Get the particule overlay
- * @return {ol.Overlay}
- */
-ol_particule_Base.prototype.getOverlay = function() {
-  return this._overlay;
-};
-
-/** Draw the particule
- * @param { CanvasRenderingContext2D } ctx
- */
-ol_particule_Base.prototype.draw = function(/* ctx */) {
-};
-
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol_particule_Base.prototype.update = function(/* dt */) {
-};
-
-/** Update the particule
- * @param {number} dt timelapes since last call
- */
-ol_particule_Base.prototype.getRandomCoord = function(dt) {
-  if (this.getOverlay().randomCoord) return this.getOverlay().randomCoord();
-  else return [dt,0];
-};
+    this.setOverlay(options.overlay);
+    this.coordinate = options.coordinate || [0, 0];
+  }
+  /** Set the particule overlay
+   * @param {ol.Overlay} overl
+   */
+  setOverlay(overlay) {
+    this._overlay = overlay;
+  }
+  /** Get the particule overlay
+   * @return {ol.Overlay}
+   */
+  getOverlay() {
+    return this._overlay;
+  }
+  /** Draw the particule
+   * @param { CanvasRenderingContext2D } ctx
+   */
+  draw( /* ctx */) {
+  }
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  update( /* dt */) {
+  }
+  /** Update the particule
+   * @param {number} dt timelapes since last call
+   */
+  getRandomCoord(dt) {
+    if (this.getOverlay().randomCoord)
+      return this.getOverlay().randomCoord();
+    else
+      return [dt, 0];
+  }
+}
 
 export default ol_particule_Base

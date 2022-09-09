@@ -2,121 +2,121 @@
 <html>
 <head>
 <!--
-	Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  Copyright (c) 2016-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
-	<title>ol-ext: Lego map</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>ol-ext: Lego map</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-	<meta name="description" content="A map mades of a set of Lego bricks." />
-	<meta name="keywords" content="ol3, filter, lego, brick" />
+  <meta name="description" content="A map mades of a set of Lego bricks." />
+  <meta name="keywords" content="ol3, filter, lego, brick" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<style>
-		#map
-		{	position: absolute;
-			top:8em;
-			left:0;
-			right:0;
-			bottom:0;
-		}
-		.options
-		{
-			position:absolute;
-			right:0;
-		}
-	</style>
+  <style>
+    #map
+    {	position: absolute;
+      top:8em;
+      left:0;
+      right:0;
+      bottom:0;
+    }
+    .options
+    {
+      position:absolute;
+      right:0;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Lego map</h1>
-	</a>
-	<div class="info">
-		<i>ol.filter.Lego</i> makes a map look like made of a set of LEGO&reg; bricks.
-	</div>
+  <a href="../../index.html">
+    <h1>ol-ext: Lego map</h1>
+  </a>
+  <div class="info">
+    <i>ol.filter.Lego</i> makes a map look like made of a set of LEGO&reg; bricks.
+  </div>
 
-	<!-- Map div -->
-	<div id="map"></div>
+  <!-- Map div -->
+  <div id="map"></div>
 
-	<div class="options" >
-		<h2>Options:</h2>
-		<ul>
-			<li>
-				<label>brick:</label>
-				<select id="brick" onchange="lego.setBrick($('#size').val(), this.value)">
-					<option value="brick">brick</option>
-					<option value="ol3">ol3</option>
-					<option value="lego">LEGO&reg;</option>
-				</select>
-			</li>
-			<li>
-				<label>brickSize:</label>
-				<select id="size" onchange="lego.set('brickSize',this.value)">
-					<option value="20">20</option>
-					<option value="30" selected="selected">30</option>
-					<option value="50">50</option>
-				</select>
-			</li>
-			<li>
-				<label>layer:</label>
-				<select id="layer" onchange="setLayer()">
-					<option value="stamen">Stamen</option>
-					<option value="mbox" selected="selected">MapBox</option>
-				</select>
-			</li>
-		</ul>
-	</div>
+  <div class="options" >
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        <label>brick:</label>
+        <select id="brick" onchange="lego.setBrick($('#size').val(), this.value)">
+          <option value="brick">brick</option>
+          <option value="ol3">ol3</option>
+          <option value="lego">LEGO&reg;</option>
+        </select>
+      </li>
+      <li>
+        <label>brickSize:</label>
+        <select id="size" onchange="lego.set('brickSize',this.value)">
+          <option value="20">20</option>
+          <option value="30" selected="selected">30</option>
+          <option value="50">50</option>
+        </select>
+      </li>
+      <li>
+        <label>layer:</label>
+        <select id="layer" onchange="setLayer()">
+          <option value="stamen">Stamen</option>
+          <option value="mbox" selected="selected">MapBox</option>
+        </select>
+      </li>
+    </ul>
+  </div>
 
-	<script type="text/javascript">
-		var stamen = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
-		var mbox = new ol.layer.Tile({
-			title:'terrain-background',
-			source: new ol.source.Stamen({ layer: 'terrain' })
-		});
+  <script type="text/javascript">
+    var stamen = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+    var mbox = new ol.layer.Tile({
+      title:'terrain-background',
+      source: new ol.source.Stamen({ layer: 'terrain' })
+    });
 
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 6,
-					center: [8866, 6607904]
-				}),
-				controls: ol.control.defaults({rotate: false}),
-				interactions: ol.interaction.defaults({ altShiftDragRotate:false, pinchRotate:false }),
-				layers: [ stamen, mbox ]
-			});
+    // The map
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 6,
+        center: [8866, 6607904]
+      }),
+      controls: ol.control.defaults.defaults({rotate: false}),
+      interactions: ol.interaction.defaults.defaults({ altShiftDragRotate:false, pinchRotate:false }),
+      layers: [ stamen, mbox ]
+    });
 
-		function setLayer ()
-		{	var b = $("#layer").val()=="stamen";
-			stamen.setVisible(b);
-			mbox.setVisible(!b);
-		}
-		setLayer();
+    function setLayer() {
+      var b = $("#layer").val()=="stamen";
+      stamen.setVisible(b);
+      mbox.setVisible(!b);
+    }
+    setLayer();
 
-		// Enhance filter
-		var lego = new ol.filter.Lego({ brickSize:$("#size").val(), img:$("#brick").val() });
-		mbox.addFilter(lego);
-		stamen.addFilter(lego);
+    // Enhance filter
+    var lego = new ol.filter.Lego({ brickSize:$("#size").val(), img:$("#brick").val() });
+    mbox.addFilter(lego);
+    stamen.addFilter(lego);
 
-	</script>
+  </script>
 
 </body>
 </html>

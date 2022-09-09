@@ -1,9 +1,7 @@
 var photoLayer = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', visible: false, baseLayer:true });
 var layers = [ 
   new ol.layer.Geoportail({ 
-    gppKey: 'h1osiyvfm7c4wu976jv6gpum',
-    key: 'h1osiyvfm7c4wu976jv6gpum', 
-    layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS', 
+    layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', 
     visible: false, 
     baseLayer:true 
   }),
@@ -82,9 +80,7 @@ print.on('print', function(e) {
 })
 
 // Search control
-var search = new ol.control.SearchGeoportail({
-  apiKey: apiKey
-});
+var search = new ol.control.SearchGeoportail();
 // var search = new ol.control.SearchBAN();
 map.addControl(search);
 search.on('select', function(e) {
