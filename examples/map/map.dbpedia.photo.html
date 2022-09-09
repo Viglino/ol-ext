@@ -140,8 +140,8 @@
   // Force thumbnail to non optional
   vectorSource.querySubject = function () {
     return "?subject rdfs:label ?label. "
-      + "?subject dbpedia-owl:thumbnail ?thumbnail."
-      + "OPTIONAL {?subject dbpedia-owl:abstract ?abstract} . "
+      + "?subject dbo:thumbnail ?thumbnail."
+      + "OPTIONAL {?subject dbo:abstract ?abstract} . "
       + "OPTIONAL {?subject rdf:type ?type}";
   }
 

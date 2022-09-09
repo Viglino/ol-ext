@@ -67,7 +67,7 @@ button i {
   transform: translateX(-50%);
   margin: 0;
   border-radius: 0 0 2em 2em;
-  background: #1f6b75;
+  background: #333;
   color: #fff;
   padding: .2em 1.5em;
 }

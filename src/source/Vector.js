@@ -1,6 +1,6 @@
 import ol_source_Vector from 'ol/source/Vector'
 
-(function () {
+;(function () {
   var clear = ol_source_Vector.prototype.clear;
 
   /** Overwrite ol/source/Vector clear to fire clearstart / clearend event

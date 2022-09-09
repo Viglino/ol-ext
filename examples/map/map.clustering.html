@@ -1,82 +1,82 @@
 ﻿<!DOCTYPE html>
 <html>
 <!--
-	Copyright (c) 2018 Jean-Marc VIGLINO,
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  Copyright (c) 2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
 -->
 <head>
-	<title>ol-ext: Clustering map</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="description" content="A cluster layer for OpenLayers (ol) that animates clusters on zoom change." />
-	<meta name="keywords" content="ol3,cluster,charts,animation,layer,selectio,animate,animated clusters,openlayers" />
+  <title>ol-ext: Clustering map</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="description" content="A cluster layer for OpenLayers (ol) that animates clusters on zoom change." />
+  <meta name="keywords" content="ol3,cluster,charts,animation,layer,selectio,animate,animated clusters,openlayers" />
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
+  
+  <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
-	<link rel="stylesheet" href="../css/fontmaki.css" />
-	<script type="text/javascript" src="../../dist/extra/FontMakiDef.js"></script>
+  <!-- ol-ext maki and fontawesome defintions used in fontsymbol -->
+  <link rel="stylesheet" href="../css/fontmaki.css" />
+  <script type="text/javascript" src="../../dist/extra/FontMakiDef.js"></script>
 
-	<link rel="stylesheet" href="../style.css" />
-	<style>
-		.infos > i {
-			float: left;
-			font-size: 3em;
-			margin: -.2em 0 -.2em -.2em;
-		}
-		[class^="maki-"]:before, [class*=" maki-"]:before {
-			width: initial;
-		}
-	</style>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .infos > i {
+      float: left;
+      font-size: 3em;
+      margin: -.2em 0 -.2em -.2em;
+    }
+    [class^="maki-"]:before, [class*=" maki-"]:before {
+      width: initial;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Clustering map</h1>
-	</a>
-	<p class="info">
-		This example show the use of the <i>ol.style.Chart</i> to display the cluster content.
-	</p>
+  <a href="../../index.html">
+    <h1>ol-ext: Clustering map</h1>
+  </a>
+  <p class="info">
+    This example show the use of the <i>ol.style.Chart</i> to display the cluster content.
+  </p>
 
-	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
 
-	<div class="options">
-		<h2>
-			Cluster options:
-		</h2>
-		<input id="animatecluster" type="checkbox" checked="checked" onchange="clusterLayer.set('animationDuration',(this.checked ? 700:0));" />
-		<label for="animatecluster">animate cluster</label>
-		<br />
-		Number of features:
-		<br/>
-		<input type="number" value="2000" onchange="addFeatures(this.value);" />
-		<h2>Select options:</h2>
-		<input id="animatesel" type="checkbox" checked="checked" onchange="selectCluster.animate = this.checked" />
-		<label for="animatesel">animate selection</label>
-	</div>
-	<div class="infos">
-		<!-- preload icon -->
-		<i class="fa maki-bus" title="building"></i>
-		<i class="fa maki-town_hall" title="building"></i>
-		<i class="fa maki-theatre" title="building"></i>
-		<i class="fa maki-industrial" title="building"></i>
-	</div>
+  <div class="options">
+    <h2>
+      Cluster options:
+    </h2>
+    <input id="animatecluster" type="checkbox" checked="checked" onchange="clusterLayer.set('animationDuration',(this.checked ? 700:0));" />
+    <label for="animatecluster">animate cluster</label>
+    <br />
+    Number of features:
+    <br/>
+    <input type="number" value="2000" onchange="addFeatures(this.value);" />
+    <h2>Select options:</h2>
+    <input id="animatesel" type="checkbox" checked="checked" onchange="selectCluster.animate = this.checked" />
+    <label for="animatesel">animate selection</label>
+  </div>
+  <div class="infos">
+    <!-- preload icon -->
+    <i class="fa maki-bus" title="building"></i>
+    <i class="fa maki-town_hall" title="building"></i>
+    <i class="fa maki-theatre" title="building"></i>
+    <i class="fa maki-industrial" title="building"></i>
+  </div>
 
-	<script type="text/javascript">
+  <script type="text/javascript">
   // Layers
   var layers = [ new ol.layer.Tile({
     source: new ol.source.OSM()
@@ -237,7 +237,7 @@
   }
   testFontLoaded ();
 
-	</script>
+  </script>
 
 </body>
 </html>

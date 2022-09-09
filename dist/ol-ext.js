@@ -2613,147 +2613,151 @@ ol.ext.input.Checkbox = class olextinputCheckbox extends ol.ext.input.Base {
  *  @param {Collection} [options.collection]  the collection to display in the list
  *  @param {function} [options.getTitle] a function that takes a collection item and returns an Element or a string
  */
-ol.ext.input.Collection = function(options) {
-  ol.Object.call(this);
-  this.element = ol.ext.element.create('UL', {
-    className: ('ol-collection-list '+(options.className||'')).trim(),
-    parent: options.target
-  })
-  this._title = (typeof(options.getTitle) === 'function' ? options.getTitle : function(elt) { return elt.title });
-  this.setCollection(options.collection);
-};
-ol.ext.inherits(ol.ext.input.Collection, ol.Object);
-/** Remove current collection (listeners)
- * /!\ remove collection when input list is removed from the DOM
- */
-ol.ext.input.Collection.prototype.removeCollection = function() {
-  if (this.collection) {
-    this.collection.un('change:length', this._update);
-    this.collection = null;
+ol.ext.input.Collection = class olextinputCollection extends ol.Object {
+  constructor(options) {
+    super();
+    this.element = ol.ext.element.create('UL', {
+      className: ('ol-collection-list ' + (options.className || '')).trim(),
+      parent: options.target
+    });
+    this._title = (typeof (options.getTitle) === 'function' ? options.getTitle : function (elt) { return elt.title; });
+    this.setCollection(options.collection);
   }
-}
-/** Set the collection
- * @param {ol.Collection} collection
- */
-ol.ext.input.Collection.prototype.setCollection = function(collection) {
-  this.removeCollection();
-  this.collection = collection;
-  this.refresh();
-  if (this.collection) {
-    this._update = function() { 
-      if (!this._reorder) {
-        this.refresh();
-        var pos = this.getSelectPosition();
-        if (pos < 0) {
-          this.dispatchEvent({ type: 'item:select', position: -1, item: null });
-        } else {
-          this.dispatchEvent({ type: 'item:order', position: pos, item: this._currentItem });
-        }
-      }
-    }.bind(this);
-    this.collection.on('change:length', this._update);
-  }
-}
-/** Select an item
- * @param {*} item
- */
-ol.ext.input.Collection.prototype.select = function(item) {
-  if (item === this._currentItem) return;
-  var pos = -1;
-  this._listElt.forEach(function (l, i) {
-    if (l.item !== item) {
-      l.li.classList.remove('ol-select');
-    } else {
-      l.li.classList.add('ol-select');
-      pos = i;
+  /** Remove current collection (listeners)
+   * /!\ remove collection when input list is removed from the DOM
+   */
+  removeCollection() {
+    if (this.collection) {
+      this.collection.un('change:length', this._update);
+      this.collection = null;
     }
-  })
-  this._currentItem = (pos >= 0 ? item : null);
-  this.dispatchEvent({ type: 'item:select', position: pos, item: this._currentItem });
-};
-/** Select an item at
- * @param {number} n
- */
-ol.ext.input.Collection.prototype.selectAt = function(n) {
-  this.select(this.collection.item(n));
-};
-/** Get current selection
- * @returns {*}
- */
-ol.ext.input.Collection.prototype.getSelect = function() {
-  return this._currentItem;
-};
-/** Get current selection
- * @returns {number}
- */
-ol.ext.input.Collection.prototype.getSelectPosition = function() {
-  if (!this.collection) return -1;
-  return this.collection.getArray().indexOf(this._currentItem);
-};
-/** Redraw the list
- */
-ol.ext.input.Collection.prototype.refresh = function() {
-  this.element.innerHTML = '';
-  this._listElt = [];
-  if (!this.collection) return;
-  this.collection.forEach((item, pos) => {
-    var li = ol.ext.element.create('LI', {
-      html: this._title(item),
-      className: this._currentItem === item ? 'ol-select' : '',
-      'data-position': pos,
-      on: {
-        click: function() {
-          this.select(item);
-        }.bind(this),
-        dblclick: function() {
-          this.dispatchEvent({ type: 'item:dblclick', position: pos, item: item });
-        }.bind(this),
-      },
-      parent: this.element
-    });
-    this._listElt.push({ li: li, item: item });
-    var order = ol.ext.element.create('DIV', {
-      className: 'ol-noscroll ol-order',
-      parent: li
-    });
-    var current = pos;
-    var move = function(e) {
-      // Get target
-      var target = e.pointerType==='touch' ? document.elementFromPoint(e.clientX, e.clientY) : e.target;
-      while (target && target.parentNode !== this.element) {
-        target = target.parentNode;
-      }
-      if (target && target !== li) {
-        var over = parseInt(target.getAttribute('data-position'));
-        if (target.getAttribute('data-position') < current) {
-          target.insertAdjacentElement('beforebegin', li);
-          current = over;
-        } else {
-          target.insertAdjacentElement('afterend', li);
-          current = over+1;
+  }
+  /** Set the collection
+   * @param {ol.Collection} collection
+   */
+  setCollection(collection) {
+    this.removeCollection();
+    this.collection = collection;
+    this.refresh();
+    if (this.collection) {
+      this._update = function () {
+        if (!this._reorder) {
+          this.refresh();
+          var pos = this.getSelectPosition();
+          if (pos < 0) {
+            this.dispatchEvent({ type: 'item:select', position: -1, item: null });
+          } else {
+            this.dispatchEvent({ type: 'item:order', position: pos, item: this._currentItem });
+          }
         }
+      }.bind(this);
+      this.collection.on('change:length', this._update);
+    }
+  }
+  /** Select an item
+   * @param {*} item
+   */
+  select(item) {
+    if (item === this._currentItem)
+      return;
+    var pos = -1;
+    this._listElt.forEach(function (l, i) {
+      if (l.item !== item) {
+        l.li.classList.remove('ol-select');
+      } else {
+        l.li.classList.add('ol-select');
+        pos = i;
       }
-    }.bind(this);
-    var stop = function() {
-      document.removeEventListener('pointermove', move);
-      document.removeEventListener('pointerup', stop);
-      document.removeEventListener('pointercancel', stop);
-      if (current !== pos) {
-        this._reorder = true;
-        this.collection.removeAt(pos);
-        this.collection.insertAt(current>pos ? current-1 : current, item);
-        this._reorder = false;
-        this.dispatchEvent({ type: 'item:order', position: current>pos ? current-1 : current, oldPosition: pos, item: item })
-        this.refresh();
-      }
-    }.bind(this);
-    order.addEventListener('pointerdown', function() {
-      this.select(item)
-      document.addEventListener('pointermove', move);
-      document.addEventListener('pointerup', stop)
-      document.addEventListener('pointercancel', stop)
-    }.bind(this));
-  });
+    });
+    this._currentItem = (pos >= 0 ? item : null);
+    this.dispatchEvent({ type: 'item:select', position: pos, item: this._currentItem });
+  }
+  /** Select an item at
+   * @param {number} n
+   */
+  selectAt(n) {
+    this.select(this.collection.item(n));
+  }
+  /** Get current selection
+   * @returns {*}
+   */
+  getSelect() {
+    return this._currentItem;
+  }
+  /** Get current selection
+   * @returns {number}
+   */
+  getSelectPosition() {
+    if (!this.collection)
+      return -1;
+    return this.collection.getArray().indexOf(this._currentItem);
+  }
+  /** Redraw the list
+   */
+  refresh() {
+    this.element.innerHTML = '';
+    this._listElt = [];
+    if (!this.collection)
+      return;
+    this.collection.forEach((item, pos) => {
+      var li = ol.ext.element.create('LI', {
+        html: this._title(item),
+        className: this._currentItem === item ? 'ol-select' : '',
+        'data-position': pos,
+        on: {
+          click: function () {
+            this.select(item);
+          }.bind(this),
+          dblclick: function () {
+            this.dispatchEvent({ type: 'item:dblclick', position: pos, item: item });
+          }.bind(this),
+        },
+        parent: this.element
+      });
+      this._listElt.push({ li: li, item: item });
+      var order = ol.ext.element.create('DIV', {
+        className: 'ol-noscroll ol-order',
+        parent: li
+      });
+      var current = pos;
+      var move = function (e) {
+        // Get target
+        var target = e.pointerType === 'touch' ? document.elementFromPoint(e.clientX, e.clientY) : e.target;
+        while (target && target.parentNode !== this.element) {
+          target = target.parentNode;
+        }
+        if (target && target !== li) {
+          var over = parseInt(target.getAttribute('data-position'));
+          if (target.getAttribute('data-position') < current) {
+            target.insertAdjacentElement('beforebegin', li);
+            current = over;
+          } else {
+            target.insertAdjacentElement('afterend', li);
+            current = over + 1;
+          }
+        }
+      }.bind(this);
+      var stop = function () {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', stop);
+        document.removeEventListener('pointercancel', stop);
+        if (current !== pos) {
+          this._reorder = true;
+          this.collection.removeAt(pos);
+          this.collection.insertAt(current > pos ? current - 1 : current, item);
+          this._reorder = false;
+          this.dispatchEvent({ type: 'item:order', position: current > pos ? current - 1 : current, oldPosition: pos, item: item });
+          this.refresh();
+        }
+      }.bind(this);
+      order.addEventListener('pointerdown', function () {
+        this.select(item);
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', stop);
+        document.addEventListener('pointercancel', stop);
+      }.bind(this));
+    });
+  }
 }
 
 /** Color picker
@@ -13436,79 +13440,82 @@ ol.control.Profil.prototype.info = {
  *  @param {String} [options.label] waiting label
  *  @param {ol.layer.Layer|Array<ol.layer.Layer>} [options.layers] tile layers with tileload events
  */
-ol.control.ProgressBar = function(options) {
-  options = options || {};
-  var element = ol.ext.element.create('DIV', {
-    className: ((options.className || '') + ' ol-progress-bar ol-unselectable ol-control').trim()
-  });
-  this._waiting = ol.ext.element.create('DIV', {
-    html: options.label || '',
-    className: 'ol-waiting',
-    parent: element
-  });
-  this._bar = ol.ext.element.create('DIV', {
-    className: 'ol-bar',
-    parent: element
-  });
-  ol.control.Control.call(this, {
-    element: element,
-    target: options.target
-  });
-  this._layerlistener = [];
-  this.setLayers(options.layers);
-};
-ol.ext.inherits(ol.control.ProgressBar, ol.control.Control);
-/** Set the control visibility
- * @param {Number} [n] progress percentage, a number beetween 0,1, default hide progress bar
- */
-ol.control.ProgressBar.prototype.setPercent = function (n) {
-  this._bar.style.width = ((Number(n) || 0) * 100)+'%';
-  if (n===undefined) {
-    ol.ext.element.hide(this.element);
-  } else {
-    ol.ext.element.show(this.element);
+ol.control.ProgressBar = class olcontrolProgressBar extends ol.control.Control {
+  constructor(options) {
+    options = options || {}
+    var element = ol.ext.element.create('DIV', {
+      className: ((options.className || '') + ' ol-progress-bar ol-unselectable ol-control').trim()
+    })
+    super({
+      element: element,
+      target: options.target
+    })
+    this._waiting = ol.ext.element.create('DIV', {
+      html: options.label || '',
+      className: 'ol-waiting',
+      parent: element
+    })
+    this._bar = ol.ext.element.create('DIV', {
+      className: 'ol-bar',
+      parent: element
+    })
+    this._layerlistener = []
+    this.setLayers(options.layers)
   }
-};
-/** Set waiting text
- * @param {string} label
- */
-ol.control.ProgressBar.prototype.setLabel = function (label) {
-  this._waiting.innerHTML = label;
-};
-/** Use a list of tile layer to shown tile load
- * @param {ol.layer.Layer|Array<ol.layer.Layer>} layers a layer or a list of layer
- */
-ol.control.ProgressBar.prototype.setLayers = function (layers) {
-  // reset
-  this._layerlistener.forEach(function (l) {
-    ol.Observable.unByKey(l);
-  });
-  this._layerlistener = [];
-  this.setPercent();
-  var loading=0, loaded=0;
-  if (layers instanceof ol.layer.Layer) layers = [layers];
-  if (!layers || !layers.forEach) return;
-  var tout;
-  // Listeners
-  layers.forEach(function(layer) {
-    if (layer instanceof ol.layer.Layer) {
-      this._layerlistener.push(layer.getSource().on('tileloadstart', function () {
-        loading++;
-        this.setPercent(loaded/loading);
-        clearTimeout(tout);
-      }.bind(this)));
-      this._layerlistener.push(layer.getSource().on(['tileloadend', 'tileloaderror'], function () {
-        loaded++;
-        if (loaded === loading) {
-          loading = loaded = 0;
-          this.setPercent(1);
-          tout = setTimeout(this.setPercent.bind(this), 300);
-        } else {
-          this.setPercent(loaded/loading);
-        }
-      }.bind(this)));
+  /** Set the control visibility
+   * @param {Number} [n] progress percentage, a number beetween 0,1, default hide progress bar
+   */
+  setPercent(n) {
+    this._bar.style.width = ((Number(n) || 0) * 100) + '%'
+    if (n === undefined) {
+      ol.ext.element.hide(this.element)
+    } else {
+      ol.ext.element.show(this.element)
     }
-  }.bind(this));
+  }
+  /** Set waiting text
+   * @param {string} label
+   */
+  setLabel(label) {
+    this._waiting.innerHTML = label
+  }
+  /** Use a list of tile layer to shown tile load
+   * @param {ol.layer.Layer|Array<ol.layer.Layer>} layers a layer or a list of layer
+   */
+  setLayers(layers) {
+    // reset
+    this._layerlistener.forEach(function (l) {
+      ol.Observable.unByKey(l)
+    })
+    this._layerlistener = []
+    this.setPercent()
+    var loading = 0, loaded = 0
+    if (layers instanceof ol.layer.Layer)
+      layers = [layers]
+    if (!layers || !layers.forEach)
+      return
+    var tout
+    // Listeners
+    layers.forEach(function (layer) {
+      if (layer instanceof ol.layer.Layer) {
+        this._layerlistener.push(layer.getSource().on('tileloadstart', function () {
+          loading++
+          this.setPercent(loaded / loading)
+          clearTimeout(tout)
+        }.bind(this)))
+        this._layerlistener.push(layer.getSource().on(['tileloadend', 'tileloaderror'], function () {
+          loaded++
+          if (loaded === loading) {
+            loading = loaded = 0
+            this.setPercent(1)
+            tout = setTimeout(this.setPercent.bind(this), 300)
+          } else {
+            this.setPercent(loaded / loading)
+          }
+        }.bind(this)))
+      }
+    }.bind(this))
+  }
 }
 
 /*	Copyright (c) 2018 Jean-Marc VIGLINO,
@@ -21541,66 +21548,67 @@ ol.format.GeoJSONX.prototype._toType = [
  *  @param {ol.ProjectionLike} options.dataProjection Projection of the data we are reading. If not provided `EPSG:4326`
  *  @param {ol.ProjectionLike} options.featureProjection Projection of the feature geometries created by the format reader. If not provided, features will be returned in the dataProjection.
  */
-ol.format.GeoJSONP = function(options) {
-  options = options || {};
-  ol.format.GeoJSONX.call (this, options);
-  this._lineFormat = new ol.format.Polyline({ factor: Math.pow(10, options.decimals || 6) });
-};
-ol.ext.inherits(ol.format.GeoJSONP, ol.format.GeoJSONX);
-/** Encode coordinates
- * @param {ol.coordinate|Array<ol.coordinate>} v
- * @return {string|Array<string>}
- * @api
- */
-ol.format.GeoJSONP.prototype.encodeCoordinates = function(v) {
-  var g;
-  if (typeof(v[0]) === 'number') {
-    g = new ol.geom.Point(v);
-    return this._lineFormat.writeGeometry(g);
-  } else if (v.length && v[0]) {
-    var tab = (typeof(v[0][0]) === 'number');
-    if (tab) {
-      g = new ol.geom.LineString(v);
-      return this._lineFormat.writeGeometry(g);
-    } else {
-      var r = [];
-      for (var i=0; i<v.length; i++) {
-        r[i] = this.encodeCoordinates(v[i]);
-      }
-      return r;
-    }
-  } else {
-    return this.encodeCoordinates([0,0]);
+ol.format.GeoJSONP = class olformatGeoJSONP extends ol.format.GeoJSONX {
+  constructor(options) {
+    options = options || {}
+    super(options)
+    this._lineFormat = new ol.format.Polyline({ factor: Math.pow(10, options.decimals || 6) })
   }
-};
-/** Decode coordinates
- * @param {string|Array<string>}
- * @return {ol.coordinate|Array<ol.coordinate>} v
- * @api
- */
-ol.format.GeoJSONP.prototype.decodeCoordinates = function(v) {
-  var i, g;
-  if (typeof(v) === 'string') {
-    g = this._lineFormat.readGeometry(v);
-    return g.getCoordinates()[0];
-  } else if (v.length) {
-    var tab = (typeof(v[0]) === 'string');
-    var r = [];
-    if (tab) {
-      for (i=0; i<v.length; i++) {
-        g = this._lineFormat.readGeometry(v[i]);
-        r[i] = g.getCoordinates();
+  /** Encode coordinates
+   * @param {ol.coordinate|Array<ol.coordinate>} v
+   * @return {string|Array<string>}
+   * @api
+   */
+  encodeCoordinates(v) {
+    var g
+    if (typeof (v[0]) === 'number') {
+      g = new ol.geom.Point(v)
+      return this._lineFormat.writeGeometry(g)
+    } else if (v.length && v[0]) {
+      var tab = (typeof (v[0][0]) === 'number')
+      if (tab) {
+        g = new ol.geom.LineString(v)
+        return this._lineFormat.writeGeometry(g)
+      } else {
+        var r = []
+        for (var i = 0; i < v.length; i++) {
+          r[i] = this.encodeCoordinates(v[i])
+        }
+        return r
       }
     } else {
-      for (i=0; i<v.length; i++) {
-        r[i] = this.decodeCoordinates(v[i]);
-      }
+      return this.encodeCoordinates([0, 0])
     }
-    return r;
-  } else {
-    return null;
   }
-};
+  /** Decode coordinates
+   * @param {string|Array<string>}
+   * @return {ol.coordinate|Array<ol.coordinate>} v
+   * @api
+   */
+  decodeCoordinates(v) {
+    var i, g
+    if (typeof (v) === 'string') {
+      g = this._lineFormat.readGeometry(v)
+      return g.getCoordinates()[0]
+    } else if (v.length) {
+      var tab = (typeof (v[0]) === 'string')
+      var r = []
+      if (tab) {
+        for (i = 0; i < v.length; i++) {
+          g = this._lineFormat.readGeometry(v[i])
+          r[i] = g.getCoordinates()
+        }
+      } else {
+        for (i = 0; i < v.length; i++) {
+          r[i] = this.decodeCoordinates(v[i])
+        }
+      }
+      return r
+    } else {
+      return null
+    }
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -27021,96 +27029,99 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
  * @param {*} options
  *  @param {Array<ol.Map>} options maps An array of maps to synchronize with the map of the interaction
  */
-ol.interaction.Synchronize = function(options) {
-  if (!options) options={};
-  var self = this;
-  ol.interaction.Interaction.call(this, {
-    handleEvent: function(e) {
-      if (e.type=="pointermove") { self.handleMove_(e); }
-      return true;
-    }
-  });
-  this.maps = options.maps || [];
-  if (options.active === false) this.setActive(false);
-};
-ol.ext.inherits(ol.interaction.Synchronize, ol.interaction.Interaction);
-/**
- * Remove the interaction from its current map, if any,  and attach it to a new
- * map, if any. Pass `null` to just remove the interaction from the current map.
- * @param {ol.Map} map Map.
- * @api stable
- */
-ol.interaction.Synchronize.prototype.setMap = function(map) {
-  if (this._listener) {
-    ol.Observable.unByKey(this._listener.center);
-    ol.Observable.unByKey(this._listener.rotation);
-    ol.Observable.unByKey(this._listener.resolution);
-    this.getMap().getTargetElement().removeEventListener('mouseout', this._listener.mouseout);
+ol.interaction.Synchronize = class olinteractionSynchronize extends ol.interaction.Interaction {
+  constructor(options) {
+    options = options || {}
+    super({
+      handleEvent: function (e) {
+        if (e.type == "pointermove") { this.handleMove_(e)} 
+        return true
+      }
+    })
+    this.maps = options.maps || []
+    if (options.active === false) this.setActive(false)
   }
-  this._listener = null;
-  ol.interaction.Interaction.prototype.setMap.call (this, map);
-  if (map) {
-    this._listener = {};
-    this._listener.center = this.getMap().getView().on('change:center', this.syncMaps.bind(this));
-    this._listener.rotation = this.getMap().getView().on('change:rotation', this.syncMaps.bind(this));
-    this._listener.resolution = this.getMap().getView().on('change:resolution', this.syncMaps.bind(this));
-    this._listener.mouseout = this.handleMouseOut_.bind(this);
-    if (this.getMap().getTargetElement()) {
-      this.getMap().getTargetElement().addEventListener('mouseout', this._listener.mouseout);
+  /**
+   * Remove the interaction from its current map, if any,  and attach it to a new
+   * map, if any. Pass `null` to just remove the interaction from the current map.
+   * @param {ol.Map} map Map.
+   * @api stable
+   */
+  setMap(map) {
+    if (this._listener) {
+      ol.Observable.unByKey(this._listener.center)
+      ol.Observable.unByKey(this._listener.rotation)
+      ol.Observable.unByKey(this._listener.resolution)
+      this.getMap().getTargetElement().removeEventListener('mouseout', this._listener.mouseout)
     }
-    this.syncMaps();
-  }
-};
-/** Auto activate/deactivate controls in the bar
- * @param {boolean} b activate/deactivate
- */
-ol.interaction.Synchronize.prototype.setActive = function (b) {
-  ol.interaction.Interaction.prototype.setActive.call(this, b);
-  this.syncMaps();
-};
-/** Synchronize the maps
- */
-ol.interaction.Synchronize.prototype.syncMaps = function() {
-  if (!this.getActive()) return;
-  var map = this.getMap();
-  if (map) {
-    if (map.get('lockView')) return;
-    for (var i=0; i<this.maps.length; i++) {
-      this.maps[i].set('lockView', true);
-      // sync
-      if (this.maps[i].getView().getRotation() != map.getView().getRotation()) {
-        this.maps[i].getView().setRotation(map.getView().getRotation()); 
+    this._listener = null
+    super.setMap(map)
+    if (map) {
+      this._listener = {}
+      this._listener.center = this.getMap().getView().on('change:center', this.syncMaps.bind(this))
+      this._listener.rotation = this.getMap().getView().on('change:rotation', this.syncMaps.bind(this))
+      this._listener.resolution = this.getMap().getView().on('change:resolution', this.syncMaps.bind(this))
+      this._listener.mouseout = this.handleMouseOut_.bind(this)
+      if (this.getMap().getTargetElement()) {
+        this.getMap().getTargetElement().addEventListener('mouseout', this._listener.mouseout)
       }
-      if (this.maps[i].getView().getCenter() != map.getView().getCenter()) {
-        this.maps[i].getView().setCenter(map.getView().getCenter()); 
-      }
-      if (this.maps[i].getView().getResolution() != map.getView().getResolution()) {
-        this.maps[i].getView().setResolution(map.getView().getResolution());
-      }
-      this.maps[i].set('lockView', false);
+      this.syncMaps()
     }
   }
-};
-/** Cursor move > tells other maps to show the cursor
-* @param {ol.event} e "move" event
-*/
-ol.interaction.Synchronize.prototype.handleMove_ = function(e) {
-  for (var i=0; i<this.maps.length; i++) {
-    this.maps[i].showTarget(e.coordinate);
+  /** Auto activate/deactivate controls in the bar
+   * @param {boolean} b activate/deactivate
+   */
+  setActive(b) {
+    super.setActive(b)
+    this.syncMaps()
   }
-  this.getMap().showTarget();
-};
-/** Cursor out of map > tells other maps to hide the cursor
-* @param {event} e "mouseOut" event
-*/
-ol.interaction.Synchronize.prototype.handleMouseOut_ = function(/*e*/) {
-  for (var i=0; i<this.maps.length; i++) {
-    if (this.maps[i]._targetOverlay) this.maps[i]._targetOverlay.setPosition(undefined);
+  /** Synchronize the maps
+   */
+  syncMaps() {
+    if (!this.getActive())
+      return
+    var map = this.getMap()
+    if (map) {
+      if (map.get('lockView'))
+        return
+      for (var i = 0; i < this.maps.length; i++) {
+        this.maps[i].set('lockView', true)
+        // sync
+        if (this.maps[i].getView().getRotation() != map.getView().getRotation()) {
+          this.maps[i].getView().setRotation(map.getView().getRotation())
+        }
+        if (this.maps[i].getView().getCenter() != map.getView().getCenter()) {
+          this.maps[i].getView().setCenter(map.getView().getCenter())
+        }
+        if (this.maps[i].getView().getResolution() != map.getView().getResolution()) {
+          this.maps[i].getView().setResolution(map.getView().getResolution())
+        }
+        this.maps[i].set('lockView', false)
+      }
+    }
   }
-};
+  /** Cursor move > tells other maps to show the cursor
+  * @param {ol.event} e "move" event
+  */
+  handleMove_(e) {
+    for (var i = 0; i < this.maps.length; i++) {
+      this.maps[i].showTarget(e.coordinate)
+    }
+    this.getMap().showTarget()
+  }
+  /** Cursor out of map > tells other maps to hide the cursor
+  * @param {event} e "mouseOut" event
+  */
+  handleMouseOut_( /*e*/) {
+    for (var i = 0; i < this.maps.length; i++) {
+      if (this.maps[i]._targetOverlay)
+        this.maps[i]._targetOverlay.setPosition(undefined)
+    }
+  }
+}
 /** Show a target overlay at coord
-* @param {ol.coordinate} coord
-*/
+ * @param {ol.coordinate} coord
+ */
 ol.Map.prototype.showTarget = function(coord) {
   if (!this._targetOverlay) {
     var elt = document.createElement("div");
@@ -27125,7 +27136,7 @@ ol.Map.prototype.showTarget = function(coord) {
   this._targetOverlay.setPosition(coord);
 };
 /** Hide the target overlay
-*/
+ */
 ol.Map.prototype.hideTarget = function() {
   this.removeOverlay(this._targetOverlay);
   this._targetOverlay = undefined;
@@ -31960,118 +31971,119 @@ ol.source.Overpass = class olsourceOverpass extends ol.source.Vector {
  *  @param {number} options.featureLimit maximum features in the source before refresh, default Infinity
  *  @param {boolean} [options.pagination] experimental enable pagination, default no pagination
  */
-ol.source.TileWFS = function (options) {
-  options = options || {};
-  if (!options.featureLimit) options.featureLimit = Infinity;
-  // Tile loading strategy
-  var zoom = options.tileZoom || 14;
-  var sourceOpt = {
-    strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: zoom, maxZoom: zoom, tileSize:512  }))
-  };
-  // Loading params
-  var format = new ol.format.GeoJSON();
-  var url = options.url
-    + '?service=WFS'
-    + '&request=GetFeature'
-    + '&version=' + (options.version || '1.1.0')
-    + '&typename=' + (options.typeName || '')
-    + '&outputFormat=application/json';
-  if (options.maxFeatures) {
-    url += '&maxFeatures=' + options.maxFeatures + '&count=' + options.maxFeatures;
-  }
-  var loader = { loading: 0, loaded: 0 };
-  // Loading fn
-  sourceOpt.loader = function(extent, resolution, projection) {
-    if (loader.loading === loader.loaded) {
-      loader.loading = loader.loaded = 0;
-      if (this.getFeatures().length > options.maxFeatures) {
-        this.clear();
-        this.refresh();
-      }
+ol.source.TileWFS = class olsourceTileWFS extends ol.source.Vector {
+  constructor(options) {
+    options = options || {}
+    if (!options.featureLimit) options.featureLimit = Infinity
+    // Tile loading strategy
+    var zoom = options.tileZoom || 14
+    var sourceOpt = {
+      strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({ minZoom: zoom, maxZoom: zoom, tileSize: 512 }))
     }
-    loader.loading++;
-    this.dispatchEvent({ 
-      type: 'tileloadstart',
-      loading: loader.loading, 
-      loaded: loader.loaded
-    });
-    this._loadTile(url, extent, projection, format, loader);
-  }
-  ol.source.Vector.call(this, sourceOpt);
-  this.set('pagination', options.pagination);
-};
-ol.ext.inherits(ol.source.TileWFS, ol.source.Vector);
-/**
- * 
- */
-ol.source.TileWFS.prototype._loadTile = function(url, extent, projection, format, loader) {
-  var req = url 
-    + '&srsname=' + projection.getCode()
-    + '&bbox=' + extent.join(',') + ',' + projection.getCode();
-  if (this.get('pagination') && !/&startIndex/.test(url)) {
-    req += '&startIndex=0';
-  }
-  ol.ext.Ajax.get({
-    url: req,
-    success: function(response) {
-      loader.loaded++;
-      if (response.error) {
-        this.dispatchEvent({ 
-          type: 'tileloaderror', 
-          error: response, 
-          loading: loader.loading, 
-          loaded: loader.loaded 
-        });
-      } else {
-        // Load features
-        var features = format.readFeatures(response, {
-          featureProjection: projection
-        });
-        if (features.length > 0) {
-          this.addFeatures(features);
-        }
-        // Next page?
-        var pos = response.numberReturned || 0;
-        if (/&startIndex/.test(url)) {
-          pos += parseInt(url.replace(/.*&startIndex=(\d*).*/, '$1'));
-          url = url.replace(/&startIndex=(\d*)/, '');
-        }
-        // Still something to load ?
-        if (pos < response.totalFeatures) {
-          if (!this.get('pagination')) {
-            this.dispatchEvent({ type: 'overload', total: response.totalFeatures, returned: response.numberReturned });
-            this.dispatchEvent({ 
-              type: 'tileloadend', 
-              loading: loader.loading, 
-              loaded: loader.loaded 
-            });
-          } else {
-            url += '&startIndex='+pos;
-            loader.loaded--;
-            this._loadTile(url, extent, projection, format, loader);
-          }
-        } else {
-          this.dispatchEvent({ 
-            type: 'tileloadend', 
-            loading: loader.loading, 
-            loaded: loader.loaded 
-          });
+    // Loading params
+    var format = new ol.format.GeoJSON()
+    var url = options.url
+      + '?service=WFS'
+      + '&request=GetFeature'
+      + '&version=' + (options.version || '1.1.0')
+      + '&typename=' + (options.typeName || '')
+      + '&outputFormat=application/json'
+    if (options.maxFeatures) {
+      url += '&maxFeatures=' + options.maxFeatures + '&count=' + options.maxFeatures
+    }
+    var loader = { loading: 0, loaded: 0 }
+    // Loading fn
+    sourceOpt.loader = function (extent, resolution, projection) {
+      if (loader.loading === loader.loaded) {
+        loader.loading = loader.loaded = 0
+        if (this.getFeatures().length > options.maxFeatures) {
+          this.clear()
+          this.refresh()
         }
       }
-    }.bind(this),
-    error: function(e) {
-      loader.loaded++;
+      loader.loading++
       this.dispatchEvent({
-        type: 'tileloaderror',
-        error: e,
-        loading: loader.loading, 
+        type: 'tileloadstart',
+        loading: loader.loading,
         loaded: loader.loaded
-      });
-    }.bind(this)
-  })
-};
+      })
+      this._loadTile(url, extent, projection, format, loader)
+    }
+    super(sourceOpt)
+    this.set('pagination', options.pagination)
+  }
+  /**
+   *
+   */
+  _loadTile(url, extent, projection, format, loader) {
+    var req = url
+      + '&srsname=' + projection.getCode()
+      + '&bbox=' + extent.join(',') + ',' + projection.getCode()
+    if (this.get('pagination') && !/&startIndex/.test(url)) {
+      req += '&startIndex=0'
+    }
+    ol.ext.Ajax.get({
+      url: req,
+      success: function (response) {
+        loader.loaded++
+        if (response.error) {
+          this.dispatchEvent({
+            type: 'tileloaderror',
+            error: response,
+            loading: loader.loading,
+            loaded: loader.loaded
+          })
+        } else {
+          // Load features
+          var features = format.readFeatures(response, {
+            featureProjection: projection
+          })
+          if (features.length > 0) {
+            this.addFeatures(features)
+          }
+          // Next page?
+          var pos = response.numberReturned || 0
+          if (/&startIndex/.test(url)) {
+            pos += parseInt(url.replace(/.*&startIndex=(\d*).*/, '$1'))
+            url = url.replace(/&startIndex=(\d*)/, '')
+          }
+          // Still something to load ?
+          if (pos < response.totalFeatures) {
+            if (!this.get('pagination')) {
+              this.dispatchEvent({ type: 'overload', total: response.totalFeatures, returned: response.numberReturned })
+              this.dispatchEvent({
+                type: 'tileloadend',
+                loading: loader.loading,
+                loaded: loader.loaded
+              })
+            } else {
+              url += '&startIndex=' + pos
+              loader.loaded--
+              this._loadTile(url, extent, projection, format, loader)
+            }
+          } else {
+            this.dispatchEvent({
+              type: 'tileloadend',
+              loading: loader.loading,
+              loaded: loader.loaded
+            })
+          }
+        }
+      }.bind(this),
+      error: function (e) {
+        loader.loaded++
+        this.dispatchEvent({
+          type: 'tileloaderror',
+          error: e,
+          loading: loader.loading,
+          loaded: loader.loaded
+        })
+      }.bind(this)
+    })
+  }
+}
 
-(function () {
+;(function () {
   var clear = ol.source.Vector.prototype.clear;
   /** Overwrite ol/source/Vector clear to fire clearstart / clearend event
    */
@@ -32094,299 +32106,305 @@ ol.source.TileWFS.prototype._loadTile = function(url, extent, projection, format
  *  @param {function|string|Number} options.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
  *  @param {Array<number>} options.center center of the view, default [.5,1]
  */
-ol.layer.Vector3D = function (options) {
-  options = options || {};
-  this._source = options.source;
-  this.height_ = this.getHfn (options.height);
-  var canvas = document.createElement('canvas');
-  ol.layer.Image.call (this, { 
-    source: new ol.source.ImageCanvas({
-      canvasFunction: function(extent, resolution, pixelRatio, size /*, projection*/ ) {
-        canvas.width = size[0];
-        canvas.height = size[1];
-        return canvas;
+ol.layer.Vector3D = class ollayerVector3D extends ol.layer.Image {
+  constructor(options) {
+    options = options || {}
+    var canvas = document.createElement('canvas')
+    super({
+      source: new ol.source.ImageCanvas({
+        canvasFunction: function (extent, resolution, pixelRatio, size /*, projection*/) {
+          canvas.width = size[0]
+          canvas.height = size[1]
+          return canvas
+        }
+      }),
+      center: options.center || [.5, 1],
+      defaultHeight: options.defaultHeight || 0,
+      maxResolution: options.maxResolution || Infinity
+    })
+    this._source = options.source
+    this.height_ = this.getHfn(options.height)
+    this.setStyle(options.style)
+    this.on(['postcompose', 'postrender'], this.onPostcompose_.bind(this))
+  }
+  /**
+   * Set the height function for the layer
+   * @param {function|string|Number} height a height function (returns height giving a feature) or a popertie name or a fixed value
+   */
+  setHeight(height) {
+    this.height_ = this.getHfn(height)
+    this.changed()
+  }
+  /**
+   * Set style associated with the layer
+   * @param {ol.style.Style} s
+   */
+  setStyle(s) {
+    if (s instanceof ol.style.Style)
+      this._style = s
+    else
+      this._style = new ol.style.Style()
+    if (!this._style.getStroke()) {
+      this._style.setStroke(new ol.style.Stroke({
+        width: 1,
+        color: 'red'
+      }))
+    }
+    if (!this._style.getFill()) {
+      this._style.setFill(new ol.style.Fill({ color: 'rgba(0,0,255,0.5)' }))
+    }
+    if (!this._style.getText()) {
+      this._style.setText(new ol.style.Fill({
+        color: 'red'
+      })
+      )
+    }
+    // Get the geometry
+    if (s && s.getGeometry()) {
+      var geom = s.getGeometry()
+      if (typeof (geom) === 'function') {
+        this.set('geometry', geom)
+      } else {
+        this.set('geometry', function () { return geom })
       }
-    }), 
-    center: options.center || [.5,1],
-    defaultHeight: options.defaultHeight || 0,
-    maxResolution: options.maxResolution || Infinity 
-  });
-  this.setStyle(options.style);
-  this.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
-}
-ol.ext.inherits(ol.layer.Vector3D, ol.layer.Image);
-/**
- * Set the height function for the layer
- * @param {function|string|Number} height a height function (returns height giving a feature) or a popertie name or a fixed value
- */
-ol.layer.Vector3D.prototype.setHeight = function(height) {
-  this.height_ = this.getHfn (height);
-  this.changed();
-};
-/**
- * Set style associated with the layer
- * @param {ol.style.Style} s
- */
-ol.layer.Vector3D.prototype.setStyle = function(s) {
-  if (s instanceof ol.style.Style) this._style = s;
-  else this._style = new ol.style.Style();
-  if (!this._style.getStroke()) {
-    this._style.setStroke(new ol.style.Stroke({
-      width: 1,
-      color: 'red'
-    }));
-  }
-  if (!this._style.getFill()) {
-    this._style.setFill( new ol.style.Fill({ color: 'rgba(0,0,255,0.5)'}) );
-  }
-  if (!this._style.getText()) {
-    this._style.setText( new ol.style.Fill({ 
-      color: 'red'}) 
-    );
-  }
-  // Get the geometry
-  if (s && s.getGeometry()) {
-    var geom = s.getGeometry();
-    if (typeof(geom)==='function') {
-      this.set('geometry', geom);
     } else {
-      this.set('geometry', function() { return geom; });
-    }
-  } else {
-    this.set('geometry', function(f) { return f.getGeometry(); });
-  }
-};
-/**
- * Get style associated with the layer
- * @return {ol.style.Style}
- */
-ol.layer.Vector3D.prototype.getStyle = function() {
-  return this._style;
-};
-/** Calculate 3D at potcompose
- * @private
- */
-ol.layer.Vector3D.prototype.onPostcompose_ = function(e) {
-  var res = e.frameState.viewState.resolution;
-  if (res > this.get('maxResolution')) return;
-  this.res_ = res*400;
-  if (this.animate_) {
-    var elapsed = e.frameState.time - this.animate_;
-    if (elapsed < this.animateDuration_) {
-      this.elapsedRatio_ = this.easing_(elapsed / this.animateDuration_);
-      // tell OL3 to continue postcompose animation
-      e.frameState.animate = true;
-    } else {
-      this.animate_ = false;
-      this.height_ = this.toHeight_
+      this.set('geometry', function (f) { return f.getGeometry() })
     }
   }
-  var ratio = e.frameState.pixelRatio;
-  var ctx = e.context;
-  var m = this.matrix_ = e.frameState.coordinateToPixelTransform;
-  // Old version (matrix)
-  if (!m) {
-    m = e.frameState.coordinateToPixelMatrix,
-    m[2] = m[4];
-    m[3] = m[5];
-    m[4] = m[12];
-    m[5] = m[13];
+  /**
+   * Get style associated with the layer
+   * @return {ol.style.Style}
+   */
+  getStyle() {
+    return this._style
   }
-  this.center_ = [ 
-    ctx.canvas.width*this.get('center')[0]/ratio, 
-    ctx.canvas.height*this.get('center')[1]/ratio 
-  ];
-  var f = this._source.getFeaturesInExtent(e.frameState.extent);
-  ctx.save();
-    ctx.scale(ratio,ratio);
-    var s = this.getStyle();
-    ctx.lineWidth = s.getStroke().getWidth();
-    ctx.lineCap = s.getStroke().getLineCap();
-    ctx.strokeStyle = ol.color.asString(s.getStroke().getColor());
-    ctx.fillStyle = ol.color.asString(s.getFill().getColor());
-    var builds = [];
-    for (var i=0; i<f.length; i++) {
-      builds.push (this.getFeature3D_ (f[i], this._getFeatureHeight(f[i])));
-    }
-    this.drawFeature3D_ (ctx, builds);
-  ctx.restore();
-};
-/** Create a function that return height of a feature
- * @param {function|string|number} h a height function or a popertie name or a fixed value
- * @return {function} function(f) return height of the feature f
- * @private
- */
-ol.layer.Vector3D.prototype.getHfn= function(h) {
-  switch (typeof(h)) {
-    case 'function': return h;
-    case 'string': {
-      var dh = this.get('defaultHeight');
-        return (function(f) {
-          return (Number(f.get(h)) || dh); 
-        });
+  /** Calculate 3D at potcompose
+   * @private
+   */
+  onPostcompose_(e) {
+    var res = e.frameState.viewState.resolution
+    if (res > this.get('maxResolution'))
+      return
+    this.res_ = res * 400
+    if (this.animate_) {
+      var elapsed = e.frameState.time - this.animate_
+      if (elapsed < this.animateDuration_) {
+        this.elapsedRatio_ = this.easing_(elapsed / this.animateDuration_)
+        // tell OL3 to continue postcompose animation
+        e.frameState.animate = true
+      } else {
+        this.animate_ = false
+        this.height_ = this.toHeight_
       }
-    case 'number': return (function(/*f*/) { return h; });
-    default: return (function(/*f*/) { return 10; });
-  }
-};
-/** Animate rendering
- * @param {*} options
- *  @param {string|function|number} options.height an attribute name or a function returning height of a feature or a fixed value
- *  @param {number} options.duration the duration of the animatioin ms, default 1000
- *  @param {ol.easing} options.easing an ol easing function
- *	@api
- */
-ol.layer.Vector3D.prototype.animate = function(options) {
-  options = options || {};
-  this.toHeight_ = this.getHfn(options.height);
-  this.animate_ = new Date().getTime();
-  this.animateDuration_ = options.duration ||1000;
-  this.easing_ = options.easing || ol.easing.easeOut;
-  // Force redraw
-  this.changed();
-};
-/** Check if animation is on
-*	@return {bool}
-*/
-ol.layer.Vector3D.prototype.animating = function() {
-  if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) {
-    this.animate_ = false;
-  }
-  return !!this.animate_;
-}
-/** Get height for a feature
- * @param {ol.Feature} f
- * @return {number}
- * @private
- */
-ol.layer.Vector3D.prototype._getFeatureHeight = function (f) {
-  if (this.animate_) {
-    var h1 = this.height_(f);
-    var h2 = this.toHeight_(f);
-    return (h1*(1-this.elapsedRatio_)+this.elapsedRatio_*h2);
-  }
-  else return this.height_(f);
-};
-/** Get hvector for a point
- * @private
- */
-ol.layer.Vector3D.prototype.hvector_ = function (pt, h) {
-  var p0 = [
-    pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
-    pt[0]*this.matrix_[2] + pt[1]*this.matrix_[3] + this.matrix_[5]
-  ];
-  return {
-    p0: p0, 
-    p1: [
-      p0[0] + h/this.res_ * (p0[0]-this.center_[0]),
-      p0[1] + h/this.res_ * (p0[1]-this.center_[1])
+    }
+    var ratio = e.frameState.pixelRatio
+    var ctx = e.context
+    var m = this.matrix_ = e.frameState.coordinateToPixelTransform
+    // Old version (matrix)
+    if (!m) {
+      m = e.frameState.coordinateToPixelMatrix,
+        m[2] = m[4]
+      m[3] = m[5]
+      m[4] = m[12]
+      m[5] = m[13]
+    }
+    this.center_ = [
+      ctx.canvas.width * this.get('center')[0] / ratio,
+      ctx.canvas.height * this.get('center')[1] / ratio
     ]
-  };
-};
-/** Get a vector 3D for a feature
- * @private
- */
-ol.layer.Vector3D.prototype.getFeature3D_ = function (f, h) {
-  var geom = this.get('geometry')(f);
-  var c = geom.getCoordinates();
-  switch (geom.getType()) {
-    case "Polygon":
-      c = [c];
-    // fallthrough
-    case "MultiPolygon":
-      var build = [];
-      for (var i=0; i<c.length; i++) {
-        for (var j=0; j<c[i].length; j++) {
-          var b = [];
-          for (var k=0; k<c[i][j].length; k++) {
-            b.push( this.hvector_(c[i][j][k], h) );
-          }
-          build.push(b);
-        }
-      }
-      return { type:"MultiPolygon", feature: f, geom: build };
-    case "Point":
-      return { type:"Point", feature: f, geom: this.hvector_(c,h) };
-    default: return {};
+    var f = this._source.getFeaturesInExtent(e.frameState.extent)
+    ctx.save()
+    ctx.scale(ratio, ratio)
+    var s = this.getStyle()
+    ctx.lineWidth = s.getStroke().getWidth()
+    ctx.lineCap = s.getStroke().getLineCap()
+    ctx.strokeStyle = ol.color.asString(s.getStroke().getColor())
+    ctx.fillStyle = ol.color.asString(s.getFill().getColor())
+    var builds = []
+    for (var i = 0; i < f.length; i++) {
+      builds.push(this.getFeature3D_(f[i], this._getFeatureHeight(f[i])))
+    }
+    this.drawFeature3D_(ctx, builds)
+    ctx.restore()
   }
-};
-/** Draw 3D feature
- * @private
- */
-ol.layer.Vector3D.prototype.drawFeature3D_ = function(ctx, build) {
-  var i,j, b, k;
-  // Construct
-  for (i=0; i<build.length; i++) {	
-    switch (build[i].type) {
-      case "MultiPolygon": {
-        for (j=0; j<build[i].geom.length; j++) {
-          b = build[i].geom[j];
-          for (k=0; k < b.length; k++) {
-            ctx.beginPath();
-            ctx.moveTo(b[k].p0[0], b[k].p0[1]);
-            ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-            ctx.stroke();
-          }
-        }
-        break;
+  /** Create a function that return height of a feature
+   * @param {function|string|number} h a height function or a popertie name or a fixed value
+   * @return {function} function(f) return height of the feature f
+   * @private
+   */
+  getHfn(h) {
+    switch (typeof (h)) {
+      case 'function': return h
+      case 'string': {
+        var dh = this.get('defaultHeight')
+        return (function (f) {
+          return (Number(f.get(h)) || dh)
+        })
       }
-      case "Point": {
-        var g = build[i].geom;
-          ctx.beginPath();
-          ctx.moveTo(g.p0[0], g.p0[1]);
-          ctx.lineTo(g.p1[0], g.p1[1]);
-          ctx.stroke();
-          break;
-        }
-      default: break;
+      case 'number': return (function ( /*f*/) { return h })
+      default: return (function ( /*f*/) { return 10 })
     }
   }
-  // Roof
-  for (i=0; i<build.length; i++) {
-    switch (build[i].type) {
-      case "MultiPolygon": {
-        ctx.beginPath();
-        for (j=0; j<build[i].geom.length; j++) {
-          b = build[i].geom[j];
-          if (j==0) {
-            ctx.moveTo(b[0].p1[0], b[0].p1[1]);
-            for (k=1; k < b.length; k++) {
-              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-            }
-          } else {
-            ctx.moveTo(b[0].p1[0], b[0].p1[1]);
-            for (k=b.length-2; k>=0; k--) {
-              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-            }
-          }
-          ctx.closePath();
-        }
-        ctx.fill("evenodd");
-        ctx.stroke();
-        break;
-      }
-      case "Point": {
-        b = build[i];
-        var t = b.feature.get('label');
-        if (t) {
-          var p = b.geom.p1;
-          var m = ctx.measureText(t);
-          var h = Number (ctx.font.match(/\d+(\.\d+)?/g).join([]));
-          ctx.fillRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
-          ctx.strokeRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
-          ctx.save()
-            ctx.fillStyle = ol.color.asString(this._style.getText().getFill().getColor());
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.fillText ( t, p[0], p[1] );
-          ctx.restore();
-        }
-        break;
-      }
-      default: break;
+  /** Animate rendering
+   * @param {*} options
+   *  @param {string|function|number} options.height an attribute name or a function returning height of a feature or a fixed value
+   *  @param {number} options.duration the duration of the animatioin ms, default 1000
+   *  @param {ol.easing} options.easing an ol easing function
+   *	@api
+   */
+  animate(options) {
+    options = options || {}
+    this.toHeight_ = this.getHfn(options.height)
+    this.animate_ = new Date().getTime()
+    this.animateDuration_ = options.duration || 1000
+    this.easing_ = options.easing || ol.easing.easeOut
+    // Force redraw
+    this.changed()
+  }
+  /** Check if animation is on
+  *	@return {bool}
+  */
+  animating() {
+    if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) {
+      this.animate_ = false
+    }
+    return !!this.animate_
+  }
+  /** Get height for a feature
+   * @param {ol.Feature} f
+   * @return {number}
+   * @private
+   */
+  _getFeatureHeight(f) {
+    if (this.animate_) {
+      var h1 = this.height_(f)
+      var h2 = this.toHeight_(f)
+      return (h1 * (1 - this.elapsedRatio_) + this.elapsedRatio_ * h2)
+    }
+    else
+      return this.height_(f)
+  }
+  /** Get hvector for a point
+   * @private
+   */
+  hvector_(pt, h) {
+    var p0 = [
+      pt[0] * this.matrix_[0] + pt[1] * this.matrix_[1] + this.matrix_[4],
+      pt[0] * this.matrix_[2] + pt[1] * this.matrix_[3] + this.matrix_[5]
+    ]
+    return {
+      p0: p0,
+      p1: [
+        p0[0] + h / this.res_ * (p0[0] - this.center_[0]),
+        p0[1] + h / this.res_ * (p0[1] - this.center_[1])
+      ]
     }
   }
-};
+  /** Get a vector 3D for a feature
+   * @private
+   */
+  getFeature3D_(f, h) {
+    var geom = this.get('geometry')(f)
+    var c = geom.getCoordinates()
+    switch (geom.getType()) {
+      case "Polygon":
+        c = [c]
+      // fallthrough
+      case "MultiPolygon":
+        var build = []
+        for (var i = 0; i < c.length; i++) {
+          for (var j = 0; j < c[i].length; j++) {
+            var b = []
+            for (var k = 0; k < c[i][j].length; k++) {
+              b.push(this.hvector_(c[i][j][k], h))
+            }
+            build.push(b)
+          }
+        }
+        return { type: "MultiPolygon", feature: f, geom: build }
+      case "Point":
+        return { type: "Point", feature: f, geom: this.hvector_(c, h) }
+      default: return {}
+    }
+  }
+  /** Draw 3D feature
+   * @private
+   */
+  drawFeature3D_(ctx, build) {
+    var i, j, b, k
+    // Construct
+    for (i = 0; i < build.length; i++) {
+      switch (build[i].type) {
+        case "MultiPolygon": {
+          for (j = 0; j < build[i].geom.length; j++) {
+            b = build[i].geom[j]
+            for (k = 0; k < b.length; k++) {
+              ctx.beginPath()
+              ctx.moveTo(b[k].p0[0], b[k].p0[1])
+              ctx.lineTo(b[k].p1[0], b[k].p1[1])
+              ctx.stroke()
+            }
+          }
+          break
+        }
+        case "Point": {
+          var g = build[i].geom
+          ctx.beginPath()
+          ctx.moveTo(g.p0[0], g.p0[1])
+          ctx.lineTo(g.p1[0], g.p1[1])
+          ctx.stroke()
+          break
+        }
+        default: break
+      }
+    }
+    // Roof
+    for (i = 0; i < build.length; i++) {
+      switch (build[i].type) {
+        case "MultiPolygon": {
+          ctx.beginPath()
+          for (j = 0; j < build[i].geom.length; j++) {
+            b = build[i].geom[j]
+            if (j == 0) {
+              ctx.moveTo(b[0].p1[0], b[0].p1[1])
+              for (k = 1; k < b.length; k++) {
+                ctx.lineTo(b[k].p1[0], b[k].p1[1])
+              }
+            } else {
+              ctx.moveTo(b[0].p1[0], b[0].p1[1])
+              for (k = b.length - 2; k >= 0; k--) {
+                ctx.lineTo(b[k].p1[0], b[k].p1[1])
+              }
+            }
+            ctx.closePath()
+          }
+          ctx.fill("evenodd")
+          ctx.stroke()
+          break
+        }
+        case "Point": {
+          b = build[i]
+          var t = b.feature.get('label')
+          if (t) {
+            var p = b.geom.p1
+            var m = ctx.measureText(t)
+            var h = Number(ctx.font.match(/\d+(\.\d+)?/g).join([]))
+            ctx.fillRect(p[0] - m.width / 2 - 5, p[1] - h - 5, m.width + 10, h + 10)
+            ctx.strokeRect(p[0] - m.width / 2 - 5, p[1] - h - 5, m.width + 10, h + 10)
+            ctx.save()
+            ctx.fillStyle = ol.color.asString(this._style.getText().getFill().getColor())
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'bottom'
+            ctx.fillText(t, p[0], p[1])
+            ctx.restore()
+          }
+          break
+        }
+        default: break
+      }
+    }
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -33367,354 +33385,365 @@ ol.layer.Vector.prototype.setRender3D = function (r) {
  *  @param {number} param.defaultHeight default height if none is return by a propertie
  *  @param {function|string|Number} param.height a height function (returns height giving a feature) or a popertie name for the height or a fixed value
  */
-ol.render3D = function (options) {
-  options = options || {};
-  options.maxResolution = options.maxResolution || 100
-  options.defaultHeight = options.defaultHeight || 0;
-  ol.Object.call (this, options);
-  this.setStyle(options.style);
-  this.set('ghost', options.ghost);
-  this.setActive(options.active || options.active!==false);
-  this.height_ = options.height = this.getHfn (options.height);
-  if (options.layer) this.setLayer(options.layer);
-}
-ol.ext.inherits(ol.render3D, ol.Object);
-/**
- * Set style associated with the renderer
- * @param {ol.style.Style} s
- */
-ol.render3D.prototype.setStyle = function(s) {
-  if (s instanceof ol.style.Style) this._style = s;
-  else this._style = new ol.style.Style ();
-  if (!this._style.getStroke()) {
-    this._style.setStroke(new ol.style.Stroke({
-      width: 1,
-      color: 'red'
-    }));
+ol.render3D = class olrender3D extends ol.Object {
+  constructor(options) {
+    options = options || {}
+    options.maxResolution = options.maxResolution || 100
+    options.defaultHeight = options.defaultHeight || 0
+    super(options)
+    this.setStyle(options.style)
+    this.set('ghost', options.ghost)
+    this.setActive(options.active || options.active !== false)
+    this.height_ = options.height = this.getHfn(options.height)
+    if (options.layer)
+      this.setLayer(options.layer)
   }
-  if (!this._style.getFill()) {
-    this._style.setFill( new ol.style.Fill({ color: 'rgba(0,0,255,0.5)'}) );
-  }
-  // Get the geometry
-  if (s && s.getGeometry()) {
-    var geom = s.getGeometry();
-    if (typeof(geom)==='function') {
-      this.set('geometry', geom);
-    } else {
-      this.set('geometry', function() { return geom; });
+  /**
+   * Set style associated with the renderer
+   * @param {ol.style.Style} s
+   */
+  setStyle(s) {
+    if (s instanceof ol.style.Style)
+      this._style = s
+    else
+      this._style = new ol.style.Style()
+    if (!this._style.getStroke()) {
+      this._style.setStroke(new ol.style.Stroke({
+        width: 1,
+        color: 'red'
+      }))
     }
-  } else {
-    this.set('geometry', function(f) { return f.getGeometry(); });
-  }
-};
-/**
- * Get style associated with the renderer
- * @return {ol.style.Style}
- */
-ol.render3D.prototype.getStyle = function() {
-  return this._style;
-};
-/** Set active
- * @param {function|boolean} active
- */
-ol.render3D.prototype.setActive = function(active) {
-  if (typeof(active)==='function') {
-    this._active = active;
-  }
-  else {
-    this._active = function() { return active; };
-  }
-  if (this.layer_) this.layer_.changed();
-};
-/** Get active
- * @return {boolean} 
- */
-ol.render3D.prototype.getActive = function() {
-  return this._active();
-};
-/** Calculate 3D at potcompose
- * @private
- */
-ol.render3D.prototype.onPostcompose_ = function(e) {
-  if (!this.getActive()) return;
-  var res = e.frameState.viewState.resolution;
-  if (res > this.get('maxResolution')) return;
-  this.res_ = res*400;
-  if (this.animate_) {
-    var elapsed = e.frameState.time - this.animate_;
-    if (elapsed < this.animateDuration_) {
-      this.elapsedRatio_ = this.easing_(elapsed / this.animateDuration_);
-      // tell OL3 to continue postcompose animation
-      e.frameState.animate = true;
+    if (!this._style.getFill()) {
+      this._style.setFill(new ol.style.Fill({ color: 'rgba(0,0,255,0.5)' }))
+    }
+    // Get the geometry
+    if (s && s.getGeometry()) {
+      var geom = s.getGeometry()
+      if (typeof (geom) === 'function') {
+        this.set('geometry', geom)
+      } else {
+        this.set('geometry', function () { return geom })
+      }
     } else {
-      this.animate_ = false;
-      this.height_ = this.toHeight_
+      this.set('geometry', function (f) { return f.getGeometry() })
     }
   }
-  var ratio = e.frameState.pixelRatio;
-  var ctx = e.context;
-  var m = this.matrix_ = e.frameState.coordinateToPixelTransform;
-  // Old version (matrix)
-  if (!m) {
-    m = e.frameState.coordinateToPixelMatrix,
-    m[2] = m[4];
-    m[3] = m[5];
-    m[4] = m[12];
-    m[5] = m[13];
+  /**
+   * Get style associated with the renderer
+   * @return {ol.style.Style}
+   */
+  getStyle() {
+    return this._style
   }
-  this.center_ = [ ctx.canvas.width/2/ratio, ctx.canvas.height/ratio ];
-  var f = this.layer_.getSource().getFeaturesInExtent(e.frameState.extent);
-  ctx.save();
-    ctx.scale(ratio,ratio);
-    var s = this.getStyle();
-    ctx.lineWidth = s.getStroke().getWidth();
-    ctx.strokeStyle = ol.color.asString(s.getStroke().getColor());
-    ctx.fillStyle = ol.color.asString(s.getFill().getColor());
-    var builds = [];
-    for (var i=0; i<f.length; i++) {
+  /** Set active
+   * @param {function|boolean} active
+   */
+  setActive(active) {
+    if (typeof (active) === 'function') {
+      this._active = active
+    }
+    else {
+      this._active = function () { return active }
+    }
+    if (this.layer_)
+      this.layer_.changed()
+  }
+  /** Get active
+   * @return {boolean}
+   */
+  getActive() {
+    return this._active()
+  }
+  /** Calculate 3D at potcompose
+   * @private
+   */
+  onPostcompose_(e) {
+    if (!this.getActive())
+      return
+    var res = e.frameState.viewState.resolution
+    if (res > this.get('maxResolution'))
+      return
+    this.res_ = res * 400
+    if (this.animate_) {
+      var elapsed = e.frameState.time - this.animate_
+      if (elapsed < this.animateDuration_) {
+        this.elapsedRatio_ = this.easing_(elapsed / this.animateDuration_)
+        // tell OL3 to continue postcompose animation
+        e.frameState.animate = true
+      } else {
+        this.animate_ = false
+        this.height_ = this.toHeight_
+      }
+    }
+    var ratio = e.frameState.pixelRatio
+    var ctx = e.context
+    var m = this.matrix_ = e.frameState.coordinateToPixelTransform
+    // Old version (matrix)
+    if (!m) {
+      m = e.frameState.coordinateToPixelMatrix,
+        m[2] = m[4]
+      m[3] = m[5]
+      m[4] = m[12]
+      m[5] = m[13]
+    }
+    this.center_ = [ctx.canvas.width / 2 / ratio, ctx.canvas.height / ratio]
+    var f = this.layer_.getSource().getFeaturesInExtent(e.frameState.extent)
+    ctx.save()
+    ctx.scale(ratio, ratio)
+    var s = this.getStyle()
+    ctx.lineWidth = s.getStroke().getWidth()
+    ctx.strokeStyle = ol.color.asString(s.getStroke().getColor())
+    ctx.fillStyle = ol.color.asString(s.getFill().getColor())
+    var builds = []
+    for (var i = 0; i < f.length; i++) {
       var h = this.getFeatureHeight(f[i])
-      if (h) builds.push (this.getFeature3D_ (f[i], h));
+      if (h)
+        builds.push(this.getFeature3D_(f[i], h))
     }
-    if (this.get('ghost')) this.drawGhost3D_ (ctx, builds);
-    else this.drawFeature3D_ (ctx, builds);
-  ctx.restore();
-};
-/** Set layer to render 3D
- */
-ol.render3D.prototype.setLayer = function(l) {
-  if (this._listener) {
-    this._listener.forEach( function(l) { 
-      ol.Observable.unByKey(l); 
-    });
+    if (this.get('ghost'))
+      this.drawGhost3D_(ctx, builds)
+    else
+      this.drawFeature3D_(ctx, builds)
+    ctx.restore()
   }
-  this.layer_ = l;
-  this._listener = l.on (['postcompose', 'postrender'], this.onPostcompose_.bind(this));
-}
-/** Create a function that return height of a feature
- *	@param {function|string|number} h a height function or a popertie name or a fixed value
- *	@return {function} function(f) return height of the feature f
- */
-ol.render3D.prototype.getHfn= function(h) {
-  switch (typeof(h)) {
-    case 'function': return h;
-    case 'string': {
-      var dh = this.get('defaultHeight');
-        return (function(f) {
-          return (Number(f.get(h)) || dh); 
-        });
+  /** Set layer to render 3D
+   */
+  setLayer(l) {
+    if (this._listener) {
+      this._listener.forEach(function (l) {
+        ol.Observable.unByKey(l)
+      })
+    }
+    this.layer_ = l
+    this._listener = l.on(['postcompose', 'postrender'], this.onPostcompose_.bind(this))
+  }
+  /** Create a function that return height of a feature
+   *	@param {function|string|number} h a height function or a popertie name or a fixed value
+   *	@return {function} function(f) return height of the feature f
+   */
+  getHfn(h) {
+    switch (typeof (h)) {
+      case 'function': return h
+      case 'string': {
+        var dh = this.get('defaultHeight')
+        return (function (f) {
+          return (Number(f.get(h)) || dh)
+        })
       }
-    case 'number': return (function(/*f*/) { return h; });
-    default: return (function(/*f*/) { return 10; });
+      case 'number': return (function ( /*f*/) { return h })
+      default: return (function ( /*f*/) { return 10 })
+    }
   }
-}
-/** Animate rendering
- * @param {olx.render3D.animateOptions}
- *  @param {string|function|number} param.height an attribute name or a function returning height of a feature or a fixed value
- *  @param {number} param.duration the duration of the animatioin ms, default 1000
- *  @param {ol.easing} param.easing an ol easing function
- *	@api
- */
-ol.render3D.prototype.animate = function(options) {
-  options = options || {};
-  this.toHeight_ = this.getHfn(options.height);
-  this.animate_ = new Date().getTime();
-  this.animateDuration_ = options.duration ||1000;
-  this.easing_ = options.easing || ol.easing.easeOut;
-  // Force redraw
-  this.layer_.changed();
-}
-/** Check if animation is on
- *	@return {bool}
- */
-ol.render3D.prototype.animating = function() {
-  if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) {
-    this.animate_ = false;
+  /** Animate rendering
+   * @param {olx.render3D.animateOptions}
+   *  @param {string|function|number} param.height an attribute name or a function returning height of a feature or a fixed value
+   *  @param {number} param.duration the duration of the animatioin ms, default 1000
+   *  @param {ol.easing} param.easing an ol easing function
+   *	@api
+   */
+  animate(options) {
+    options = options || {}
+    this.toHeight_ = this.getHfn(options.height)
+    this.animate_ = new Date().getTime()
+    this.animateDuration_ = options.duration || 1000
+    this.easing_ = options.easing || ol.easing.easeOut
+    // Force redraw
+    this.layer_.changed()
   }
-  return !!this.animate_;
-}
-/** Get feature height
- * @param {ol.Feature} f
- */
-ol.render3D.prototype.getFeatureHeight = function (f) {
-  if (this.animate_) {
-    var h1 = this.height_(f);
-    var h2 = this.toHeight_(f);
-    return (h1*(1-this.elapsedRatio_)+this.elapsedRatio_*h2);
+  /** Check if animation is on
+   *	@return {bool}
+   */
+  animating() {
+    if (this.animate_ && new Date().getTime() - this.animate_ > this.animateDuration_) {
+      this.animate_ = false
+    }
+    return !!this.animate_
   }
-  else return this.height_(f);
-};
-/** Get elevation line
- * @private
- */
-ol.render3D.prototype.hvector_ = function (pt, h) {
-  var p0 = [
-    pt[0]*this.matrix_[0] + pt[1]*this.matrix_[1] + this.matrix_[4],
-    pt[0]*this.matrix_[2] + pt[1]*this.matrix_[3] + this.matrix_[5]
-  ];
-  return {
-    p0: p0, 
-    p1: [
-      p0[0] + h/this.res_ * (p0[0]-this.center_[0]),
-      p0[1] + h/this.res_ * (p0[1]-this.center_[1])
+  /** Get feature height
+   * @param {ol.Feature} f
+   */
+  getFeatureHeight(f) {
+    if (this.animate_) {
+      var h1 = this.height_(f)
+      var h2 = this.toHeight_(f)
+      return (h1 * (1 - this.elapsedRatio_) + this.elapsedRatio_ * h2)
+    }
+    else
+      return this.height_(f)
+  }
+  /** Get elevation line
+   * @private
+   */
+  hvector_(pt, h) {
+    var p0 = [
+      pt[0] * this.matrix_[0] + pt[1] * this.matrix_[1] + this.matrix_[4],
+      pt[0] * this.matrix_[2] + pt[1] * this.matrix_[3] + this.matrix_[5]
     ]
-  };
-};
-/** Get drawing
- * @private
- */
-ol.render3D.prototype.getFeature3D_ = function (f, h) {
-  var geom = this.get('geometry')(f);
-  var c = geom.getCoordinates();
-  switch (geom.getType()) {
-    case "Polygon":
-      c = [c];
-    // fallthrough
-    case "MultiPolygon":
-      var build = [];
-      for (var i=0; i<c.length; i++) {
-        for (var j=0; j<c[i].length; j++) {
-          var b = [];
-          for (var k=0; k<c[i][j].length; k++) {
-            b.push( this.hvector_(c[i][j][k], h) );
+    return {
+      p0: p0,
+      p1: [
+        p0[0] + h / this.res_ * (p0[0] - this.center_[0]),
+        p0[1] + h / this.res_ * (p0[1] - this.center_[1])
+      ]
+    }
+  }
+  /** Get drawing
+   * @private
+   */
+  getFeature3D_(f, h) {
+    var geom = this.get('geometry')(f)
+    var c = geom.getCoordinates()
+    switch (geom.getType()) {
+      case "Polygon":
+        c = [c]
+      // fallthrough
+      case "MultiPolygon":
+        var build = []
+        for (var i = 0; i < c.length; i++) {
+          for (var j = 0; j < c[i].length; j++) {
+            var b = []
+            for (var k = 0; k < c[i][j].length; k++) {
+              b.push(this.hvector_(c[i][j][k], h))
+            }
+            build.push(b)
           }
-          build.push(b);
         }
+        return { type: "MultiPolygon", feature: f, geom: build, height: h }
+      case "Point":
+        return { type: "Point", feature: f, geom: this.hvector_(c, h), height: h }
+      default: return {}
+    }
+  }
+  /** Draw a feature
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {ol.Feature} build
+   * @private
+   */
+  drawFeature3D_(ctx, build) {
+    var i, j, b, k
+    // Construct
+    for (i = 0; i < build.length; i++) {
+      switch (build[i].type) {
+        case "MultiPolygon": {
+          for (j = 0; j < build[i].geom.length; j++) {
+            b = build[i].geom[j]
+            for (k = 0; k < b.length; k++) {
+              ctx.beginPath()
+              ctx.moveTo(b[k].p0[0], b[k].p0[1])
+              ctx.lineTo(b[k].p1[0], b[k].p1[1])
+              ctx.stroke()
+            }
+          }
+          break
+        }
+        case "Point": {
+          var g = build[i].geom
+          ctx.beginPath()
+          ctx.moveTo(g.p0[0], g.p0[1])
+          ctx.lineTo(g.p1[0], g.p1[1])
+          ctx.stroke()
+          break
+        }
+        default: break
       }
-      return { type:"MultiPolygon", feature: f, geom: build, height: h };
-    case "Point":
-      return { type:"Point", feature: f, geom: this.hvector_(c,h), height: h };
-    default: return {};
+    }
+    // Roof
+    for (i = 0; i < build.length; i++) {
+      switch (build[i].type) {
+        case "MultiPolygon": {
+          ctx.beginPath()
+          for (j = 0; j < build[i].geom.length; j++) {
+            b = build[i].geom[j]
+            if (j == 0) {
+              ctx.moveTo(b[0].p1[0], b[0].p1[1])
+              for (k = 1; k < b.length; k++) {
+                ctx.lineTo(b[k].p1[0], b[k].p1[1])
+              }
+            } else {
+              ctx.moveTo(b[0].p1[0], b[0].p1[1])
+              for (k = b.length - 2; k >= 0; k--) {
+                ctx.lineTo(b[k].p1[0], b[k].p1[1])
+              }
+            }
+            ctx.closePath()
+          }
+          ctx.fill("evenodd")
+          ctx.stroke()
+          break
+        }
+        case "Point": {
+          b = build[i]
+          var t = b.feature.get('label')
+          if (t) {
+            var p = b.geom.p1
+            var f = ctx.fillStyle
+            ctx.fillStyle = ctx.strokeStyle
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'bottom'
+            ctx.fillText(t, p[0], p[1])
+            var m = ctx.measureText(t)
+            var h = Number(ctx.font.match(/\d+(\.\d+)?/g).join([]))
+            ctx.fillStyle = "rgba(255,255,255,0.5)"
+            ctx.fillRect(p[0] - m.width / 2 - 5, p[1] - h - 5, m.width + 10, h + 10)
+            ctx.strokeRect(p[0] - m.width / 2 - 5, p[1] - h - 5, m.width + 10, h + 10)
+            ctx.fillStyle = f
+            //console.log(build[i].feature.getProperties())
+          }
+          break
+        }
+        default: break
+      }
+    }
+  }
+  /**
+   * @private
+   */
+  drawGhost3D_(ctx, build) {
+    var i, j, b, k
+    // Construct
+    for (i = 0; i < build.length; i++) {
+      switch (build[i].type) {
+        case "MultiPolygon": {
+          for (j = 0; j < build[i].geom.length; j++) {
+            b = build[i].geom[j]
+            for (k = 0; k < b.length - 1; k++) {
+              ctx.beginPath()
+              ctx.moveTo(b[k].p0[0], b[k].p0[1])
+              ctx.lineTo(b[k].p1[0], b[k].p1[1])
+              ctx.lineTo(b[k + 1].p1[0], b[k + 1].p1[1])
+              ctx.lineTo(b[k + 1].p0[0], b[k + 1].p0[1])
+              ctx.lineTo(b[k].p0[0], b[k].p0[1])
+              var m = [(b[k].p0[0] + b[k + 1].p0[0]) / 2, (b[k].p0[1] + b[k + 1].p0[1]) / 2]
+              var h = [b[k].p0[1] - b[k + 1].p0[1], -b[k].p0[0] + b[k + 1].p0[0]]
+              var c = ol.coordinate.getIntersectionPoint(
+                [m, [m[0] + h[0], m[1] + h[1]]],
+                [b[k].p1, b[k + 1].p1]
+              )
+              var gradient = ctx.createLinearGradient(
+                m[0], m[1],
+                c[0], c[1]
+              )
+              gradient.addColorStop(0, 'rgba(255,255,255,.2)')
+              gradient.addColorStop(1, 'rgba(255,255,255,0)')
+              ctx.fillStyle = gradient
+              ctx.fill()
+            }
+          }
+          break
+        }
+        case "Point": {
+          var g = build[i].geom
+          ctx.beginPath()
+          ctx.moveTo(g.p0[0], g.p0[1])
+          ctx.lineTo(g.p1[0], g.p1[1])
+          ctx.stroke()
+          break
+        }
+        default: break
+      }
+    }
   }
 }
-/** Draw a feature
- * @param {CanvasRenderingContext2D} ctx
- * @param {ol.Feature} build
- * @private
- */
-ol.render3D.prototype.drawFeature3D_ = function(ctx, build) {
-  var i,j, b, k;
-  // Construct
-  for (i=0; i<build.length; i++) {	
-    switch (build[i].type) {
-      case "MultiPolygon": {
-        for (j=0; j<build[i].geom.length; j++) {
-          b = build[i].geom[j];
-          for (k=0; k < b.length; k++) {
-            ctx.beginPath();
-            ctx.moveTo(b[k].p0[0], b[k].p0[1]);
-            ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-            ctx.stroke();
-          }
-        }
-        break;
-      }
-      case "Point": {
-        var g = build[i].geom;
-          ctx.beginPath();
-          ctx.moveTo(g.p0[0], g.p0[1]);
-          ctx.lineTo(g.p1[0], g.p1[1]);
-          ctx.stroke();
-          break;
-        }
-      default: break;
-    }
-  }
-  // Roof
-  for (i=0; i<build.length; i++) {
-    switch (build[i].type) {
-      case "MultiPolygon": {
-        ctx.beginPath();
-        for (j=0; j<build[i].geom.length; j++) {
-          b = build[i].geom[j];
-          if (j==0) {
-            ctx.moveTo(b[0].p1[0], b[0].p1[1]);
-            for (k=1; k < b.length; k++) {
-              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-            }
-          } else {
-            ctx.moveTo(b[0].p1[0], b[0].p1[1]);
-            for (k=b.length-2; k>=0; k--) {
-              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-            }
-          }
-          ctx.closePath();
-        }
-        ctx.fill("evenodd");
-        ctx.stroke();
-        break;
-      }
-      case "Point": {
-        b = build[i];
-        var t = b.feature.get('label');
-        if (t) {
-          var p = b.geom.p1;
-          var f = ctx.fillStyle;
-          ctx.fillStyle = ctx.strokeStyle;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText ( t, p[0], p[1] );
-          var m = ctx.measureText(t);
-          var h = Number (ctx.font.match(/\d+(\.\d+)?/g).join([]));
-          ctx.fillStyle = "rgba(255,255,255,0.5)";
-          ctx.fillRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
-          ctx.strokeRect (p[0]-m.width/2 -5, p[1]-h -5, m.width +10, h +10)
-          ctx.fillStyle = f;
-          //console.log(build[i].feature.getProperties())
-        }
-        break;
-      }
-      default: break;
-    }
-  }
-};
-/**
- * @private
- */
-ol.render3D.prototype.drawGhost3D_ = function(ctx, build) {
-  var i,j, b, k;
-  // Construct
-  for (i=0; i<build.length; i++) {	
-    switch (build[i].type) {
-      case "MultiPolygon": {
-        for (j=0; j<build[i].geom.length; j++) {
-          b = build[i].geom[j];
-          for (k=0; k < b.length-1; k++) {
-            ctx.beginPath();
-              ctx.moveTo(b[k].p0[0], b[k].p0[1]);
-              ctx.lineTo(b[k].p1[0], b[k].p1[1]);
-              ctx.lineTo(b[k+1].p1[0], b[k+1].p1[1]);
-              ctx.lineTo(b[k+1].p0[0], b[k+1].p0[1]);
-              ctx.lineTo(b[k].p0[0], b[k].p0[1]);
-              var m = [(b[k].p0[0] + b[k+1].p0[0]) /2, (b[k].p0[1] + b[k+1].p0[1]) /2];
-              var h = [b[k].p0[1] - b[k+1].p0[1], - b[k].p0[0] + b[k+1].p0[0]];
-              var c = ol.coordinate.getIntersectionPoint(
-                [m, [m[0] + h[0], m[1]+ h[1]]],
-                [b[k].p1, b[k+1].p1]
-              );
-              var gradient = ctx.createLinearGradient(
-                m[0], m[1],              
-                c[0], c[1]
-              );
-              gradient.addColorStop(0, 'rgba(255,255,255,.2)');
-              gradient.addColorStop(1, 'rgba(255,255,255,0)');
-              ctx.fillStyle = gradient;
-              ctx.fill();
-          }
-        }
-        break;
-      }
-      case "Point": {
-        var g = build[i].geom;
-          ctx.beginPath();
-          ctx.moveTo(g.p0[0], g.p0[1]);
-          ctx.lineTo(g.p1[0], g.p1[1]);
-          ctx.stroke();
-          break;
-        }
-      default: break;
-    }
-  }
-};
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
