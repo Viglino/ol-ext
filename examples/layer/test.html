@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: HexBin source</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol.source.HexBin is a source to display hexagonal binning on a map." />
+  <meta name="keywords" content="ol3, layer, hexbin, cluster, hexagon, binning, heatmap" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+<!-- ol-ext -- >
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+<!-- -->
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map {
+      width: 600px;
+      height: 400px;
+    }
+  </style>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: </h1>
+  </a>
+
+  <div class="info">
+  </div>
+
+  <!-- Map DIV -->
+  <div id="map"></div>
+
+  <div class="options">
+    Test opacity on VectorImage layer
+    <br/>
+    opacity: <input type="range" min="0" max="1" step="any" value=".7" />
+  </div>
+
+<script type="text/javascript">
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 4,
+      center: [166326, 5992663]
+    }),
+    layers: [ new ol.layer.Tile({ title: 'OSM', source: new ol.source.OSM() }) ]
+  });
+
+  // Create a set of features on seed points
+  function addFeatures(nb) {
+    var ext = map.getView().calculateExtent(map.getSize());
+    var dx = ext[2]-ext[0];
+    var dy = ext[3]-ext[1];
+    var features = [];
+    for (var i=0; i<nb; i++) {
+      var seed = [ext[0]+dx*Math.random(), ext[1]+dy*Math.random()]
+      var f = new ol.Feature(new ol.geom.Point(seed));
+      features.push(f); 
+    }   
+    source.addFeatures(features);
+  }
+
+  // Vector source
+  var source = new ol.source.Vector();
+  addFeatures(10);
+
+  var layerSource = new ol.layer.VectorImage({ 
+    title: 'Source', 
+    source: source, 
+    opacity: .7,
+    visible:true,
+    style: new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 10,
+        fill: new ol.style.Fill({ color: '#00F' })
+      })
+    })
+  })
+  map.addLayer(layerSource);
+
+  var op = document.querySelector('input');
+  op.addEventListener('change', function(e) {
+    layerSource.setOpacity(parseFloat(op.value))
+  })
+</script>
+
+</body>
+</html>
