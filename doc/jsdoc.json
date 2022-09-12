@@ -15,10 +15,10 @@
         "outputSourceFiles": true,
         "useLongnameInNav": true
       },
-      "logoFile": "https://openlayers.org/en/latest/examples/resources/logo-70x70.png",
+      "logoFile": "https://openlayers.org/theme/img/logo-dark.svg",
       "systemName": "ol-ext",
       "path": "ink-docstrap",
-      "theme": "cerulean",
+      "theme": "cosmo",
       "navType": "vertical",
       "linenums": true,
       "includeDate": false
