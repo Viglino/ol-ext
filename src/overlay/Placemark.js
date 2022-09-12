@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_inherits from '../util/ext'
 import ol_Overlay_Popup from './Popup'
 
 /**

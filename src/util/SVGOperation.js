@@ -12,12 +12,13 @@ import ol_Object from 'ol/Object'
 var ol_ext_SVGOperation = class olextSVGOperation extends ol_Object {
   constructor(attributes) {
     if (typeof (attributes) === 'string') attributes = { feoperation: attributes };
+
+    super();
+
     if (!attributes || !attributes.feoperation) {
       console.error('[SVGOperation]: no operation defined.');
       return;
     }
-
-    super();
 
     this._name = attributes.feoperation;
     this.element = document.createElementNS(ol_ext_SVGOperation.NS || 'http://www.w3.org/2000/svg', this._name);

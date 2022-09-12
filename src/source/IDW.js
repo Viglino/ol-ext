@@ -1,8 +1,8 @@
 /*	Copyright (c) 2021 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
 */
-import ol_ext_inherits from '../util/ext'
 import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
+import ol_ext_Worker from '../util/Worker'
 
 /** Inverse distance weighting interpolated source - Shepard's method
  * @see https://en.wikipedia.org/wiki/Inverse_distance_weighting

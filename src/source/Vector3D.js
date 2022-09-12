@@ -1,5 +1,4 @@
-﻿import ol_ext_inherits from '../util/ext'
-import ol_layer_Image from 'ol/layer/Image'
+﻿import ol_layer_Image from 'ol/layer/Image'
 import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import ol_style_Style from 'ol/style/Style'

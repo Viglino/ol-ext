@@ -1,4 +1,3 @@
-import ol_ext_inherits from '../ext'
 import ol_ext_element from '../element';
 import ol_ext_input_Base from './Base'
 

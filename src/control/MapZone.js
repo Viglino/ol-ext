@@ -183,7 +183,6 @@ var ol_control_MapZone = class olcontrolMapZone extends ol_control_Control {
     }
   }
 }
-ol_ext_inherits(ol_control_MapZone, ol_control_Control);
 
 /** Pre-defined zones */
 ol_control_MapZone.zones = {};

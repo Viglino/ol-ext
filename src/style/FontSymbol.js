@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_style_RegularShape from 'ol/style/RegularShape'
-import ol_style_Image from 'ol/style/Image'
 import {asString as ol_color_asString} from 'ol/color'
 
 /**
@@ -436,16 +435,17 @@ ol_style_FontSymbol.defs = { 'fonts':{}, 'glyphs':{} };
 /* Cool stuff to get the image symbol for a style
  * @param {number} ratio pixelratio
  * /
+import ol_style_Image from 'ol/style/Image'
 ol_style_Image.prototype.getImagePNG = function(ratio) {
   ratio = ratio || window.devicePixelRatio;
   var canvas = this.getImage(ratio);
   if (canvas) {
-    try { return canvas.toDataURL("image/png"); }
+    try { return canvas.toDataURL('image/png'); }
     catch(e) { return false; }
   } else {
     return false;
   }
 }
-*/
+/* */
 
 export default ol_style_FontSymbol

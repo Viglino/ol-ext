@@ -570,13 +570,6 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
     }
   }
   /**
-   * Get features to transform
-   * @return {ol.Collection<ol.Feature>}
-   */
-  getFeatures() {
-    return this.selection_
-  }
-  /**
    * Get the rotation center
    * @return {ol.coordinates|undefined}
    */

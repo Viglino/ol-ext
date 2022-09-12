@@ -4,7 +4,6 @@
 	
 */
 
-import ol_ext_inherits from '../util/ext'
 import ol_featureAnimation from './FeatureAnimation'
 
 /** Do nothing for a given duration

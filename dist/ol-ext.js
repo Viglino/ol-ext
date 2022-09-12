@@ -308,11 +308,11 @@ ol.ext.SVGFilter.prototype._id = 0;
 ol.ext.SVGOperation = class olextSVGOperation extends ol.Object {
   constructor(attributes) {
     if (typeof (attributes) === 'string') attributes = { feoperation: attributes };
+    super();
     if (!attributes || !attributes.feoperation) {
       console.error('[SVGOperation]: no operation defined.');
       return;
     }
-    super();
     this._name = attributes.feoperation;
     this.element = document.createElementNS(ol.ext.SVGOperation.NS || 'http://www.w3.org/2000/svg', this._name);
     this.setProperties(attributes);
@@ -7765,41 +7765,43 @@ ol.control.Dialog = class olcontrolDialog extends ol.control.Control {
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
  *		@param {String} options.class class of the control
- *		@param {String} options.html html code to insert in the control
- *		@param {bool} options.on the control is on
- *		@param {function} options.toggleFn callback when control is clicked 
- */
-ol.control.Disable = function(options)
-{	options = options||{};
-	var element = document.createElement("div");
-			element.className = (options.className||""+' ol-disable ol-unselectable ol-control').trim();
-	var stylesOptions = { top:"0px", left:"0px", right:"0px", bottom:"0px", "zIndex":10000, background:"none", display:"none" };
-	Object.keys(stylesOptions).forEach(function(styleKey) {
-		element.style[styleKey] = stylesOptions[styleKey];
-	});
-	ol.control.Control.call(this,
-	{	element: element
-	});
-}
-ol.ext.inherits(ol.control.Disable, ol.control.Control);
-/** Test if the control is on
- * @return {bool}
- * @api stable
- */
-ol.control.Disable.prototype.isOn = function()
-{	return this.element.classList.contains("ol-disable");
-}
-/** Disable all action on the map
- * @param {bool} b, default false
- * @api stable
- */
-ol.control.Disable.prototype.disableMap = function(b)
-{	if (b) 
-	{	this.element.classList.add("ol-enable").show();
-	}
-	else 
-	{	this.element.classList.remove("ol-enable").hide();
-	}
+*		@param {String} options.html html code to insert in the control
+*		@param {bool} options.on the control is on
+*		@param {function} options.toggleFn callback when control is clicked 
+*/
+ol.control.Disable = class olcontrolDisable extends ol.control.Control {
+  constructor(options) {
+    options = options || {};
+    var element = document.createElement('div');
+    element.className = (options.className || '' + ' ol-disable ol-unselectable ol-control').trim();
+    var stylesOptions = { top: "0px", left: "0px", right: "0px", bottom: "0px", "zIndex": 10000, background: "none", display: "none" };
+    Object.keys(stylesOptions).forEach(function (styleKey) {
+      element.style[styleKey] = stylesOptions[styleKey];
+    });
+    super({
+      element: element
+    });
+  }
+  /** Test if the control is on
+   * @return {bool}
+   * @api stable
+   */
+  isOn() {
+    return this.element.classList.contains('ol-disable');
+  }
+  /** Disable all action on the map
+   * @param {bool} b, default false
+   * @api stable
+   */
+  disableMap(b) {
+    if (b) {
+      this.element.classList.add('ol-enable')
+      this.element.style.display = 'block'
+    } else {
+      this.element.classList.remove('ol-enable')
+      this.element.style.display = 'none'
+    }
+  }
 }
 
 /** Control bar for editing in a layer
@@ -10620,7 +10622,6 @@ ol.control.MapZone = class olcontrolMapZone extends ol.control.Control {
     }
   }
 }
-ol.ext.inherits(ol.control.MapZone, ol.control.Control);
 /** Pre-defined zones */
 ol.control.MapZone.zones = {};
 /** French overseas departments  */
@@ -18921,7 +18922,6 @@ ol.featureAnimation = class olfeatureAnimation extends ol.Object {
     return false
   }
 }
-ol.ext.inherits(ol.featureAnimation, ol.Object);
 /** Hidden style: a transparent style
  */
 ol.featureAnimation.hiddenStyle = new ol.style.Style({ 
@@ -19134,7 +19134,6 @@ ol.featureAnimation.Blink = class olfeatureAnimationBlink extends ol.featureAnim
     return (e.time <= this.duration_);
   }
 }
-ol.ext.inherits(ol.featureAnimation.Blink, ol.featureAnimation);
 
 /*
 	Copyright (c) 2016 Jean-Marc VIGLINO, 
@@ -19619,7 +19618,6 @@ ol.featureAnimation.ZoomOut = class olfeatureAnimationZoomOut extends ol.feature
     super(options);
   }
 }
-ol.ext.inherits(ol.featureAnimation.ZoomOut, ol.featureAnimation.Zoom);
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -20010,8 +20008,7 @@ ol.filter.CanvasFilter = class olfilterCanvasFilter extends ol.filter.Base {
    * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
    */
   addSVGFilter(url) {
-    if (url.getId)
-      url = '#' + url.getId();
+    if (url.getId) url = '#' + url.getId();
     this._svg[url] = 1;
     this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
   }
@@ -20019,8 +20016,7 @@ ol.filter.CanvasFilter = class olfilterCanvasFilter extends ol.filter.Base {
    * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
    */
   removeSVGFilter(url) {
-    if (url.getId)
-      url = '#' + url.getId();
+    if (url.getId) url = '#' + url.getId();
     delete this._svg[url];
     this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
   }
@@ -20035,8 +20031,7 @@ ol.filter.CanvasFilter = class olfilterCanvasFilter extends ol.filter.Base {
   postcompose(e) {
     var filter = [];
     // Set filters
-    if (this.get('url') !== undefined)
-      filter.push('url(' + this.get('url') + ')');
+    if (this.get('url') !== undefined) filter.push('url(' + this.get('url') + ')');
     for (var f in this._svg) {
       filter.push('url(' + f + ')');
     }
@@ -20780,42 +20775,43 @@ ol.filter.Lego.prototype.img = {
 /** @typedef {Object} FilterPointillismOptions
  * @property {number} saturate saturation, default 2
  */
-/** A pointillism filter to turn maps into pointillism paintings
+/** @deprecated use canvas filter instead
  * @constructor
  * @extends {ol.filter.Base}
  * @param {object} options
  *  @param {boolean} [options.active]
  *  @param {number} [options.scale=1]
  */
-ol.filter.Paper = function(options) {
-  options = options || {};
-  ol.filter.Base.call(this, options);
-  this._svgfilter = new ol.ext.SVGFilter.Paper(options);
-};
-ol.ext.inherits(ol.filter.Paper, ol.filter.Base);
-/** @private 
- */
-ol.filter.Paper.prototype.precompose = function(/* e */) {
-};
-/** @private 
- */
-ol.filter.Paper.prototype.postcompose = function(e) {
-  // var ratio = e.frameState.pixelRatio;
-  var ctx = e.context;
-  var canvas = ctx.canvas;
-  ctx.save();
-    ctx.filter = 'url(#' + this._svgfilter.getId() +')';
+ol.filter.Paper = class olfilterPaper extends ol.filter.Base {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this._svgfilter = new ol.ext.SVGFilter.Paper(options);
+  }
+  /** @private
+   */
+  precompose( /* e */) {
+  }
+  /** @private
+   */
+  postcompose(e) {
+    // var ratio = e.frameState.pixelRatio;
+    var ctx = e.context;
+    var canvas = ctx.canvas;
+    ctx.save();
+    ctx.filter = 'url(#' + this._svgfilter.getId() + ')';
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'multiply';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.restore();
-};
-/** Set filter light
- * @param {number} light light option. 0: darker, 100: lighter
- */
-ol.filter.Paper.prototype.setLight = function(light) {
-  this._svgfilter.setLight(light);
-};
+    ctx.restore();
+  }
+  /** Set filter light
+   * @param {number} light light option. 0: darker, 100: lighter
+   */
+  setLight(light) {
+    this._svgfilter.setLight(light);
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -21979,7 +21975,6 @@ ol.interaction.Clip = class olinteractionClip extends ol.interaction.Pointer {
     }
   }
 }
-ol.ext.inherits(ol.interaction.Clip, ol.interaction.Pointer);
 
 /** An interaction to check the current map and add key events listeners.
  * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).
@@ -23799,44 +23794,47 @@ ol.interaction.Flashlight = class olinteractionFlashlight extends ol.interaction
 }
 
 /** An interaction to focus on the map on click. Usefull when using keyboard event on the map.
+ * @deprecated use ol/interaction/CurrentMap instead
  * @constructor
  * @fires focus
  * @extends {ol.interaction.Interaction}
  */
-ol.interaction.FocusMap = function() {
-  //
-  ol.interaction.Interaction.call(this, {});
-  // Focus (hidden) button to focus on the map when click on it 
-  this.focusBt = ol.ext.element.create('BUTTON', {
-    on: {
-      focus: function() {
-        this.dispatchEvent({ type:'focus' });
-      }.bind(this)
-    },
-    style: {
-      position: 'absolute',
-      zIndex: -1,
-      top: 0,
-      opacity: 0
-    }
-  });
-};
-ol.ext.inherits(ol.interaction.FocusMap, ol.interaction.Interaction);
-/** Set the map > add the focus button and focus on the map when pointerdown to enable keyboard events.
- */
-ol.interaction.FocusMap.prototype.setMap = function(map) {
-  if (this._listener) ol.Observable.unByKey(this._listener);
-  this._listener = null;
-  if (this.getMap()) { this.getMap().getViewport().removeChild(this.focusBt); }
-  ol.interaction.Interaction.prototype.setMap.call (this, map);
-  if (this.getMap()) {
-    // Force focus on the clicked map
-    this._listener = this.getMap().on('pointerdown', function() {
-      if (this.getActive()) this.focusBt.focus();
-    }.bind(this));
-    this.getMap().getViewport().appendChild(this.focusBt); 
+ol.interaction.FocusMap = class olinteractionFocusMap extends ol.interaction.Interaction {
+  constructor() {
+    //
+    super({});
+    // Focus (hidden) button to focus on the map when click on it 
+    this.focusBt = ol.ext.element.create('BUTTON', {
+      on: {
+        focus: function () {
+          this.dispatchEvent({ type: 'focus' });
+        }.bind(this)
+      },
+      style: {
+        position: 'absolute',
+        zIndex: -1,
+        top: 0,
+        opacity: 0
+      }
+    });
   }
-};
+  /** Set the map > add the focus button and focus on the map when pointerdown to enable keyboard events.
+   */
+  setMap(map) {
+    if (this._listener) ol.Observable.unByKey(this._listener);
+    this._listener = null;
+    if (this.getMap()) { this.getMap().getViewport().removeChild(this.focusBt); }
+    super.setMap(map);
+    if (this.getMap()) {
+      // Force focus on the clicked map
+      this._listener = this.getMap().on('pointerdown', function () {
+        if (this.getActive())
+          this.focusBt.focus();
+      }.bind(this));
+      this.getMap().getViewport().appendChild(this.focusBt);
+    }
+  }
+}
 
 // 
 /** Interaction to draw on the current geolocation
@@ -24600,7 +24598,7 @@ ol.interaction.Modify.prototype.getModifiedFeatures = function() {
  * - the modifyend event is fired after the modification
  * - it fires a modifying event
  * @constructor
- * @extends {ol.interaction.Pointer}
+ * @extends {ol.interaction.Interaction}
  * @fires modifystart
  * @fires modifying
  * @fires modifyend
@@ -28680,13 +28678,6 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
       this.dispatchEvent({ type: 'select', feature: feature, features: this.selection_, pixel: evt.pixel, coordinate: evt.coordinate })
       return false
     }
-  }
-  /**
-   * Get features to transform
-   * @return {ol.Collection<ol.Feature>}
-   */
-  getFeatures() {
-    return this.selection_
   }
   /**
    * Get the rotation center
@@ -40170,13 +40161,13 @@ ol.style.Image.prototype.getImagePNG = function(ratio) {
   ratio = ratio || window.devicePixelRatio;
   var canvas = this.getImage(ratio);
   if (canvas) {
-    try { return canvas.toDataURL("image/png"); }
+    try { return canvas.toDataURL('image/png'); }
     catch(e) { return false; }
   } else {
     return false;
   }
 }
-*/
+/* */
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -41213,7 +41204,6 @@ ol.style.StrokePattern = class olstyleStrokePattern extends ol.style.Stroke {
 		return pat
 	}
 }
-ol.ext.inherits(ol.style.StrokePattern, ol.style.Stroke);
 
 ol.style.Style.defaultStyle;
 (function() {

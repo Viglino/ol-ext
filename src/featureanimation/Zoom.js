@@ -76,8 +76,6 @@ var ol_featureAnimation_ZoomOut = class olfeatureAnimationZoomOut extends ol_fea
     super(options);
   }
 }
-ol_ext_inherits(ol_featureAnimation_ZoomOut, ol_featureAnimation_Zoom);
-
 
 export {ol_featureAnimation_Zoom, ol_featureAnimation_ZoomOut}
 export default ol_featureAnimation_Zoom

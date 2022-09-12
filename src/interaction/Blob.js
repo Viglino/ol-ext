@@ -1,4 +1,3 @@
-import ol_ext_inherits from '../util/ext'
 import ol_interaction_Clip from './Clip'
 import ol_coordinate_cspline from '../render/Cspline'
 

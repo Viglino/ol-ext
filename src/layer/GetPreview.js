@@ -10,7 +10,6 @@ import ol_layer_Base from 'ol/layer/Layer'
 import {containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_layer_Group from 'ol/layer/Group'
-import { toContext } from 'ol/render'
 
 /**
  * Return a preview image of the source.

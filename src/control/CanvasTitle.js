@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_inherits from '../util/ext'
 import {asString as ol_color_asString} from 'ol/color'
 
 import ol_control_CanvasBase from './CanvasBase'

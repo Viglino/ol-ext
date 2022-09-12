@@ -37,8 +37,7 @@ var ol_filter_CanvasFilter = class olfilterCanvasFilter extends ol_filter_Base {
    * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
    */
   addSVGFilter(url) {
-    if (url.getId)
-      url = '#' + url.getId();
+    if (url.getId) url = '#' + url.getId();
     this._svg[url] = 1;
     this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
   }
@@ -46,8 +45,7 @@ var ol_filter_CanvasFilter = class olfilterCanvasFilter extends ol_filter_Base {
    * @param {string|ol.ext.SVGFilter} url IRI pointing to an SVG filter element
    */
   removeSVGFilter(url) {
-    if (url.getId)
-      url = '#' + url.getId();
+    if (url.getId) url = '#' + url.getId();
     delete this._svg[url];
     this.dispatchEvent({ type: 'propertychange', key: 'svg', oldValue: this._svg });
   }
@@ -62,8 +60,7 @@ var ol_filter_CanvasFilter = class olfilterCanvasFilter extends ol_filter_Base {
   postcompose(e) {
     var filter = [];
     // Set filters
-    if (this.get('url') !== undefined)
-      filter.push('url(' + this.get('url') + ')');
+    if (this.get('url') !== undefined) filter.push('url(' + this.get('url') + ')');
     for (var f in this._svg) {
       filter.push('url(' + f + ')');
     }

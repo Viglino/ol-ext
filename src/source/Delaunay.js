@@ -1,5 +1,4 @@
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-import ol_ext_inherits from '../util/ext'
 import ol_source_Vector from 'ol/source/Vector'
 import ol_Feature from 'ol/Feature'
 import ol_geom_Polygon from 'ol/geom/Polygon'

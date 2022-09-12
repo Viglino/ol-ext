@@ -1,4 +1,3 @@
-import ol_ext_inherits from '../util/ext'
 import ol_interaction_Pointer from 'ol/interaction/Pointer'
 
 /** Clip interaction to clip layers in a circle
@@ -221,20 +220,5 @@ var ol_interaction_Clip = class olinteractionClip extends ol_interaction_Pointer
     }
   }
 }
-ol_ext_inherits(ol_interaction_Clip, ol_interaction_Pointer);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export default ol_interaction_Clip

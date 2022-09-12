@@ -8,8 +8,6 @@ import ol_source_Vector from 'ol/source/Vector'
 import { ol_coordinate_getFeatureCenter } from "../geom/GeomUtils";
 import './Vector' 
 
-import {ol_ext_inherits} from '../util/ext'
-
 /** Abstract base class; normally only used for creating subclasses. Bin collector for data
  * @constructor
  * @extends {ol.source.Vector}

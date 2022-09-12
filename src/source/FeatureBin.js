@@ -4,7 +4,6 @@
 */
 import ol_source_Vector from 'ol/source/Vector'
 import ol_source_BinBase from './BinBase'
-import {ol_ext_inherits} from '../util/ext'
 
 /** A source that use a set of feature to collect data on it.
  * If a binSource is provided the bin is recalculated when features change.

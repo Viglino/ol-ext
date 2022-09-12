@@ -289,6 +289,5 @@ var ol_style_StrokePattern = class olstyleStrokePattern extends ol_style_Stroke 
 		return pat
 	}
 }
-ol_ext_inherits(ol_style_StrokePattern, ol_style_Stroke);
 
 export default ol_style_StrokePattern

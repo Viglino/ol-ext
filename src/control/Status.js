@@ -1,4 +1,3 @@
-import ol_ext_inherits from '../util/ext'
 import ol_control_Control from 'ol/control/Control'
 import ol_ext_element from '../util/element'
 

@@ -27,6 +27,5 @@ var ol_featureAnimation_Blink = class olfeatureAnimationBlink extends ol_feature
     return (e.time <= this.duration_);
   }
 }
-ol_ext_inherits(ol_featureAnimation_Blink, ol_featureAnimation);
 
 export default ol_featureAnimation_Blink

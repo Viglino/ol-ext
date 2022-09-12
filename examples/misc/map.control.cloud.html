@@ -2,117 +2,120 @@
 
 <html>
 <head>
-<!----------------------------------------------------------
- 
-	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
-	Smoke on http://codepen.io/flashpremium/pen/kJvGo
+<!--
+  Copyright (c) 2015 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+  Smoke on http://codepen.io/flashpremium/pen/kJvGo
+-->	
+  <title>ol-ext: Map in the clouds</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
------------------------------------------------------------->	
-	<title>ol-ext: Map in the clouds</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="description" content="ol.control.cloud adds an animated clouds overlay on the map." />
+  <meta name="keywords" content="ol3, control, canvas, animation, cloud, bird" />
 
-	<meta name="description" content="ol.control.cloud adds an animated clouds overlay on the map." />
-	<meta name="keywords" content="ol3, control, canvas, animation, cloud, bird" />
+  <link rel="stylesheet" href="../style.css" />
 
-	<link rel="stylesheet" href="../style.css" />
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-	<!-- jQuery -->
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-
-	<!-- Openlayers -->
-    <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-	<script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-	
-	<!-- ol-ext -->
-    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
-	<script type="text/javascript" src="../../dist/extra/Cloud.js"></script>
+  <script type="text/javascript" src="../../dist/extra/Cloud.js"></script>
 
-	<style>
-		#map
-		{	position: fixed;
-			top:5em;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			width:100%;
-			background:transparent;
-		}
-		.options 
-		{	position:fixed;
-			top:6em;
-			right:1em;
-			margin:0;
-			max-width:15%;
-			min-width:200px;
-		}
-		.options input
-		{	vertical-align: middle;
-
-		}
-		.options input[type="number"]
-		{	width: 5em;
-		}
-	</style>
+  <style>
+    #map {
+      position: fixed;
+      top:5em;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width:100%;
+      background:transparent;
+    }
+    .options {
+      position:fixed;
+      top:6em;
+      right:1em;
+      margin:0;
+      max-width:15%;
+      min-width:200px;
+    }
+    .options input {
+      vertical-align: middle;
+    }
+    .options input[type="number"] {
+      width: 5em;
+    }
+  </style>
 
 </head>
 <body >
-	<a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
-	<a href="../../index.html">
-		<h1>ol-ext: Map in the clouds</h1>
-	</a>
+  <a href="../../index.html">
+    <h1>ol-ext: Map in the clouds</h1>
+  </a>
 
-	<!-- Map div -->
-	<div id="map" ></div>
+  <!-- Map div -->
+  <div id="map" ></div>
 
-	<div class="options">
-		The <i>ol.control.Cloud</i> adds an animated clouds overlay on the map.
-		<h2>Options:</h2>
-		<ul>
-			<li>
-				Opacity: <input id="opacity" type="number" min="0" max="1" step="0.1" value="0.3" onchange="ctrl.set('opacity', Number(this.value));" />
-			</li><li>
-				Density: <input id="density" type="number" min="0" max="2" step="0.1" value="0.5" onchange="ctrl.set('density', Number(this.value));" />
-			</li><li>
-				Wind angle: <input id="wa" type="number" min="0" max="360" step="1" value="45" onchange="ctrl.setWind({ windAngle:Number($('#wa').val())*Math.PI/180, windSpeed:$('#ws').val()});" />
-			</li><li>
-				Wind speed: <input id="ws" type="number" min="0" max="5" step="0.5" value="1" onchange="ctrl.setWind({ windAngle:Number($('#wa').val())*Math.PI/180, windSpeed:$('#ws').val()});" />
-			</li>
-		</ul>
-	</div>
+  <div class="options">
+    The <i>ol.control.Cloud</i> adds an animated clouds overlay on the map.
+    <h2>Options:</h2>
+    <ul>
+      <li>
+        Opacity: <input id="opacity" type="number" min="0" max="1" step="0.1" value="0.3" onchange="ctrl.set('opacity', Number(this.value));" />
+      </li><li>
+        Density: <input id="density" type="number" min="0" max="2" step="0.1" value="0.5" onchange="ctrl.set('density', Number(this.value));" />
+      </li><li>
+        Wind angle: <input id="wa" type="number" min="0" max="360" step="1" value="45" onchange="ctrl.setWind({ windAngle:Number($('#wa').val())*Math.PI/180, windSpeed:$('#ws').val()});" />
+      </li><li>
+        Wind speed: <input id="ws" type="number" min="0" max="5" step="0.5" value="1" onchange="ctrl.setWind({ windAngle:Number($('#wa').val())*Math.PI/180, windSpeed:$('#ws').val()});" />
+      </li>
+    </ul>
+  </div>
 
 
-	<script type="text/javascript">
+  <script type="text/javascript">
 
-		var osm = new ol.layer.Tile({source: new ol.source.OSM()});
-		var esri = new ol.layer.Tile ({ source: new ol.source.XYZ(
-		{		url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.jpg",
-				attributions: [ '&copy; <a href="http://www.arcgis.com/home/">Esri</a> ',
-					'&copy; <a href="http://www.arcgis.com/home/">DigitalGlobe, Earthstar Geographics, CNES/Airbus DS, GeoEye, USDA FSA, USGS, Getmapping, Aerogrid, IGN, IGP, swisstopo</a> '
-				]
-			})
-		});
+    var osm = new ol.layer.Tile({source: new ol.source.OSM()});
+    var esri = new ol.layer.Tile ({ 
+      source: new ol.source.XYZ({
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.jpg",
+        attributions: [ '&copy; <a href="http://www.arcgis.com/home/">Esri</a> ',
+          '&copy; <a href="http://www.arcgis.com/home/">DigitalGlobe, Earthstar Geographics, CNES/Airbus DS, GeoEye, USDA FSA, USGS, Getmapping, Aerogrid, IGN, IGP, swisstopo</a> '
+        ]
+      })
+    });
 
-		// The map
-		var map = new ol.Map
-			({	target: 'map',
-				view: new ol.View
-				({	zoom: 14,
-					center: [-305977, 6026830]
-				}),
-				layers: [esri]
-			});
-		map.getView().fit ([-375917, 5976764, -229158, 6025378], map.getSize());
+    // The map
+    var map = new ol.Map({
+      target: 'map',
+      view: new ol.View({
+        zoom: 14,
+        center: [-305977, 6026830]
+      }),
+      layers: [esri]
+    });
+    map.getView().fit ([-375917, 5976764, -229158, 6025378], map.getSize());
 
-		var ctrl = new ol.control.Cloud({ opacity:$("#opacity").val(), density:$("#density").val(), windSpeed:Number($("#ws").val()), windAngle:Number($("#wa").val())*Math.PI/180 });
-		map.addControl(ctrl);
-	</script>
+    var ctrl = new ol.control.Cloud({ 
+      opacity:$("#opacity").val(), 
+      density:$("#density").val(), 
+      windSpeed:Number($("#ws").val()), 
+      windAngle:Number($("#wa").val())*Math.PI/180 
+    });
+    map.addControl(ctrl);
+  </script>
 
 </body>
 </html>

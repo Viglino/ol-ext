@@ -2,7 +2,6 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_ext_inherits from '../util/ext'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 
 import ol_source_BinBase from './BinBase'

@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_source_BinBase from './BinBase'
-import {ol_ext_inherits} from '../util/ext'
 import {transform as ol_proj_transform} from 'ol/proj'
 import ol_geom_Polygon from 'ol/geom/Polygon'
 

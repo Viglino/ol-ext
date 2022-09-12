@@ -7,7 +7,6 @@
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import ol_control_Control from 'ol/control/Control'
 import ol_style_Stroke from 'ol/style/Stroke'
-import ol_ext_inherits from '../util/ext'
 import ol_ext_element from '../util/element'
 import ol_control_Dialog from './Dialog'
 import ol_control_Legend from './Legend'

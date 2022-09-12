@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_inherits from '../util/ext'
 import ol_interaction_Interaction from 'ol/interaction/Interaction'
 import ol_control_Target from '../control/Target'
 

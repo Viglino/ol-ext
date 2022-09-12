@@ -1,5 +1,4 @@
-﻿import ol_ext_inherits from '../util/ext'
-import ol_layer_Vector from 'ol/layer/Vector'
+﻿import ol_layer_Vector from 'ol/layer/Vector'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
 import {easeOut as ol_easing_easeOut} from 'ol/easing'
 import ol_Object from 'ol/Object'

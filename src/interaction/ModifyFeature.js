@@ -3,7 +3,6 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_Pointer from 'ol/interaction/Pointer'
 import ol_style_Style from 'ol/style/Style'
 import ol_style_Stroke from 'ol/style/Stroke'
 import ol_source_Vector from 'ol/source/Vector'
@@ -30,7 +29,7 @@ import '../geom/LineStringSplitAt'
  * - the modifyend event is fired after the modification
  * - it fires a modifying event
  * @constructor
- * @extends {ol_interaction_Pointer}
+ * @extends {ol_interaction_Interaction}
  * @fires modifystart
  * @fires modifying
  * @fires modifyend

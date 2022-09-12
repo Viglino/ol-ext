@@ -89,7 +89,6 @@ var ol_featureAnimation = class olfeatureAnimation extends ol_Object {
     return false
   }
 }
-ol_ext_inherits(ol_featureAnimation, ol_Object);
 
 /** Hidden style: a transparent style
  */
