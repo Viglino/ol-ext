@@ -76,7 +76,7 @@ var ol_interaction_TouchCursorDraw = class olinteractionTouchCursorDraw extends 
    * @api stable
    */
   setMap(map) {
-    ol_interaction_TouchCursor.prototype.setMap.call(this, map);
+    super.setMap(map);
 
     this.sketch.setMap(map);
     if (map) {

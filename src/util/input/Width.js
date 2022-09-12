@@ -37,7 +37,7 @@ var ol_ext_input_Width = class olextinputWidth extends ol_ext_input_List {
    * @returns {number}
    */
   getValue() {
-    return parseFloat(ol_ext_input_List.prototype.getValue.call(this));
+    return parseFloat(super.getValue());
   }
 }
 

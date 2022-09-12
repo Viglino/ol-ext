@@ -208,7 +208,7 @@ var ol_Overlay_Popup = class olOverlayPopup extends ol_Overlay {
    */
   setPositioning_(pos) {
     if (this.element) {
-      ol_Overlay.prototype.setPositioning.call(this, pos);
+      super.setPositioning(pos);
       this.element.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
       var classes = this.getClassPositioning().split(' ')
         .filter(function (className) {

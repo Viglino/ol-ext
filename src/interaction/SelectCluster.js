@@ -127,7 +127,7 @@ var ol_interaction_SelectCluster = class olinteractionSelectCluster extends ol_i
       ol_Observable_unByKey(this._listener)
     this._listener = null
 
-    ol_interaction_Select.prototype.setMap.call(this, map)
+    super.setMap(map)
     this.overlayLayer_.setMap(map)
     // map.addLayer(this.overlayLayer_);
     if (map && map.getView()) {

@@ -104,7 +104,7 @@ var ol_interaction_ModifyTouch = class olinteractionModifyTouch extends ol_inter
     if (this.getMap()) {
       this.getMap().removeOverlay(this._popup);
     }
-    ol_interaction_Modify.prototype.setMap.call(this, map);
+    super.setMap(map);
     if (this.getMap()) {
       this.getMap().addOverlay(this._popup);
     }
@@ -113,7 +113,7 @@ var ol_interaction_ModifyTouch = class olinteractionModifyTouch extends ol_inter
    * @param {Boolean} b
    */
   setActive(b) {
-    ol_interaction_Modify.prototype.setActive.call(this, b);
+    super.setActive(b);
     this.showDeleteBt({ type: 'hide' });
   }
   /**
@@ -121,10 +121,9 @@ var ol_interaction_ModifyTouch = class olinteractionModifyTouch extends ol_inter
    */
   removePoint() {
     // Prevent touch + click on popup 
-    if (new Date() - this._timeout < 200)
-      return;
+    if (new Date() - this._timeout < 200) return;
     // Remove point
-    ol_interaction_Modify.prototype.removePoint.call(this);
+    super.removePoint();
     this.showDeleteBt({ type: 'hide' });
   }
   /**

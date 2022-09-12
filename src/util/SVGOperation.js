@@ -38,7 +38,7 @@ var ol_ext_SVGOperation = class olextSVGOperation extends ol_Object {
    */
   set(k, val) {
     if (!/^feoperation$|^operations$/.test(k)) {
-      ol_Object.prototype.set.call(this, k, val);
+      super.set(k, val);
       this.element.setAttribute(k, val);
     }
   }

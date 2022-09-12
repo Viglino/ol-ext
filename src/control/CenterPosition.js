@@ -49,14 +49,13 @@ var ol_control_CenterPosition = class olcontrolCenterPosition extends ol_control
    * @param {ol_style_Style} style
    */
   setStyle(style) {
-    ol_control_CanvasBase.prototype.setStyle.call(this, style)
+    super.setStyle(style)
     // Element style
     if (this.element) {
       this.element.style.font = this.getTextFont()
     }
     // refresh
-    if (this.getMap())
-      this.getMap().render()
+    if (this.getMap()) this.getMap().render()
   }
   /**
    * Draw on canvas

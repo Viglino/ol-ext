@@ -172,9 +172,9 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
         this.searchCommune(f, function () {
           ol_control_Search.prototype.select.call(this, f, reverse, c, options);
           //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
-        });
+        }.bind(this));
       } else {
-        ol_control_Search.prototype.select.call(this, f, reverse, c, options);
+        super.select(f, reverse, c, options);
         //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
       }
     } else {

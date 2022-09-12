@@ -47,7 +47,7 @@ var ol_control_CanvasScaleLine = class olcontrolCanvasScaleLine extends ol_contr
       ol_Observable_unByKey(this._listener)
     this._listener = null
 
-    ol_control_ScaleLine.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (oldmap) {
       try { oldmap.renderSync()}  catch (e) { /* ok */ }
     }

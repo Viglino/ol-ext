@@ -47,7 +47,7 @@ var ol_interaction_TinkerBell = class olinteractionTinkerBell extends ol_interac
       this.getMap().render()
     }
 
-    ol_interaction_Pointer.prototype.setMap.call(this, map)
+    super.setMap(map)
 
     if (map) {
       this._listener = map.on('postcompose', this.postcompose_.bind(this))

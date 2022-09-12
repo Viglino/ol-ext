@@ -32,7 +32,7 @@ var ol_interaction_ClipMap = class olinteractionClipMap extends ol_interaction_P
       layerDiv.style.clipPath = '';
     }
 
-    ol_interaction_Pointer.prototype.setMap.call(this, map);
+    super.setMap(map);
 
     if (map) {
       this._listener = map.on('change:size', this._clip.bind(this));

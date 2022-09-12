@@ -104,7 +104,7 @@ var ol_control_VideoRecorder = class olcontrolVideoRecorder extends ol_control_C
       if (this._dialog)
         this.getMap().removeControl(this._dialog)
     }
-    ol_control_Control.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (this.getMap()) {
       this.getMap().addControl(this._printCtrl)
       if (this._dialog)

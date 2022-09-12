@@ -81,7 +81,7 @@ var ol_control_CanvasAttribution = class olcontrolCanvasAttribution extends ol_c
       ol_Observable_unByKey(this._listener)
     this._listener = null
 
-    ol_control_Attribution.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (oldmap) {
       try { oldmap.renderSync()}  catch (e) { /* ok */ }
     }

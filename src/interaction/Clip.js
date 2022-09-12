@@ -39,7 +39,7 @@ var ol_interaction_Clip = class olinteractionClip extends ol_interaction_Pointer
       try { this.getMap().renderSync(); } catch (e) { /* ok */ }
     }
 
-    ol_interaction_Pointer.prototype.setMap.call(this, map);
+    super.setMap(map);
 
     if (map) {
       for (i = 0; i < this.layers_.length; i++) {

@@ -41,7 +41,7 @@ var ol_control_CanvasBase = class olcontrolCanvasBase extends ol_control_Control
       this._listener = null
     }
 
-    ol_control_Control.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (oldmap) {
       try { oldmap.renderSync()}  catch (e) { /* ok */ }
     }

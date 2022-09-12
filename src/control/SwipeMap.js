@@ -68,7 +68,7 @@ var ol_control_SwipeMap = class olcontrolSwipeMap extends ol_control_Control {
       layerDiv.style.clip = '';
     }
 
-    ol_control_Control.prototype.setMap.call(this, map);
+    super.setMap(map);
 
     if (map) {
       this._listener = map.on('change:size', this._clip.bind(this));

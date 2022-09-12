@@ -58,11 +58,9 @@ var ol_Overlay_Tooltip = class olOverlayTooltip extends ol_Overlay_Popup {
    * @param {_ol_Map_} map The map instance.
    */
   setMap(map) {
-    if (this.getMap())
-      this.getMap().removeInteraction(this._interaction);
-    ol_Overlay_Popup.prototype.setMap.call(this, map);
-    if (this.getMap())
-      this.getMap().addInteraction(this._interaction);
+    if (this.getMap()) this.getMap().removeInteraction(this._interaction);
+    super.setMap(map);
+    if (this.getMap()) this.getMap().addInteraction(this._interaction);
   }
   /** Get the information to show in the tooltip
    * The area/length will be added if a feature is attached.

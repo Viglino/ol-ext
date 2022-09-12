@@ -57,7 +57,7 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
 
     // Hack to get the hit detection Image (v4.6.5 ?)
     if (!this.getHitDetectionImage) {
-      var img = ol_style_RegularShape.prototype.getImage.call(this)
+      var img = super.getImage.call(this)
       if (!this.hitDetectionCanvas_) {
         for (var i in this) {
           if (this[i] && this[i].getContext && this[i] !== img) {

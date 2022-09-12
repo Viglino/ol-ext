@@ -151,7 +151,7 @@ var ol_control_Timeline = class olcontrolTimeline extends ol_control_Control {
    * @param {_ol_Map_} map The map instance.
    */
   setMap(map) {
-    ol_control_Control.prototype.setMap.call(this, map);
+    super.setMap(map);
     this.refresh(this.get('zoom') || 1, true);
   }
   /** Add a button on the timeline

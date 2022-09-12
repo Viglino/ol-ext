@@ -48,8 +48,8 @@ var ol_interaction_TouchCompass = class olinteractionTouchCompass extends ol_int
 		this.size = options.size || 80;
 		this.alpha = options.alpha || 0.5;
 
-		if (!ol_interaction_TouchCompass.prototype.compass) {
-			var canvas = ol_interaction_TouchCompass.prototype.compass = document.createElement('canvas');
+		if (!this.compass) {
+			var canvas = this.compass = document.createElement('canvas');
 			var ctx = canvas.getContext("2d");
 			var s = canvas.width = canvas.height = this.size;
 			var w = s / 10;
@@ -172,10 +172,5 @@ var ol_interaction_TouchCompass = class olinteractionTouchCompass extends ol_int
 		}
 	}
 }
-
-/** Compass Image as a JS Image object
-* @api
-*/
-ol_interaction_TouchCompass.prototype.compass = null;
 
 export default ol_interaction_TouchCompass

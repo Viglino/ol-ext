@@ -165,9 +165,7 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
    * @param {_ol_Map_} map The map instance.
    */
   setMap(map) {
-
-    ol_control_Control.prototype.setMap.call(this, map);
-
+    super.setMap(map);
     this._search.setMap(map);
   }
   /** Add a new search input

@@ -81,7 +81,7 @@ var ol_interaction_CenterTouch = class olinteractionCenterTouch extends ol_inter
    * @api
    */
   setActive(b) {
-    ol_interaction_Interaction.prototype.setActive.call(this, b);
+    super.setActive(b);
 
     this.pos_ = null;
 

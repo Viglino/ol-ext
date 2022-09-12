@@ -100,7 +100,7 @@
         zoom: 5,
         center: [266812, 5960201]
       }),
-      controls: ol.control.defaults({ "attribution": false }),
+      controls: ol.control.defaults.defaults({ "attribution": false }),
       layers: [
         new ol.layer.Tile({ title:'Waterolor', visible: false, source: new ol.source.Stamen({ layer: 'watercolor' }) }),
         new ol.layer.Tile({ title:'Labels', visible: false, source: new ol.source.Stamen({ layer: 'toner-labels' }) }),

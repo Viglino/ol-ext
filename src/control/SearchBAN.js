@@ -65,10 +65,10 @@ var ol_control_SearchBAN = class olcontrolSearchBAN extends ol_control_SearchPho
     this.dispatchEvent({ type: "select", search: f, coordinate: c });
   }
   requestData(s) {
-    var data = ol_control_SearchPhoton.prototype.requestData.call(this, s);
-    data.postcode = this.get('postcode'),
-      data.citycode = this.get('citycode'),
-      data.type = this.get('type');
+    var data = super.requestData(s);
+    data.postcode = this.get('postcode');
+    data.citycode = this.get('citycode');
+    data.type = this.get('type');
 
     return data;
   }

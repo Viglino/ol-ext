@@ -93,7 +93,7 @@ var ol_source_HexBin = class olsourceHexBin extends ol_source_BinBase {
    * @return {Array<ol.Feature>}
    */
   getHexFeatures() {
-    return ol_source_BinBase.prototype.getGridFeatures.call(this);
+    return super.getGridFeatures();
   }
 }
 

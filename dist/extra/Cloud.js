@@ -46,7 +46,7 @@ ol.control.Cloud = class olcontrolCloud extends ol.control.Control {
     if (this._listener)
       ol.Observable.unByKey(this._listener);
     this._listener = null;
-    ol.control.Control.prototype.setMap.call(this, map);
+    super.setMap(map);
     if (map) {
       this._listener = map.on('postcompose', this.drawCloud_.bind(this));
     }

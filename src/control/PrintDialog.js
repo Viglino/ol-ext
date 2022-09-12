@@ -362,16 +362,14 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     })
     this.formats.forEach(function (format, i) {
       if (format.pdf) {
-        if (options.pdf === false)
-          return
+        if (options.pdf === false) return
       } else if (format.clipboard) {
-        if (options.copy === false)
-          return
+        if (options.copy === false) return
       } else if (options.save === false) {
         return
       }
       ol_ext_element.create('OPTION', {
-        html: this.i18n(format.title),
+        html: format.title,
         value: i,
         parent: save
       })
@@ -463,7 +461,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     })
     this.formats.forEach(function (format, i) {
       ol_ext_element.create('OPTION', {
-        html: this.i18n(format.title),
+        html: format.title,
         value: i,
         parent: saveLegend
       })
@@ -639,7 +637,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
    * @returns {string}
    */
   i18n(what) {
-    var rep = this._labels.en[what] || 'bad param'
+    var rep = this._labels.en[what] || 'bad param';
     if (this._labels[this._lang] && this._labels[this._lang][what]) {
       rep = this._labels[this._lang][what]
     }
@@ -768,7 +766,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
       this.getMap().removeControl(this._printCtrl)
       this.getMap().removeControl(this._printDialog)
     }
-    ol_control_Control.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (this.getMap()) {
       this.getMap().addControl(this._compass)
       this.getMap().addControl(this._printCtrl)

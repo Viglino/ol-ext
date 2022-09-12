@@ -71,7 +71,7 @@ var ol_control_Toggle = class olcontrolToggle extends ol_control_Button {
         this.getMap().removeControl(this.subbar_);
     }
 
-    ol_control_Button.prototype.setMap.call(this, map);
+    super.setMap(map);
 
     if (map) {
       if (this.interaction_)

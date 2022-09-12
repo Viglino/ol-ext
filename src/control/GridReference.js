@@ -86,7 +86,7 @@ var ol_control_GridReference = class olcontrolGridReference extends ol_control_C
    * @param {ol_Map} map The map instance.
    */
   setMap(map) {
-    ol_control_CanvasBase.prototype.setMap.call(this, map)
+    super.setMap(map)
     this.setIndex(this.source_.getFeatures())
   }
   /** Returns the text to be displayed in the index

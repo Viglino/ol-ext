@@ -57,7 +57,7 @@ var ol_control_Scale = class olcontrolScale extends ol_control_Control {
       ol_Observable_unByKey(this._listener);
     this._listener = null;
 
-    ol_control_Control.prototype.setMap.call(this, map);
+    super.setMap(map);
 
     // Get change (new layer added or removed)
     if (map) {

@@ -82,6 +82,7 @@ function drawTextPath (e)
 *	returns an array of styles. If it is undefined the default style is used. 
 *	If it is null the layer has no style (a null style). 
 *	See ol.style for information on the default style.
+* @deprecated use ol/style/Text with placement:line
 *	@param {ol.style.Style|Array.<ol.style.Style>|ol.StyleFunction} style
 *	@param {Number} maxResolution to display text, default: 0
 */
@@ -243,7 +244,3 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 	}
   
 };
-
-//NB: (Not confirmed)To use this module, you just have to :
-
-//   import('ol-ext/layer/getpreview')

@@ -157,7 +157,7 @@ var ol_style_StrokePattern = class olstyleStrokePattern extends ol_style_Stroke 
 	 * @return {ol_style_StrokePattern}
 	 */
 	clone() {
-		var s = ol_style_Fill.prototype.clone.call(this)
+		var s = super.clone()
 		s.canvas_ = this.canvas_
 		return s
 	}

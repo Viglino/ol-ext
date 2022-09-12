@@ -203,7 +203,7 @@ var ol_control_Overview = class olcontrolOverview extends ol_control_Control {
     }
     this._listener = {}
 
-    ol_control_Control.prototype.setMap.call(this, map)
+    super.setMap(map)
 
     if (map) {
       this._listener.map = map.on('change:view', function () {

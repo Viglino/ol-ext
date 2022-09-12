@@ -131,7 +131,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
       }
       this.previousCursor_ = undefined
     }
-    ol_interaction_Pointer.prototype.setMap.call(this, map)
+    super.setMap(map)
     this.overlayLayer_.setMap(map)
     if (map === null) {
       this.select(null)

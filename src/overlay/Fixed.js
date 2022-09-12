@@ -32,9 +32,9 @@ var ol_Overlay_Fixed = class olOverlayFixed extends ol_Overlay {
     if (this.getMap() && position) {
       this._pixel = this.getMap().getPixelFromCoordinate(position);
     }
-    ol_Overlay.prototype.setPosition.call(this, position);
+    super.setPosition(position);
     if (force) {
-      ol_Overlay.prototype.updatePixelPosition.call(this);
+      super.updatePixelPosition();
     }
   }
   /** Update position according the pixel position

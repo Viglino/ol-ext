@@ -46,7 +46,7 @@ var ol_source_OilPainting = class olsourceOilPainting extends ol_source_Raster {
         }
       }
     }
-    return ol_source_Raster.prototype.set.call(this, key, val);
+    return super.set(key, val);
   }
 }
 

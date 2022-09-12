@@ -128,7 +128,7 @@ var ol_Overlay_PopupFeature = class olOverlayPopupFeature extends ol_Overlay_Pop
       if (!coordinate || features[0].getGeometry().getType() === 'Point') {
         coordinate = features[0].getGeometry().getFirstCoordinate();
       }
-      ol_Overlay_Popup.prototype.show.call(this, coordinate, html);
+      super.show(coordinate, html);
     } else {
       this.hide();
     }

@@ -40,7 +40,7 @@ var ol_interaction_DropFile = class olinteractionDropFile extends ol_interaction
   /** Set the map
   */
   setMap(map) {
-    ol_interaction_Interaction.prototype.setMap.call(this, map)
+    super.setMap(map)
   }
   /** Do something when over
   */

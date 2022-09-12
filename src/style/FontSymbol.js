@@ -192,7 +192,7 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     // get canvas
-    var canvas = ol_style_RegularShape.prototype.getImage.call(this, pixelratio);
+    var canvas = super.getImage(pixelratio);
 
     var strokeStyle;
     var strokeWidth = 0;

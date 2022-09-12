@@ -67,13 +67,13 @@ var ol_interaction_Hover = class olinteractionHover extends ol_interaction_Inter
       this.getMap().getTargetElement().style.cursor = this.previousCursor_;
       this.previousCursor_ = undefined;
     }
-    ol_interaction_Interaction.prototype.setMap.call(this, map);
+    super.setMap(map);
   }
   /** Activate / deactivate interaction
    * @param {boolean} b
    */
   setActive(b) {
-    ol_interaction_Interaction.prototype.setActive.call(this, b);
+    super.setActive(b);
     if (this.cursor_ && this.getMap() && this.getMap().getTargetElement()) {
       var style = this.getMap().getTargetElement().style;
       if (this.previousCursor_ !== undefined) {

@@ -273,7 +273,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
    * @param {ol.size} size
    */
   set(key, value, opt_silent) {
-    ol_Object.prototype.set.call(this, key, value, opt_silent)
+    super.set(key, value, opt_silent)
     if (!opt_silent)
       this.refresh()
   }
@@ -426,30 +426,28 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
       height: (this._items.length + 1) * height
     })
   }
+  /** Get the image for a style 
+   * @param {olLegendItemOptions} item 
+   * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
+   * @param {int|undefined} row row number to draw in canvas, default 0
+   * @return {CanvasElement}
+   */
+  getLegendImage(options, canvas, row) {
+    options = options || {};
+    return ol_legend_Legend.getLegendImage({
+      className: options.className,
+      feature: options.feature,
+      typeGeom: options.typeGeom,
+      style: options.style || this._style,
+      properties: options.properties,
+      margin: options.margin || this.get('margin'),
+      size: options.size || this.get('size'),
+      lineHeight: options.lineHeight || this.get('lineHeight'),
+      onload: function() {
+        // Force refresh
+        this.refresh();
+      }.bind(this)
+    }, canvas, row);
+  }
 }
-
-/** Get the image for a style 
- * @param {olLegendItemOptions} item 
- * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
- * @param {int|undefined} row row number to draw in canvas, default 0
- * @return {CanvasElement}
- */
-ol_legend_Legend.prototype.getLegendImage = function(options, canvas, row) {
-  options = options || {};
-  return ol_legend_Legend.getLegendImage({
-    className: options.className,
-    feature: options.feature,
-    typeGeom: options.typeGeom,
-    style: options.style || this._style,
-    properties: options.properties,
-    margin: options.margin || this.get('margin'),
-    size: options.size || this.get('size'),
-    lineHeight: options.lineHeight || this.get('lineHeight'),
-    onload: function() {
-      // Force refresh
-      this.refresh();
-    }.bind(this)
-  }, canvas, row);
-};
-
 export default ol_legend_Legend

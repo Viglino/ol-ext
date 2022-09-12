@@ -331,7 +331,7 @@ ol.ext.SVGOperation = class olextSVGOperation extends ol.Object {
    */
   set(k, val) {
     if (!/^feoperation$|^operations$/.test(k)) {
-      ol.Object.prototype.set.call(this, k, val);
+      super.set(k, val);
       this.element.setAttribute(k, val);
     }
   }
@@ -3417,7 +3417,7 @@ ol.ext.input.Size = class olextinputSize extends ol.ext.input.List {
    * @returns {number}
    */
   getValue() {
-    return parseFloat(ol.ext.input.List.prototype.getValue.call(this));
+    return parseFloat(super.getValue());
   }
 }
 
@@ -3470,7 +3470,7 @@ ol.ext.input.Width = class olextinputWidth extends ol.ext.input.List {
    * @returns {number}
    */
   getValue() {
-    return parseFloat(ol.ext.input.List.prototype.getValue.call(this));
+    return parseFloat(super.getValue());
   }
 }
 
@@ -3719,7 +3719,7 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
    * @param {ol.size} size
    */
   set(key, value, opt_silent) {
-    ol.Object.prototype.set.call(this, key, value, opt_silent)
+    super.set(key, value, opt_silent)
     if (!opt_silent)
       this.refresh()
   }
@@ -3867,30 +3867,30 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
       height: (this._items.length + 1) * height
     })
   }
+  /** Get the image for a style 
+   * @param {olLegendItemOptions} item 
+   * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
+   * @param {int|undefined} row row number to draw in canvas, default 0
+   * @return {CanvasElement}
+   */
+  getLegendImage(options, canvas, row) {
+    options = options || {};
+    return ol.legend.Legend.getLegendImage({
+      className: options.className,
+      feature: options.feature,
+      typeGeom: options.typeGeom,
+      style: options.style || this._style,
+      properties: options.properties,
+      margin: options.margin || this.get('margin'),
+      size: options.size || this.get('size'),
+      lineHeight: options.lineHeight || this.get('lineHeight'),
+      onload: function() {
+        // Force refresh
+        this.refresh();
+      }.bind(this)
+    }, canvas, row);
+  }
 }
-/** Get the image for a style 
- * @param {olLegendItemOptions} item 
- * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
- * @param {int|undefined} row row number to draw in canvas, default 0
- * @return {CanvasElement}
- */
-ol.legend.Legend.prototype.getLegendImage = function(options, canvas, row) {
-  options = options || {};
-  return ol.legend.Legend.getLegendImage({
-    className: options.className,
-    feature: options.feature,
-    typeGeom: options.typeGeom,
-    style: options.style || this._style,
-    properties: options.properties,
-    margin: options.margin || this.get('margin'),
-    size: options.size || this.get('size'),
-    lineHeight: options.lineHeight || this.get('lineHeight'),
-    onload: function() {
-      // Force refresh
-      this.refresh();
-    }.bind(this)
-  }, canvas, row);
-};
 
 /** ol/legend/Item options
  * @typedef {Object} olLegendItemOptions
@@ -3981,7 +3981,7 @@ ol.control.CanvasBase = class olcontrolCanvasBase extends ol.control.Control {
       ol.Observable.unByKey(this._listener)
       this._listener = null
     }
-    ol.control.Control.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (oldmap) {
       try { oldmap.renderSync()}  catch (e) { /* ok */ }
     }
@@ -4473,7 +4473,7 @@ ol.control.Toggle = class olcontrolToggle extends ol.control.Button {
       if (this.subbar_)
         this.getMap().removeControl(this.subbar_);
     }
-    ol.control.Button.prototype.setMap.call(this, map);
+    super.setMap(map);
     if (map) {
       if (this.interaction_)
         map.addInteraction(this.interaction_);
@@ -5469,9 +5469,9 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
         this.searchCommune(f, function () {
           ol.control.Search.prototype.select.call(this, f, reverse, c, options);
           //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
-        });
+        }.bind(this));
       } else {
-        ol.control.Search.prototype.select.call(this, f, reverse, c, options);
+        super.select(f, reverse, c, options);
         //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
       }
     } else {
@@ -6752,7 +6752,7 @@ ol.control.CanvasAttribution = class olcontrolCanvasAttribution extends ol.contr
     if (this._listener)
       ol.Observable.unByKey(this._listener)
     this._listener = null
-    ol.control.Attribution.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (oldmap) {
       try { oldmap.renderSync()}  catch (e) { /* ok */ }
     }
@@ -6867,7 +6867,7 @@ ol.control.CanvasScaleLine = class olcontrolCanvasScaleLine extends ol.control.S
     if (this._listener)
       ol.Observable.unByKey(this._listener)
     this._listener = null
-    ol.control.ScaleLine.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (oldmap) {
       try { oldmap.renderSync()}  catch (e) { /* ok */ }
     }
@@ -7130,14 +7130,13 @@ ol.control.CenterPosition = class olcontrolCenterPosition extends ol.control.Can
    * @param {ol.style.Style} style
    */
   setStyle(style) {
-    ol.control.CanvasBase.prototype.setStyle.call(this, style)
+    super.setStyle(style)
     // Element style
     if (this.element) {
       this.element.style.font = this.getTextFont()
     }
     // refresh
-    if (this.getMap())
-      this.getMap().render()
+    if (this.getMap()) this.getMap().render()
   }
   /**
    * Draw on canvas
@@ -9184,7 +9183,7 @@ ol.control.GridReference = class olcontrolGridReference extends ol.control.Canva
    * @param {ol.Map} map The map instance.
    */
   setMap(map) {
-    ol.control.CanvasBase.prototype.setMap.call(this, map)
+    super.setMap(map)
     this.setIndex(this.source_.getFeatures())
   }
   /** Returns the text to be displayed in the index
@@ -9938,7 +9937,7 @@ ol.control.IsochroneGeoportail = class olcontrolIsochroneGeoportail extends ol.c
    * @param {_ol_Map_} map The map instance.
    */
   setMap(map) {
-    ol.control.Control.prototype.setMap.call(this, map);
+    super.setMap(map);
     this._search.setMap(map);
   }
   /** Add a new search input
@@ -11087,7 +11086,7 @@ ol.control.Overview = class olcontrolOverview extends ol.control.Control {
       }
     }
     this._listener = {}
-    ol.control.Control.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (map) {
       this._listener.map = map.on('change:view', function () {
         if (this._listener.view)
@@ -12117,16 +12116,14 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
     })
     this.formats.forEach(function (format, i) {
       if (format.pdf) {
-        if (options.pdf === false)
-          return
+        if (options.pdf === false) return
       } else if (format.clipboard) {
-        if (options.copy === false)
-          return
+        if (options.copy === false) return
       } else if (options.save === false) {
         return
       }
       ol.ext.element.create('OPTION', {
-        html: this.i18n(format.title),
+        html: format.title,
         value: i,
         parent: save
       })
@@ -12216,7 +12213,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
     })
     this.formats.forEach(function (format, i) {
       ol.ext.element.create('OPTION', {
-        html: this.i18n(format.title),
+        html: format.title,
         value: i,
         parent: saveLegend
       })
@@ -12387,7 +12384,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
    * @returns {string}
    */
   i18n(what) {
-    var rep = this._labels.en[what] || 'bad param'
+    var rep = this._labels.en[what] || 'bad param';
     if (this._labels[this._lang] && this._labels[this._lang][what]) {
       rep = this._labels[this._lang][what]
     }
@@ -12511,7 +12508,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
       this.getMap().removeControl(this._printCtrl)
       this.getMap().removeControl(this._printDialog)
     }
-    ol.control.Control.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (this.getMap()) {
       this.getMap().addControl(this._compass)
       this.getMap().addControl(this._printCtrl)
@@ -14119,7 +14116,7 @@ ol.control.Scale = class olcontrolScale extends ol.control.Control {
     if (this._listener)
       ol.Observable.unByKey(this._listener);
     this._listener = null;
-    ol.control.Control.prototype.setMap.call(this, map);
+    super.setMap(map);
     // Get change (new layer added or removed)
     if (map) {
       this._listener = map.on('moveend', this.getScale.bind(this));
@@ -14222,10 +14219,10 @@ ol.control.SearchBAN = class olcontrolSearchBAN extends ol.control.SearchPhoton 
     this.dispatchEvent({ type: "select", search: f, coordinate: c });
   }
   requestData(s) {
-    var data = ol.control.SearchPhoton.prototype.requestData.call(this, s);
-    data.postcode = this.get('postcode'),
-      data.citycode = this.get('citycode'),
-      data.type = this.get('type');
+    var data = super.requestData(s);
+    data.postcode = this.get('postcode');
+    data.citycode = this.get('citycode');
+    data.type = this.get('type');
     return data;
   }
 }
@@ -16623,7 +16620,7 @@ ol.control.SwipeMap = class olcontrolSwipeMap extends ol.control.Control {
       var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
       layerDiv.style.clip = '';
     }
-    ol.control.Control.prototype.setMap.call(this, map);
+    super.setMap(map);
     if (map) {
       this._listener = map.on('change:size', this._clip.bind(this));
     }
@@ -16976,7 +16973,7 @@ ol.control.Timeline = class olcontrolTimeline extends ol.control.Control {
    * @param {_ol_Map_} map The map instance.
    */
   setMap(map) {
-    ol.control.Control.prototype.setMap.call(this, map);
+    super.setMap(map);
     this.refresh(this.get('zoom') || 1, true);
   }
   /** Add a button on the timeline
@@ -17595,7 +17592,7 @@ ol.control.VideoRecorder = class olcontrolVideoRecorder extends ol.control.Contr
       if (this._dialog)
         this.getMap().removeControl(this._dialog)
     }
-    ol.control.Control.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (this.getMap()) {
       this.getMap().addControl(this._printCtrl)
       if (this._dialog)
@@ -21797,7 +21794,7 @@ ol.interaction.Clip = class olinteractionClip extends ol.interaction.Pointer {
       }
       try { this.getMap().renderSync(); } catch (e) { /* ok */ }
     }
-    ol.interaction.Pointer.prototype.setMap.call(this, map);
+    super.setMap(map);
     if (map) {
       for (i = 0; i < this.layers_.length; i++) {
         this.layers_[i].on(['precompose', 'prerender'], this.precomposeBind_);
@@ -22254,7 +22251,7 @@ ol.interaction.CenterTouch = class olinteractionCenterTouch extends ol.interacti
    * @api
    */
   setActive(b) {
-    ol.interaction.Interaction.prototype.setActive.call(this, b);
+    super.setActive(b);
     this.pos_ = null;
     if (this.getMap()) {
       if (this.getActive()) {
@@ -22307,7 +22304,7 @@ ol.interaction.ClipMap = class olinteractionClipMap extends ol.interaction.Point
       var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
       layerDiv.style.clipPath = '';
     }
-    ol.interaction.Pointer.prototype.setMap.call(this, map);
+    super.setMap(map);
     if (map) {
       this._listener = map.on('change:size', this._clip.bind(this));
     }
@@ -23478,7 +23475,7 @@ ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.Dra
   /** Set the map
   */
   setMap(map) {
-    ol.interaction.Interaction.prototype.setMap.call(this, map)
+    super.setMap(map)
   }
   /** Do something when over
   */
@@ -24373,13 +24370,13 @@ ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interacti
       this.getMap().getTargetElement().style.cursor = this.previousCursor_;
       this.previousCursor_ = undefined;
     }
-    ol.interaction.Interaction.prototype.setMap.call(this, map);
+    super.setMap(map);
   }
   /** Activate / deactivate interaction
    * @param {boolean} b
    */
   setActive(b) {
-    ol.interaction.Interaction.prototype.setActive.call(this, b);
+    super.setActive(b);
     if (this.cursor_ && this.getMap() && this.getMap().getTargetElement()) {
       var style = this.getMap().getTargetElement().style;
       if (this.previousCursor_ !== undefined) {
@@ -25429,7 +25426,7 @@ ol.interaction.ModifyTouch = class olinteractionModifyTouch extends ol.interacti
     if (this.getMap()) {
       this.getMap().removeOverlay(this._popup);
     }
-    ol.interaction.Modify.prototype.setMap.call(this, map);
+    super.setMap(map);
     if (this.getMap()) {
       this.getMap().addOverlay(this._popup);
     }
@@ -25438,7 +25435,7 @@ ol.interaction.ModifyTouch = class olinteractionModifyTouch extends ol.interacti
    * @param {Boolean} b
    */
   setActive(b) {
-    ol.interaction.Modify.prototype.setActive.call(this, b);
+    super.setActive(b);
     this.showDeleteBt({ type: 'hide' });
   }
   /**
@@ -25446,10 +25443,9 @@ ol.interaction.ModifyTouch = class olinteractionModifyTouch extends ol.interacti
    */
   removePoint() {
     // Prevent touch + click on popup 
-    if (new Date() - this._timeout < 200)
-      return;
+    if (new Date() - this._timeout < 200) return;
     // Remove point
-    ol.interaction.Modify.prototype.removePoint.call(this);
+    super.removePoint();
     this.showDeleteBt({ type: 'hide' });
   }
   /**
@@ -25950,7 +25946,7 @@ ol.interaction.SelectCluster = class olinteractionSelectCluster extends ol.inter
     if (this._listener)
       ol.Observable.unByKey(this._listener)
     this._listener = null
-    ol.interaction.Select.prototype.setMap.call(this, map)
+    super.setMap(map)
     this.overlayLayer_.setMap(map)
     // map.addLayer(this.overlayLayer_);
     if (map && map.getView()) {
@@ -27220,7 +27216,7 @@ ol.interaction.TinkerBell = class olinteractionTinkerBell extends ol.interaction
       map.getViewport().removeEventListener('mouseout', this.out_, false)
       this.getMap().render()
     }
-    ol.interaction.Pointer.prototype.setMap.call(this, map)
+    super.setMap(map)
     if (map) {
       this._listener = map.on('postcompose', this.postcompose_.bind(this))
       map.getViewport().addEventListener('mouseout', this.out_, false)
@@ -27306,8 +27302,8 @@ ol.interaction.TouchCompass = class olinteractionTouchCompass extends ol.interac
 		this.ondrag_ = options.onDrag;
 		this.size = options.size || 80;
 		this.alpha = options.alpha || 0.5;
-		if (!ol.interaction.TouchCompass.prototype.compass) {
-			var canvas = ol.interaction.TouchCompass.prototype.compass = document.createElement('canvas');
+		if (!this.compass) {
+			var canvas = this.compass = document.createElement('canvas');
 			var ctx = canvas.getContext("2d");
 			var s = canvas.width = canvas.height = this.size;
 			var w = s / 10;
@@ -27418,10 +27414,6 @@ ol.interaction.TouchCompass = class olinteractionTouchCompass extends ol.interac
 		}
 	}
 }
-/** Compass Image as a JS Image object
-* @api
-*/
-ol.interaction.TouchCompass.prototype.compass = null;
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -27803,7 +27795,7 @@ ol.interaction.TouchCursorDraw = class olinteractionTouchCursorDraw extends ol.i
    * @api stable
    */
   setMap(map) {
-    ol.interaction.TouchCursor.prototype.setMap.call(this, map);
+    super.setMap(map);
     this.sketch.setMap(map);
     if (map) {
       this._listeners.movend = map.on('moveend', function () {
@@ -28249,7 +28241,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
       }
       this.previousCursor_ = undefined
     }
-    ol.interaction.Pointer.prototype.setMap.call(this, map)
+    super.setMap(map)
     this.overlayLayer_.setMap(map)
     if (map === null) {
       this.select(null)
@@ -31413,7 +31405,7 @@ ol.source.HexBin = class olsourceHexBin extends ol.source.BinBase {
    * @return {Array<ol.Feature>}
    */
   getHexFeatures() {
-    return ol.source.BinBase.prototype.getGridFeatures.call(this);
+    return super.getGridFeatures();
   }
 }
 
@@ -31683,102 +31675,107 @@ ol.source.InseeBin = class olsourceInseeBin extends ol.source.BinBase {
 }
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	@classdesc
-	ol.source.Mapillary is a source that load Mapillary's geotagged photos in a vector layer.
-	Inherits from:
-	<ol.source.Vector>
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  @classdesc
+  ol.source.Mapillary is a source that load Mapillary's geotagged photos in a vector layer.
+  Inherits from:
+  <ol.source.Vector>
 */
-/**
+/** Mapillary test (not tested)
 * @constructor ol.source.Mapillary
 * @extends {ol.source.Vector}
 * @param {olx.source.Mapillary=} options
 */
-ol.source.Mapillary = function(opt_options)
-{	var options = opt_options || {};
-	options.loader = this._loaderFn;
-	/** Max resolution to load features  */
-	this._maxResolution = options.maxResolution || 100;
-	/** Query limit */
-	this._limit = options.limit || 100;
-	/** Default attribution */
-	if (!options.attributions) options.attributions = [ "&copy; <a href='https://www.mapillary.com/'>Mapillary</a>" ];
-	// Bbox strategy : reload at each move
+ol.source.Mapillary = class olsourceMapillary extends ol.source.Vector {
+  constructor(opt_options) {
+    var options = opt_options || {};
+    options.loader = function(extent, resolution, projection) {
+      return this._loaderFn(extent, resolution, projection);
+    }
+    /** Default attribution */
+    if (!options.attributions) options.attributions = ["&copy; <a href='https://www.mapillary.com/'>Mapillary</a>"];
+    // Bbox strategy : reload at each move
     if (!options.strategy) options.strategy = ol.loadingstrategy.bbox;
-	// Init parent
-	ol.source.Vector.call (this, options);
-	// Client ID
-	// this.set("clientId", options.clientId);
-};
-ol.ext.inherits(ol.source.Mapillary, ol.source.Vector);
-/** Decode wiki attributes and choose to add feature to the layer
-* @param {feature} the feature
-* @param {attributes} wiki attributes
-* @return {boolean} true: add the feature to the layer
-* @API stable
-*/
-ol.source.Mapillary.prototype.readFeature = function (/*feature, attributes*/)
-{	// Allways read feature (no filter)
-	return true;
-};
-/** Loader function used to load features.
-* @private
-*/
-ol.source.Mapillary.prototype._loaderFn = function(extent, resolution, projection)
-{	if (resolution > this._maxResolution) return;
-	var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
-	// Commons API: for more info @see https://www.mapillary.com/developer
-	var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
-	var url = "https://a.mapillary.com/v2/search/im?client_id="
-		+ this.get('clientId')
-		+ "&max_lat=" + bbox[3]
-		+ "&max_lon=" + bbox[2]
-		+ "&min_lat=" + bbox[1]
-		+ "&min_lon=" + bbox[0]
-		+ "&limit="+(this._limit-1)
-		+ "&start_time=" + date;
-	// Ajax request to get the tile
-	ol.ext.Ajax.get(
-	{	url: url,
-		dataType: 'jsonp', 
-		success: function(data) 
-		{	console.log(data);
-			/*
-			var features = [];
-			var att, pt, feature, lastfeature = null;
-			if (data.query && data.query.pages) return;
-			for ( var i in data.query.pages)
-			{	att = data.query.pages[i];
-				if (att.coordinates && att.coordinates.length ) 
-				{	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
-				}
-				else
-				{	var meta = att.imageinfo[0].metadata;
-					if (!meta)
-					{	//console.log(att);
-						continue;
-					}
-					pt = [];
-					for (var k=0; k<meta.length; k++)
-					{	if (meta[k].name=="GPSLongitude") pt[0] = meta[k].value;
-						if (meta[k].name=="GPSLatitude") pt[1] = meta[k].value;
-					}
-					if (!pt.length) 
-					{	//console.log(att);
-						continue;
-					}
-				}
-				feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
-				att.imageinfo[0].title = att.title;
-				if (self.readFeature(feature, att.imageinfo[0]))
-				{	features.push(feature);
-				}
-			}
-			self.addFeatures(features);
-			*/
-    }});
-};
+    // Init parent
+    super(options);
+    /** Max resolution to load features  */
+    this._maxResolution = options.maxResolution || 100;
+    /** Query limit */
+    this._limit = options.limit || 100;
+    // Client ID
+    // this.set("clientId", options.clientId);
+  }
+  /** Decode wiki attributes and choose to add feature to the layer
+  * @param {feature} the feature
+  * @param {attributes} wiki attributes
+  * @return {boolean} true: add the feature to the layer
+  * @API stable
+  */
+  readFeature( /*feature, attributes*/) {
+    return true;
+  }
+  /** Loader function used to load features.
+  * @private
+  */
+  _loaderFn(extent, resolution, projection) {
+    if (resolution > this._maxResolution)
+      return;
+    var bbox = ol.proj.transformExtent(extent, projection, "EPSG:4326");
+    // Commons API: for more info @see https://www.mapillary.com/developer
+    var date = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000;
+    var url = "https://a.mapillary.com/v2/search/im?client_id="
+      + this.get('clientId')
+      + "&max_lat=" + bbox[3]
+      + "&max_lon=" + bbox[2]
+      + "&min_lat=" + bbox[1]
+      + "&min_lon=" + bbox[0]
+      + "&limit=" + (this._limit - 1)
+      + "&start_time=" + date;
+    // Ajax request to get the tile
+    ol.ext.Ajax.get(
+      {
+        url: url,
+        dataType: 'jsonp',
+        success: function (data) {
+          console.log(data);
+          /*
+          var features = [];
+          var att, pt, feature, lastfeature = null;
+          if (data.query && data.query.pages) return;
+          for ( var i in data.query.pages)
+          {	att = data.query.pages[i];
+              if (att.coordinates && att.coordinates.length )
+              {	pt = [att.coordinates[0].lon, att.coordinates[0].lat];
+              }
+              else
+              {	var meta = att.imageinfo[0].metadata;
+                  if (!meta)
+                  {	//console.log(att);
+                      continue;
+                  }
+                  pt = [];
+                  for (var k=0; k<meta.length; k++)
+                  {	if (meta[k].name=="GPSLongitude") pt[0] = meta[k].value;
+                      if (meta[k].name=="GPSLatitude") pt[1] = meta[k].value;
+                  }
+                  if (!pt.length)
+                  {	//console.log(att);
+                      continue;
+                  }
+              }
+              feature = new ol.Feature(new ol.geom.Point(ol.proj.transform (pt,"EPSG:4326",projection)));
+              att.imageinfo[0].title = att.title;
+              if (self.readFeature(feature, att.imageinfo[0]))
+              {	features.push(feature);
+              }
+          }
+          self.addFeatures(features);
+          */
+        }
+      });
+  }
+}
 
 /*	Copyright (c) 2019 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
@@ -31824,7 +31821,7 @@ ol.source.OilPainting = class olsourceOilPainting extends ol.source.Raster {
         }
       }
     }
-    return ol.source.Raster.prototype.set.call(this, key, val);
+    return super.set(key, val);
   }
 }
 /**
@@ -34809,7 +34806,7 @@ ol.Overlay.Popup = class olOverlayPopup extends ol.Overlay {
    */
   setPositioning_(pos) {
     if (this.element) {
-      ol.Overlay.prototype.setPositioning.call(this, pos);
+      super.setPositioning(pos);
       this.element.classList.remove("ol-popup-top", "ol-popup-bottom", "ol-popup-left", "ol-popup-right", "ol-popup-center", "ol-popup-middle");
       var classes = this.getClassPositioning().split(' ')
         .filter(function (className) {
@@ -35167,9 +35164,9 @@ ol.Overlay.Fixed = class olOverlayFixed extends ol.Overlay {
     if (this.getMap() && position) {
       this._pixel = this.getMap().getPixelFromCoordinate(position);
     }
-    ol.Overlay.prototype.setPosition.call(this, position);
+    super.setPosition(position);
     if (force) {
-      ol.Overlay.prototype.updatePixelPosition.call(this);
+      super.updatePixelPosition();
     }
   }
   /** Update position according the pixel position
@@ -35876,7 +35873,7 @@ ol.Overlay.PopupFeature = class olOverlayPopupFeature extends ol.Overlay.Popup {
       if (!coordinate || features[0].getGeometry().getType() === 'Point') {
         coordinate = features[0].getGeometry().getFirstCoordinate();
       }
-      ol.Overlay.Popup.prototype.show.call(this, coordinate, html);
+      super.show(coordinate, html);
     } else {
       this.hide();
     }
@@ -36100,11 +36097,9 @@ ol.Overlay.Tooltip = class olOverlayTooltip extends ol.Overlay.Popup {
    * @param {_ol_Map_} map The map instance.
    */
   setMap(map) {
-    if (this.getMap())
-      this.getMap().removeInteraction(this._interaction);
-    ol.Overlay.Popup.prototype.setMap.call(this, map);
-    if (this.getMap())
-      this.getMap().addInteraction(this._interaction);
+    if (this.getMap()) this.getMap().removeInteraction(this._interaction);
+    super.setMap(map);
+    if (this.getMap()) this.getMap().addInteraction(this._interaction);
   }
   /** Get the information to show in the tooltip
    * The area/length will be added if a feature is attached.
@@ -37766,8 +37761,8 @@ ol.sphere.setMapScale = function (map, scale, dpi) {
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Pulse an extent on postcompose
 *	@param {ol.coordinates} point to pulse
@@ -37777,47 +37772,48 @@ ol.sphere.setMapScale = function (map, scale, dpi) {
 *	  @param {ol.easing} options.easing easing function, default ol.easing.upAndDown
 *	  @param {ol.style.Stroke} options.style stroke style, default 2px red
 */
-ol.Map.prototype.animExtent = function(extent, options)
-{	var listenerKey;
-	options = options || {};
-	// Change to map's projection
-	if (options.projection)
-	{	extent = ol.proj.transformExtent (extent, options.projection, this.getView().getProjection());
-	}
-	// options
-	var start = new Date().getTime();
-	var duration = options.duration || 1000;
-	var easing = options.easing || ol.easing.upAndDown;
-	var width = options.style ? options.style.getWidth() || 2 : 2;
-	var color = options.style ? options.style.getColr() || 'red' : 'red';
-	// Animate function
-	function animate(event) 
-	{	var frameState = event.frameState;
-		var ratio = frameState.pixelRatio;
-		var elapsed = frameState.time - start;
-		if (elapsed > duration) ol.Observable.unByKey(listenerKey);
-		else
-		{	var elapsedRatio = elapsed / duration;
-			var p0 = this.getPixelFromCoordinate([extent[0],extent[1]]);
-			var p1 = this.getPixelFromCoordinate([extent[2],extent[3]]);
-			var context = event.context;
-			context.save();
-			context.scale(ratio,ratio);
-			context.beginPath();
-			// var e = easing(elapsedRatio)
-			context.globalAlpha = easing(1 - elapsedRatio);
-			context.lineWidth = width;
-			context.strokeStyle = color;
-			context.rect(p0[0], p0[1], p1[0]-p0[0], p1[1]-p0[1]);
-			context.stroke();
-			context.restore();
-			// tell OL3 to continue postcompose animation
-			frameState.animate = true;
-		}
-	}
-	// Launch animation
-	listenerKey = this.on('postcompose', animate.bind(this));
-	try { this.renderSync(); } catch(e) { /* ok */ }
+ol.Map.prototype.animExtent = function(extent, options){
+  var listenerKey;
+  options = options || {};
+  // Change to map's projection
+  if (options.projection) {
+    extent = ol.proj.transformExtent (extent, options.projection, this.getView().getProjection());
+  }
+  // options
+  var start = new Date().getTime();
+  var duration = options.duration || 1000;
+  var easing = options.easing || ol.easing.upAndDown;
+  var width = options.style ? options.style.getWidth() || 2 : 2;
+  var color = options.style ? options.style.getColr() || 'red' : 'red';
+  // Animate function
+  function animate(event) {
+    var frameState = event.frameState;
+    var ratio = frameState.pixelRatio;
+    var elapsed = frameState.time - start;
+    if (elapsed > duration) {
+      ol.Observable.unByKey(listenerKey);
+    } else {
+      var elapsedRatio = elapsed / duration;
+      var p0 = this.getPixelFromCoordinate([extent[0],extent[1]]);
+      var p1 = this.getPixelFromCoordinate([extent[2],extent[3]]);
+      var context = event.context;
+      context.save();
+      context.scale(ratio,ratio);
+      context.beginPath();
+      // var e = easing(elapsedRatio)
+      context.globalAlpha = easing(1 - elapsedRatio);
+      context.lineWidth = width;
+      context.strokeStyle = color;
+      context.rect(p0[0], p0[1], p1[0]-p0[0], p1[1]-p0[1]);
+      context.stroke();
+      context.restore();
+      // tell OL3 to continue postcompose animation
+      frameState.animate = true;
+    }
+  }
+  // Launch animation
+  listenerKey = this.on('postcompose', animate.bind(this));
+  try { this.renderSync(); } catch(e) { /* ok */ }
 }
 
 /** Create a cardinal spline version of this geometry.
@@ -39932,7 +39928,7 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     // get canvas
-    var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
+    var canvas = super.getImage(pixelratio);
     var strokeStyle;
     var strokeWidth = 0;
     if (this._stroke) {
@@ -40221,7 +40217,7 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
     this._shadow = shadow;
     // Hack to get the hit detection Image (v4.6.5 ?)
     if (!this.getHitDetectionImage) {
-      var img = ol.style.RegularShape.prototype.getImage.call(this)
+      var img = super.getImage.call(this)
       if (!this.hitDetectionCanvas_) {
         for (var i in this) {
           if (this[i] && this[i].getContext && this[i] !== img) {
@@ -40703,6 +40699,7 @@ function drawTextPath (e)
 *	returns an array of styles. If it is undefined the default style is used. 
 *	If it is null the layer has no style (a null style). 
 *	See ol.style for information on the default style.
+* @deprecated use ol/style/Text with placement:line
 *	@param {ol.style.Style|Array.<ol.style.Style>|ol.StyleFunction} style
 *	@param {Number} maxResolution to display text, default: 0
 */
@@ -40842,8 +40839,7 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
 		start += wl+letterPadding*(letter==" "?2:1);
 	}
 };
-//NB: (Not confirmed)To use this module, you just have to :
-//   import('ol-ext/layer/getpreview')
+
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -40907,7 +40903,7 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     var radius = this._radius;
-    var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio);
+    var canvas = super.getImage(pixelratio);
     // Remove the circle on the canvas
     var context = (canvas.getContext('2d'));
     context.save();
@@ -41077,7 +41073,7 @@ ol.style.StrokePattern = class olstyleStrokePattern extends ol.style.Stroke {
 	 * @return {ol.style.StrokePattern}
 	 */
 	clone() {
-		var s = ol.style.Fill.prototype.clone.call(this)
+		var s = super.clone()
 		s.canvas_ = this.canvas_
 		return s
 	}
