@@ -163,6 +163,7 @@
   position: absolute;
   bottom: 100%;
   left: 0.3em;
+  pointer-events: none;
 }
 
 .ol-control.ol-bar .ol-option-bar .ol-control {
