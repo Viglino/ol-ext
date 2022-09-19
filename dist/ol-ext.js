@@ -1389,7 +1389,9 @@ ol.ext.getVectorContextStyle = function(e, s) {
 
 /** @namespace ol.ext.imageLoader
  */
-if (window.ol) window.ol.ext.imageLoader = {};
+if (window.ol && ol.ext && !ol.ext.imageLoader) {
+  ol.ext.imageLoader = {};
+}
 /** Helper for loading BIL-32 (Band Interleaved by Line) image
  * @param {string} src
  * @param {function} onload a function that takes a Float32Array and a ol.size.Size (array size)
@@ -2232,7 +2234,7 @@ ol.ext.SVGFilter.Sobel = class olextSVGFilterSobel extends ol.ext.SVGFilter {
 /** @namespace  ol.ext.input
  */
 /*global ol*/
-if (window.ol) {
+if (window.ol && ol.ext && !ol.ext.input) {
   ol.ext.input = {};
 }
 /** Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
