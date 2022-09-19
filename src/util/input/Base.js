@@ -6,7 +6,7 @@ import ol_Object from 'ol/Object'
 /** @namespace  ol.ext.input
  */
 /*global ol*/
-if (window.ol) {
+if (window.ol && ol.ext && !ol.ext.input) {
   ol.ext.input = {};
 }
 
