@@ -103,8 +103,11 @@
     closeBox: true,
     onclose: function(){ console.log("You close the box"); },
     positioning: $("#positioning").val(),
-    autoPan: true,
-    autoPanAnimation: { duration: 100 }
+    autoPan: {
+      animation: {
+        duration: 100
+      }
+    }
   });
     
   // The map

@@ -150,8 +150,11 @@
     // backgroundColor : 'yellow',
     contentColor: '#000',
     onshow: function(){ console.log("You opened a placemark"); },
-    autoPan: true,
-    autoPanAnimation: { duration: 250 }
+    autoPan: { 
+      animation : {
+        duration: 250 
+      }
+    }
   });
 		
 	// The map

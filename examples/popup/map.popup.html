@@ -183,8 +183,9 @@
     onshow: function(){ console.log("You opened the box"); },
     onclose: function(){ console.log("You close the box"); },
     positioning: 'auto',
-    autoPan: true,
-    autoPanAnimation: { duration: 250 }
+    autoPan: {
+      animation: { duration: 250 }
+    }
   });
     
   // The map
