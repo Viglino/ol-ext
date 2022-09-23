@@ -109,8 +109,30 @@
 
   // IDW source
   var idw = new ol.source.IDW({
-    // Use workers
-    // useWorker: true,
+    /* Use workers * /
+    useWorker: true,
+    lib: {
+      // A set of function accessible in the worker
+      hue2rgb: function(h) {
+        h = (h + 6) % 6;
+        if (h < 1) return Math.round(h * 255);
+        if (h < 3) return 255;
+        if (h < 4) return Math.round((4 - h) * 255);
+        return 0;
+      }
+    },
+    getColor: function(v) {
+      // Get hue
+      var h = 4 - (0.04 * v);
+      // Convert to RGB
+      return [
+        hue2rgb(h + 2),
+        hue2rgb(h),
+        hue2rgb(h - 2),
+        255
+      ];
+    },
+    /**/
     // scale: 8,
     // Source that contains the data
     source: new ol.source.Vector(),

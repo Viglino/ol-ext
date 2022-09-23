@@ -12,7 +12,9 @@ import ol_ext_Worker from '../util/Worker'
  * @fire drawend
  * @param {*} [options]
  *  @param {ol.source.vector} options.source a source to interpolate
+ *  @param {function} [options.getColor] a function that takes a value and returns a color (as an Array [r,g,b,a])
  *  @param {boolean} [options.useWorker=false] use worker to calculate the distance map (may cause flickering on small data sets). Source will fire drawstart, drawend while calculating
+ *  @param {Object} [options.lib] Functions that will be made available to operations run in a worker
  *  @param {number} [options.scale=4] scale factor, use large factor to enhance performances (but minor accuracy)
  *  @param {string|function} options.weight The feature attribute to use for the weight or a function that returns a weight from a feature. Weight values should range from 0 to 100. Default use the weight attribute of the feature.
  */
@@ -32,10 +34,19 @@ var ol_source_IDW = class olsourceIDW extends ol_source_ImageCanvas {
       this.changed();
     }.bind(this));
 
+    if (typeof(options.getColor) === 'function') this.getColor = options.getColor
 
     if (options.useWorker) {
+      var lib = {
+        hue2rgb: this.hue2rgb,
+        getColor: this.getColor
+      }
+      for (let f in options.useWorker) {
+        lib[f] = options.useWorker[f];
+      }
       this.worker = new ol_ext_Worker(this.computeImage, {
-        onMessage: this.onImageData.bind(this)
+        onMessage: this.onImageData.bind(this),
+        lib: lib
       });
     }
     this._position = { extent: [], resolution: 0 };
@@ -52,7 +63,7 @@ var ol_source_IDW = class olsourceIDW extends ol_source_ImageCanvas {
    * @param {Uint8ClampedArray} data RGBA array
    * @param {number} i index in the RGBA array
    * @api
-   */
+   * /
   setData(v, data, i) {
     // Get color
     var color = this.getColor(v);
@@ -67,47 +78,43 @@ var ol_source_IDW = class olsourceIDW extends ol_source_ImageCanvas {
    * @return {Uint8ClampedArray}
    */
   getValue(coord) {
-    if (!this._canvas)
-      return null;
+    if (!this._canvas) return null;
     var pt = this.transform(coord);
     var v = this._canvas.getContext('2d').getImageData(Math.round(pt[0]), Math.round(pt[1]), 1, 1).data;
     return (v);
   }
-  /** Compute image data */
+  /** Convert hue to rgb factor
+   * @param {number} h
+   * @return {number}
+   * @private
+   */
+  hue2rgb(h) {
+    h = (h + 6) % 6;
+    if (h < 1) return Math.round(h * 255);
+    if (h < 3) return 255;
+    if (h < 4) return Math.round((4 - h) * 255);
+    return 0;
+  }
+  /** Get color for a value. Return an array of RGBA values.
+   * @param {number} v value
+   * @returns {Array<number>}
+   * @api
+   */
+  getColor(v) {
+    // Get hue
+    var h = 4 - (0.04 * v);
+    // Convert to RGB
+    return [
+      this.hue2rgb(h + 2),
+      this.hue2rgb(h),
+      this.hue2rgb(h - 2),
+      255
+    ];
+  };
+  /** Compute image data
+   * @param {Object} e
+   */
   computeImage(e) {
-    /** Convert hue to rgb factor
-     * @param {number} h
-     * @return {number}
-     * @private
-     */
-    var hue2rgb = function (h) {
-      h = (h + 6) % 6;
-      if (h < 1)
-        return Math.round(h * 255);
-      if (h < 3)
-        return 255;
-      if (h < 4)
-        return Math.round((4 - h) * 255);
-      return 0;
-    };
-
-    /** Get color for a value. Return an array of RGBA values.
-     * @param {number} v value
-     * @returns {Array<number>}
-     * @api
-     */
-    var getColor = function (v) {
-      // Get hue
-      var h = 4 - (0.04 * v);
-      // Convert to RGB
-      return [
-        hue2rgb(h + 2),
-        hue2rgb(h),
-        hue2rgb(h - 2),
-        255
-      ];
-    };
-
     var pts = e.data.pts;
     var width = e.data.width;
     var height = e.data.height;
@@ -133,7 +140,7 @@ var ol_source_IDW = class olsourceIDW extends ol_source_ImageCanvas {
           b += inv;
         }
         // Set color
-        var color = getColor(t / b);
+        var color = this.getColor(t / b);
         // Convert to RGB
         var pos = (y * width + x) * 4;
         imageData[pos] = color[0];
@@ -153,8 +160,7 @@ var ol_source_IDW = class olsourceIDW extends ol_source_ImageCanvas {
    * @private
    */
   calculateImage(extent, resolution, pixelRatio, size) {
-    if (!this._source)
-      return this._canvas;
+    if (!this._source) return this._canvas;
     if (this._updated) {
       this._updated = false;
       return this._canvas;

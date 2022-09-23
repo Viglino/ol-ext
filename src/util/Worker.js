@@ -9,13 +9,17 @@ var ol_ext_Worker = class olextWorker {
   constructor(mainFn, options) {
     // Convert to function
     var mainStr = mainFn.toString().replace(/^.*\(/, 'function(');
+    var lib = '';
+    for (let i in options.lib) {
+      lib += '\nvar ' + i + ' = ' + options.lib[i].toString().replace(/^.*\(/, 'function(') + ';';
+    }
     // Code
-    var lines = ['var mainFn = ' + mainStr + `
+    var lines = ['var mainFn = ' + mainStr + lib + `
     self.addEventListener("message", function(event) {
       var result = mainFn(event);
       self.postMessage(result);
-    });`
-    ];
+    });`];
+    console.log(lines[0])
     this.code_ = URL.createObjectURL(new Blob(lines, { type: 'text/javascript' }));
     this.onMessage_ = options.onMessage;
     this.start();
