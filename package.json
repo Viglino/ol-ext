@@ -67,6 +67,7 @@
     "toolbar",
     "animation"
   ],
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Viglino/ol-ext.git"
