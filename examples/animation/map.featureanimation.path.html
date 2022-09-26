@@ -156,7 +156,7 @@
     }
   });
   // Add a feature on the map
-  var f, anim;
+  var f, anim, controler;
   function animateFeature(){
     if (path) {
       f = new ol.Feature(new ol.geom.Point([0,0]));
@@ -181,7 +181,7 @@
         map.getView().setRotation(e.rotation||0)
       })
       /**/
-      vector.animateFeature ( f, anim );
+      controler = vector.animateFeature ( f, anim );
     }
   }
 

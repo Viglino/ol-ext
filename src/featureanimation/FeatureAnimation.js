@@ -249,20 +249,27 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
     ol_Observable_unByKey(listenerKey);
     listenerKey = null;
     feature.setStyle(style);
+    event.stop = (new Date).getTime();
     // Send event
-    var event = { type:'animationend', feature: feature };
+    var eventEnd = { type:'animationend', feature: feature };
     if (options) {
       for (var i in options) if (options.hasOwnProperty(i)) {
-        event[i] = options[i]; 
+        eventEnd[i] = options[i]; 
       }
     }
-    fanim[step].dispatchEvent(event);
-    self.dispatchEvent(event);
+    fanim[step].dispatchEvent(eventEnd);
+    self.dispatchEvent(eventEnd);
   }
 
   // Launch animation
   function start(options) {
     if (fanim.length && !listenerKey) {
+      // Restart at stop time
+      if (event.stop) {
+        event.start = (new Date).getTime() - event.stop + event.start;
+        event.stop = 0;
+      }
+      // Compose
       listenerKey = self.on(['postcompose','postrender'], animate.bind(self));
       // map or layer?
       if (self.renderSync) {
@@ -273,14 +280,14 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
       // Hide feature while animating
       feature.setStyle(fanim[step].hiddenStyle || ol_featureAnimation.hiddenStyle);
       // Send event
-      var event = { type:'animationstart', feature: feature };
+      var eventStart = { type:'animationstart', feature: feature };
       if (options) {
         for (var i in options) if (options.hasOwnProperty(i)) {
-          event[i] = options[i]; 
+          eventStart[i] = options[i]; 
         }
       }
-      fanim[step].dispatchEvent(event);
-      self.dispatchEvent(event);
+      fanim[step].dispatchEvent(eventStart);
+      self.dispatchEvent(eventStart);
     }
   }
   start();
