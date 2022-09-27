@@ -19053,7 +19053,8 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
         rotation: event.rotation||0,
         geom: event.geom,
         coordinate: event.coord,
-        feature: feature 
+        feature: feature,
+        extra: event.extra || {}
       };
       fanim[step].dispatchEvent(animEvent);
       self.dispatchEvent(animEvent);
@@ -19347,6 +19348,7 @@ ol.featureAnimation.Path = class olfeatureAnimationPath extends ol.featureAnimat
       dy = p[1] - p0[1];
       dl = Math.sqrt(dx * dx + dy * dy);
       if (dl && d + dl >= dmax) {
+        e.extra = { index: i, coordinates: p};
         s = (dmax - d) / dl;
         p = [p0[0] + (p[0] - p0[0]) * s, p0[1] + (p[1] - p0[1]) * s];
         break;
