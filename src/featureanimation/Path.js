@@ -64,6 +64,7 @@ var ol_featureAnimation_Path = class olfeatureAnimationPath extends ol_featureAn
       dy = p[1] - p0[1];
       dl = Math.sqrt(dx * dx + dy * dy);
       if (dl && d + dl >= dmax) {
+        e.pathNextPoint = { index:i,coordinates:p};
         s = (dmax - d) / dl;
         p = [p0[0] + (p[0] - p0[0]) * s, p0[1] + (p[1] - p0[1]) * s];
         break;
