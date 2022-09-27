@@ -230,7 +230,7 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
         geom: event.geom,
         coordinate: event.coord,
         feature: feature,
-        pathNextPoint: event.pathNextPoint || {}
+        extra: event.extra || {}
       };
       fanim[step].dispatchEvent(animEvent);
       self.dispatchEvent(animEvent);
