@@ -5,7 +5,6 @@
 
 import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has'
 import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Fill from 'ol/style/Fill'
 import {asString as ol_color_asString} from 'ol/color'
 import ol_style_FillPattern from './FillPattern'
 
@@ -17,7 +16,7 @@ import ol_style_FillPattern from './FillPattern'
  * @param {any}  options
  *	@param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
  *	@param {number|undefined} options.opacity opacity with image pattern, default:1
- *	@param {olx.style.fillPattern} options.pattern pattern name (override by image option)
+ *	@param {string} options.pattern pattern name (override by image option)
  *	@param {ol.colorLike} options.color pattern color
  *	@param {ol.style.Fill} options.fill fill color (background)
  *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern

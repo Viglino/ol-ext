@@ -13,19 +13,19 @@ import {asString as ol_color_asString} from 'ol/color'
  *
  * @constructor
  * @param {olx.style.FillPatternOption=}  options
- *	@param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
-*	@param {number|undefined} options.opacity opacity with image pattern, default:1
-*	@param {olx.style.fillPattern} options.pattern pattern name (override by image option)
-*	@param {ol_color} options.color pattern color
-*	@param {ol_style_Fill} options.fill fill color (background)
-*	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
-*	@param {number} options.size line size for hash/dot/circle/cross pattern
-*	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
-*	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
-*	@param {number} options.scale pattern scale 
-* @extends {ol_style_Fill}
-* @api
-*/
+ *  @param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
+ *  @param {number|undefined} options.opacity opacity with image pattern, default:1
+ *  @param {string} options.pattern pattern name (override by image option)
+ *  @param {ol_color} options.color pattern color
+ *  @param {ol_style_Fill} options.fill fill color (background)
+ *  @param {number} options.offset pattern offset for hash/dot/circle/cross pattern
+ *  @param {number} options.size line size for hash/dot/circle/cross pattern
+ *  @param {number} options.spacing spacing for hash/dot/circle/cross pattern
+ *  @param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
+ *  @param {number} options.scale pattern scale 
+ * @extends {ol_style_Fill}
+ * @api
+ */
 var ol_style_FillPattern = class olstyleFillPattern extends ol_style_Fill {
   constructor(options) {
     super();
@@ -152,7 +152,7 @@ var ol_style_FillPattern = class olstyleFillPattern extends ol_style_Fill {
   }
   /** Static fuction to add char patterns
    * @param {title}
-   * @param {*} options
+   * @param {object} options
    *  @param {integer} [options.size=10] default 10
    *  @param {integer} [options. width=10] default 10
    *  @param {integer} [options.height=10] default 10
