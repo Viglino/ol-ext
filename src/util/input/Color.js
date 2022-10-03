@@ -1,9 +1,9 @@
-import ol_ext_element from '../element';
-import ol_ext_input_PopupBase from './PopupBase'
-import ol_Collection from 'ol/Collection';
-import { toHSV as ol_color_toHSV, fromHSV as ol_color_fromHSV } from '../color'
-import { toHexa as ol_color_toHexa } from '../color'
-import { asArray as ol_color_asArray } from 'ol/color'
+import ol_ext_element from '../element.js';
+import ol_ext_input_PopupBase from './PopupBase.js'
+import ol_Collection from 'ol/Collection.js';
+import { toHSV as ol_color_toHSV, fromHSV as ol_color_fromHSV } from '../color.js'
+import { toHexa as ol_color_toHexa } from '../color.js'
+import { asArray as ol_color_asArray } from 'ol/color.js'
 
 /** Color picker
  * @constructor

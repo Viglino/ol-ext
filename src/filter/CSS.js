@@ -1,4 +1,4 @@
-import ol_filter_Base from './Base'
+import ol_filter_Base from './Base.js'
 
 /** Add a mix-blend-mode CSS filter (not working with IE or ol<6).
  * Add a className to the layer to apply the filter to a specific layer.    

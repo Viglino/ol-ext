@@ -1,13 +1,13 @@
-﻿import ol_layer_Vector from 'ol/layer/Vector'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import {easeOut as ol_easing_easeOut} from 'ol/easing'
-import ol_Object from 'ol/Object'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Fill from 'ol/style/Fill'
-import {asString as ol_color_asString} from 'ol/color'
+﻿import ol_layer_Vector from 'ol/layer/Vector.js'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import {easeOut as ol_easing_easeOut} from 'ol/easing.js'
+import ol_Object from 'ol/Object.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import {asString as ol_color_asString} from 'ol/color.js'
 
-import {ol_coordinate_getIntersectionPoint} from '../geom/GeomUtils'
+import {ol_coordinate_getIntersectionPoint} from '../geom/GeomUtils.js'
 
 /** ol.layer.Vector.prototype.setRender3D
  * @extends {ol.layer.Vector}

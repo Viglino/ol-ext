@@ -4,7 +4,7 @@
 	
 */
 
-import ol_featureAnimation from './FeatureAnimation'
+import ol_featureAnimation from './FeatureAnimation.js'
 
 /** Fade animation: feature fade in
  * @constructor

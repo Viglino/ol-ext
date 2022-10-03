@@ -3,8 +3,8 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_Select from 'ol/interaction/Select'
-import ol_source_Vector from 'ol/source/Vector'
+import ol_interaction_Select from 'ol/interaction/Select.js'
+import ol_source_Vector from 'ol/source/Vector.js'
 
 /** A Select interaction to delete features on click.
  * @constructor

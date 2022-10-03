@@ -3,11 +3,11 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_Collection from 'ol/Collection'
-import ol_View from 'ol/View'
-import ol_Overlay from 'ol/Overlay'
-import ol_Map from 'ol/Map'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_Collection from 'ol/Collection.js'
+import ol_View from 'ol/View.js'
+import ol_Overlay from 'ol/Overlay.js'
+import ol_Map from 'ol/Map.js'
 
 /**
  * @classdesc

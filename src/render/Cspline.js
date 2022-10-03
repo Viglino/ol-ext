@@ -1,10 +1,10 @@
-﻿import ol_geom_Geometry from 'ol/geom/Geometry'
-import ol_geom_GeometryCollection from 'ol/geom/GeometryCollection'
-import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
-import ol_geom_LineString from 'ol/geom/LineString'
-import { ol_coordinate_dist2d } from '../geom/GeomUtils'
+﻿import ol_geom_Geometry from 'ol/geom/Geometry.js'
+import ol_geom_GeometryCollection from 'ol/geom/GeometryCollection.js'
+import ol_geom_MultiLineString from 'ol/geom/MultiLineString.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon.js'
+import ol_geom_LineString from 'ol/geom/LineString.js'
+import { ol_coordinate_dist2d } from '../geom/GeomUtils.js'
 
 /** Create a cardinal spline version of this geometry.
  *	Original https://github.com/epistemex/cardinal-spline-js

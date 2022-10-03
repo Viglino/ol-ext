@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_Overlay from 'ol/Overlay'
+import ol_Overlay from 'ol/Overlay.js'
 
 /**
  * @classdesc

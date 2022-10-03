@@ -1,7 +1,7 @@
-import ol_interaction_Modify from 'ol/interaction/Modify'
-import {getUid as ol_util_getUid} from 'ol/util'
+import ol_interaction_Modify from 'ol/interaction/Modify.js'
+import {getUid as ol_util_getUid} from 'ol/util.js'
 // Use ol.getUid for Openlayers < v6
-import {getUid as ol_getUid} from 'ol/util'
+import {getUid as ol_getUid} from 'ol/util.js'
 
 /** Extent the ol/interaction/Modify with a getModifyFeatures
  * Get the features modified by the interaction

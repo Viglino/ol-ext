@@ -3,11 +3,11 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_source_OSM from 'ol/source/OSM'
-import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
-import ol_format_OSMXML from 'ol/format/OSMXML'
+import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_source_OSM from 'ol/source/OSM.js'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj.js'
+import ol_format_OSMXML from 'ol/format/OSMXML.js'
 
 /**
  * OSM layer using the Ovepass API

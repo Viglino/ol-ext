@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
 
 /** Interaction to handle longtouch events
  * @constructor

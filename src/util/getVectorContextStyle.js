@@ -1,5 +1,5 @@
-import {VERSION as ol_util_VERSION} from 'ol/util'
-import ol_style_Icon from 'ol/style/Icon'
+import {VERSION as ol_util_VERSION} from 'ol/util.js'
+import ol_style_Icon from 'ol/style/Icon.js'
 
 /*global ol*/
 if (window.ol) {

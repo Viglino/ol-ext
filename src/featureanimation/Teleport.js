@@ -4,7 +4,7 @@
 	
 */
 
-import ol_featureAnimation from './FeatureAnimation'
+import ol_featureAnimation from './FeatureAnimation.js'
 
 /** Teleport a feature at a given place (feat. Star Trek)
  * @constructor

@@ -1,4 +1,4 @@
-import ol_View from 'ol/View'
+import ol_View from 'ol/View.js'
 
 // Prevent overwrite
 if (ol_View.prototype.flyTo)  {

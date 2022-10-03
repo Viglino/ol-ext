@@ -3,20 +3,20 @@
   released under the CeCILL license (http://www.cecill.info/).
 */
 
-import ol_Object from 'ol/Object'
-import {linear as ol_easing_linear} from 'ol/easing'
-import ol_Map from 'ol/Map'
-import {getCenter as ol_extent_getCenter} from 'ol/extent'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_layer_Base from 'ol/layer/Base'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Circle from 'ol/style/Circle'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_layer_Vector from 'ol/layer/Vector'
-import ol_source_Vector from 'ol/source/Vector'
+import ol_Object from 'ol/Object.js'
+import {linear as ol_easing_linear} from 'ol/easing.js'
+import ol_Map from 'ol/Map.js'
+import {getCenter as ol_extent_getCenter} from 'ol/extent.js'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_layer_Base from 'ol/layer/Base.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Circle from 'ol/style/Circle.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_layer_Vector from 'ol/layer/Vector.js'
+import ol_source_Vector from 'ol/source/Vector.js'
 
-import ol_render_getVectorContext from '../util/getVectorContext';
-import ol_ext_getVectorContextStyle from '../util/getVectorContextStyle'
+import ol_render_getVectorContext from '../util/getVectorContext.js';
+import ol_ext_getVectorContextStyle from '../util/getVectorContextStyle.js'
 
 /** Feature animation base class
  * Use the {@link ol.Map#animateFeature} or {@link ol.layer.Vector#animateFeature} to animate a feature

@@ -4,11 +4,11 @@
 */
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_Collection from 'ol/Collection'
-import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer} from 'ol/extent'
-import '../geom/LineStringSplitAt'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_Collection from 'ol/Collection.js'
+import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer} from 'ol/extent.js'
+import '../geom/LineStringSplitAt.js'
 
 /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
  * @constructor

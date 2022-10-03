@@ -2,9 +2,9 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_control_LayerSwitcher from './LayerSwitcher'
-import '../layer/GetPreview'
-import ol_ext_element from '../util/element';
+import ol_control_LayerSwitcher from './LayerSwitcher.js'
+import '../layer/GetPreview.js'
+import ol_ext_element from '../util/element.js';
 
 /**
  * @classdesc OpenLayers Layer Switcher Control.

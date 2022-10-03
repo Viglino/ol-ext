@@ -4,7 +4,7 @@
 	
 */
 
-import ol_featureAnimation from './FeatureAnimation'
+import ol_featureAnimation from './FeatureAnimation.js'
 
 /** Drop animation: drop a feature on the map
  * @constructor

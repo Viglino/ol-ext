@@ -4,8 +4,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_control_Control from 'ol/control/Control'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_control_Control from 'ol/control/Control.js'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
 
 /** A control that use a CSS clip rect to swipe the map
  * @classdesc Swipe Control.

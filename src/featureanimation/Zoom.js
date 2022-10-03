@@ -4,7 +4,7 @@
   
 */
 
-import ol_featureAnimation from './FeatureAnimation'
+import ol_featureAnimation from './FeatureAnimation.js'
 
 /** Zoom animation: feature zoom in (for points)
  * @constructor

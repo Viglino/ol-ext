@@ -1,5 +1,5 @@
-import ol_interaction_Clip from './Clip'
-import ol_coordinate_cspline from '../render/Cspline'
+import ol_interaction_Clip from './Clip.js'
+import ol_coordinate_cspline from '../render/Cspline.js'
 
 /** Blob interaction to clip layers in a blob
  * @constructor

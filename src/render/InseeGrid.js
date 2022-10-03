@@ -3,12 +3,12 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import proj4 from 'proj4'
-import ol_Object from 'ol/Object'
-import {register as ol_proj_proj4_register} from 'ol/proj/proj4.js';
-import {transform as ol_proj_transform} from 'ol/proj'
-import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
-import ol_geom_Polygon from 'ol/geom/Polygon'
+import proj4 from 'proj4.js'
+import ol_Object from 'ol/Object.js'
+import {register as ol_proj_proj4_register} from 'ol/proj/proj4.js.js';
+import {transform as ol_proj_transform} from 'ol/proj.js'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
 
 /**
  * French INSEE grids

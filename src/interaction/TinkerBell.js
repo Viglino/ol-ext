@@ -7,10 +7,10 @@
   @link https://github.com/Viglino
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_interaction_Pointer from 'ol/interaction/Pointer'
-import {asString as ol_color_asString} from 'ol/color'
-import ol_ext_getMapCanvas from '../util/getMapcanvas'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_interaction_Pointer from 'ol/interaction/Pointer.js'
+import {asString as ol_color_asString} from 'ol/color.js'
+import ol_ext_getMapCanvas from '../util/getMapcanvas.js'
 
 /**
  * @constructor

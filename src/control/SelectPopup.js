@@ -2,8 +2,8 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_control_SelectBase from './SelectBase'
-import ol_ext_element from '../util/element'
+import ol_control_SelectBase from './SelectBase.js'
+import ol_ext_element from '../util/element.js'
 
 /**
  * Select features by property using a popup 

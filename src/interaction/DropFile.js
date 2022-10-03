@@ -1,12 +1,12 @@
-import ol_interaction_DragAndDrop from 'ol/interaction/DragAndDrop'
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_format_GPX from 'ol/format/GPX'
-import ol_format_GeoJSON from 'ol/format/GeoJSON'
-import ol_format_IGC from 'ol/format/IGC'
-import ol_format_KML from 'ol/format/KML'
-import ol_format_TopoJSON from 'ol/format/TopoJSON'
-import ol_format_GeoJSONX from '../format/GeoJSONX'
-import ol_format_GeoJSONP from '../format/GeoJSONP'
+import ol_interaction_DragAndDrop from 'ol/interaction/DragAndDrop.js'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import ol_format_GPX from 'ol/format/GPX.js'
+import ol_format_GeoJSON from 'ol/format/GeoJSON.js'
+import ol_format_IGC from 'ol/format/IGC.js'
+import ol_format_KML from 'ol/format/KML.js'
+import ol_format_TopoJSON from 'ol/format/TopoJSON.js'
+import ol_format_GeoJSONX from '../format/GeoJSONX.js'
+import ol_format_GeoJSONP from '../format/GeoJSONP.js'
 
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
  * @constructor

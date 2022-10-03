@@ -4,19 +4,19 @@
 */
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 
-import {getDistance as ol_sphere_getDistance} from 'ol/sphere'
-import {transform as ol_proj_transform} from 'ol/proj'
-import ol_control_Control from 'ol/control/Control'
-import ol_Feature from 'ol/Feature'
-import ol_style_Fill from 'ol/style/Fill'
+import {getDistance as ol_sphere_getDistance} from 'ol/sphere.js'
+import {transform as ol_proj_transform} from 'ol/proj.js'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_style_Fill from 'ol/style/Fill.js'
 
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Text from 'ol/style/Text'
-import ol_geom_LineString from 'ol/geom/LineString'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_style_Text from 'ol/style/Text.js'
+import ol_geom_LineString from 'ol/geom/LineString.js'
 
-import {ol_coordinate_dist2d} from "../geom/GeomUtils";
-import ol_ext_element from '../util/element'
+import {ol_coordinate_dist2d} from "../geom/GeomUtils.js";
+import ol_ext_element from '../util/element.js'
 
 /**
  * @classdesc OpenLayers 3 Profil Control.

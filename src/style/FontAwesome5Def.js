@@ -1,4 +1,4 @@
-import ol_style_FontSymbol from './FontSymbol'
+import ol_style_FontSymbol from './FontSymbol.js'
 
 ol_style_FontSymbol.addDefs({
   "font":"\"Font Awesome 5 Free\"",

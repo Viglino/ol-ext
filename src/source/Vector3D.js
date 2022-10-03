@@ -1,10 +1,10 @@
-﻿import ol_layer_Image from 'ol/layer/Image'
-import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
-import {easeOut as ol_easing_easeOut} from 'ol/easing'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Fill from 'ol/style/Fill'
-import {asString as ol_color_asString} from 'ol/color'
+﻿import ol_layer_Image from 'ol/layer/Image.js'
+import ol_source_ImageCanvas from 'ol/source/ImageCanvas.js'
+import {easeOut as ol_easing_easeOut} from 'ol/easing.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import {asString as ol_color_asString} from 'ol/color.js'
 
 /** 
  * @classdesc 3D vector layer rendering

@@ -2,10 +2,10 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_control_Control from 'ol/control/Control'
-import ol_Collection from 'ol/Collection'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_ext_element from '../util/element'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_Collection from 'ol/Collection.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_ext_element from '../util/element.js'
 
 /**
  * This is the base class for Select controls on attributes values. 

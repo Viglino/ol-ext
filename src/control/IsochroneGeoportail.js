@@ -2,12 +2,12 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_control_Control from 'ol/control/Control'
-import ol_format_WKT from 'ol/format/WKT'
-import {toLonLat as ol_proj_toLonLat} from 'ol/proj'
-import ol_ext_Ajax from '../util/Ajax';
-import ol_ext_element from '../util/element';
-import ol_control_SearchGeoportail from './SearchGeoportail'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_format_WKT from 'ol/format/WKT.js'
+import {toLonLat as ol_proj_toLonLat} from 'ol/proj.js'
+import ol_ext_Ajax from '../util/Ajax.js';
+import ol_ext_element from '../util/element.js';
+import ol_control_SearchGeoportail from './SearchGeoportail.js'
 
 /**
  * Geoportail isochrone Control.

@@ -2,8 +2,8 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_control_SearchGeoportail from "./SearchGeoportail";
-import {fromLonLat as ol_proj_fromLonLat} from 'ol/proj'
+import ol_control_SearchGeoportail from "./SearchGeoportail.js";
+import {fromLonLat as ol_proj_fromLonLat} from 'ol/proj.js'
 
 /**
  * Search places using the French National Base Address (BAN) API.

@@ -3,11 +3,11 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_TouchCursor from './TouchCursor'
-import ol_interaction_ModifyFeature from './ModifyFeature'
-import ol_style_Style from 'ol/style/Style';
-import ol_style_Stroke from 'ol/style/Stroke';
-import ol_style_RegularShape from 'ol/style/RegularShape';
+import ol_interaction_TouchCursor from './TouchCursor.js'
+import ol_interaction_ModifyFeature from './ModifyFeature.js'
+import ol_style_Style from 'ol/style/Style.js';
+import ol_style_Stroke from 'ol/style/Stroke.js';
+import ol_style_RegularShape from 'ol/style/RegularShape.js';
 
 /** TouchCursor interaction + ModifyFeature
  * @constructor

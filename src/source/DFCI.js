@@ -3,13 +3,13 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_Feature from 'ol/Feature'
-import ol_source_Vector from 'ol/source/Vector'
-import {ol_coordinate_toDFCI} from '../geom/DFCI'
-import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
-import {register as ol_proj_proj4_register} from 'ol/proj/proj4.js';
-import proj4 from 'proj4';
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import {ol_coordinate_toDFCI} from '../geom/DFCI.js'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj.js'
+import {register as ol_proj_proj4_register} from 'ol/proj/proj4.js.js';
+import proj4 from 'proj4.js';
 
 /** DFCI source: a source to display the French DFCI grid on a map
  * @see http://ccffpeynier.free.fr/Files/dfci.pdf

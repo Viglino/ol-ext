@@ -4,11 +4,11 @@
 * (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Text from 'ol/style/Text';
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Fill from 'ol/style/Fill'
-import ol_style_Style_defaultStyle from '../style/defaultStyle'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Text from 'ol/style/Text.js';
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import ol_style_Style_defaultStyle from '../style/defaultStyle.js'
 
 /**
  * Get a style for Geoportail WFS features

@@ -2,10 +2,10 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {transform as ol_proj_transform} from 'ol/proj'
-import ol_control_SearchJSON from "./SearchJSON";
-import ol_ext_Ajax from '../util/Ajax'
-import ol_ext_element from '../util/element';
+import {transform as ol_proj_transform} from 'ol/proj.js'
+import ol_control_SearchJSON from "./SearchJSON.js";
+import ol_ext_Ajax from '../util/Ajax.js'
+import ol_ext_element from '../util/element.js';
 
 /**
  * Search places using the MediaWiki API.

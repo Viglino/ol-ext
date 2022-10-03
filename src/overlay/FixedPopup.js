@@ -3,16 +3,16 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_layer_Image from 'ol/layer/Image'
-import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Fill from 'ol/style/Fill'
-import {asString as ol_color_asString} from 'ol/color'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_layer_Image from 'ol/layer/Image.js'
+import ol_source_ImageCanvas from 'ol/source/ImageCanvas.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import {asString as ol_color_asString} from 'ol/color.js'
 
-import ol_ext_element from '../util/element'
-import ol_Overlay_Popup from './Popup'
-import {ol_coordinate_dist2d} from "../geom/GeomUtils";
+import ol_ext_element from '../util/element.js'
+import ol_Overlay_Popup from './Popup.js'
+import {ol_coordinate_dist2d} from "../geom/GeomUtils.js";
 
 /**
  * A popup element to be displayed over the map and attached to a single map

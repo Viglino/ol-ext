@@ -3,12 +3,12 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_DragOverlay from './DragOverlay'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_interaction_DragOverlay from './DragOverlay.js'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
 
-import ol_ext_element from '../util/element'
-import ol_Overlay_Fixed from '../overlay/Fixed'
+import ol_ext_element from '../util/element.js'
+import ol_Overlay_Fixed from '../overlay/Fixed.js'
 
 /** Handle a touch cursor to defer event position on overlay position
  * It can be used as abstract base class used for creating subclasses. 

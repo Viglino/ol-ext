@@ -14,10 +14,10 @@
  * @property {Array.<ol.Coordinate>} imageMask linestring to mask the image on the map
  */
 
-import ol_source_ImageCanvas from 'ol/source/ImageCanvas'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
-import {fromExtent as ol_geom_Polygon_fromExtent} from 'ol/geom/Polygon'
+import ol_source_ImageCanvas from 'ol/source/ImageCanvas.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent.js'
+import {fromExtent as ol_geom_Polygon_fromExtent} from 'ol/geom/Polygon.js'
 
 /** Layer source with georeferencement to place it on a map
  * @constructor 

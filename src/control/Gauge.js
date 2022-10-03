@@ -3,8 +3,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_control_Control from 'ol/control/Control'
-import ol_ext_element from '../util/element'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_ext_element from '../util/element.js'
 
 /** A simple gauge control to display level information on the map.
  *

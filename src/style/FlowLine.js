@@ -3,11 +3,11 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_style_Style from 'ol/style/Style'
-import {asString as ol_color_asString} from 'ol/color'
-import {asArray as ol_color_asArray} from 'ol/color'
-import {ol_coordinate_dist2d} from '../geom/GeomUtils'
-import '../geom/LineStringSplitAt'
+import ol_style_Style from 'ol/style/Style.js'
+import {asString as ol_color_asString} from 'ol/color.js'
+import {asArray as ol_color_asArray} from 'ol/color.js'
+import {ol_coordinate_dist2d} from '../geom/GeomUtils.js'
+import '../geom/LineStringSplitAt.js'
 
 /** Flow line style
  * Draw LineString with a variable color / width

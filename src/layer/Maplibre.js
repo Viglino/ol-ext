@@ -2,11 +2,11 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_layer_Layer from 'ol/layer/Layer'
-import {ol_ext_inherits} from '../util/ext'
-import {ol_ext_element} from '../util/element'
-import {toLonLat as ol_proj_toLonLat} from 'ol/proj'
-import * as mapboxgl from 'maplibre-gl';
+import ol_layer_Layer from 'ol/layer/Layer.js'
+import {ol_ext_inherits} from '../util/ext.js'
+import {ol_ext_element} from '../util/element.js'
+import {toLonLat as ol_proj_toLonLat} from 'ol/proj.js'
+import * as mapboxgl from 'maplibre-gl.js';
 
 /** Layer that use Maplibre GL as render
  * @constructor 

@@ -1,4 +1,4 @@
-import ol_control_Control from 'ol/control/Control'
+import ol_control_Control from 'ol/control/Control.js'
 
 /** A simple control to disable all actions on the map.
  * The control will create an invisible div over the map.

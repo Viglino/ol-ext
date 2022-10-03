@@ -3,7 +3,7 @@ released under the CeCILL-B license (French BSD license)
 (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_control_Button from "./Button";
+import ol_control_Button from "./Button.js";
 
 /** A simple push button control drawn as text
  * @constructor

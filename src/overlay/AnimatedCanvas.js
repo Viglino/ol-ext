@@ -3,10 +3,10 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_Overlay from 'ol/Overlay'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_ext_element from '../util/element';
-import ol_particule_Base from '../particule/Base';
+import ol_Overlay from 'ol/Overlay.js'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_ext_element from '../util/element.js';
+import ol_particule_Base from '../particule/Base.js';
 
 /** An overlay to play animations on top of the map
  * The overlay define a set of particules animated on top of the map.

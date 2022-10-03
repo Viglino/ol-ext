@@ -59,14 +59,14 @@ In Openlayers classes just replace the `point` by a `underscore`.
 The file name must reflect the name of the extension and should be placed in the src directory corresponding to its namespace.
 Thus `ol_control_MyControl`must be created in the `./src/control/MyControl.js` file and can be used in a webpack as:
 ````javascript
-import ol_control_MyControl from 'ol-ext/control/MyControl';
+import ol_control_MyControl from 'ol-ext/control/MyControl.js';
 ````
 
 Example:
 ````javascript
 // Import ol classes
-import ol_ext_inherits from '../util/ext'
-import ol_control_Control from 'ol/control/Control'
+import ol_ext_inherits from '../util/ext.js'
+import ol_control_Control from 'ol/control/Control.js'
 
 // Create my control
 var ol_control_MyControl = function(options) {

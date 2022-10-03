@@ -3,9 +3,9 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_control_Search from './Search'
-import {ol_coordinate_fromDFCI} from '../geom/DFCI'
-import {ol_coordinate_toDFCI} from '../geom/DFCI'
+import ol_control_Search from './Search.js'
+import {ol_coordinate_fromDFCI} from '../geom/DFCI.js'
+import {ol_coordinate_toDFCI} from '../geom/DFCI.js'
 
 /**
  * Search on DFCI grid.

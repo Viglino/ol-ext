@@ -1,7 +1,7 @@
-import ol_ext_inherits from '../util/ext'
-import ol_layer_Vector from 'ol/layer/Vector'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Text from 'ol/style/Text'
+import ol_ext_inherits from '../util/ext.js'
+import ol_layer_Vector from 'ol/layer/Vector.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Text from 'ol/style/Text.js'
 
 /** Add a setTextPath style to draw text along linestrings
 @toto letterpadding/spacing, wordpadding/spacing

@@ -13,7 +13,7 @@
   @link https://github.com/Viglino
 */
 
-import ol_interaction_Pointer from 'ol/interaction/Pointer'
+import ol_interaction_Pointer from 'ol/interaction/Pointer.js'
 
 /**
  * @constructor

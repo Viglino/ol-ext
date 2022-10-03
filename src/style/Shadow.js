@@ -5,8 +5,8 @@
 *  Shadow image style for point vector features
 */
 
-import ol_style_Fill from 'ol/style/Fill'
-import ol_style_RegularShape from 'ol/style/RegularShape'
+import ol_style_Fill from 'ol/style/Fill.js'
+import ol_style_RegularShape from 'ol/style/RegularShape.js'
 
 /**
  * @classdesc

@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_Object from 'ol/Object'
+import ol_Object from 'ol/Object.js'
 
 /** @typedef {'pointy' | 'flat'} HexagonLayout
  *  Layout of a Hexagon. Flat means the bottom part of the hexagon is flat.

@@ -2,10 +2,10 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_Object from 'ol/Object'
-import ol_Feature from 'ol/Feature'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_Object from 'ol/Object.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
 
 /** Feature format for reading data in the GeoRSS format.
  * @constructor ol_fromat_GeoRSS

@@ -1,4 +1,4 @@
-import ol_ext_input_Base from './Base'
+import ol_ext_input_Base from './Base.js'
 
 /** Checkbox input
  * @constructor

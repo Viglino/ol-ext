@@ -2,10 +2,10 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
-import {getMapScale as ol_sphere_getMapScale} from '../geom/sphere'
-import {setMapScale as ol_sphere_setMapScale} from '../geom/sphere'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_control_Control from 'ol/control/Control.js'
+import {getMapScale as ol_sphere_getMapScale} from '../geom/sphere.js'
+import {setMapScale as ol_sphere_setMapScale} from '../geom/sphere.js'
 
 /**
  * Scale Control.

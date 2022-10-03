@@ -3,18 +3,18 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_style_Fill from 'ol/style/Fill'
-import ol_style_Circle from 'ol/style/Circle'
-import ol_layer_Vector from 'ol/layer/Vector'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_Feature from 'ol/Feature'
-import ol_geom_LineString from 'ol/geom/LineString'
-import {ol_coordinate_dist2d} from "../geom/GeomUtils";
-import '../geom/LineStringSplitAt'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import ol_style_Circle from 'ol/style/Circle.js'
+import ol_layer_Vector from 'ol/layer/Vector.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_geom_LineString from 'ol/geom/LineString.js'
+import {ol_coordinate_dist2d} from "../geom/GeomUtils.js";
+import '../geom/LineStringSplitAt.js'
 
 /** Interaction split interaction for splitting feature geometry
  * @constructor

@@ -3,9 +3,9 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_interaction_Pointer from 'ol/interaction/Pointer'
-import ol_ext_getMapCanvas from '../util/getMapCanvas'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_interaction_Pointer from 'ol/interaction/Pointer.js'
+import ol_ext_getMapCanvas from '../util/getMapCanvas.js'
 
 /** Interaction splitter: acts as a split feature agent while editing vector features (LineString).
  * @constructor

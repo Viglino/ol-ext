@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_filter_Base from './Base'
+import ol_filter_Base from './Base.js'
 
 /** Add a composite filter on a layer.    
  * With ol6+ you'd better use {@link ol_filter_CSS} instead.    

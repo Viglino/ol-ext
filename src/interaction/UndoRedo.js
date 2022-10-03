@@ -1,8 +1,8 @@
-import ol_Collection from 'ol/Collection'
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_layer_Vector from 'ol/layer/Vector'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import '../source/Vector' 
+import ol_Collection from 'ol/Collection.js'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import ol_layer_Vector from 'ol/layer/Vector.js'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import '../source/Vector.js'
 
 /** Undo/redo interaction
  * @constructor

@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_control_Button from './Button'
+import ol_control_Button from './Button.js'
 
 /** A simple toggle control
  * The control can be created with an interaction to control its activation.

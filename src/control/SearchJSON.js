@@ -2,8 +2,8 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_control_Search from './Search'
-import ol_ext_Ajax from '../util/Ajax';
+import ol_control_Search from './Search.js'
+import ol_ext_Ajax from '../util/Ajax.js';
 
 /**
  * This is the base class for search controls that use a json service to search features.

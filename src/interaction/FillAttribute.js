@@ -1,5 +1,5 @@
-import ol_interaction_Select from 'ol/interaction/Select'
-import {click as ol_events_condition_click} from 'ol/events/condition'
+import ol_interaction_Select from 'ol/interaction/Select.js'
+import {click as ol_events_condition_click} from 'ol/events/condition.js'
 
 /** A Select interaction to fill feature's properties on click.
  * @constructor

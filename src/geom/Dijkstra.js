@@ -3,14 +3,14 @@
 	released under the CeCILL-B license (http://www.cecill.info/).
 */
 
-import ol_Object from 'ol/Object';
-import ol_geom_LineString from 'ol/geom/LineString';
-import ol_geom_Point from 'ol/geom/Point';
-import ol_Feature from 'ol/Feature';
-import ol_source_Vector from 'ol/source/Vector'
-import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
-import {buffer as ol_extent_buffer} from 'ol/extent'
-import {ol_coordinate_dist2d} from "../geom/GeomUtils";
+import ol_Object from 'ol/Object.js';
+import ol_geom_LineString from 'ol/geom/LineString.js';
+import ol_geom_Point from 'ol/geom/Point.js';
+import ol_Feature from 'ol/Feature.js';
+import ol_source_Vector from 'ol/source/Vector.js'
+import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent.js'
+import {buffer as ol_extent_buffer} from 'ol/extent.js'
+import {ol_coordinate_dist2d} from "../geom/GeomUtils.js";
 
 /* Define namespace
  */

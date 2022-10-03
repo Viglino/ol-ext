@@ -4,8 +4,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_control_Control from 'ol/control/Control'
-import ol_ext_element from '../util/element'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_ext_element from '../util/element.js'
 
 /** Print control to get an image of the map
  * @constructor

@@ -1,4 +1,4 @@
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
 
 /** Interaction hover do to something when hovering a feature
  * @constructor

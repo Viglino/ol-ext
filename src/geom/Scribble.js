@@ -6,11 +6,11 @@
 */
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 
-import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_geom_MultiPolygon from 'ol/geom/multipolygon'
-import '../render/Cspline'
-import { ol_coordinate_splitH } from "./GeomUtils";
+import ol_geom_MultiLineString from 'ol/geom/MultiLineString.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_geom_MultiPolygon from 'ol/geom/multipolygon.js'
+import '../render/Cspline.js'
+import { ol_coordinate_splitH } from "./GeomUtils.js";
 
 /**
  * Calculate a MultiPolyline to fill a Polygon with a scribble effect that appears hand-made

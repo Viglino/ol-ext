@@ -2,19 +2,19 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_layer_Vector from 'ol/layer/Vector'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_RegularShape from 'ol/style/RegularShape'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_Feature from 'ol/Feature'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_geom_LineString from 'ol/geom/LineString'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_geom_Circle from 'ol/geom/Circle'
+import ol_layer_Vector from 'ol/layer/Vector.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_RegularShape from 'ol/style/RegularShape.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import ol_geom_LineString from 'ol/geom/LineString.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_geom_Circle from 'ol/geom/Circle.js'
 
-import ol_style_Style_defaultStyle from '../style/defaultStyle'
-import {ol_coordinate_dist2d} from "../geom/GeomUtils";
+import ol_style_Style_defaultStyle from '../style/defaultStyle.js'
+import {ol_coordinate_dist2d} from "../geom/GeomUtils.js";
 
 /** A sketch layer used as overlay to handle drawing sketch (helper for drawing tools)
  * @constructor 

@@ -3,14 +3,14 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_proj_Projection from 'ol/proj/Projection'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Fill from 'ol/style/Fill'
-import ol_style_Text from 'ol/style/Text'
-import {transform as ol_proj_transform} from 'ol/proj'
-import {get as ol_proj_get} from 'ol/proj'
-import ol_control_CanvasBase from './CanvasBase'
+import ol_proj_Projection from 'ol/proj/Projection.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import ol_style_Text from 'ol/style/Text.js'
+import {transform as ol_proj_transform} from 'ol/proj.js'
+import {get as ol_proj_get} from 'ol/proj.js'
+import ol_control_CanvasBase from './CanvasBase.js'
 
 /** Draw a graticule on the map.
  * @constructor

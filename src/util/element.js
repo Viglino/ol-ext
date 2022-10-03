@@ -3,9 +3,9 @@
  * @see https://plainjs.com/javascript/
  * @see http://youmightnotneedjquery.com/
  */
-import ol_ext_input_Checkbox from './input/Checkbox'
-import ol_ext_input_Switch from './input/Switch'
-import ol_ext_input_Radio from './input/Radio'
+import ol_ext_input_Checkbox from './input/Checkbox.js'
+import ol_ext_input_Switch from './input/Switch.js'
+import ol_ext_input_Radio from './input/Radio.js'
 
 /** @namespace ol.ext.element */
 var ol_ext_element = {};

@@ -2,15 +2,15 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_control_Control from 'ol/control/Control'
-import ol_Feature from 'ol/Feature'
-import ol_ext_element from '../util/element';
-import ol_control_SearchGeoportail from './SearchGeoportail'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_geom_Point from 'ol/geom/Point'
-import {transform as ol_proj_transform} from 'ol/proj'
-import { ol_coordinate_equal } from '../geom/GeomUtils'
-import ol_format_GeoJSON from 'ol/format/GeoJSON'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_ext_element from '../util/element.js';
+import ol_control_SearchGeoportail from './SearchGeoportail.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import {transform as ol_proj_transform} from 'ol/proj.js'
+import { ol_coordinate_equal } from '../geom/GeomUtils.js'
+import ol_format_GeoJSON from 'ol/format/GeoJSON.js'
 
 /** Geoportail routing Control.
  * @constructor

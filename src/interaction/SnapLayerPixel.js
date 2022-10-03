@@ -3,8 +3,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import {altKeyOnly as ol_events_condition_altKeyOnly} from 'ol/events/condition'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import {altKeyOnly as ol_events_condition_altKeyOnly} from 'ol/events/condition.js'
 
 /** An interaction to snap on pixel on a layer
  * The CenterTouch interaction modifies map browser event coordinate and pixel properties to force pointer on the viewport center to any interaction that them.

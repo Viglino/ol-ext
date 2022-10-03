@@ -3,10 +3,10 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_layer_Base from 'ol/layer/Base'
-import ol_Object from 'ol/Object'
-import ol_Map from 'ol/Map'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_layer_Base from 'ol/layer/Base.js'
+import ol_Object from 'ol/Object.js'
+import ol_Map from 'ol/Map.js'
 
 /* Namespace */
 var ol_filter = {};

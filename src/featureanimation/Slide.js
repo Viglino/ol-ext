@@ -4,7 +4,7 @@
 	
 */
 
-import ol_featureAnimation from './FeatureAnimation'
+import ol_featureAnimation from './FeatureAnimation.js'
 
 /** Slice animation: feature enter from left
  * @constructor

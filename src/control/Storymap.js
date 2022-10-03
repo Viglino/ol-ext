@@ -1,8 +1,8 @@
-import ol_control_Control from 'ol/control/Control'
-import ol_ext_element from '../util/element'
-import {fromLonLat as ol_proj_fromLonLat} from 'ol/proj'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_ext_element from '../util/element.js'
+import {fromLonLat as ol_proj_fromLonLat} from 'ol/proj.js'
 // Add flyTo
-import '../util/View'
+import '../util/View.js'
 
 /** A control with scroll-driven navigation to create narrative maps
  *

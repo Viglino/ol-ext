@@ -1,5 +1,5 @@
-import {ol_coordinate_equal} from "./GeomUtils";
-import ol_geom_LineString from "ol/geom/LineString";
+import {ol_coordinate_equal} from "./GeomUtils.js";
+import ol_geom_LineString from "ol/geom/LineString.js";
 
 /** Split a lineString by a point or a list of points
  *	NB: points must be on the line, use getClosestPoint() to get one

@@ -1,4 +1,4 @@
-import {asArray as ol_color_asArray} from 'ol/color'
+import {asArray as ol_color_asArray} from 'ol/color.js'
 
 /** Converts an RGB color value to HSL.
  * returns hsl as array h:[0,360], s:[0,100], l:[0,100]

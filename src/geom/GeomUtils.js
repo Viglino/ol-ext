@@ -5,16 +5,16 @@
   Usefull function to handle geometric operations
 */
 
-import ol_geom_LineString from 'ol/geom/LineString'
-import ol_geom_LinearRing from 'ol/geom/LinearRing'
-import ol_geom_MultiLineString from 'ol/geom/MultiLineString'
-import ol_geom_MultiPoint from 'ol/geom/MultiPoint'
-import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_geom_Circle from 'ol/geom/Circle'
-import {getCenter as ol_extent_getCenter} from 'ol/extent'
-import {buffer as ol_extent_buffer} from 'ol/extent'
+import ol_geom_LineString from 'ol/geom/LineString.js'
+import ol_geom_LinearRing from 'ol/geom/LinearRing.js'
+import ol_geom_MultiLineString from 'ol/geom/MultiLineString.js'
+import ol_geom_MultiPoint from 'ol/geom/MultiPoint.js'
+import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_geom_Circle from 'ol/geom/Circle.js'
+import {getCenter as ol_extent_getCenter} from 'ol/extent.js'
+import {buffer as ol_extent_buffer} from 'ol/extent.js'
 
 /** Distance beetween 2 points
  *	Usefull geometric functions

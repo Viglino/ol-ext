@@ -3,12 +3,12 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Bar from './Bar'
-import ol_control_Toggle from './Toggle'
-import ol_control_Button from './Button'
-import ol_control_TextButton from './TextButton'
-import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_control_Bar from './Bar.js'
+import ol_control_Toggle from './Toggle.js'
+import ol_control_Button from './Button.js'
+import ol_control_TextButton from './TextButton.js'
+import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw.js'
 
 
 /** Geolocation bar

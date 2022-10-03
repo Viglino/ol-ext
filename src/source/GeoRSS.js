@@ -2,10 +2,10 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_source_Vector from 'ol/source/Vector'
-import ol_ext_Ajax from '../util/Ajax';
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_ext_Ajax from '../util/Ajax.js';
 
-import ol_format_GeoRSS from '../format/GeoRSS'
+import ol_format_GeoRSS from '../format/GeoRSS.js'
 
 /** ol_source_GeoRSS is a source that load Wikimedia Commons content in a vector layer.
  * @constructor 

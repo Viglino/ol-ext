@@ -3,9 +3,9 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_TouchCursor from './TouchCursor'
+import ol_interaction_TouchCursor from './TouchCursor.js'
 
-import ol_layer_SketchOverlay from '../layer/SketchOverlay'
+import ol_layer_SketchOverlay from '../layer/SketchOverlay.js'
 
 /** TouchCursor interaction + ModifyFeature
  * @constructor

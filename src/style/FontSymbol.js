@@ -2,8 +2,8 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_style_RegularShape from 'ol/style/RegularShape'
-import {asString as ol_color_asString} from 'ol/color'
+import ol_style_RegularShape from 'ol/style/RegularShape.js'
+import {asString as ol_color_asString} from 'ol/color.js'
 
 /**
  * @classdesc
@@ -435,7 +435,7 @@ ol_style_FontSymbol.defs = { 'fonts':{}, 'glyphs':{} };
 /* Cool stuff to get the image symbol for a style
  * @param {number} ratio pixelratio
  * /
-import ol_style_Image from 'ol/style/Image'
+import ol_style_Image from 'ol/style/Image.js'
 ol_style_Image.prototype.getImagePNG = function(ratio) {
   ratio = ratio || window.devicePixelRatio;
   var canvas = this.getImage(ratio);

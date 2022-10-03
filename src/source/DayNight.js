@@ -3,10 +3,10 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_Feature from 'ol/Feature'
-import ol_source_Vector from 'ol/source/Vector'
-import {all as ol_loadingstrategy_all} from 'ol/loadingstrategy'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import {all as ol_loadingstrategy_all} from 'ol/loadingstrategy.js'
 
 /** DayNight source: a source to display day/night on a map
  * @constructor 

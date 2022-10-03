@@ -3,16 +3,16 @@
   The tiles will be reprojected to map pojection (EPSG:3857).
   NB: reduce tileSize to minimize deformations on small scales.
 */
-import ol_View from 'ol/View'
-import ol_source_TileWMS from 'ol/source/TileWMS'
-import ol_layer_Tile from 'ol/layer/Tile'
-import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
-import ol_format_WMSCapabilities from 'ol/format/WMSCapabilities'
-import ol_ext_element from '../util/element'
-import ol_ext_Ajax from '../util/Ajax'
-import ol_control_Button from './Button'
-import ol_control_Dialog from './Dialog'
-import '../layer/GetPreview';
+import ol_View from 'ol/View.js'
+import ol_source_TileWMS from 'ol/source/TileWMS.js'
+import ol_layer_Tile from 'ol/layer/Tile.js'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj.js'
+import ol_format_WMSCapabilities from 'ol/format/WMSCapabilities.js'
+import ol_ext_element from '../util/element.js'
+import ol_ext_Ajax from '../util/Ajax.js'
+import ol_control_Button from './Button.js'
+import ol_control_Dialog from './Dialog.js'
+import '../layer/GetPreview.js';
 
 /** WMSCapabilities
  * @constructor

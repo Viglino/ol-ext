@@ -3,11 +3,11 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon'
-import ol_geom_LinearRing from 'ol/geom/LinearRing'
-import ol_interaction_Draw from 'ol/interaction/Draw'
-import ol_interaction_Select from 'ol/interaction/Select'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon.js'
+import ol_geom_LinearRing from 'ol/geom/LinearRing.js'
+import ol_interaction_Draw from 'ol/interaction/Draw.js'
+import ol_interaction_Select from 'ol/interaction/Select.js'
 
 /** Interaction to draw holes in a polygon.
  * It fires a drawstart, drawend event when drawing the hole

@@ -7,7 +7,7 @@
 	@see https://en.wikipedia.org/wiki/Convex_hull_algorithms
 */
 
-import ol_geom_Geometry from 'ol/geom/Geometry';
+import ol_geom_Geometry from 'ol/geom/Geometry.js';
 
 var ol_coordinate_convexHull;
 

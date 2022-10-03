@@ -2,12 +2,12 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_Map from 'ol/Map'
-import ol_ext_element from '../util/element';
-import ol_Overlay from 'ol/Overlay'
-import { inAndOut as ol_easing_inAndOut } from 'ol/easing'
-import ol_matrix3D from '../util/matrix3D'
-import { altKeyOnly as ol_events_condition_altKeyOnly } from 'ol/events/condition'
+import ol_Map from 'ol/Map.js'
+import ol_ext_element from '../util/element.js';
+import ol_Overlay from 'ol/Overlay.js'
+import { inAndOut as ol_easing_inAndOut } from 'ol/easing.js'
+import ol_matrix3D from '../util/matrix3D.js'
+import { altKeyOnly as ol_events_condition_altKeyOnly } from 'ol/events/condition.js'
 
 /** A map with a perspective
  * @constructor 
