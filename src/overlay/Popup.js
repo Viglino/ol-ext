@@ -3,8 +3,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_Overlay from 'ol/Overlay'
-import ol_ext_element from '../util/element'
+import ol_Overlay from 'ol/Overlay.js'
+import ol_ext_element from '../util/element.js'
 
 /**
  * @classdesc

@@ -2,8 +2,8 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_source_BinBase from './BinBase'
-import ol_InseeGrid from '../render/InseeGrid';
+import ol_source_BinBase from './BinBase.js'
+import ol_InseeGrid from '../render/InseeGrid.js';
 
 /** A source for INSEE grid
  * @constructor

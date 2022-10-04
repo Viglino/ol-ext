@@ -1,11 +1,11 @@
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-import ol_source_Vector from 'ol/source/Vector'
-import ol_Feature from 'ol/Feature'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
-import {buffer as ol_extent_buffer} from 'ol/extent'
-import {ol_coordinate_equal, ol_coordinate_dist2d} from '../geom/GeomUtils'
-import ol_coordinate_convexHull from '../geom/ConvexHull'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent.js'
+import {buffer as ol_extent_buffer} from 'ol/extent.js'
+import {ol_coordinate_equal, ol_coordinate_dist2d} from '../geom/GeomUtils.js'
+import ol_coordinate_convexHull from '../geom/ConvexHull.js'
 
 /** Delaunay source
  * Calculate a delaunay triangulation from points in a source

@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_SVGFilter from '../../util/SVGFilter'
+import ol_ext_SVGFilter from '../../util/SVGFilter.js'
 
 /** A simple filter to detect edges on images
  * @constructor

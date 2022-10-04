@@ -3,9 +3,9 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_filter_Base from './Base'
-import {asString as ol_color_asString} from 'ol/color'
-import {toHSL as ol_color_toHSL} from '../util/color'
+import ol_filter_Base from './Base.js'
+import {asString as ol_color_asString} from 'ol/color.js'
+import {toHSL as ol_color_toHSL} from '../util/color.js'
 
 /** Make a map or layer look like made of a set of Lego bricks.
  *  @constructor

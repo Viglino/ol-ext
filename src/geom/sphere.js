@@ -1,5 +1,5 @@
-import {getDistance as ol_sphere_getDistance} from 'ol/sphere'
-import {transform as ol_proj_transform} from 'ol/proj'
+import {getDistance as ol_sphere_getDistance} from 'ol/sphere.js'
+import {transform as ol_proj_transform} from 'ol/proj.js'
 
 /** Compute great circle bearing of two points.
  * @See http://www.movable-type.co.uk/scripts/latlong.html for the original code

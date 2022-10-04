@@ -2,11 +2,11 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_Feature from 'ol/Feature'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_source_Vector from 'ol/source/Vector'
-import { ol_coordinate_getFeatureCenter } from "../geom/GeomUtils";
-import './Vector' 
+import ol_Feature from 'ol/Feature.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import { ol_coordinate_getFeatureCenter } from "../geom/GeomUtils.js";
+import './Vector.js'
 
 /** Abstract base class; normally only used for creating subclasses. Bin collector for data
  * @constructor

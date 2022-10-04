@@ -4,14 +4,14 @@
 
   ol_layer_AnimatedCluster is a vector layer that animate cluster
 */
-import ol_layer_Vector from 'ol/layer/Vector'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_Feature from 'ol/Feature'
-import {easeOut as ol_easing_easeOut} from 'ol/easing'
-import {buffer as ol_extent_buffer} from 'ol/extent'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_render_getVectorContext from '../util/getVectorContext';
-import ol_ext_getVectorContextStyle from '../util/getVectorContextStyle'
+import ol_layer_Vector from 'ol/layer/Vector.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_Feature from 'ol/Feature.js'
+import {easeOut as ol_easing_easeOut} from 'ol/easing.js'
+import {buffer as ol_extent_buffer} from 'ol/extent.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import ol_render_getVectorContext from '../util/getVectorContext.js';
+import ol_ext_getVectorContextStyle from '../util/getVectorContextStyle.js'
 
 /**
  *  A vector layer for animated cluster

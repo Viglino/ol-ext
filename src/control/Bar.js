@@ -2,7 +2,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_control_Control from 'ol/control/Control'
+import ol_control_Control from 'ol/control/Control.js'
 
 /** Control bar for OL3
  * The control bar is a container for other controls. It can be used to create toolbars.

@@ -2,12 +2,12 @@
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_interaction_Pointer from 'ol/interaction/Pointer'
-import ol_geom_LineString from 'ol/geom/LineString'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import {ol_coordinate_dist2d, ol_coordinate_findSegment, ol_coordinate_offsetCoords} from "../geom/GeomUtils";
+import ol_interaction_Pointer from 'ol/interaction/Pointer.js'
+import ol_geom_LineString from 'ol/geom/LineString.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import {ol_coordinate_dist2d, ol_coordinate_findSegment, ol_coordinate_offsetCoords} from "../geom/GeomUtils.js";
 
-import ol_style_Style_defaultStyle from '../style/defaultStyle'
+import ol_style_Style_defaultStyle from '../style/defaultStyle.js'
 
 /** Offset interaction for offseting feature geometry
  * @constructor

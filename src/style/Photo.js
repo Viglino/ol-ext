@@ -4,10 +4,10 @@
 *
 *  Photo style for vector features
 */
-import ol_style_RegularShape from 'ol/style/RegularShape'
-import {asString as ol_color_asString} from 'ol/color'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Fill from 'ol/style/Fill'
+import ol_style_RegularShape from 'ol/style/RegularShape.js'
+import {asString as ol_color_asString} from 'ol/color.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_style_Fill from 'ol/style/Fill.js'
 
 /**
  * @classdesc

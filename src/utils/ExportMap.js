@@ -1,5 +1,5 @@
 //TODO: Rewrite pdf export module and export
-import jsPDF from 'jspdf'
+import jsPDF from 'jspdf.js'
 
 /** Function to export the map as an image. The function 
  *

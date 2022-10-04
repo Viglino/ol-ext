@@ -2,8 +2,8 @@
  * Create a brand new function for ol5 copy of ol6 function.
  * Will be ignored using openlayers-ext package or ol5
  */
-import { multiply as multiplyTransform } from 'ol/transform';
-import CanvasImmediateRenderer from 'ol/render/canvas/Immediate';
+import { multiply as multiplyTransform } from 'ol/transform.js';
+import CanvasImmediateRenderer from 'ol/render/canvas/Immediate.js';
 
 function getVectorContext(event) {
   const frameState = event.frameState;

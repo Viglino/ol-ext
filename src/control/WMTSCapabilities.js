@@ -1,13 +1,13 @@
-import ol_control_WMSCapabilities from './WMSCapabilities';
+import ol_control_WMSCapabilities from './WMSCapabilities.js';
 
-import ol_View from 'ol/View'
-import ol_tilegrid_WMTS from 'ol/tilegrid/WMTS'
-import ol_format_WMTSCapabilities from 'ol/format/WMTSCapabilities'
-import ol_layer_Tile from 'ol/layer/Tile'
-import ol_source_WMTS from 'ol/source/WMTS'
-import { get as ol_proj_get } from 'ol/proj'
-import { transformExtent as ol_proj_transformExtent } from 'ol/proj'
-import { getWidth as ol_extent_getWidth } from 'ol/extent'
+import ol_View from 'ol/View.js'
+import ol_tilegrid_WMTS from 'ol/tilegrid/WMTS.js'
+import ol_format_WMTSCapabilities from 'ol/format/WMTSCapabilities.js'
+import ol_layer_Tile from 'ol/layer/Tile.js'
+import ol_source_WMTS from 'ol/source/WMTS.js'
+import { get as ol_proj_get } from 'ol/proj.js'
+import { transformExtent as ol_proj_transformExtent } from 'ol/proj.js'
+import { getWidth as ol_extent_getWidth } from 'ol/extent.js'
 
 /** WMTSCapabilities
  * @constructor

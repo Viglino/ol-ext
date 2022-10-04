@@ -1,5 +1,5 @@
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-import ol_format_GeoJSON from 'ol/format/GeoJSON'
+import ol_format_GeoJSON from 'ol/format/GeoJSON.js'
 
 /** Feature format for reading and writing data in the GeoJSONX format.
  * @constructor 

@@ -3,8 +3,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_filter_Base from './Base'
-import ol_ext_SVGFilter_Paper from '../util/SVGFilter/Paper'
+import ol_filter_Base from './Base.js'
+import ol_ext_SVGFilter_Paper from '../util/SVGFilter/Paper.js'
 
 /** @typedef {Object} FilterPointillismOptions
  * @property {number} saturate saturation, default 2

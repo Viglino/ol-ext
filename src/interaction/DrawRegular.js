@@ -3,17 +3,17 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_style_Style_defaultStyle from '../style/defaultStyle'
-import ol_Collection from 'ol/Collection'
-import ol_layer_Vector from 'ol/layer/Vector'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_geom_Circle from 'ol/geom/Circle'
-import {fromCircle as ol_geom_Polygon_fromCircle} from 'ol/geom/Polygon'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_geom_LineString from 'ol/geom/LineString'
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import ol_Feature from 'ol/Feature'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import ol_style_Style_defaultStyle from '../style/defaultStyle.js'
+import ol_Collection from 'ol/Collection.js'
+import ol_layer_Vector from 'ol/layer/Vector.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_geom_Circle from 'ol/geom/Circle.js'
+import {fromCircle as ol_geom_Polygon_fromCircle} from 'ol/geom/Polygon.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import ol_geom_LineString from 'ol/geom/LineString.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_Feature from 'ol/Feature.js'
 
 /** Interaction rotate
  * @constructor

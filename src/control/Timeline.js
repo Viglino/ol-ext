@@ -1,7 +1,7 @@
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-import ol_source_Vector from 'ol/source/Vector'
-import ol_control_Control from 'ol/control/Control'
-import ol_ext_element from '../util/element'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_ext_element from '../util/element.js'
 
 /** Timeline control
  *

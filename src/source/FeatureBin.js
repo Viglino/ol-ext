@@ -2,8 +2,8 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_source_Vector from 'ol/source/Vector'
-import ol_source_BinBase from './BinBase'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_source_BinBase from './BinBase.js'
 
 /** A source that use a set of feature to collect data on it.
  * If a binSource is provided the bin is recalculated when features change.

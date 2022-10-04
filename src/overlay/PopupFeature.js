@@ -2,9 +2,9 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_Feature from 'ol/Feature'
-import ol_Overlay_Popup from './Popup'
-import ol_ext_element from '../util/element'
+import ol_Feature from 'ol/Feature.js'
+import ol_Overlay_Popup from './Popup.js'
+import ol_ext_element from '../util/element.js'
 
 
 /** Template attributes for popup

@@ -1,5 +1,5 @@
-import ol_interaction_Pointer from 'ol/interaction/Pointer'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
+import ol_interaction_Pointer from 'ol/interaction/Pointer.js'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
 
 /** Clip interaction to clip layers in a circle
  * @constructor

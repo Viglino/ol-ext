@@ -3,9 +3,9 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_Modify from 'ol/interaction/Modify'
-import ol_Overlay_Popup from '../overlay/Popup'
-import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
+import ol_interaction_Modify from 'ol/interaction/Modify.js'
+import ol_Overlay_Popup from '../overlay/Popup.js'
+import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent.js'
 
 /** Modify interaction with a popup to delet a point on touch device
  * @constructor

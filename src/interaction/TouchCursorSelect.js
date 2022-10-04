@@ -3,8 +3,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_style_Style_defaultStyle from '../style/defaultStyle'
-import ol_interaction_TouchCursor from './TouchCursor'
+import ol_style_Style_defaultStyle from '../style/defaultStyle.js'
+import ol_interaction_TouchCursor from './TouchCursor.js'
 
 /** A TouchCursor to select objects on hovering the cursor
  * @constructor

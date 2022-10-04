@@ -3,10 +3,10 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has'
-import ol_style_Stroke from 'ol/style/Stroke'
-import {asString as ol_color_asString} from 'ol/color'
-import ol_style_FillPattern from './FillPattern'
+import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import {asString as ol_color_asString} from 'ol/color.js'
+import ol_style_FillPattern from './FillPattern.js'
 
 /**
  * @classdesc

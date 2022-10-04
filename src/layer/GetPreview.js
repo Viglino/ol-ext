@@ -3,13 +3,13 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_source_Source from 'ol/source/Source'
-import ol_source_Tile from 'ol/source/Tile'
-import ol_source_TileWMS from 'ol/source/TileWMS'
-import ol_layer_Base from 'ol/layer/Layer'
-import {containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent'
-import {transform as ol_proj_transform} from 'ol/proj'
-import ol_layer_Group from 'ol/layer/Group'
+import ol_source_Source from 'ol/source/Source.js'
+import ol_source_Tile from 'ol/source/Tile.js'
+import ol_source_TileWMS from 'ol/source/TileWMS.js'
+import ol_layer_Base from 'ol/layer/Layer.js'
+import {containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent.js'
+import {transform as ol_proj_transform} from 'ol/proj.js'
+import ol_layer_Group from 'ol/layer/Group.js'
 
 /**
  * Return a preview image of the source.

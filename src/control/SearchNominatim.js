@@ -2,8 +2,8 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {transform as ol_proj_transform} from 'ol/proj'
-import ol_control_SearchJSON from "./SearchJSON";
+import {transform as ol_proj_transform} from 'ol/proj.js'
+import ol_control_SearchJSON from "./SearchJSON.js";
 
 /**
  * Search places using the Nominatim geocoder from the OpenStreetmap project.

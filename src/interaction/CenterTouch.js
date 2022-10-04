@@ -3,8 +3,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_control_Target from '../control/Target'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import ol_control_Target from '../control/Target.js'
 
 /** Handles coordinates on the center of the viewport.
  * It can be used as abstract base class used for creating subclasses. 

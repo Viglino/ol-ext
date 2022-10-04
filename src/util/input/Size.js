@@ -1,5 +1,5 @@
-import ol_ext_element from '../element';
-import ol_ext_input_List from './List'
+import ol_ext_element from '../element.js';
+import ol_ext_input_List from './List.js'
 
 /** Checkbox input
  * @constructor

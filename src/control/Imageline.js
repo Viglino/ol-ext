@@ -1,7 +1,7 @@
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
-import ol_ext_element from '../util/element'
-import ol_ext_getMapCanvas from '../util/getMapCanvas'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_ext_element from '../util/element.js'
+import ol_ext_getMapCanvas from '../util/getMapCanvas.js'
 
 /** Image line control
  *

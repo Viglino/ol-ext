@@ -2,12 +2,12 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_layer_Tile from 'ol/layer/Tile'
-import ol_ext_Ajax from '../util/Ajax'
-import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
+import ol_layer_Tile from 'ol/layer/Tile.js'
+import ol_ext_Ajax from '../util/Ajax.js'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj.js'
 // import {intersects as ol_extent_intersects} from 'ol/extent'
 
-import ol_source_Geoportail from '../source/Geoportail'
+import ol_source_Geoportail from '../source/Geoportail.js'
 
 /** IGN's Geoportail WMTS layer definition
  * @constructor 

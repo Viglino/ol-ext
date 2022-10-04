@@ -1,7 +1,7 @@
-import ol_format_GeoJSONX from './GeoJSONX'
-import ol_format_Polyline from 'ol/format/Polyline'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_geom_LineString from 'ol/geom/LineString'
+import ol_format_GeoJSONX from './GeoJSONX.js'
+import ol_format_Polyline from 'ol/format/Polyline.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import ol_geom_LineString from 'ol/geom/LineString.js'
 
 /** Feature format for reading and writing data in the GeoJSONP format,
  * using Polyline Algorithm to encode geometry.

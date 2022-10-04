@@ -1,4 +1,4 @@
-import ol_Object from 'ol/Object'
+import ol_Object from 'ol/Object.js'
 
 /** Ajax request
  * @fires success

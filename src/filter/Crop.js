@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_filter_Mask from './Mask'
+import ol_filter_Mask from './Mask.js'
 
 /** Crop drawing using an ol.Feature
  * @constructor

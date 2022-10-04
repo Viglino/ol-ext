@@ -3,16 +3,16 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Stroke from 'ol/style/Stroke'
-import {buffer as ol_extent_buffer, containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_layer_Vector from 'ol/layer/Vector'
-import ol_Collection from 'ol/Collection'
-import ol_Feature from 'ol/Feature'
-import ol_geom_LineString from 'ol/geom/LineString'
-import './Modify'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import {buffer as ol_extent_buffer, containsCoordinate as ol_extent_containsCoordinate} from 'ol/extent.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_layer_Vector from 'ol/layer/Vector.js'
+import ol_Collection from 'ol/Collection.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_geom_LineString from 'ol/geom/LineString.js'
+import './Modify.js'
 
 /** Interaction to snap to guidelines
  * @constructor

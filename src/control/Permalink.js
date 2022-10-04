@@ -3,12 +3,12 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
-import {transform as ol_proj_transform} from 'ol/proj'
-import ol_ext_element from '../util/element'
-import { toLonLat as ol_geohash_toLonLat } from '../geom/geohash'
-import { fromLonLat as ol_geohash_fromLonLat } from '../geom/geohash'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_control_Control from 'ol/control/Control.js'
+import {transform as ol_proj_transform} from 'ol/proj.js'
+import ol_ext_element from '../util/element.js'
+import { toLonLat as ol_geohash_toLonLat } from '../geom/geohash.js'
+import { fromLonLat as ol_geohash_fromLonLat } from '../geom/geohash.js'
 
 /**
  * Set an hyperlink that will return the user to the current map view.

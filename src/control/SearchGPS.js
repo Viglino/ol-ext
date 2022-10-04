@@ -3,12 +3,12 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {transform as ol_proj_transform} from 'ol/proj'
-import {toStringHDMS as ol_coordinate_toStringHDMS} from 'ol/coordinate';
-import ol_Geolocation from 'ol/Geolocation'
+import {transform as ol_proj_transform} from 'ol/proj.js'
+import {toStringHDMS as ol_coordinate_toStringHDMS} from 'ol/coordinate.js';
+import ol_Geolocation from 'ol/Geolocation.js'
 
-import ol_control_Search from './Search'
-import ol_ext_element from '../util/element'
+import ol_control_Search from './Search.js'
+import ol_ext_element from '../util/element.js'
 
 /**
  * Search on GPS coordinate.

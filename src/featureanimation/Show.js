@@ -4,7 +4,7 @@
   
 */
 
-import ol_featureAnimation from './FeatureAnimation'
+import ol_featureAnimation from './FeatureAnimation.js'
 
 /** Show an object for a given duration
  * @constructor

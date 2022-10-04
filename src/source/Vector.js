@@ -1,4 +1,4 @@
-import ol_source_Vector from 'ol/source/Vector'
+import ol_source_Vector from 'ol/source/Vector.js'
 
 ;(function () {
   var clear = ol_source_Vector.prototype.clear;

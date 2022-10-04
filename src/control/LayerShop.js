@@ -3,8 +3,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_element from '../util/element'
-import ol_control_LayerSwitcher from '../control/LayerSwitcher'
+import ol_ext_element from '../util/element.js'
+import ol_control_LayerSwitcher from '../control/LayerSwitcher.js'
 
 /** LayerShop a layer switcher with special controls to handle operation on layers.
  * @fires select

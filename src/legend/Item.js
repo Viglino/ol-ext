@@ -1,5 +1,5 @@
-import ol_Object from 'ol/Object'
-import ol_ext_element from '../util/element'
+import ol_Object from 'ol/Object.js'
+import ol_ext_element from '../util/element.js'
 
 /** ol/legend/Item options
  * @typedef {Object} olLegendItemOptions

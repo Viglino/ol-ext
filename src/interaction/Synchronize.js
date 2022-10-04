@@ -3,10 +3,10 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_Map from 'ol/Map'
-import ol_Overlay from 'ol/Overlay'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import ol_Map from 'ol/Map.js'
+import ol_Overlay from 'ol/Overlay.js'
 
 /** Interaction synchronize
  * @constructor

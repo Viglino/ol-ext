@@ -2,11 +2,11 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_source_WMTS from 'ol/source/WMTS'
-import {getWidth as ol_extent_getWidth} from 'ol/extent'
-import ol_tilegrid_WMTS from 'ol/tilegrid/WMTS'
-import {get as ol_proj_get} from 'ol/proj' 
-import ol_ext_Ajax from '../util/Ajax'
+import ol_source_WMTS from 'ol/source/WMTS.js'
+import {getWidth as ol_extent_getWidth} from 'ol/extent.js'
+import ol_tilegrid_WMTS from 'ol/tilegrid/WMTS.js'
+import {get as ol_proj_get} from 'ol/proj.js' 
+import ol_ext_Ajax from '../util/Ajax.js'
 
 /** IGN's Geoportail WMTS source
  * @constructor

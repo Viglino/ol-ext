@@ -1,4 +1,4 @@
-import ol_ext_input_Checkbox from './Checkbox'
+import ol_ext_input_Checkbox from './Checkbox.js'
 
 /** Switch input
  * @constructor

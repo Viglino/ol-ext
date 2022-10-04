@@ -2,9 +2,9 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_source_BinBase from './BinBase'
-import {transform as ol_proj_transform} from 'ol/proj'
-import ol_geom_Polygon from 'ol/geom/Polygon'
+import ol_source_BinBase from './BinBase.js'
+import {transform as ol_proj_transform} from 'ol/proj.js'
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
 
 /** A source for grid binning
  * @constructor

@@ -5,9 +5,9 @@
 *  Add a chart style to display charts (pies or bars) on a map 
 */
 
-import ol_style_RegularShape from 'ol/style/RegularShape'
-import ol_style_Fill from 'ol/style/Fill'
-import {asString as ol_color_asString} from 'ol/color'
+import ol_style_RegularShape from 'ol/style/RegularShape.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import {asString as ol_color_asString} from 'ol/color.js'
 
 /**
  * @classdesc

@@ -5,22 +5,22 @@
   ol/interaction/SelectCluster is an interaction for selecting vector features in a cluster.
 */
 
-import ol_Map from 'ol/Map'
-import ol_Collection from 'ol/Collection'
-import ol_layer_Vector from 'ol/layer/Vector'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_interaction_Select from 'ol/interaction/Select'
-import ol_Feature from 'ol/Feature'
-import ol_geom_LineString from 'ol/geom/LineString'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import {easeOut as ol_easing_easeOut} from 'ol/easing'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Circle from 'ol/style/Circle'
-import ol_render_getVectorContext from '../util/getVectorContext';
-import { createEmpty as ol_extent_createEmpty } from 'ol/extent'
-import { extend as ol_extent_extend } from 'ol/extent'
-import { singleClick as ol_events_condition_singleClick } from 'ol/events/condition';
+import ol_Map from 'ol/Map.js'
+import ol_Collection from 'ol/Collection.js'
+import ol_layer_Vector from 'ol/layer/Vector.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_interaction_Select from 'ol/interaction/Select.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_geom_LineString from 'ol/geom/LineString.js'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import {easeOut as ol_easing_easeOut} from 'ol/easing.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Circle from 'ol/style/Circle.js'
+import ol_render_getVectorContext from '../util/getVectorContext.js';
+import { createEmpty as ol_extent_createEmpty } from 'ol/extent.js'
+import { extend as ol_extent_extend } from 'ol/extent.js'
+import { singleClick as ol_events_condition_singleClick } from 'ol/events/condition.js';
 
 /**
  * @classdesc

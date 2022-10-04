@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_ext_SVGFilter from '../SVGFilter'
+import ol_ext_SVGFilter from '../SVGFilter.js'
 
 /** Apply a sobel filter on an image
  * @constructor

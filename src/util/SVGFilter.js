@@ -1,5 +1,5 @@
-import ol_Object from 'ol/Object'
-import ol_ext_SVGOperation from './SVGOperation'
+import ol_Object from 'ol/Object.js'
+import ol_ext_SVGOperation from './SVGOperation.js'
 
 /** SVG filter 
  * @param {*} options

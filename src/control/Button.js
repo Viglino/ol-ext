@@ -2,9 +2,9 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_control_Control from 'ol/control/Control'
+import ol_control_Control from 'ol/control/Control.js'
 
-import ol_ext_element from '../util/element'
+import ol_ext_element from '../util/element.js'
 
 /** A simple push button control
  * @constructor

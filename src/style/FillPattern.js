@@ -3,9 +3,9 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has'
-import ol_style_Fill from 'ol/style/Fill'
-import {asString as ol_color_asString} from 'ol/color'
+import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import {asString as ol_color_asString} from 'ol/color.js'
 
 /**
  * @classdesc

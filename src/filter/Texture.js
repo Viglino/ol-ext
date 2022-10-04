@@ -3,8 +3,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_filter_Base from './Base'
-import ol_filter_Texture_Image from './TextureImage'
+import ol_filter_Base from './Base.js'
+import ol_filter_Texture_Image from './TextureImage.js'
 
 /** @typedef {Object} FilterTextureOptions
  *  @property {Image | undefined} img Image object for the texture

@@ -2,7 +2,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_source_Raster from 'ol/source/Raster'
+import ol_source_Raster from 'ol/source/Raster.js'
 
 /** A source to turn your maps into oil paintings...
  * Original idea:  Santhosh G https://www.codeproject.com/Articles/471994/OilPaintEffect

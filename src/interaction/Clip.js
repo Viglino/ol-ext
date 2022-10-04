@@ -1,4 +1,4 @@
-import ol_interaction_Pointer from 'ol/interaction/Pointer'
+import ol_interaction_Pointer from 'ol/interaction/Pointer.js'
 
 /** Clip interaction to clip layers in a circle
  * @constructor

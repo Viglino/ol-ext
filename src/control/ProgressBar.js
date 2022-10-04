@@ -2,10 +2,10 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
-import ol_layer_Layer from 'ol/layer/Layer'
-import ol_ext_element from '../util/element'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_layer_Layer from 'ol/layer/Layer.js'
+import ol_ext_element from '../util/element.js'
 
 /** Add a progress bar to a map.
  * Use the layers option listen to tileload event and show the layer loading progress.

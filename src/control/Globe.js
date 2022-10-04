@@ -3,17 +3,17 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
-import ol_Map from 'ol/Map'
-import ol_Collection from 'ol/Collection'
-import ol_View from 'ol/View'
-import ol_layer_Vector from 'ol/layer/Vector'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Circle from 'ol/style/Circle'
-import ol_style_Fill from 'ol/style/Fill'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_source_Vector from 'ol/source/Vector'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_Map from 'ol/Map.js'
+import ol_Collection from 'ol/Collection.js'
+import ol_View from 'ol/View.js'
+import ol_layer_Vector from 'ol/layer/Vector.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Circle from 'ol/style/Circle.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_source_Vector from 'ol/source/Vector.js'
 
 /**
  * OpenLayers 3 lobe Overview Control.

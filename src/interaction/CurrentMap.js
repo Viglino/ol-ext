@@ -1,4 +1,4 @@
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
 
 /** An interaction to check the current map and add key events listeners.
  * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).

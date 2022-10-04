@@ -4,17 +4,17 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Control from 'ol/control/Control'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_ext_element from '../util/element'
-import ol_control_Dialog from './Dialog'
-import ol_control_Legend from './Legend'
-import ol_control_Print from './Print'
-import ol_control_CanvasTitle from './CanvasTitle'
-import {getMapScale as ol_sphere_getMapScale} from '../geom/sphere'
-import {setMapScale as ol_sphere_setMapScale} from '../geom/sphere'
-import ol_control_Compass from './Compass';
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_ext_element from '../util/element.js'
+import ol_control_Dialog from './Dialog.js'
+import ol_control_Legend from './Legend.js'
+import ol_control_Print from './Print.js'
+import ol_control_CanvasTitle from './CanvasTitle.js'
+import {getMapScale as ol_sphere_getMapScale} from '../geom/sphere.js'
+import {setMapScale as ol_sphere_setMapScale} from '../geom/sphere.js'
+import ol_control_Compass from './Compass.js';
 
 /** Print control to get an image of the map
  * @constructor

@@ -3,10 +3,10 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {asString as ol_color_asString} from 'ol/color'
+import {asString as ol_color_asString} from 'ol/color.js'
 
-import ol_control_CanvasBase from './CanvasBase'
-import ol_ext_element from '../util/element'
+import ol_control_CanvasBase from './CanvasBase.js'
+import ol_ext_element from '../util/element.js'
 
 /**
  * A title Control integrated in the canvas (for jpeg/png export purposes).

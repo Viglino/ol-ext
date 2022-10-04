@@ -1,18 +1,18 @@
-import ol_Object from 'ol/Object'
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_Collection from 'ol/Collection'
-import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has'
-import {toContext as ol_render_toContext} from 'ol/render'
-import {asString as ol_color_asString} from 'ol/color'
-import ol_Feature from 'ol/Feature'
-import ol_geom_Point from 'ol/geom/Point'
-import ol_geom_LineString from 'ol/geom/LineString';
-import ol_geom_Polygon from 'ol/geom/Polygon'
-import {extend as ol_extent_extend} from 'ol/extent'
-import ol_legend_Item from './Item'
-import ol_ext_element from '../util/element'
-import ol_style_Text from 'ol/style/Text'
-import ol_style_Fill from 'ol/style/Fill'
+import ol_Object from 'ol/Object.js'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_Collection from 'ol/Collection.js'
+import {DEVICE_PIXEL_RATIO as ol_has_DEVICE_PIXEL_RATIO} from 'ol/has.js'
+import {toContext as ol_render_toContext} from 'ol/render.js'
+import {asString as ol_color_asString} from 'ol/color.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import ol_geom_LineString from 'ol/geom/LineString.js';
+import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import {extend as ol_extent_extend} from 'ol/extent.js'
+import ol_legend_Item from './Item.js'
+import ol_ext_element from '../util/element.js'
+import ol_style_Text from 'ol/style/Text.js'
+import ol_style_Fill from 'ol/style/Fill.js'
 
 /** @namespace  ol.legend
  */

@@ -3,12 +3,12 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {asString as ol_color_asString} from 'ol/color'
-import {toStringXY as ol_coordinate_toStringXY} from 'ol/coordinate'
-import {transform as ol_proj_transform} from 'ol/proj'
+import {asString as ol_color_asString} from 'ol/color.js'
+import {toStringXY as ol_coordinate_toStringXY} from 'ol/coordinate.js'
+import {transform as ol_proj_transform} from 'ol/proj.js'
 
-import ol_control_CanvasBase from './CanvasBase'
-import ol_ext_element from '../util/element'
+import ol_control_CanvasBase from './CanvasBase.js'
+import ol_ext_element from '../util/element.js'
 
 /**
  * A Control to display map center coordinates on the canvas.

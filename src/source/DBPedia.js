@@ -13,16 +13,16 @@
   <ol.source.Vector>
 */
 
-import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy'
-import ol_source_Vector from 'ol/source/Vector'
-import ol_Feature from 'ol/Feature'
-import ol_geom_Point from 'ol/geom/Point'
-import {transform as ol_proj_transform, transformExtent as ol_proj_transformExtent} from 'ol/proj'
-import ol_style_Fill from 'ol/style/Fill'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_FontSymbol from '../style/FontSymbol'
-import ol_ext_Ajax from '../util/Ajax';
+import {bbox as ol_loadingstrategy_bbox} from 'ol/loadingstrategy.js'
+import ol_source_Vector from 'ol/source/Vector.js'
+import ol_Feature from 'ol/Feature.js'
+import ol_geom_Point from 'ol/geom/Point.js'
+import {transform as ol_proj_transform, transformExtent as ol_proj_transformExtent} from 'ol/proj.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_FontSymbol from '../style/FontSymbol.js'
+import ol_ext_Ajax from '../util/Ajax.js';
 
 /**
 * @constructor ol_source_DBPedia

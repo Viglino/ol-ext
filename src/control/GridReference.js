@@ -3,12 +3,12 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Fill from 'ol/style/Fill'
-import ol_style_Text from 'ol/style/Text'
-import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent'
-import ol_control_CanvasBase from './CanvasBase'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_style_Fill from 'ol/style/Fill.js'
+import ol_style_Text from 'ol/style/Text.js'
+import {boundingExtent as ol_extent_boundingExtent} from 'ol/extent.js'
+import ol_control_CanvasBase from './CanvasBase.js'
 
 /**
  * Draw a grid reference on the map and add an index.

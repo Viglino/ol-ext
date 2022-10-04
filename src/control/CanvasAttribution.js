@@ -2,12 +2,12 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_control_Attribution from 'ol/control/Attribution'
-import ol_style_Style from 'ol/style/Style'
-import {asString as ol_color_asString} from 'ol/color'
-import ol_control_CanvasBase from './CanvasBase'
-import ol_ext_element from '../util/element'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_control_Attribution from 'ol/control/Attribution.js'
+import ol_style_Style from 'ol/style/Style.js'
+import {asString as ol_color_asString} from 'ol/color.js'
+import ol_control_CanvasBase from './CanvasBase.js'
+import ol_ext_element from '../util/element.js'
 
 /**
  * @classdesc 

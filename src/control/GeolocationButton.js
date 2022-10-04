@@ -3,8 +3,8 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_control_Toggle from './Toggle'
-import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw'
+import ol_control_Toggle from './Toggle.js'
+import ol_interaction_GeolocationDraw from '../interaction/GeolocationDraw.js'
 
 /** Geolocation bar
  * The control bar is a container for other controls. It can be used to create toolbars.

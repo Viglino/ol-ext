@@ -1,7 +1,7 @@
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Circle from 'ol/style/Circle'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_style_Fill from 'ol/style/Fill'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Circle from 'ol/style/Circle.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_style_Fill from 'ol/style/Fill.js'
 
 var ol_style_Style_defaultStyle;
 

@@ -2,11 +2,11 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_source_Vector from 'ol/source/Vector'
-import {tile as ol_loadingstrategy_tile} from 'ol/loadingstrategy'
-import {createXYZ as ol_tilegrid_createXYZ} from 'ol/tilegrid'
-import ol_format_GeoJSON from 'ol/format/GeoJSON'
-import ol_ext_Ajax from '../util/Ajax'
+import ol_source_Vector from 'ol/source/Vector.js'
+import {tile as ol_loadingstrategy_tile} from 'ol/loadingstrategy.js'
+import {createXYZ as ol_tilegrid_createXYZ} from 'ol/tilegrid.js'
+import ol_format_GeoJSON from 'ol/format/GeoJSON.js'
+import ol_ext_Ajax from '../util/Ajax.js'
 
 /** A vector source to load WFS at a tile zoom level
  * @constructor

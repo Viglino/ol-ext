@@ -1,5 +1,5 @@
-import ol_Collection from 'ol/Collection'
-import ol_interaction_CurrentMap from './CurrentMap';
+import ol_Collection from 'ol/Collection.js'
+import ol_interaction_CurrentMap from './CurrentMap.js';
 
 /** An interaction to copy/paste features on a map. 
  * It will fire a 'focus' event on the map when map is focused (use mapCondition option to handle the condition when the map is focused).

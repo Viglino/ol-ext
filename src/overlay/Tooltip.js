@@ -3,11 +3,11 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import {getArea as ol_sphere_getArea} from 'ol/sphere.js';
-import {getLength as ol_sphere_getLength} from 'ol/sphere.js';
-import ol_Overlay_Popup from './Popup'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import {getArea as ol_sphere_getArea} from 'ol/sphere.js.js';
+import {getLength as ol_sphere_getLength} from 'ol/sphere.js.js';
+import ol_Overlay_Popup from './Popup.js'
 
 /** A tooltip element to be displayed over the map and attached on the cursor position.
  * @constructor

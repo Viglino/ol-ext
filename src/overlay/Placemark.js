@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_Overlay_Popup from './Popup'
+import ol_Overlay_Popup from './Popup.js'
 
 /**
  * @classdesc

@@ -3,7 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_control_Search from './Search'
+import ol_control_Search from './Search.js'
 
 /**
  * Search features.

@@ -3,8 +3,8 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_filter_Base from './Base'
-import {asString as ol_color_asString} from 'ol/color'
+import ol_filter_Base from './Base.js'
+import {asString as ol_color_asString} from 'ol/color.js'
 
 /** Mask drawing using an ol.Feature
  * @constructor

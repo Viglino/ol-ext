@@ -3,10 +3,10 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_control_CanvasBase from './CanvasBase'
-import ol_style_Style from 'ol/style/Style'
-import ol_style_Stroke from 'ol/style/Stroke'
-import ol_ext_element from '../util/element';
+import ol_control_CanvasBase from './CanvasBase.js'
+import ol_style_Style from 'ol/style/Style.js'
+import ol_style_Stroke from 'ol/style/Stroke.js'
+import ol_ext_element from '../util/element.js';
 
 /**
  * Draw a compass on the map. The position/size of the control is defined in the css.

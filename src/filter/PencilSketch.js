@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_filter_Base from './Base'
+import ol_filter_Base from './Base.js'
 
 /** @typedef {Object} FilterPencilSketchOptions
  * @property {number} blur blur value in pixel, default 8

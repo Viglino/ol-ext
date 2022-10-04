@@ -2,11 +2,11 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_interaction_CenterTouch from './CenterTouch'
-import ol_style_Style_defaultStyle from '../style/defaultStyle'
-import ol_layer_SketchOverlay from '../layer/SketchOverlay'
-import {ol_coordinate_equal} from '../geom/GeomUtils';
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_interaction_CenterTouch from './CenterTouch.js'
+import ol_style_Style_defaultStyle from '../style/defaultStyle.js'
+import ol_layer_SketchOverlay from '../layer/SketchOverlay.js'
+import {ol_coordinate_equal} from '../geom/GeomUtils.js';
 
 /** Interaction DrawTouch : pointer is deferred to the center of the viewport and a target is drawn to materialize this point
  * The interaction modifies map browser event coordinate and pixel properties to force pointer on the viewport center to any interaction that them.

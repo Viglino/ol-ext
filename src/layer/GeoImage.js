@@ -2,7 +2,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_layer_Image from 'ol/layer/Image'
+import ol_layer_Image from 'ol/layer/Image.js'
 
 /**
  * @classdesc

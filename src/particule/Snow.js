@@ -3,7 +3,7 @@
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-import ol_particule_Base from './Base'
+import ol_particule_Base from './Base.js'
 
 /** Rain particules to display clouds over the map
  * @constructor

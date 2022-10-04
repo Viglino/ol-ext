@@ -1,4 +1,4 @@
-import { asArray as ol_color_asArray } from 'ol/color'
+import { asArray as ol_color_asArray } from 'ol/color.js'
 
 /** @namespace ol.ext.imageLoader
  */

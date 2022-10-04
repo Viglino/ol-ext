@@ -3,12 +3,12 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import ol_control_Control from 'ol/control/Control'
-import {getCenter as ol_extent_getCenter} from 'ol/extent'
-import ol_Map from 'ol/Map'
-import ol_View from 'ol/View'
-import {transformExtent as ol_proj_transformExtent} from 'ol/proj'
-import ol_ext_element from 'ol-ext/util/element'
+import ol_control_Control from 'ol/control/Control.js'
+import {getCenter as ol_extent_getCenter} from 'ol/extent.js'
+import ol_Map from 'ol/Map.js'
+import ol_View from 'ol/View.js'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj.js'
+import ol_ext_element from 'ol-ext/util/element.js'
 
 /** A control to jump from one zone to another.
  * @constructor

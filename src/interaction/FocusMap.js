@@ -1,6 +1,6 @@
-import {unByKey as ol_Observable_unByKey} from 'ol/Observable'
-import ol_interaction_Interaction from 'ol/interaction/Interaction'
-import ol_ext_element from '../util/element'
+import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import ol_ext_element from '../util/element.js'
 
 /** An interaction to focus on the map on click. Usefull when using keyboard event on the map.
  * @deprecated use ol/interaction/CurrentMap instead
