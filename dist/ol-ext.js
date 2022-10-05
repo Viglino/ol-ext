@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.1
+ * @version v4.0.2
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -1172,9 +1172,9 @@ ol.ext.element.scrollDiv = function(elt, options) {
   }
   // Register scroll
   var onPointerMove = function(e) {
-    moving = true;
     if (pos !== false) {
       var delta = (isbar ? -1/scale : 1) * (pos - e[page]);
+      moving = moving || Math.round(delta)
       elt[scroll] += delta;
       d = new Date();
       if (d-dt) {
@@ -1184,6 +1184,8 @@ ol.ext.element.scrollDiv = function(elt, options) {
       dt = d;
       // Tell we are moving
       if (delta) onmove(true);
+    } else {
+      moving = true;
     }
   };
   // Animate scroll

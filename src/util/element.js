@@ -441,9 +441,9 @@ ol_ext_element.scrollDiv = function(elt, options) {
 
   // Register scroll
   var onPointerMove = function(e) {
-    moving = true;
     if (pos !== false) {
       var delta = (isbar ? -1/scale : 1) * (pos - e[page]);
+      moving = moving || Math.round(delta)
       elt[scroll] += delta;
       d = new Date();
       if (d-dt) {
@@ -453,6 +453,8 @@ ol_ext_element.scrollDiv = function(elt, options) {
       dt = d;
       // Tell we are moving
       if (delta) onmove(true);
+    } else {
+      moving = true;
     }
   };
   
