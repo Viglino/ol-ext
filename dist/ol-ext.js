@@ -23466,7 +23466,7 @@ ol.interaction.DrawTouch = class olinteractionDrawTouch extends ol.interaction.C
 
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
  * @constructor
- * @extends {ol.interaction.DragAndDrop}
+ * @extends {ol.interaction.Interaction}
  * @fires loadstart, loadend, addfeatures
  * @param {*} options
  *  @param {string} options.zone selector for the drop zone, default document
@@ -23474,7 +23474,7 @@ ol.interaction.DrawTouch = class olinteractionDrawTouch extends ol.interaction.C
  *  @param {Array<function(new:ol.format.Feature)>|undefined} options.formatConstructors Format constructors, default [ ol.format.GPX, ol.format.GeoJSONX, ol.format.GeoJSONP, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ]
  *  @param {Array<string>|undefined} options.accept list of accepted format, default ["gpx","json","geojsonx","geojsonp","geojson","igc","kml","topojson"]
  */
-ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.DragAndDrop {
+ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.Interaction {
   constructor(options) {
     options = options || {}
     super({})
@@ -23487,7 +23487,9 @@ ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.Dra
     this.projection_ = options.projection
     this.accept_ = options.accept || ["gpx", "json", "geojsonx", "geojsonp", "geojson", "igc", "kml", "topojson"]
     var self = this
-    zone.addEventListener('drop', function (e) { return self.ondrop(e) })
+    zone.addEventListener('drop', function (e) { 
+      return self.ondrop(e) 
+    })
   }
   /** Set the map
   */
@@ -23504,6 +23506,7 @@ ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.Dra
   /** Do something when over
   */
   ondrop(e) {
+    console.log('drop')
     e.preventDefault()
     if (e.dataTransfer && e.dataTransfer.files.length) {
       var self = this
