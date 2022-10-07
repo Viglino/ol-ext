@@ -53,7 +53,6 @@ var ol_interaction_DropFile = class olinteractionDropFile extends ol_interaction
   /** Do something when over
   */
   ondrop(e) {
-    console.log('drop')
     e.preventDefault()
     if (e.dataTransfer && e.dataTransfer.files.length) {
       var self = this
