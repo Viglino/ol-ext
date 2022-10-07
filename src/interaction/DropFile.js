@@ -1,4 +1,3 @@
-import ol_interaction_DragAndDrop from 'ol/interaction/DragAndDrop.js'
 import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
 import ol_format_GPX from 'ol/format/GPX.js'
 import ol_format_GeoJSON from 'ol/format/GeoJSON.js'
@@ -10,7 +9,7 @@ import ol_format_GeoJSONP from '../format/GeoJSONP.js'
 
 /** Extend DragAndDrop choose drop zone + fires loadstart, loadend
  * @constructor
- * @extends {ol_interaction_DragAndDrop}
+ * @extends {ol_interaction_Interaction}
  * @fires loadstart, loadend, addfeatures
  * @param {*} options
  *  @param {string} options.zone selector for the drop zone, default document
@@ -18,7 +17,7 @@ import ol_format_GeoJSONP from '../format/GeoJSONP.js'
  *  @param {Array<function(new:ol.format.Feature)>|undefined} options.formatConstructors Format constructors, default [ ol.format.GPX, ol.format.GeoJSONX, ol.format.GeoJSONP, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON ]
  *  @param {Array<string>|undefined} options.accept list of accepted format, default ["gpx","json","geojsonx","geojsonp","geojson","igc","kml","topojson"]
  */
-var ol_interaction_DropFile = class olinteractionDropFile extends ol_interaction_DragAndDrop {
+var ol_interaction_DropFile = class olinteractionDropFile extends ol_interaction_Interaction {
   constructor(options) {
     options = options || {}
 
@@ -35,7 +34,9 @@ var ol_interaction_DropFile = class olinteractionDropFile extends ol_interaction
     this.accept_ = options.accept || ["gpx", "json", "geojsonx", "geojsonp", "geojson", "igc", "kml", "topojson"]
 
     var self = this
-    zone.addEventListener('drop', function (e) { return self.ondrop(e) })
+    zone.addEventListener('drop', function (e) { 
+      return self.ondrop(e) 
+    })
   }
   /** Set the map
   */
@@ -52,6 +53,7 @@ var ol_interaction_DropFile = class olinteractionDropFile extends ol_interaction
   /** Do something when over
   */
   ondrop(e) {
+    console.log('drop')
     e.preventDefault()
     if (e.dataTransfer && e.dataTransfer.files.length) {
       var self = this
