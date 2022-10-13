@@ -20,7 +20,7 @@ import ol_control_CanvasBase from './CanvasBase.js'
  * @param {Object=} _ol_control_ options.
  *  @param {ol.projectionLike} options.projection projection to use for the graticule, default EPSG:4326 
  *  @param {number} options.maxResolution max resolution to display the graticule
- *  @param {ol_style_Style} options.style Style to use for drawing the graticule, default black.
+ *  @param {ol_style_Style} options.style Style to use for drawing the graticule, default black / white. Line style is used for drawing lines (no line if not defined). Fill style is used to draw the border. Text style is used to draw coords.
  *  @param {number} options.step step between lines (in proj units), default 1
  *  @param {number} options.stepCoord show a coord every stepCoord, default 1
  *  @param {number} options.spacing spacing between lines (in px), default 40px 
