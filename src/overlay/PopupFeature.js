@@ -178,21 +178,24 @@ var ol_Overlay_PopupFeature = class olOverlayPopupFeature extends ol_Overlay_Pop
           var a = atts[att];
           var content, val = featureAtts[att];
           // Get calculated value
-          if (typeof (a.format) === 'function') {
+          if (a && typeof (a.format) === 'function') {
             val = a.format(val, feature);
           }
 
           // Is entry visible?
           var visible = true;
-          if (typeof (a.visible) === 'boolean') {
+          if (a && typeof (a.visible) === 'boolean') {
             visible = a.visible;
-          } else if (typeof (a.visible) === 'function') {
+          } else if (a && typeof (a.visible) === 'function') {
             visible = a.visible(feature, val);
           }
 
           if (visible) {
             tr = ol_ext_element.create('TR', { parent: table });
-            ol_ext_element.create('TD', { html: a.title || att, parent: tr });
+            ol_ext_element.create('TD', { 
+              html: a ? a.title || att : att, 
+              parent: tr 
+            });
 
             // Show image or content
             if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
@@ -200,10 +203,15 @@ var ol_Overlay_PopupFeature = class olOverlayPopupFeature extends ol_Overlay_Pop
                 src: val
               });
             } else {
-              content = (a.before || '') + val + (a.after || '');
+              if (a) {
+                content = (a.before || '') + val + (a.after || '');
+              } else {
+                content = '';
+              }
               var maxc = this.get('maxChar') || 200;
-              if (typeof (content) === 'string' && content.length > maxc)
+              if (typeof (content) === 'string' && content.length > maxc) {
                 content = content.substr(0, maxc) + '[...]';
+              }
             }
 
             // Add value
