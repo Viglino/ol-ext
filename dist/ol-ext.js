@@ -8849,7 +8849,7 @@ ol.control.Globe = class olcontrolGlobe extends ol.control.Control {
  * @param {Object=} _ol_control_ options.
  *  @param {ol.projectionLike} options.projection projection to use for the graticule, default EPSG:4326 
  *  @param {number} options.maxResolution max resolution to display the graticule
- *  @param {ol.style.Style} options.style Style to use for drawing the graticule, default black.
+ *  @param {ol.style.Style} options.style Style to use for drawing the graticule, default black / white. Line style is used for drawing lines (no line if not defined). Fill style is used to draw the border. Text style is used to draw coords.
  *  @param {number} options.step step between lines (in proj units), default 1
  *  @param {number} options.stepCoord show a coord every stepCoord, default 1
  *  @param {number} options.spacing spacing between lines (in px), default 40px 
@@ -23506,7 +23506,6 @@ ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.Int
   /** Do something when over
   */
   ondrop(e) {
-    console.log('drop')
     e.preventDefault()
     if (e.dataTransfer && e.dataTransfer.files.length) {
       var self = this
@@ -35951,29 +35950,37 @@ ol.Overlay.PopupFeature = class olOverlayPopupFeature extends ol.Overlay.Popup {
           var a = atts[att];
           var content, val = featureAtts[att];
           // Get calculated value
-          if (typeof (a.format) === 'function') {
+          if (a && typeof (a.format) === 'function') {
             val = a.format(val, feature);
           }
           // Is entry visible?
           var visible = true;
-          if (typeof (a.visible) === 'boolean') {
+          if (a && typeof (a.visible) === 'boolean') {
             visible = a.visible;
-          } else if (typeof (a.visible) === 'function') {
+          } else if (a && typeof (a.visible) === 'function') {
             visible = a.visible(feature, val);
           }
           if (visible) {
             tr = ol.ext.element.create('TR', { parent: table });
-            ol.ext.element.create('TD', { html: a.title || att, parent: tr });
+            ol.ext.element.create('TD', { 
+              html: a ? a.title || att : att, 
+              parent: tr 
+            });
             // Show image or content
             if (this.get('showImage') && /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(val)) {
               content = ol.ext.element.create('IMG', {
                 src: val
               });
             } else {
-              content = (a.before || '') + val + (a.after || '');
+              if (a) {
+                content = (a.before || '') + val + (a.after || '');
+              } else {
+                content = '';
+              }
               var maxc = this.get('maxChar') || 200;
-              if (typeof (content) === 'string' && content.length > maxc)
+              if (typeof (content) === 'string' && content.length > maxc) {
                 content = content.substr(0, maxc) + '[...]';
+              }
             }
             // Add value
             ol.ext.element.create('TD', {
