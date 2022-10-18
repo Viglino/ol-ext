@@ -571,14 +571,14 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
   }
   /**
    * Get the rotation center
-   * @return {ol.coordinates|undefined}
+   * @return {ol.coordinate|undefined}
    */
   getCenter() {
     return this.get('center')
   }
   /**
    * Set the rotation center
-   * @param {ol.coordinates|undefined} c the center point, default center on the objet
+   * @param {ol.coordinate|undefined} c the center point, default center on the objet
    */
   setCenter(c) {
     return this.set('center', c)
