@@ -82,7 +82,7 @@ var ol_control_Bar = class olcontrolBar extends ol_control_Control {
     return this.controls_;
   }
   /** Set tool bar position
-   * @param {string} pos a combinaison of top|left|bottom|right
+   * @param {string} pos a combinaison of top|left|bottom|right separated with -
    */
   setPosition(pos) {
     this.element.classList.remove('ol-left', 'ol-top', 'ol-bottom', 'ol-right');
