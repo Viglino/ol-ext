@@ -5,7 +5,7 @@
 
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
 import ol_control_Control from 'ol/control/Control.js'
-import ol_ext_getMapCanvas from '../util/getMapcanvas.js'
+import ol_ext_getMapCanvas from '../util/getMapCanvas.js'
 
 /** ol_control_Cloud adds an old map effect on a canvas renderer.
 * It colors the map, adds a parchment texture and compass onto the map. 
