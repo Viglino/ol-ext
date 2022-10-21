@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.2
+ * @version v4.0.3
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -6271,7 +6271,6 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
       var label = ol.ext.element.create('LABEL', {
         title: layer.get('title') || layer.get('name'),
         click: setVisibility,
-        unselectable: 'on',
         style: {
           userSelect: 'none'
         },
@@ -6576,7 +6575,7 @@ ol.control.Bar = class olcontrolBar extends ol.control.Control {
     return this.controls_;
   }
   /** Set tool bar position
-   * @param {string} pos a combinaison of top|left|bottom|right
+   * @param {string} pos a combinaison of top|left|bottom|right separated with -
    */
   setPosition(pos) {
     this.element.classList.remove('ol-left', 'ol-top', 'ol-bottom', 'ol-right');
@@ -28692,14 +28691,14 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
   }
   /**
    * Get the rotation center
-   * @return {ol.coordinates|undefined}
+   * @return {ol.coordinate|undefined}
    */
   getCenter() {
     return this.get('center')
   }
   /**
    * Set the rotation center
-   * @param {ol.coordinates|undefined} c the center point, default center on the objet
+   * @param {ol.coordinate|undefined} c the center point, default center on the objet
    */
   setCenter(c) {
     return this.set('center', c)

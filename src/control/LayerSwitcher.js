@@ -774,7 +774,6 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
       var label = ol_ext_element.create('LABEL', {
         title: layer.get('title') || layer.get('name'),
         click: setVisibility,
-        unselectable: 'on',
         style: {
           userSelect: 'none'
         },
