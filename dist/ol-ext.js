@@ -578,7 +578,7 @@ ol.ext.Worker = class olextWorker {
       var result = mainFn(event);
       self.postMessage(result);
     });`];
-    console.log(lines[0])
+    // console.log(lines[0])
     this.code_ = URL.createObjectURL(new Blob(lines, { type: 'text/javascript' }));
     this.onMessage_ = options.onMessage;
     this.start();
@@ -15448,7 +15448,6 @@ ol.control.SelectCheck = class olcontrolSelectCheck extends ol.control.SelectBas
   /** Select features by attributes
    */
   doSelect(options) {
-    console.log('select');
     options = options || {};
     var conditions = [];
     this._checks.forEach(function (c) {
@@ -20336,7 +20335,7 @@ ol.filter.Colorize = class olfilterColorize extends ol.filter.Base {
           ctx2 = c2.getContext('2d')
           ctx2.drawImage(canvas, 0, 0, w, h)
           ctx2.globalCompositeOperation = 'color-burn'
-          console.log(v)
+          // console.log(v)
           ctx2.globalAlpha = v
           ctx2.drawImage(c2, 0, 0, w, h)
           ctx2.drawImage(c2, 0, 0, w, h)
@@ -38460,8 +38459,8 @@ ol.ordering.zIndex = function(options)
 };
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 /** Pulse a point on postcompose
 *	@deprecated use map.animateFeature instead
@@ -38474,60 +38473,60 @@ ol.ordering.zIndex = function(options)
 *		- style {ol.style.Image|ol.style.Style|Array<ol.style.Style>} Image to draw as markup, default red circle
 */
 ol.Map.prototype.pulse = function(coords, options) {
-	var listenerKey;
-	options = options || {};
-	// Change to map's projection
-	if (options.projection) {
-		coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
-	}
-	// options
-	var start = new Date().getTime();
-	var duration = options.duration || 3000;
-	var easing = options.easing || ol.easing.easeOut;
-	var style = options.style;
-	if (!style) style = new ol.style.Circle({ radius:30, stroke:new ol.style.Stroke({color:'red', width:2 }) });
-	if (style instanceof ol.style.Image) style = new ol.style.Style({ image: style });
-	if (!(style instanceof Array)) style = [style];
-	var amplitude = options.amplitude || 1;
-	if (amplitude<0) amplitude=0;
-	var maxRadius = options.radius || 15;
-	if (maxRadius<0) maxRadius = 5;
-	/*
-	var minRadius = maxRadius - (options.amplitude || maxRadius); //options.minRadius || 0;
-	var width = options.lineWidth || 2;
-	var color = options.color || 'red';
-	console.log("pulse")
-	*/
-	// Animate function
-	function animate(event) 
-	{	var frameState = event.frameState;
-		var ratio = frameState.pixelRatio;
-		var elapsed = frameState.time - start;
-		if (elapsed > duration) ol.Observable.unByKey(listenerKey);
-		else
-		{	var elapsedRatio = elapsed / duration;
-			var context = event.context;
-			context.save();
-			context.beginPath();
-			var e = easing(elapsedRatio)
-			context.globalAlpha = easing(1 - elapsedRatio);
-			console.log("anim")
-			for (var i=0; i<style.length; i++)
-			{	var imgs = style[i].getImage();
-				var sc = imgs.getScale(); 
-				imgs.setScale(ratio*sc*(1+amplitude*(e-1)));
-				event.vectorContext.setStyle(style[i]);
-				event.vectorContext.drawGeometry(new ol.geom.Point(coords));
-				imgs.setScale(sc);
-			}
-			context.restore();
-			// tell OL3 to continue postcompose animation
-			frameState.animate = true;
-		}
-	}
-	// Launch animation
-	listenerKey = this.on('postcompose', animate.bind(this));
-	try { this.renderSync(); } catch(e) { /* ok */ }
+  var listenerKey;
+  options = options || {};
+  // Change to map's projection
+  if (options.projection) {
+    coords = ol.proj.transform(coords, options.projection, this.getView().getProjection());
+  }
+  // options
+  var start = new Date().getTime();
+  var duration = options.duration || 3000;
+  var easing = options.easing || ol.easing.easeOut;
+  var style = options.style;
+  if (!style) style = new ol.style.Circle({ radius:30, stroke:new ol.style.Stroke({color:'red', width:2 }) });
+  if (style instanceof ol.style.Image) style = new ol.style.Style({ image: style });
+  if (!(style instanceof Array)) style = [style];
+  var amplitude = options.amplitude || 1;
+  if (amplitude<0) amplitude=0;
+  var maxRadius = options.radius || 15;
+  if (maxRadius<0) maxRadius = 5;
+  /*
+  var minRadius = maxRadius - (options.amplitude || maxRadius); //options.minRadius || 0;
+  var width = options.lineWidth || 2;
+  var color = options.color || 'red';
+  console.log("pulse")
+  */
+  // Animate function
+  function animate(event) {
+    var frameState = event.frameState;
+    var ratio = frameState.pixelRatio;
+    var elapsed = frameState.time - start;
+    if (elapsed > duration) {
+      ol.Observable.unByKey(listenerKey);
+    } else {	var elapsedRatio = elapsed / duration;
+      var context = event.context;
+      context.save();
+      context.beginPath();
+      var e = easing(elapsedRatio)
+      context.globalAlpha = easing(1 - elapsedRatio);
+      // console.log("anim")
+      for (var i=0; i<style.length; i++) {
+        var imgs = style[i].getImage();
+        var sc = imgs.getScale(); 
+        imgs.setScale(ratio*sc*(1+amplitude*(e-1)));
+        event.vectorContext.setStyle(style[i]);
+        event.vectorContext.drawGeometry(new ol.geom.Point(coords));
+        imgs.setScale(sc);
+      }
+      context.restore();
+      // tell OL3 to continue postcompose animation
+      frameState.animate = true;
+    }
+  }
+  // Launch animation
+  listenerKey = this.on('postcompose', animate.bind(this));
+  try { this.renderSync(); } catch(e) { /* ok */ }
 }
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 

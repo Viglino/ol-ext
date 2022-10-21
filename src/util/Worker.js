@@ -19,7 +19,7 @@ var ol_ext_Worker = class olextWorker {
       var result = mainFn(event);
       self.postMessage(result);
     });`];
-    console.log(lines[0])
+    // console.log(lines[0])
     this.code_ = URL.createObjectURL(new Blob(lines, { type: 'text/javascript' }));
     this.onMessage_ = options.onMessage;
     this.start();

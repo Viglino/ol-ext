@@ -72,7 +72,6 @@ var ol_control_SelectCheck = class olcontrolSelectCheck extends ol_control_Selec
   /** Select features by attributes
    */
   doSelect(options) {
-    console.log('select');
     options = options || {};
     var conditions = [];
     this._checks.forEach(function (c) {

@@ -122,7 +122,7 @@ var ol_filter_Colorize = class olfilterColorize extends ol_filter_Base {
           ctx2 = c2.getContext('2d')
           ctx2.drawImage(canvas, 0, 0, w, h)
           ctx2.globalCompositeOperation = 'color-burn'
-          console.log(v)
+          // console.log(v)
           ctx2.globalAlpha = v
           ctx2.drawImage(c2, 0, 0, w, h)
           ctx2.drawImage(c2, 0, 0, w, h)
