@@ -248,116 +248,117 @@
   <script type="text/javascript">
     /** Add date next to title if available */
     function addDate() {
-        const yearSelection = $("#year-selection");
-        const dates = [];
-        $(".example").each(function () {
-            const exampleDate = $(this).data('date') || '2017';
-            $(this).find(">:first-child").after(`<span class="date"><small>${exampleDate}</small></span>`);
-            $(this).find(".date").click(addToSearchInput);
+      const yearSelection = $("#year-selection");
+      const dates = [];
+      $(".example").each(function () {
+        const exampleDate = $(this).data('date') || '2017';
+        $(this).find(">:first-child").after(`<span class="date"><small>${exampleDate}</small></span>`);
+        $(this).find(".date").click(addToSearchInput);
 
-            /** add dates to dropdown */
-            const year = exampleDate.split('-')[0];
-            if (dates.indexOf(year) === -1) {
-              dates.push(year);
-            }
-        });
+        /** add dates to dropdown */
+        const year = exampleDate.split('-')[0];
+        if (dates.indexOf(year) === -1) {
+          dates.push(year);
+        }
+      });
 
-        dates.sort(function(a, b){return b-a}).forEach(function (d) {
-          yearSelection.append(`<option value="${d}">Examples from ${d}</option>`);
-        });
+      dates.sort(function(a, b){return b-a}).forEach(function (d) {
+        yearSelection.append(`<option value="${d}">Examples from ${d}</option>`);
+      });
     }
 
     function addToSearchInput() {
-        $('#keywords').val($(this).text()).change();
+      $('#keywords').val($(this).text()).change();
     }
 
     function search() {
-        $('#keywords').on('keyup change search', function () {
-            const s = new RegExp($(this).val(), "i");
-            let k = 0;
-            $(".example").each(function () {
-                const text = $(this).text();
-                const t = s.test(text);
-                if (!t) {
-                    $(this).parent().hide();
-                } else {
-                    k++;
-                    $(this).parent().show();
-                }
-            });
-            $("h2").each(function () {
-                if ($(".example:visible", $(this).next()).length) $(this).show();
-                else $(this).hide();
-            });
-            $("#count").text("(" + k + ")");
-            // Set new url
-            window.history.replaceState(null, null, document.location.origin + document.location.pathname + "?q=" + $(this).val());
+      $('#keywords').on('keyup change search', function () {
+        const s = new RegExp($(this).val(), "i");
+        let k = 0;
+        $(".example").each(function () {
+          const text = $(this).text();
+          const t = s.test(text);
+          if (!t) {
+            $(this).parent().hide();
+          } else {
+            k++;
+            $(this).parent().show();
+          }
         });
+        $("h2").each(function () {
+          if ($(".example:visible", $(this).next()).length) $(this).show();
+          else $(this).hide();
+        });
+        $("#count").text("(" + k + ")");
+        // Set new url
+        window.history.replaceState(null, null, document.location.origin + document.location.pathname + "?q=" + $(this).val());
+      });
 
-        // Decode url
-        const search = window.location.search.replace(/^\?/, "").split("&");
-        for (let i = 0; i < search.length; i++) if (/^q=/.test(search[i])) {
-            $("#keywords").val(search[i].split("=")[1]).trigger("keyup");
-        }
+      // Decode url
+      const search = window.location.search.replace(/^\?/, "").split("&");
+      for (let i = 0; i < search.length; i++) if (/^q=/.test(search[i])) {
+          $("#keywords").val(search[i].split("=")[1]).trigger("keyup");
+      }
     }
 
     /** Add tags on click to search */
     function tagOnClick() {
-        $('.tag').each(function () {
-            const tags = $(this).text().split(',');
-            const div = $(this).html('');
-            tags.forEach(function (t) {
-                $('<a>').text(t.trim())
-                    .click(addToSearchInput)
-                    .appendTo(div);
-            })
+      $('.tag').each(function () {
+        const tags = $(this).text().split(',');
+        const div = $(this).html('');
+        tags.forEach(function (t) {
+          $('<a>').text(t.trim())
+            .click(addToSearchInput)
+            .appendTo(div);
         })
+      })
     }
 
     /** Examples from the last 2 month */
     function newExamples() {
-        const d = new Date((new Date()).getTime() - 2 * 31 * 24 * 60 * 60 * 1000);
-        let nb = 0;
-        $(".example[data-date]").each(function () {
-            if (new Date($(this).data('date')) > d) {
-                nb++;
-                $(this).addClass('new');
-                $(".tag", this).text($(".tag", this).text() + ', new');
-            }
-        });
-        if (nb) {
-            $('<span>').addClass('news')
-                .text(nb + ' NEWS')
-                .click(function () {
-                    $('#keywords').val('new').change();
-                })
-                .appendTo($('.container'));
+      const d = new Date((new Date()).getTime() - 2 * 31 * 24 * 60 * 60 * 1000);
+      let nb = 0;
+      $(".example[data-date]").each(function () {
+        if (new Date($(this).data('date')) > d) {
+          nb++;
+          $(this).addClass('new');
+          $(".tag", this).text($(".tag", this).text() + ', new');
         }
+      });
+      if (nb) {
+        $('<span>').addClass('news')
+          .text(nb + ' NEWS')
+          .click(function () {
+            $('#keywords').val('new').change();
+          })
+          .appendTo($('.container'));
+      }
     }
 
     /** wrap .example's in div if the don't have a wrapper?? */
     function wrapExamples() {
-        $(".example").wrap($("<div>"));
+      $(".example").wrap($("<div>"));
     }
 
     function appendExampleLinkToTitles() {
-        $(".example a.mainlink").each(function () {
-            let href = /[^\/]*$/.exec($(this).attr('href')).pop();
-            $("<small>").text("(" + href + ")")
-                .appendTo($(this));
-            $("<img>").attr('src', "img/" + href.replace('html', $(this).data('img') || 'jpg'))
-                .appendTo($(this))
-                .load(function (e) {
-                    $(this).show();
-                })
-        });
-    }
+      $(".example a.mainlink").each(function () {
+        let href = /[^\/]*$/.exec($(this).attr('href')).pop();
+        $("<small>").text("(" + href + ")")
+            .appendTo($(this));
+        $("<img>").attr('src', "img/" + href.replace('html', $(this).data('img') || 'jpg'))
+          .appendTo($(this))
+          .load(function (e) {
+            $(this).show();
+          })
+      });
+  }
 
     $(document).ready(function() {
       wrapExamples();
       appendExampleLinkToTitles();
       tagOnClick();
       addDate();
+      newExamples();
       search();
     });
   </script>
@@ -782,12 +783,20 @@
         <p class="tag">control, permalink</p>
       </div>
 
-      <div class="example">
+      <div class="example" data-date="2022-10-22">
         <a class="mainlink" href="examples/control/map.control.swipe.html">
           <strong>Swipe control</strong><br>
         </a>
         <p class="description">The <i>ol.control.Swipe</i> is a control that add a split screen to compare two map overlays. </p>
         <p class="tag">control, swipe, compare</p>
+      </div>
+
+      <div class="example">
+        <a class="mainlink" href="examples/misc/map.compare.html">
+          <strong>Compare map</strong><br>
+        </a>
+        <p class="description">Swipe control and clip interaction to compare two maps.</p>
+        <p class="tag">map, compare, swipe, clip</p>
       </div>
 
       <div class="example">
@@ -1917,16 +1926,18 @@
         <p class="description">An example using the ol.style.Chart to display the cluster content.</p>
         <p class="tag">layer, vector, cluster, chart, style, cluster, animation</p>
       </div>
-  </div>
+
+      <div class="example" data-date="2022-10-22">
+        <a class="mainlink" href="examples/map/map.watchdogs.html" data-img='gif'>
+          <strong>Watchdog map</strong><br>
+        </a>
+        <p class="description">A map with animations when adding points.</p>
+        <p class="tag">map, animation, blink</p>
+      </div>
+
+    </div>
 
 <!-- TODO
-      <div class="example">
-        <a class="mainlink" href="examples/misc/map.compare.html">
-          <strong>Compare map</strong><br>
-        </a>
-        <p class="description">Swipe and clip control to compare two maps.</p>
-        <p class="tag">map, compare, swipe, clip</p>
-      </div>
 
       <div class="example">
         <a class="mainlink" href="examples/misc/map.input.html">
@@ -1952,14 +1963,6 @@
         <p class="tag">map, API</p>
       </div>
       
-      <div class="example">
-        <a class="mainlink" href="examples/map/map.watchdogs.html">
-          <strong>Watchdog map</strong><br>
-        </a>
-        <p class="description">A map with animations when adding points.</p>
-        <p class="tag">map, animation, blink</p>
-      </div>
-
       <div class="example">
         <a class="mainlink" href="examples/layer/map.intersection.html">
           <strong>Intersection!</strong><br>
