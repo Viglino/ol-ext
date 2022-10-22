@@ -29,10 +29,11 @@ var ol_filter_Base = class olfilterBase extends ol_Object {
     super(options)
     // Array of postcompose listener
     this._listener = []
-    if (options && options.active === false)
+    if (options && options.active === false) {
       this.set('active', false)
-    else
+    } else {
       this.set('active', true)
+    }
   }
   /** Activate / deactivate filter
   *	@param {boolean} b

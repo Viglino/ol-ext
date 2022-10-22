@@ -13,6 +13,9 @@ import {asString as ol_color_asString} from 'ol/color.js'
  * @param {Object} [options]
  *  @param {ol.Feature} [options.feature] feature to mask with
  *  @param {ol.style.Fill} [options.fill] style to fill with
+ *  @param {number} [options.shadowWidth=0] shadow width, default no shadow
+ *  @param {boolean} [options.shadowMapUnits=false] true if the shadow width is in mapUnits
+ *  @param {ol.colorLike} [options.shadowColor='rgba(0,0,0,.5)'] shadow color, default 
  *  @param {boolean} [options.inner=false] mask inner, default false
  *  @param {boolean} [options.wrapX=false] wrap around the world, default false
  */
@@ -30,9 +33,26 @@ var ol_filter_Mask = class olfilterMask extends ol_filter_Base {
       }
     }
     this.set('inner', options.inner);
-    this.fillColor_ = options.fill ? ol_color_asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
+    this._fillColor = options.fill ? ol_color_asString(options.fill.getColor()) || 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.2)';
+    this._shadowColor = options.shadowColor ? ol_color_asString(options.shadowColor) || 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.5)';
+    this.set('shadowWidth', options.shadowWidth || 0);
+    this.set('shadowMapUnits', options.shadowMapUnits === true);
   }
-  /** Draw the feature into canvas */
+  /** Set filter fill color
+   * @param {ol/colorLike} color
+   */
+  setFillColor(color) {
+    this._fillColor = color ? ol_color_asString(color) || 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.2)';
+  }
+  /** Set filter shadow color
+   * @param {ol/colorLike} color
+   */
+  setShadowColor(color) {
+    this._shadowColor = color ? ol_color_asString(color) || 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.5)';
+  }
+  /** Draw the feature into canvas
+   * @private
+   */
   drawFeaturePath_(e, out) {
     var ctx = e.context;
     var canvas = ctx.canvas;
@@ -96,11 +116,11 @@ var ol_filter_Mask = class olfilterMask extends ol_filter_Base {
     ctx.beginPath();
 
     if (out) {
-      ctx.moveTo(0, 0);
-      ctx.lineTo(canvas.width, 0);
-      ctx.lineTo(canvas.width, canvas.height);
-      ctx.lineTo(0, canvas.height);
-      ctx.lineTo(0, 0);
+      ctx.moveTo(-100, -100);
+      ctx.lineTo(canvas.width + 100, -100);
+      ctx.lineTo(canvas.width + 100, canvas.height + 100);
+      ctx.lineTo(-100, canvas.height + 100);
+      ctx.lineTo(-100, -100);
     }
 
     // Draw current world
@@ -123,14 +143,29 @@ var ol_filter_Mask = class olfilterMask extends ol_filter_Base {
       drawll(0);
     }
   }
+  /**
+   * @param {ol/Event} e 
+   * @private
+   */
   postcompose(e) {
-    if (!this.feature_)
-      return;
+    if (!this.feature_) return;
     var ctx = e.context;
     ctx.save();
-    this.drawFeaturePath_(e, !this.get("inner"));
-    ctx.fillStyle = this.fillColor_;
-    ctx.fill("evenodd");
+    this.drawFeaturePath_(e, !this.get('inner'));
+    ctx.fillStyle = this._fillColor;
+    ctx.fill('evenodd');
+    // Draw shadow
+    if (this.get('shadowWidth')) {
+      var width = this.get('shadowWidth') * e.frameState.pixelRatio
+      if (this.get('shadowMapUnits')) width /= e.frameState.viewState.resolution;
+      ctx.clip('evenodd');
+      ctx.filter = 'blur(' + width + 'px)';
+      ctx.strokeStyle = this._shadowColor;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = width;
+      ctx.stroke();
+    }
     ctx.restore();
   }
 }

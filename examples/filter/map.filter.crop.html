@@ -55,9 +55,12 @@
     </li><li>
       <input id="inner" type="checkbox" onchange="setFilter()" /><label for="inner">inner</label>
     </li><li>
+      <label><input type="checkbox" id="shadow" onchange="setFilter()" /> shadow</label>
+    </li><li>
       Color of the mask:
       <select id="color" onchange="setFilter()">
-        <option value="rgba(255,255,255,0.8)">White</option>
+        <option value="rgba(255,255,255,0.5)">White</option>
+        <option value="transparent">Transparent</option>
         <option value="rgba(255,0,0,1)">Red</option>
         <option value="rgba(0,255,0,0.2)">Green</option>
         <option value="rgba(0,0,255,0.2)">Blue</option>
@@ -101,9 +104,11 @@
     osm.addFilter(mask);
 
     function setFilter(){
-      mask.set('inner', $("#inner").prop('checked')); 
       crop.set('inner', $("#inner").prop('checked')); 
-      mask.fillColor_ = $("#color").val();
+      crop.set('shadowWidth', $("#shadow").prop('checked') ? 15 : 0);
+      mask.set('inner', $("#inner").prop('checked')); 
+      mask.set('shadowWidth', $("#shadow").prop('checked') ? 15 : 0);
+      mask.setFillColor($("#color").val());
       // Activate
       mask.set('active', false); 
       crop.set('active', false); 
