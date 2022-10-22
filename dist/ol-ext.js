@@ -1395,8 +1395,8 @@ ol.ext.getVectorContextStyle = function(e, s) {
 
 /** @namespace ol.ext.imageLoader
  */
-if (window.ol && ol.ext && !ol.ext.imageLoader) {
-  ol.ext.imageLoader = {};
+if (window.ol && window.ol.ext && !window.ol.ext.imageLoader) {
+  window.ol.ext.imageLoader = {};
 }
 /** Helper for loading BIL-32 (Band Interleaved by Line) image
  * @param {string} src
@@ -19654,10 +19654,11 @@ ol.filter.Base = class olfilterBase extends ol.Object {
     super(options)
     // Array of postcompose listener
     this._listener = []
-    if (options && options.active === false)
+    if (options && options.active === false) {
       this.set('active', false)
-    else
+    } else {
       this.set('active', true)
+    }
   }
   /** Activate / deactivate filter
   *	@param {boolean} b
@@ -19787,6 +19788,9 @@ ol.layer.Base.prototype.getFilters = function () {
  * @param {Object} [options]
  *  @param {ol.Feature} [options.feature] feature to mask with
  *  @param {ol.style.Fill} [options.fill] style to fill with
+ *  @param {number} [options.shadowWidth=0] shadow width, default no shadow
+ *  @param {boolean} [options.shadowMapUnits=false] true if the shadow width is in mapUnits
+ *  @param {ol.colorLike} [options.shadowColor='rgba(0,0,0,.5)'] shadow color, default 
  *  @param {boolean} [options.inner=false] mask inner, default false
  *  @param {boolean} [options.wrapX=false] wrap around the world, default false
  */
@@ -19804,9 +19808,26 @@ ol.filter.Mask = class olfilterMask extends ol.filter.Base {
       }
     }
     this.set('inner', options.inner);
-    this.fillColor_ = options.fill ? ol.color.asString(options.fill.getColor()) || "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.2)";
+    this._fillColor = options.fill ? ol.color.asString(options.fill.getColor()) || 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.2)';
+    this._shadowColor = options.shadowColor ? ol.color.asString(options.shadowColor) || 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.5)';
+    this.set('shadowWidth', options.shadowWidth || 0);
+    this.set('shadowMapUnits', options.shadowMapUnits === true);
   }
-  /** Draw the feature into canvas */
+  /** Set filter fill color
+   * @param {ol/colorLike} color
+   */
+  setFillColor(color) {
+    this._fillColor = color ? ol.color.asString(color) || 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.2)';
+  }
+  /** Set filter shadow color
+   * @param {ol/colorLike} color
+   */
+  setShadowColor(color) {
+    this._shadowColor = color ? ol.color.asString(color) || 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.5)';
+  }
+  /** Draw the feature into canvas
+   * @private
+   */
   drawFeaturePath_(e, out) {
     var ctx = e.context;
     var canvas = ctx.canvas;
@@ -19867,11 +19888,11 @@ ol.filter.Mask = class olfilterMask extends ol.filter.Base {
     }
     ctx.beginPath();
     if (out) {
-      ctx.moveTo(0, 0);
-      ctx.lineTo(canvas.width, 0);
-      ctx.lineTo(canvas.width, canvas.height);
-      ctx.lineTo(0, canvas.height);
-      ctx.lineTo(0, 0);
+      ctx.moveTo(-100, -100);
+      ctx.lineTo(canvas.width + 100, -100);
+      ctx.lineTo(canvas.width + 100, canvas.height + 100);
+      ctx.lineTo(-100, canvas.height + 100);
+      ctx.lineTo(-100, -100);
     }
     // Draw current world
     if (this.get('wrapX')) {
@@ -19892,14 +19913,29 @@ ol.filter.Mask = class olfilterMask extends ol.filter.Base {
       drawll(0);
     }
   }
+  /**
+   * @param {ol/Event} e 
+   * @private
+   */
   postcompose(e) {
-    if (!this.feature_)
-      return;
+    if (!this.feature_) return;
     var ctx = e.context;
     ctx.save();
-    this.drawFeaturePath_(e, !this.get("inner"));
-    ctx.fillStyle = this.fillColor_;
-    ctx.fill("evenodd");
+    this.drawFeaturePath_(e, !this.get('inner'));
+    ctx.fillStyle = this._fillColor;
+    ctx.fill('evenodd');
+    // Draw shadow
+    if (this.get('shadowWidth')) {
+      var width = this.get('shadowWidth') * e.frameState.pixelRatio
+      if (this.get('shadowMapUnits')) width /= e.frameState.viewState.resolution;
+      ctx.clip('evenodd');
+      ctx.filter = 'blur(' + width + 'px)';
+      ctx.strokeStyle = this._shadowColor;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = width;
+      ctx.stroke();
+    }
     ctx.restore();
   }
 }
@@ -20418,24 +20454,54 @@ ol.filter.Composite = class olfilterComposite extends ol.filter.Base {
  * @extends {ol.filter.Mask}
  * @param {Object} [options]
  *  @param {ol.Feature} [options.feature] feature to crop with
+ *  @param {number} [options.shadowWidth=0] shadow width, default no shadow
+ *  @param {boolean} [options.shadowMapUnits=false] true if the shadow width is in mapUnits
+ *  @param {ol.colorLike} [options.shadowColor='rgba(0,0,0,.5)'] shadow color, default 
  *  @param {boolean} [options.inner=false] mask inner, default false
+ *  @param {boolean} [options.wrapX=false] wrap around the world, default false
  */
 ol.filter.Crop = class olfilterCrop extends ol.filter.Mask {
   constructor(options) {
     options = options || {};
     super(options);
   }
+  /**
+   * @param {ol/Event} e 
+   * @private
+   */
   precompose(e) {
     if (this.feature_) {
       var ctx = e.context;
       ctx.save();
-      this.drawFeaturePath_(e, this.get("inner"));
-      ctx.clip("evenodd");
+      this.drawFeaturePath_(e, this.get('inner'));
+      ctx.clip('evenodd');
     }
   }
+  /**
+   * @param {ol/Event} e 
+   * @private
+   */
   postcompose(e) {
-    if (this.feature_)
-      e.context.restore();
+    if (this.feature_) {
+      var ctx = e.context;
+      ctx.restore();
+      // Draw shadow
+      if (this.get('shadowWidth')) {
+        ctx.save()
+        console.log('shadow', this._shadowColor)
+        var width = this.get('shadowWidth') * e.frameState.pixelRatio
+        if (this.get('shadowMapUnits')) width /= e.frameState.viewState.resolution;
+        this.drawFeaturePath_(e, !this.get('inner'));
+        ctx.clip('evenodd');
+        ctx.filter = 'blur(' + width + 'px)';
+        ctx.strokeStyle = this._shadowColor;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = width;
+        ctx.stroke();
+        ctx.restore()
+      }
+    }
   }
 }
 
@@ -31531,7 +31597,7 @@ ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
       this.hue2rgb(h - 2),
       255
     ];
-  };
+  }
   /** Compute image data
    * @param {Object} e
    */
