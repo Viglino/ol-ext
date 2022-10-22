@@ -20488,7 +20488,6 @@ ol.filter.Crop = class olfilterCrop extends ol.filter.Mask {
       // Draw shadow
       if (this.get('shadowWidth')) {
         ctx.save()
-        console.log('shadow', this._shadowColor)
         var width = this.get('shadowWidth') * e.frameState.pixelRatio
         if (this.get('shadowMapUnits')) width /= e.frameState.viewState.resolution;
         this.drawFeaturePath_(e, !this.get('inner'));
