@@ -110,7 +110,7 @@ var ol_source_IDW = class olsourceIDW extends ol_source_ImageCanvas {
       this.hue2rgb(h - 2),
       255
     ];
-  };
+  }
   /** Compute image data
    * @param {Object} e
    */

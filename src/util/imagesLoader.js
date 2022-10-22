@@ -2,8 +2,8 @@ import { asArray as ol_color_asArray } from 'ol/color.js'
 
 /** @namespace ol.ext.imageLoader
  */
-if (window.ol && ol.ext && !ol.ext.imageLoader) {
-  ol.ext.imageLoader = {};
+if (window.ol && window.ol.ext && !window.ol.ext.imageLoader) {
+  window.ol.ext.imageLoader = {};
 }
 
 /** Helper for loading BIL-32 (Band Interleaved by Line) image
