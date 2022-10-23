@@ -290,7 +290,8 @@ ol_extent_intersection = function(extent, polygon) {
 };
 })();
 
-export {ol_extent_intersection}
+export { ol_extent_intersection }
+export { ol_extent_intersection as extentIntersection }
 
 /** Add points along a segment
  * @param {ol_Coordinate} p1 

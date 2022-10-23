@@ -50,9 +50,17 @@
       width: 10em;
       text-align: right;
       margin-right: .5em;
+      vertical-align: middle;
     }
     .options {
       white-space: nowrap;
+    }
+    .options table {
+      width: 100%;
+      text-align: center;
+    }
+    .options table span {
+      display: block;
     }
   </style>
 
@@ -65,8 +73,13 @@
 	</a>
 
   <div class="info">
-    <i>ol/Circle~intersection</i> is a fast polygon intersection calculation with a circle (mainly used to calculate area intersection).
-    It produces unnecessary points.
+    <i>ol/Circle~intersection</i> is a fast polygon intersection calculation with a circle.
+    <br/>
+    It produces a rough calculation of the intersection area (for fast statistcal purposes).
+    <br/>
+    NB: It produces unnecessary points and the computed intersection is rough.
+    <br/>
+    See <a href="./map.intersection.html">extent intersection example</a> to compute intersection on extents.
     <br/>
     It can be used to compute <a href='../layer/map.layer.clc.wfs.html'>statistics on the map</a>.
   </div>
@@ -75,6 +88,40 @@
   <div id="map" style="width:640px; height:400px"></div>
 
   <div class="options">
+    <i>Draw a polygon on the map</i>
+    <ul>
+      <li class="extent">
+        <label>Extent area: </label><span>-</span> ha
+      </li>
+      <li class="poly">
+        <label>Polygon area: </label><span>-</span> ha
+      </li>
+      <li class="diff">
+        <label>Intersection area<br/>(ol-ext approx.): </label><span>-</span>
+      </li>
+      <li class="jstsclip">
+        <label>Intersection area<br/>(jsts): </label><span>-</span> ha
+      </li>
+      <li class="delta">
+        <label>Delta area: </label><span>-</span> %
+      </li>
+    </ul>
+    <hr/>
+    <table>
+      <tr>
+        <td colspan="3">Computation time comparison</td>
+      </tr>
+      <tr>
+        <td class="ol">
+          ol-ext <span></span>
+        </td>
+        <td>vs</td>
+        <td class="jsts">
+          jsts <span></span>
+        </td>
+      </tr>
+    </table>
+  </div>
 
   <script>
 
@@ -130,7 +177,7 @@ var circleArea = ol.sphere.getArea(polyCircle);
 // Calculate intersection on drawend
 draw.on('drawend', function(e) {
   var dt = new Date();
-  var g = circle.getGeometry().intersection(e.feature.getGeometry(), 500);
+  var g = circle.getGeometry().intersection(e.feature.getGeometry(), 100);
   dt = new Date() - dt;
   // Using jsts
   var jstsclip;
@@ -145,16 +192,14 @@ draw.on('drawend', function(e) {
   if (g) vector.getSource().addFeature(new ol.Feature(g));
   var a = g ? ol.sphere.getArea(g) : 0;
   var polyArea = ol.sphere.getArea(e.feature.getGeometry());
-  $('.options').html(
-    '<label>Circle area:</label>'+(circleArea/10000).toFixed(2)+' ha<br/>'+
-    '<label>Polygon area:</label>'+(polyArea/10000).toFixed(2)+' ha<br/>'+
-    '<label>Intersection area:</label>'+(a/10000).toFixed(2)+' ha - '+
-    ((a/circleArea)*100).toFixed(0)+'%<br/>'+
-    '<label>JSTS area:</label>'+(jstsclip ? (jstsclip.isEmpty() ? '0.00' : (ol.sphere.getArea(jstsParser.write(jstsclip))/10000).toFixed(2)) : '')+' ha<br/>'+
-    '<hr/>'+
-    '<label>time:</label>'+dt+' ms<br/>'+
-    '<label>jsts time:</label>'+dt2+' ms<br/>'
-  );
+  var jstsarea = jstsclip ? (jstsclip.isEmpty() ? 0 : ol.sphere.getArea(jstsParser.write(jstsclip))) : NaN;
+  $('.options .extent span').html((circleArea/10000).toFixed(2))
+  $('.options .poly span').html((polyArea/10000).toFixed(2))
+  $('.options .jstsclip span').html(jstsclip ? (jstsarea/10000).toFixed(2) : '')
+  $('.options .diff span').html((a/10000).toFixed(2)+' ha - ' + ((a/circleArea)*100).toFixed(0) +'%')
+  $('.options .delta span').html(((jstsarea / a - 1)*100).toFixed(3))
+  $('.options .ol span').html(dt+' ms')
+  $('.options .jsts span').html(dt2+' ms')
 })
 
   </script>

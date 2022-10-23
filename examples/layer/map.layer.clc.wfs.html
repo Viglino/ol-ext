@@ -133,6 +133,12 @@
 p input:checked ~ span {
   opacity: 1;
 }
+p.info {
+  background-color: #eee;
+  padding: 1em;
+  font-style: italic;
+  margin-top: 0;
+}
 
   </style>
   
@@ -148,6 +154,14 @@ p input:checked ~ span {
   <div id="map"></div>
 
   <div id="data">
+    <p class="info">
+      This example computes statistics on the visible area or upon circle area around the cursor.
+      <br/>
+      Look at 
+      <a href="./map.intersection.html">extent intersection</a> 
+      or
+      <a href="./map.circle.intersection.html">circle intersection</a> examples for more details.
+    </p>
     <h2>Statistiques:</h2>
     <p class="clip">
       <input id="clip" type="checkbox" onchange="clip.setActive($(this).prop('checked')); calculate();"> 
@@ -174,8 +188,8 @@ p input:checked ~ span {
 var map = new ol.Map ({
   target: 'map',
   view: new ol.View ({
-    zoom: 10,
-    center: [261204.43490751847, 6250258.191535994]
+    zoom: 13,
+    center: [482126, 6044162]
   }),
   layers: [
     new ol.layer.Geoportail({

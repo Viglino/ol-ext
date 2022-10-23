@@ -54,6 +54,13 @@
     .options {
       white-space: nowrap;
     }
+    .options table {
+      width: 100%;
+      text-align: center;
+    }
+    .options table span {
+      display: block;
+    }
   </style>
 
 </head>
@@ -65,16 +72,47 @@
 	</a>
 
   <div class="info">
-    <i>ol/extend.intersection</i> is a fast polygon intersection calculation with an extent (mainly used to calculate area intersection).
-    It produces unnecessary points.
+    <i>extentIntersection (ol/extent~intersection)</i> is a fast polygon intersection calculation with an extent (mainly used to calculate area intersection).
     <br/>
-    It can be used to compute <a href='../layer/map.layer.clc.wfs.html'>statistics on visible area</a>.
+    NB: It may produce unnecessary points.
+    <br/>
+    See <a href="./map.circle.intersection.html">circle intersection example</a> to compute intersection on a cirle.
+    <br/>
+    It can be used to compute <a href='./map.layer.clc.wfs.html'>statistics on visible area</a>.
   </div>
 
 	<!-- DIV pour la carte -->
   <div id="map" style="width:640px; height:400px"></div>
 
   <div class="options">
+    <i>Draw a polygon on the map</i>
+    <ul>
+      <li class="extent">
+        <label>Extent area : </label><span>-</span> ha
+      </li>
+      <li class="poly">
+        <label>Polygon area : </label><span>-</span> ha
+      </li>
+      <li class="diff">
+        <label>Intersection area : </label><span>-</span>
+      </li>
+    </ul>
+    <hr/>
+    <table>
+      <tr>
+        <td colspan="3">Computation time comparison</td>
+      </tr>
+      <tr>
+        <td class="ol">
+          ol-ext <span></span>
+        </td>
+        <td>vs</td>
+        <td class="jsts">
+          jsts <span></span>
+        </td>
+      </tr>
+    </table>
+  </div>
 
   <script>
 
@@ -120,7 +158,7 @@ var vector = new ol.layer.Vector({
 map.addLayer(vector);
 vector.getSource().addFeature(extentFeature);
 
-var draw = new ol.interaction.Draw({ type: 'Polygon' });
+var draw = new ol.interaction.Draw({ type: 'Polygon', freehand: true });
 map.addInteraction(draw);
 
 var jstsParser = new jsts.io.OL3Parser();
@@ -144,15 +182,11 @@ draw.on('drawend', function(e) {
   vector.getSource().addFeature(new ol.Feature(g));
   var a = ol.sphere.getArea(g);
   var polyArea = ol.sphere.getArea(e.feature.getGeometry());
-  $('.options').html(
-    '<label>Extent area:</label>'+(extentArea/10000).toFixed(2)+' ha<br/>'+
-    '<label>Polygon area:</label>'+(polyArea/10000).toFixed(2)+' ha<br/>'+
-    '<label>Intersection area:</label>'+(a/10000).toFixed(2)+' ha - '+
-    ((a/extentArea)*100).toFixed(0)+'%<br/>'+
-    '<hr/>'+
-    '<label>time:</label>'+dt+' ms<br/>'+
-    '<label>jsts time:</label>'+dt2+' ms<br/>'
-  );
+  $('.options .extent span').html((extentArea/10000).toFixed(2))
+  $('.options .poly span').html((polyArea/10000).toFixed(2))
+  $('.options .diff span').html((a/10000).toFixed(2)+' ha - ' + ((a/extentArea)*100).toFixed(0) +'%')
+  $('.options .ol span').html(dt+' ms')
+  $('.options .jsts span').html(dt2+' ms')
 })
 
   </script>
