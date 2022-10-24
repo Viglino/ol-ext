@@ -106,23 +106,25 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
   /** Get a symbol image for a given legend item
    * @param {olLegendItemOptions} item
    * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
-   * @param {int|undefined} row row number to draw in canvas, default 0
+   * @param {int|undefined} offsetY Y offset to draw in canvas, default 0
    */
-  static getLegendImage(item, canvas, row) {
+  static getLegendImage(item, canvas, offsetY) {
     item = item || {}
     if (typeof (item.margin) === 'undefined')
       item.margin = 10
     var size = item.size || [40, 25]
+    if (item.width) size[0] = item.width
+    if (item.heigth) size[1] = item.heigth
     item.onload = item.onload || function () {
       setTimeout(function () {
-        ol_legend_Legend.getLegendImage(item, canvas, row)
+        ol_legend_Legend.getLegendImage(item, canvas, offsetY)
       }, 100)
     }
     var width = size[0] + 2 * item.margin
     var height = item.lineHeight || (size[1] + 2 * item.margin)
     var ratio = item.pixelratio || ol_has_DEVICE_PIXEL_RATIO
     if (!canvas) {
-      row = 0
+      offsetY = 0
       canvas = document.createElement('canvas')
       canvas.width = width * ratio
       canvas.height = height * ratio
@@ -136,14 +138,16 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
     var style
     var feature = item.feature
     if (!feature && typeGeom) {
-      if (/Point/.test(typeGeom))
+      if (/Point/.test(typeGeom)){
         feature = new ol_Feature(new ol_geom_Point([0, 0]))
-      else if (/LineString/.test(typeGeom))
+      } else if (/LineString/.test(typeGeom)) {
         feature = new ol_Feature(new ol_geom_LineString([0, 0]))
-      else
+      } else {
         feature = new ol_Feature(new ol_geom_Polygon([[0, 0]]))
-      if (item.properties)
+      }
+      if (item.properties) {
         feature.setProperties(item.properties)
+      }
     }
     if (feature) {
       style = feature.getStyle()
@@ -156,8 +160,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
     } else {
       style = []
     }
-    if (!(style instanceof Array))
-      style = [style]
+    if (!(style instanceof Array)) style = [style]
 
     var cx = width / 2
     var cy = height / 2
@@ -207,7 +210,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
     }
 
     // Draw image
-    cy += (row * height) || 0
+    cy += offsetY || 0
     for (i = 0; s = style[i]; i++) {
       vectorContext.setStyle(s)
       ctx.save()
@@ -238,12 +241,9 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
       // Geometry function?
       if (s.getGeometryFunction()) {
         geom = s.getGeometryFunction()(new ol_Feature(geom))
-        ctx.restore()
-        vectorContext.drawGeometry(geom)
-      } else {
-        vectorContext.drawGeometry(geom)
-        ctx.restore()
       }
+      vectorContext.drawGeometry(geom)
+      ctx.restore()
     }
 
     ctx.restore()
@@ -274,8 +274,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
    */
   set(key, value, opt_silent) {
     super.set(key, value, opt_silent)
-    if (!opt_silent)
-      this.refresh()
+    if (!opt_silent) this.refresh()
   }
   /** Get legend list element
    * @returns {Element}
@@ -371,8 +370,9 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
       }
     }.bind(this))
     canvas.width = (textWidth + 2 * margin) * ratio
-    canvas.height = (this._items.getLength() + 1) * height * ratio
-    canvas.style.height = ((this._items.getLength() + 1) * height) + 'px'
+    var h = this.getHeight()
+    canvas.height = h * ratio
+    canvas.style.height = h + 'px'
 
     ctx.textBaseline = 'middle'
     ctx.fillStyle = ol_color_asString(this._textStyle.getFill().getColor())
@@ -392,6 +392,8 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
       this._drawText(ctx, this.getTitle(), canvas.width / ratio / 2, height / 2)
     }
     // Add items
+    var offsetY = 0;
+    if (this.getTitle()) offsetY = height;
     this._items.forEach(function (r, i) {
       var index = i + (this.getTitle() ? 1 : 0)
       table.appendChild(r.getElement([width, height], function (b) {
@@ -403,20 +405,22 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
         })
       }.bind(this)))
       var item = r.getProperties()
+      var h = item.height || height;
       ctx.textAlign = 'left'
       if (item.feature || item.typeGeom) {
-        canvas = this.getLegendImage(item, canvas, index)
+        canvas = this.getLegendImage(item, canvas, offsetY)
         ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
-        this._drawText(ctx, r.get('title'), width + margin, (i + 1.5) * height)
+        this._drawText(ctx, r.get('title'), width + margin, offsetY + h / 2)
       } else {
         ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
         if (/\bcenter\b/.test(item.className)) {
           ctx.textAlign = 'center'
-          this._drawText(ctx, r.get('title'), canvas.width / ratio / 2, (i + 1.5) * height)
+          this._drawText(ctx, r.get('title'), canvas.width / ratio / 2, offsetY + h / 2)
         } else {
-          this._drawText(ctx, r.get('title'), margin, (i + 1.5) * height)
+          this._drawText(ctx, r.get('title'), margin, offsetY + h / 2)
         }
       }
+      offsetY += h;
     }.bind(this))
 
     // Done
@@ -426,14 +430,29 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
       height: (this._items.length + 1) * height
     })
   }
+  /** Calculate the legend height
+   * @return {number}
+   */
+  getHeight() {
+    // default item height
+    var margin = this.get('margin')
+    var hitem = this.get('lineHeight') || this.get('size')[1] + 2 * margin
+    var height = this.getTitle() ? hitem : 0;
+    this._items.forEach(function (r) {
+      if (r.get('height')) height += r.get('height') + 2 * margin; 
+      else height += hitem
+    })
+    return height
+  }
   /** Get the image for a style 
    * @param {olLegendItemOptions} item 
    * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
-   * @param {int|undefined} row row number to draw in canvas, default 0
+   * @param {int|undefined} offsetY Y offset to draw in canvas, default 0
    * @return {CanvasElement}
    */
-  getLegendImage(options, canvas, row) {
+  getLegendImage(options, canvas, offsetY) {
     options = options || {};
+    var size = this.get('size');
     return ol_legend_Legend.getLegendImage({
       className: options.className,
       feature: options.feature,
@@ -441,13 +460,13 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
       style: options.style || this._style,
       properties: options.properties,
       margin: options.margin || this.get('margin'),
-      size: options.size || this.get('size'),
+      size: [ options.width || size[0], options.height || size[1]],
       lineHeight: options.lineHeight || this.get('lineHeight'),
       onload: function() {
         // Force refresh
         this.refresh();
       }.bind(this)
-    }, canvas, row);
+    }, canvas, offsetY);
   }
 }
 export default ol_legend_Legend

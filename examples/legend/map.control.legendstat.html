@@ -121,10 +121,10 @@
   }));
 
   // Add empty row to 
-  legend.addItem();
-  legend.addItem({ title:'2.600.000', properties: { pop: 2600000 }, typeGeom: 'Point'});
-  legend.addItem({ title:'100.000', properties: { pop: 1000000 }, typeGeom: 'Point'});
-  legend.addItem({ title:'0', properties: { pop: 100000 }, typeGeom: 'Point'});
+  legend.addItem({});
+  legend.addItem({ title:'2.600.000', properties: { pop: 2600000 }, typeGeom: 'Point', height: 8 });
+  legend.addItem({ properties: { pop: 1000000 }, typeGeom: 'Point', height: 8 });
+  legend.addItem({ title:'100.000', properties: { pop: 100000 }, typeGeom: 'Point', height: 8 });
 
   // Display the style on select
   var popup = new ol.Overlay.Popup({ 

@@ -105,7 +105,7 @@ ul.ol-legend li {
 }
 ul.ol-legend li div {
   display: inline-block;
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 .ol-control.ol-legend .ol-legend {
