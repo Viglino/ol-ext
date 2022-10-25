@@ -2224,6 +2224,10 @@ body > .ol-ext-dialog > form {
   max-width: 90%;
   overflow-x: hidden;
   overflow-y: auto;
+  background-color: rgba(255,255,255,.6);
+}
+.ol-control.ol-legend:hover {
+  background-color: rgba(255,255,255,.8);
 }
 .ol-control.ol-legend.ol-collapsed {
   overflow: hidden;
@@ -2324,7 +2328,7 @@ ul.ol-legend li {
 }
 ul.ol-legend li div {
   display: inline-block;
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 .ol-control.ol-legend .ol-legend {
