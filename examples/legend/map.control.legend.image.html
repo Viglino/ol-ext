@@ -45,12 +45,10 @@
   <i clas="fa fa-car" style="position: absolute; top: -100px;"></i>
 
   <a href="../../index.html">
-    <h1>ol-ext: control Legends</h1>
+    <h1>ol-ext: control legend with image item</h1>
   </a>
   <div class="info">
-    The <i>ol/control/Legend</i> computes a legend based on <i>ol/style/Style</i> and draw it on the map.
-    <br/>
-    This example displays a legend with 2 columns.
+    Legend items can use <i>ol/legend/Image</i> to display an image as legend.
   </div>
 
   <!-- DIV pour la carte -->
@@ -59,41 +57,57 @@
 <script type="text/javascript">
   
   // Layers
-  var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
-    
+  var layer = new ol.layer.Tile({ title: 'Watercolor', source: new ol.source.Stamen({ layer: 'watercolor' }) });
+  var geology = new ol.layer.Tile ({
+    "title": "Cartes géologiques",
+    "extent": [
+      -20037508.342789244,
+      -238107693.26496765,
+      20037508.342789244,
+      238107693.26496765
+    ],
+    "queryable": false,
+    "abstract": "Cartes géologiques",
+    "minResolution": 3.1750000000000003,
+    "maxResolution": 3527.777777777778,
+    "source": new ol.source.TileWMS({
+      "url": "http://geoservices.brgm.fr/geologie?language=fre&",
+      "projection": "EPSG:3857",
+      "attributions": [
+        "<a href='http://www.brgm.fr/'>&copy; Brgm</a>"
+      ],
+      "crossOrigin": "anonymous",
+      "params": {
+        "LAYERS": "GEOLOGIE",
+        "FORMAT": "image/png",
+        "VERSION": "1.3.0"
+      }
+    })
+  })
+
   // The map
   var map = new ol.Map ({
     target: 'map',
     view: new ol.View ({
-      zoom: 6,
+      zoom: 7,
       center: [166326, 5992663]
     }),
-    layers: [layer]
+    layers: [geology]
   });
 
   // Define a new legend
   var legend = new ol.legend.Legend({ 
     title: 'Legend',
-    margin: 5
+    margin: 5,
+    maxWidth: 300
   });
   var legendCtrl = new ol.control.Legend({
     legend: legend,
     collapsed: false
   });
   map.addControl(legendCtrl);
-  //legend.on('select', function(e){ console.log(e) });
-  
-  // Add a new one
-  var legend2 = new ol.legend.Legend({ 
-    title: ' ', // no title
-    margin: 5
-  });
-  map.addControl(new ol.control.Legend({
-    legend: legend2,
-    target: legendCtrl.element
-  }));
 
-  var form = { Trianle:3, Square:4, Pentagon: 5, Hexagon: 6 };
+  var form = { Triangle:3, Square:4, Pentagon: 5, Hexagon: 6 };
   for (var i in form) {
     legend.addItem({ 
       title: i, 
@@ -107,21 +121,11 @@
         })
       })
     });
-    legend2.addItem({ 
-      title: i, 
-      typeGeom: 'Point',
-      style: new ol.style.Style({
-        image: new ol.style.RegularShape({
-          points: form[i],
-          radius: 15,
-          radius2: 7,
-          stroke: new ol.style.Stroke({ color: [0,128,255,1 ], width: 1.5 }),
-          fill: new ol.style.Fill({ color: [0,255,255,.3 ]})
-        })
-      })
-    });
   }
-
+  legend.addItem(new ol.legend.Image({
+    title: 'Geology',
+    url: 'http://geoservices.brgm.fr/geologie?language=fre&version=1.3.0&service=WMS&request=GetLegendGraphic&sld_version=1.1.0&layer=GEOSERVICES_GEOLOGIE&format=image/png&STYLE=default'
+  }))
 
 </script>
   
