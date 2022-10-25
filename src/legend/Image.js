@@ -7,6 +7,8 @@ import ol_ext_element from '../util/element.js'
  * @param {Object} options
  *  @param {string} url
  *  @param {string} [title]
+ *  @param {HTMLImageElement|HTMLCanvasElement} [img] an image to display
+ *  @param {string} [src] legend image url (if no img option)
  *  @param {string} [className] 'center' to center the title
  *  @param {number} [width] legend width, default use the image width
  */
@@ -16,11 +18,15 @@ var ol_legend_Image = class ollegendImage extends ol_Object {
     super(options);
 
     this.set('width', options.width);
-    this._img = new Image()
+    // The image
+    this._img = options.img || new Image()
     this._img.onload = function () {
       this.changed()
     }.bind(this);
-    this._img.src = options.url;
+    // Get source
+    if (!options.img) {
+      this._img.src = options.src;
+    }
   }
   /** Set the legend title
    * @param {string} title
