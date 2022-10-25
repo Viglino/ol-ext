@@ -571,7 +571,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
    *  @param {('m'|'km'|'ft'|'mi')} [options.unit='km'] 'm', 'km', 'ft' or 'mi', default 'km' or 'mi' according to the System of measurement
    *  @param {Number|undefined} [options.zmin=0] default 0
    *  @param {Number|undefined} options.zmax default max Z of the feature
-   *  @param {integer|undefined} [options.zDigits=0] number of digits for z graduation, default 0
+   *  @param {integer|undefined} [options.zDigits=0] number of digits for z graduation, default is calculated according to the value range
    *  @param {integer|undefined} [options.zMaxChars] maximum number of chars to be used for z graduation before switching to scientific notation
    *  @param {Number|undefined} [options.graduation=100] length of each z graduation step, default 100. If `zsteps` is provided, this is not used
    *  @param {integer|undefined} [options.amplitude] amplitude of the altitude, default zmax-zmin
@@ -799,26 +799,26 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
         if (baseNumber < 0)
           nbDigits -= 1
 
-        ctx.fillText(baseNumber.toFixed(Math.max(nbDigits, 0)), -4 * ratio, i * scy + dy)
+        ctx.fillText(baseNumber.toFixed(Math.max(nbDigits, 0)), -4 * ratio, zunitNumber * scy + dy)
       } else {
 
         if (typeof zDigits == 'number') {
           zunitNumber = this._numberFormat(zunitNumber, zDigits);
         } else {
           // If `zDigits` is not provided, it's calculated according to the range of values (after the unit conversion)
-          // If the diferrece between zmax and zmin is less than `zdif`, use decimals
-          var zdif = 10;
+          // If the diference between zmax and zmin is less than `zdif`, use decimals
+          var zdif = 1;
           zunitNumber = ((this._unitsConversion(zmax, zunit) - this._unitsConversion(zmin, zunit)) > zdif)
             ? this._numberFormat(zunitNumber, 0)
             : this._numberFormat(zunitNumber, 2);
         }
-        ctx.fillText(zunitNumber, -4 * ratio, i * scy + dy)
+        ctx.fillText(zunitNumber, -4 * ratio, zunitNumber * scy + dy)
       }
-      ctx.moveTo(-2 * ratio, i * scy + dy)
-      if (i != 0)
-        ctx.lineTo(d * scx, i * scy + dy)
+      ctx.moveTo(-2 * ratio, zunitNumber * scy + dy)
+      if (zunitNumber != 0)
+        ctx.lineTo(d * scx, zunitNumber * scy + dy)
       else
-        ctx.lineTo(0, i * scy + dy)
+        ctx.lineTo(0, zunitNumber * scy + dy)
     }
     // Scale X
     ctx.textAlign = "center"
