@@ -2,6 +2,7 @@ import {asString as ol_color_asString} from 'ol/color.js'
 import ol_control_CanvasBase from './CanvasBase.js'
 // eslint-disable-next-line no-unused-vars
 import ol_legend_Legend from '../legend/Legend.js'
+import ol_ext_element from '../util/element.js';
 
 /** Create a legend for styles
  * @constructor
@@ -51,11 +52,13 @@ var ol_control_Legend = class olcontrolLegend extends ol_control_CanvasBase {
     // The legend
     this._legend = options.legend;
     this._legend.getCanvas().className = 'ol-legendImg';
+    // Legend element
     element.appendChild(this._legend.getCanvas());
     element.appendChild(this._legend.getListElement());
 
-    if (options.collapsible !== false && options.collapsed === false)
+    if (options.collapsible !== false && options.collapsed === false) {
       this.show();
+    }
 
     this._legend.on('select', function (e) {
       this.dispatchEvent(e);

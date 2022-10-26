@@ -429,7 +429,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
     this._items.forEach(function (r, i) {
       if (r instanceof ol_legend_Legend) {
         if ((!r._layer || r._layer.getVisible()) && r.getCanvas().height) {
-          ctx.drawImage(r.getCanvas(), 0, offsetY)
+          ctx.drawImage(r.getCanvas(), 0, offsetY * ratio)
           var list = r._listElement.querySelectorAll('li')
           for (var l=0; l<list.length; l++) {
             var li = list[l].cloneNode();
@@ -461,7 +461,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
           }
           // Image
           var img = r.getImage()
-          ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY, r.getWidth(), r.getHeight())
+          ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
           offsetY += r.getHeight();
         } else {
           var item = r.getProperties()
