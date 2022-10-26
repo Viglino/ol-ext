@@ -3877,7 +3877,7 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
     this._items.forEach(function (r, i) {
       if (r instanceof ol.legend.Legend) {
         if ((!r._layer || r._layer.getVisible()) && r.getCanvas().height) {
-          ctx.drawImage(r.getCanvas(), 0, offsetY)
+          ctx.drawImage(r.getCanvas(), 0, offsetY * ratio)
           var list = r._listElement.querySelectorAll('li')
           for (var l=0; l<list.length; l++) {
             var li = list[l].cloneNode();
@@ -3909,7 +3909,7 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
           }
           // Image
           var img = r.getImage()
-          ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY, r.getWidth(), r.getHeight())
+          ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
           offsetY += r.getHeight();
         } else {
           var item = r.getProperties()
@@ -10592,10 +10592,12 @@ ol.control.Legend = class olcontrolLegend extends ol.control.CanvasBase {
     // The legend
     this._legend = options.legend;
     this._legend.getCanvas().className = 'ol-legendImg';
+    // Legend element
     element.appendChild(this._legend.getCanvas());
     element.appendChild(this._legend.getListElement());
-    if (options.collapsible !== false && options.collapsed === false)
+    if (options.collapsible !== false && options.collapsed === false) {
       this.show();
+    }
     this._legend.on('select', function (e) {
       this.dispatchEvent(e);
     }.bind(this));
