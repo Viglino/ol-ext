@@ -105,6 +105,16 @@ var ol_control_WMTSCapabilities = class olcontrolWMTSCapabilities extends ol_con
   getTileGrid(tileMatrixSet, minZoom, maxZoom, tilePrefix) {
     return new ol_tilegrid_WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom, tilePrefix));
   }
+  /** Check if the TileMatrixSet is supported
+   * @param {Object} tm
+   * @returns {boolean}
+   */
+  isSupportedSet(tm) {
+    return tm.TileMatrixSet === 'PM' 
+      || tm.TileMatrixSet === '3857' 
+      || tm.TileMatrixSet === 'EPSG:3857' 
+      || tm.TileMatrixSet === 'webmercator'
+  }
   /** Return a WMTS options for the given capabilities
    * @param {*} caps layer capabilities (read from the capabilities)
    * @param {*} parent capabilities
@@ -112,18 +122,17 @@ var ol_control_WMTSCapabilities = class olcontrolWMTSCapabilities extends ol_con
    */
   getOptionsFromCap(caps, parent) {
     var bbox = caps.WGS84BoundingBox;
-    if (bbox)
-      bbox = ol_proj_transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
+    if (bbox) bbox = ol_proj_transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
 
     // Tilematrix zoom
     var minZoom = Infinity, maxZoom = -Infinity;
     var tmatrix;
     caps.TileMatrixSetLink.forEach(function (tm) {
-      if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857' || tm.TileMatrixSet === 'webmercator') {
+      if (this.isSupportedSet(tm)) {
         tmatrix = tm;
         caps.TileMatrixSet = tm.TileMatrixSet;
       }
-    });
+    }.bind(this));
     if (!tmatrix) {
       this.showError({ type: 'TileMatrix' });
       return;
