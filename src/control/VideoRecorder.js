@@ -116,8 +116,9 @@ var ol_control_VideoRecorder = class olcontrolVideoRecorder extends ol_control_C
     var print = this._printCtrl
     var stop = false
     function capture(canvas) {
-      if (stop)
-        return
+      //  Stop recording
+      if (stop) return
+      // New frame
       print.fastPrint({
         canvas: canvas
       }, capture)
