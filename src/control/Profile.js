@@ -4,19 +4,19 @@
 */
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 
-import {getDistance as ol_sphere_getDistance} from 'ol/sphere.js'
-import {transform as ol_proj_transform} from 'ol/proj.js'
+import { getDistance as ol_sphere_getDistance } from 'ol/sphere.js'
+import { transform as ol_proj_transform } from 'ol/proj.js'
 import ol_control_Control from 'ol/control/Control.js'
 import ol_Feature from 'ol/Feature.js'
 import ol_style_Fill from 'ol/style/Fill.js'
-import {asString as ol_asString} from 'ol/color.js'
+import { asString as ol_asString } from 'ol/color.js'
 
 import ol_style_Style from 'ol/style/Style.js'
 import ol_style_Stroke from 'ol/style/Stroke.js'
 import ol_style_Text from 'ol/style/Text.js'
 import ol_geom_LineString from 'ol/geom/LineString.js'
 
-import {ol_coordinate_dist2d} from "../geom/GeomUtils.js"
+import { ol_coordinate_dist2d } from "../geom/GeomUtils.js"
 import ol_ext_element from '../util/element.js'
 
 // Accepted units
@@ -57,8 +57,6 @@ var KILOMETER_VALUE = 1000
  *  @param {ol.Feature} [options.feature] the feature to draw profil
  *  @param {boolean} [options.selectable=false] enable selection on the profil, default false
  *  @param {boolean} [options.zoomable=false] can zoom in the profil
- *  @param {number} [options.decimalsAltitude=2] default 2
- *  @param {number} [options.decimalsDistance=1] default 1
  *  @param {string} [options.numberFormat] Convert numbers to a custom locale format, default is not used
  */
 var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
@@ -71,7 +69,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
       element: element,
       target: options.target
     })
-    
+
     var self = this
     this.info = options.info || ol_control_Profil.prototype.info
     if (options.target) {
@@ -150,13 +148,11 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     div_to_canvas.addEventListener('touchmove', this.onMove.bind(this))
 
     this.setProperties({
-      'decimalsAltitude' : options.decimalsAltitude || 2,
-      'decimalsDistance' : options.decimalsDistance || 1,
-      'units' : options.units || 'metric',
+      'units': options.units || 'metric',
       'numberFormat': options.numberFormat,
       'selectable': options.selectable
     })
-  
+
     this._isMetric = this.get('units') === 'metric'
 
     // Offset in px
@@ -280,18 +276,18 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
       this.bar_.parentElement.classList.add("over")
       this.bar_.style.left = dx + "px"
       this.bar_.style.display = "block"
-  
+
       var zunit = this._isMetric ? Unit.Meter : Unit.Foot
       var zvalue = this._unitsConversion(p[1], zunit)
-      this.element.querySelector(".point-info .z").textContent = this._numberFormat(zvalue, this.get('decimalsAltitude')) + zunit
-  
+      this.element.querySelector(".point-info .z").textContent = this._numberFormat(zvalue, this.get('zDigitsHover')) + zunit
+
       var xunit
       if (this._isMetric) xunit = (xvalue > KILOMETER_VALUE) ? Unit.Kilometer : Unit.Meter
       else xunit = (xvalue > MILE_VALUE) ? Unit.Mile : Unit.Foot
-  
+
       var xvalue = this._unitsConversion(p[0], xunit)
-      this.element.querySelector(".point-info .dist").textContent = this._numberFormat(xvalue, this.get('decimalsDistance')) + xunit
-  
+      this.element.querySelector(".point-info .dist").textContent = this._numberFormat(xvalue, this.get('xDigitsHover')) + xunit
+
       this.element.querySelector(".point-info .time").textContent = p[2]
       if (dx > this.canvas_.width / this.ratio / 2)
         this.popup_.classList.add('ol-left')
@@ -570,13 +566,16 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
    *  @param {('m'|'km'|'ft'|'mi')} [options.zunit='m'] 'm', 'km', 'ft' or 'mi', default 'm' or 'ft' according to the System of measurement
    *  @param {('m'|'km'|'ft'|'mi')} [options.unit='km'] 'm', 'km', 'ft' or 'mi', default 'km' or 'mi' according to the System of measurement
    *  @param {Number|undefined} [options.zmin=0] default 0
-   *  @param {Number|undefined} options.zmax default max Z of the feature
+   *  @param {Number|undefined} [options.zmax] default max Z of the feature
    *  @param {integer|undefined} [options.zDigits=0] number of digits for z graduation, default is calculated according to the value range
+   *  @param {integer|undefined} [options.xDigits=1] number of digits for x-axis (distance), default 1
+   *  @param {number} [options.zDigitsHover=2] Decimals number while hovering the profile graph, default 2 
+   *  @param {number} [options.xDigitsHover=1] Decimals number while hovering the profile graph, default 1
    *  @param {integer|undefined} [options.zMaxChars] maximum number of chars to be used for z graduation before switching to scientific notation
-   *  @param {Number|undefined} [options.graduation=100] length of each z graduation step, default 100. If `zsteps` is provided, this is not used
+   *  @param {Number|undefined} [options.graduation=100] length of each z graduation step, default 100. If `zSteps` is provided, this is not used
    *  @param {integer|undefined} [options.amplitude] amplitude of the altitude, default zmax-zmin
-   *  @param {integer|undefined} [options.xsteps=10] number of steps at the x-axis (distance), default 10
-   *  @param {integer|undefined} [options.zsteps] number of steps at the amplitude scale. If not provided, default is calculated from graduation
+   *  @param {integer|undefined} [options.xSteps] number of steps at the x-axis (distance), default 10. If not provided, default is calculated from the distance
+   *  @param {integer|undefined} [options.zSteps] number of steps at the amplitude scale. If not provided, default is calculated from graduation
    * @api stable
    */
   setGeometry(g, options) {
@@ -640,16 +639,21 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
 
     this._z = [zmin, zmax]
 
-    this.set('graduation', options.graduation || 100)
-    this.set('zmin', options.zmin)
-    this.set('zmax', options.zmax)
-    this.set('amplitude', options.amplitude)
-    this.set('unit', options.unit)
-    this.set('zunit', options.zunit)
-    this.set('zDigits', options.zDigits)
-    this.set('zMaxChars', options.zMaxChars)
-    this.set('xsteps', options.xsteps)
-    this.set('zsteps', options.zsteps)
+    this.setProperties({
+      'graduation': options.graduation || 100,
+      'zmin': options.zmin,
+      'zmax': options.zmax,
+      'amplitude': options.amplitude,
+      'unit': options.unit,
+      'zunit': options.zunit,
+      'zDigits': typeof options.zDigits === 'number' ? options.zDigits : 0,
+      'xDigits': typeof options.xDigits === 'number' ? options.xDigits : 1,
+      'zDigitsHover': typeof options.zDigitsHover === 'number' ? options.zDigitsHover : 2,
+      'xDigitsHover': typeof options.xDigitsHover === 'number' ? options.xDigitsHover : 1,
+      'zMaxChars': options.zMaxChars,
+      'xSteps': options.xSteps,
+      'zSteps': options.zSteps,
+    })
 
     this.dispatchEvent({ type: 'change:geometry', geometry: g })
 
@@ -694,38 +698,36 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     ctx.stroke()
 
     // Info
-    this.element.querySelector(".track-info .zmin").textContent = zmin.toFixed(2)+this.info.altitudeUnits
-    this.element.querySelector(".track-info .zmax").textContent = zmax.toFixed(2)+this.info.altitudeUnits
+    this.element.querySelector(".track-info .zmin").textContent = zmin.toFixed(2) + this.info.altitudeUnits
+    this.element.querySelector(".track-info .zmax").textContent = zmax.toFixed(2) + this.info.altitudeUnits
 
     var zminunit = (this._isMetric) ? Unit.Meter : Unit.Foot
     var zminConverted = this._unitsConversion(zmin, zminunit)
-    this.element.querySelector(".track-info .zmin").textContent = this._numberFormat(zminConverted, this._decimalsAltitude) + zminunit
+    this.element.querySelector(".track-info .zmin").textContent = this._numberFormat(zminConverted, this.get('zDigitsHover')) + zminunit
 
     var zmaxnunit = (this._isMetric) ? Unit.Meter : Unit.Foot
     var zmaxConverted = this._unitsConversion(zmax, zmaxnunit)
-    this.element.querySelector(".track-info .zmax").textContent = this._numberFormat(zmaxConverted, this._decimalsAltitude) + zmaxnunit
+    this.element.querySelector(".track-info .zmax").textContent = this._numberFormat(zmaxConverted, this.get('zDigitsHover')) + zmaxnunit
 
     var dunit;
     if (this._isMetric) {
       dunit = (d > 1000) ? Unit.Kilometer : Unit.Meter
     } else {
-      this.element.querySelector(".track-info .dist").textContent= (d).toFixed(1)+this.info.distanceUnitsM
       dunit = (d > MILE_VALUE) ? Unit.Mile : Unit.Foot
     }
-    this.element.querySelector(".track-info .time").textContent = ti
     var dConverted = this._unitsConversion(d, dunit)
-    this.element.querySelector(".track-info .dist").textContent = this._numberFormat(dConverted, this._decimalsDistance) + dunit
+    this.element.querySelector(".track-info .dist").textContent = this._numberFormat(dConverted, this.get('xDigitsHover')) + dunit
 
     this.element.querySelector(".track-info .time").textContent = ti
-  
-    var zsteps = this.get('zsteps')
+
+    var zSteps = this.get('zSteps')
     var grad
-  
-    if (zsteps) {
+
+    if (zSteps) {
       zmax = Math.ceil(zmax)
       zmin = Math.floor(zmin * 10) / 10
       var amp = this.get('amplitude') || (zmax - zmin)
-      grad = amp / (zsteps - 1)
+      grad = amp / (zSteps - 1)
     } else {
       // Set graduation
       var grad = this.get('graduation')
@@ -775,7 +777,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
       var usedChars
       var zminCon = this._unitsConversion(zmin, zunit)
       var zmaxCon = this._unitsConversion(zmax, zunit)
-    
+
       usedChars = Math.max(zminCon.toFixed(1).length, zmaxCon.toFixed(1).length)
 
       if (this.get('zMaxChars') < usedChars) {
@@ -799,54 +801,64 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
         if (baseNumber < 0)
           nbDigits -= 1
 
-        ctx.fillText(baseNumber.toFixed(Math.max(nbDigits, 0)), -4 * ratio, zunitNumber * scy + dy)
+        ctx.fillText(baseNumber.toFixed(Math.max(nbDigits, 0)), -4 * ratio, i * scy + dy)
       } else {
 
         if (typeof zDigits == 'number') {
           zunitNumber = this._numberFormat(zunitNumber, zDigits);
         } else {
           // If `zDigits` is not provided, it's calculated according to the range of values (after the unit conversion)
-          // If the diference between zmax and zmin is less than `zdif`, use decimals
-          var zdif = 1;
+          // If the diferrece between zmax and zmin is less than `zdif`, use decimals
+          var zdif = 10;
           zunitNumber = ((this._unitsConversion(zmax, zunit) - this._unitsConversion(zmin, zunit)) > zdif)
             ? this._numberFormat(zunitNumber, 0)
             : this._numberFormat(zunitNumber, 2);
         }
-        ctx.fillText(zunitNumber, -4 * ratio, zunitNumber * scy + dy)
+        ctx.fillText(zunitNumber, -4 * ratio, i * scy + dy)
       }
-      ctx.moveTo(-2 * ratio, zunitNumber * scy + dy)
-      if (zunitNumber != 0)
-        ctx.lineTo(d * scx, zunitNumber * scy + dy)
+      ctx.moveTo(-2 * ratio, i * scy + dy)
+      if (i != 0)
+        ctx.lineTo(d * scx, i * scy + dy)
       else
-        ctx.lineTo(0, zunitNumber * scy + dy)
+        ctx.lineTo(0, i * scy + dy)
     }
     // Scale X
     ctx.textAlign = "center"
     ctx.textBaseline = "top"
     ctx.setLineDash([ratio, 3 * ratio])
-    var unit = this.get('unit') || (this._isMetric) ? Unit.Kilometer : Unit.Mile
-    var stepsX = this.get('xsteps') || 10;
-    var step = (d / (stepsX-1));
-    var nstep;
-    var maxLimit = unit === Unit.Mile ? MILE_VALUE : 1000;
-  
+    var unit = this.get('unit') || ((this._isMetric) ? Unit.Kilometer : Unit.Mile)
+    var stepsX = this.get('xSteps')
+    var xDigits = this.get('xDigits')
+    var maxLimit = unit === Unit.Mile ? MILE_VALUE : 1000
+    var step
+
     if (d < maxLimit) {
-      // For small distances force using smallers units
-      unit = this._isMetric ? Unit.Meter : Unit.Foot;
+      // For small distances use the smallers units
+      unit = this._isMetric ? Unit.Meter : Unit.Foot
     }
-    if (step > 1000) {
-      nstep = Math.round(step/1000)*1000
-    } else if (step>100) {
-      nstep = Math.floor(step/10)*10
-    } else if (step>10) {
-       nstep = Math.floor(step/10)*10  
-    } else { 
-      nstep = step
+
+    if (typeof stepsX === 'number') {
+      step = Math.floor((d / (stepsX)))
+    } else {
+      if (d > maxLimit) {
+        step = Math.round(d / 1000) * 100
+        if (step > 1000)
+          step = Math.ceil(step / 1000) * 1000
+      } else {
+        if (d > 100)
+          step = Math.round(d / 100) * 10
+        else if (d > 10)
+          step = Math.round(d / 10)
+        else if (d > 1)
+          step = Math.round(d) / 10
+        else
+          step = d
+      }
     }
     for (i = 0; i <= d; i += step) {
-      var txt = this._unitsConversion(i, unit)
+      var txt = this._numberFormat(this._unitsConversion(i, unit), xDigits)
       //if (i+step>d) txt += " "+ (options.zunits || "km");
-      ctx.fillText(Math.round(txt * 10) / 10, i * scx, 4 * ratio)
+      ctx.fillText(txt, i * scx, 4 * ratio)
       ctx.moveTo(i * scx, 2 * ratio); ctx.lineTo(i * scx, 0)
     }
     ctx.font = (12 * ratio) + "px arial"
@@ -873,14 +885,14 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
       return this.canvas_
     return this.canvas_.toDataURL(type, encoderOptions)
   }
-    
+
   /**
    * Convert meters to another system of measurement or unit 
    * @param {number} nMeters 
    * @param {('m'|'km'|'ft'|'mi')} targetUnit default is m
    * @api stable
    */
-  _unitsConversion = function(nMeters, targetUnit = Unit.Meter) {
+  _unitsConversion = function (nMeters, targetUnit = Unit.Meter) {
     switch (targetUnit) {
       case Unit.Kilometer:
         return nMeters / KILOMETER_VALUE;
@@ -903,10 +915,10 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
    * @returns {string}
    * @api stable
    */
-  _numberFormat = function(number, decimals = 2) {
+  _numberFormat = function (number, decimals = 2) {
     var locale = this.get('numberFormat')
-    if (!locale) return Number(number).toFixed(decimals)
-    return Number(number).toLocaleString(locale, {minimumFractionDigits: decimals, maximumFractionDigits: decimals})
+    if (!locale) return Math.round(Number(number) * (10 * decimals)) / (10 * decimals)
+    return Number(number).toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: decimals })
   }
 }
 
@@ -916,26 +928,11 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
 ol_control_Profil.prototype.info = {
   "zmin": "Zmin",
   "zmax": "Zmax",
-  "ytitle": "Altitude", // Unit of measurement is autocompleted
-  "xtitle": "Distance", // Unit of measurement is autocompleted
+  "ytitle": "Altitude", // Unit of measurement is autogenerated
+  "xtitle": "Distance", // Unit of measurement is autogenerated
   "time": "Time",
   "altitude": "Altitude",
   "distance": "Distance"
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export default ol_control_Profil
