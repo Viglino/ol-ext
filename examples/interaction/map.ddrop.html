@@ -45,13 +45,14 @@
     .loading {
       background: #fff;
       border: 2px solid #369;
+      line-height: 1.4;
       left: 50%;
-      margin: -2em -100px;
       padding: 0.5em;
-      position: fixed;
+      position: absolute;
       text-align: center;
       top: 50%;
-      width: 200px;
+      transform: translate(-50%, -50%);
+      width: 400px;
       z-index: 1;
       box-sizing: border-box;
       box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
@@ -82,7 +83,7 @@
 
   <!-- DIV pour la carte -->
   <div id="map"></div>
-  <div class="loading"><p>Drop a file on the map...</p><span></span></div>
+  <div class="loading"><p>Drop a file on the map...<br>GPX, GeoJSON, IGC, KML, or TopoJSON</p><span></span></div>
   
   <script type="text/javascript">
   // The map
@@ -218,15 +219,15 @@
     ]
     */
   });
-  map.addInteraction (dd);
+  map.addInteraction(dd);
   var loading = 0;
   
   // Drag and drop
   dd.on ('loadstart', function (e) {
+    if (!/(.json|.gpx|.geojson|.igc|.kml)/.test(e.fileextension)) return
     if (!$("#addto").prop('checked') && !loading) vectorSource.clear();
     select.getFeatures().clear();
     $(".info").html("");
-
     loading++; 
     $(".loading").show();
     $(".loading p").html("LOADING ("+loading+")");
@@ -234,7 +235,7 @@
   dd.on ('addfeatures', function(event) {   
     loading--; 
     $(".loading p").html("LOADING ("+loading+")");
-    $(".loading span").html(event.features.length);
+    $(".loading span").html(event.features.length + " Objects");
 
     setTimeout(function(){
       vectorSource.addFeatures(event.features);
