@@ -29130,8 +29130,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
         for (i = 0, f; f = this.selection_.item(i); i++) {
           geometry = (viewRotation === 0 || !this.get('enableRotatedTransform')) ? this.geoms_[i].clone() : this.rotatedGeoms_[i].clone()
           geometry.applyTransform(function (g1, g2, dim) {
-            if (dim < 2)
-              return g2
+            if (dim < 2) return g2
             if (!keepRectangle) {
               for (j = 0; j < g1.length; j += dim) {
                 if (scx != 1)
@@ -29197,10 +29196,9 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
               }
             }
             // bug: ol, bad calculation circle geom extent
-            if (geometry.getType() == 'Circle')
-              geometry.setCenterAndRadius(geometry.getCenter(), geometry.getRadius())
+            if (geometry.getType() == 'Circle') geometry.setCenterAndRadius(geometry.getCenter(), geometry.getRadius())
             return g2
-          })
+          }.bind(this))
           if (this.get('enableRotatedTransform') && viewRotation !== 0) {
             //geometry.rotate(viewRotation, rotationCenter);
             geometry.rotate(viewRotation, this.getMap().getView().getCenter())
