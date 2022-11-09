@@ -185,7 +185,6 @@ ol_geom_Polygon.prototype.scribbleFill = function (options) {
   var angle = options.angle || Math.PI/2;
   var i, k,l;
   
-  console.log(this)
   // Geometry + rotate
 	var geom = this.clone();
 	geom.rotate(angle, [0,0]);
