@@ -125,7 +125,7 @@ function scribbleStyle(feature, resolution) {
   if (!scribble || scribble.step !== step) {
     scribble = {
       step: step,
-      geom: feature.getGeometry().scribbleFill({ interval: step, angle: a })
+      geom: ol.geom.scribbleFill(feature.getGeometry(), { interval: step, angle: a }) // feature.getGeometry().scribbleFill({ interval: step, angle: a })
     };
     feature._scribble = scribble;
     // console.log('calculating')
