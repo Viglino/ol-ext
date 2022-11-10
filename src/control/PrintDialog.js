@@ -369,7 +369,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
         return
       }
       ol_ext_element.create('OPTION', {
-        html: format.title,
+        html: this.i18n(format.title),
         value: i,
         parent: save
       })
@@ -461,7 +461,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     })
     this.formats.forEach(function (format, i) {
       ol_ext_element.create('OPTION', {
-        html: format.title,
+        html: this.i18n(format.title),
         value: i,
         parent: saveLegend
       })
