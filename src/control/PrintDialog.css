@@ -263,6 +263,9 @@
   }
   body.ol-print-document > .ol-ext-print-dialog .ol-content {
     max-height: unset!important;
+    max-width: unset!important;
+    width: unset!important;
+    height: unset!important;
   }
   .ol-ext-print-dialog > form,
   .ol-ext-print-dialog {
