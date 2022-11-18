@@ -40673,6 +40673,7 @@ ol.style.Image.prototype.getImagePNG = function(ratio) {
  * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
  * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
  *  @param {function} [options.onload] callback when image is loaded (to redraw the layer)
+ *  @param {function} [options.onerror] callback when image is on error (not loaded)
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
@@ -40729,6 +40730,7 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
     this._src = options.src
     this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0]
     this._onload = options.onload
+    this._onerror = options.onerror
     if (typeof (options.opacity) == 'number')
       this.setOpacity(options.opacity)
     if (typeof (options.rotation) == 'number')
@@ -40837,8 +40839,7 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
   getImage(pixelratio) {
     pixelratio = pixelratio || 1
     var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio)
-    if (this._gethit)
-      return canvas
+    if (this._gethit || this.img_) return canvas;
     var strokeStyle
     var strokeWidth = 0
     if (this._stroke) {
@@ -40847,12 +40848,12 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
     }
     // Draw hitdetection image
     this._gethit = true
-    var context = this.getHitDetectionImage().getContext('2d')
-    context.save()
-    context.setTransform(1, 0, 0, 1, 0, 0)
-    this.drawBack_(context, "#000", strokeWidth, 1)
-    context.fill()
-    context.restore()
+      var context = this.getHitDetectionImage().getContext('2d')
+      context.save()
+      context.setTransform(1, 0, 0, 1, 0, 0)
+      this.drawBack_(context, "#000", strokeWidth, 1)
+      context.fill()
+      context.restore()
     this._gethit = false
     // Draw the image
     context = canvas.getContext('2d')
@@ -40870,8 +40871,7 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
     context.restore()
     var self = this
     var img = this.img_ = new Image()
-    if (this._crossOrigin)
-      img.crossOrigin = this._crossOrigin
+    if (this._crossOrigin) img.crossOrigin = this._crossOrigin
     img.src = this._src
     // Draw image
     if (img.width) {
@@ -40881,8 +40881,12 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
         self.drawImage_(canvas, img, pixelratio)
         // Force change (?!)
         // self.setScale(1);
-        if (self._onload)
-          self._onload()
+        if (self._onload) self._onload()
+      }
+      if (self._onerror) {
+        img.onerror = function () {
+          self._onerror()
+        }
       }
     }
     // Set anchor (ol < 6)
