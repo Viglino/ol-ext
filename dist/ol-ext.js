@@ -20926,7 +20926,7 @@ ol.filter.Halftone = class olfilterHalftone extends ol.filter.Base {
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = ol.color.asString(this.get('color') || '#000');
     for (var x = 0; x < w2; x++)
-      for (var y = 0; y < h2; y++) {
+      for (var y = 0; y < h2; y++) if (data[x * 4 + 3 + y * w2 * 4]) {
         var pix;
         switch (this.get('channel')) {
           case 'r': pix = data[x * 4 + y * w2 * 4] / 2.55; break;
