@@ -122,7 +122,12 @@
   var search = new ol.control.SearchFeature({
     //target: $(".options").get(0),
     source: vectorSource,
-    property: $(".options select").val()
+    property: $(".options select").val(),
+    sort: function(f1,f2) {
+      if (search.getSearchString(f1) < search.getSearchString(f2)) return -1;
+      if (search.getSearchString(f1) > search.getSearchString(f2)) return 1;
+      return 0;
+    }
   });
   map.addControl (search);
 
