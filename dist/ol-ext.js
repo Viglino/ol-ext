@@ -9928,14 +9928,13 @@ ol.control.Imageline = class olcontrolImageline extends ol.control.Control {
         // On click > dispatch event
         img.addEventListener('click', function () {
           if (!this._moving) {
-            this.dispatchEvent({ type: 'select', feature: f });
             this._scrolldiv.scrollLeft = img.offsetLeft
-              + ol.ext.element.getStyle(img, 'width') / 2
-              - ol.ext.element.getStyle(this.element, 'width') / 2;
-            if (this._select)
-              this._select.elt.classList.remove('select');
+            + ol.ext.element.getStyle(img, 'width') / 2
+            - ol.ext.element.getStyle(this.element, 'width') / 2;
+            if (this._select) this._select.elt.classList.remove('select');
             this._select = sel;
-            this._select.elt.classList.add('select');
+            if (this._select) this._select.elt.classList.add('select');
+            this.dispatchEvent({ type: 'select', feature: f });
           }
         }.bind(this));
         // Show link
