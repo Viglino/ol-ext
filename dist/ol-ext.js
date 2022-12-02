@@ -23813,10 +23813,9 @@ ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.Int
     this.formatConstructors_ = options.formatConstructors || [ol.format.GPX, ol.format.GeoJSONX, ol.format.GeoJSONP, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON]
     this.projection_ = options.projection
     this.accept_ = options.accept || ["gpx", "json", "geojsonx", "geojsonp", "geojson", "igc", "kml", "topojson"]
-    var self = this
     zone.addEventListener('drop', function (e) { 
-      return self.ondrop(e) 
-    })
+      return this.ondrop(e) 
+    }.bind(this))
   }
   /** Set the map
   */
@@ -23835,46 +23834,44 @@ ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.Int
   ondrop(e) {
     e.preventDefault()
     if (e.dataTransfer && e.dataTransfer.files.length) {
-      var self = this
       var projection = this.projection_ || (this.getMap() ? this.getMap().getView().getProjection() : null)
       // fetch FileList object
       var files = e.dataTransfer.files // e.originalEvent.target.files ?
       // process all File objects
-      var file
       var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/
-      for (var i = 0; file = files[i]; i++) {
+      Array.prototype.forEach.call(files, function(file) {
         var ex = file.name.match(pat)[0]
         var isok = (this.accept_.indexOf(ex.toLocaleLowerCase()) >= 0)
-        self.dispatchEvent({ type: 'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, isok: isok })
+        this.dispatchEvent({ type: 'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, isok: isok })
         // Don't load file
-        if (!this.formatConstructors_.length)
-          continue
-        // Load file
-        var reader = new FileReader()
-        var formatConstructors = this.formatConstructors_
-        var theFile = file
-        reader.onload = function (e) {
-          var result = e.target.result
-          var features = []
-          var i, ii
-          for (i = 0, ii = formatConstructors.length; i < ii; ++i) {
-            var formatConstructor = formatConstructors[i]
-            try {
-              var format = new formatConstructor()
-              features = format.readFeatures(result, { featureProjection: projection })
-              if (features && features.length > 0) {
-                self.dispatchEvent({ type: 'addfeatures', features: features, file: theFile, projection: projection })
-                self.dispatchEvent({ type: 'loadend', features: features, file: theFile, projection: projection })
-                return
-              }
-            } catch (e) { /* ok */ }
-          }
-          // Nothing match, try to load by yourself
-          self.dispatchEvent({ type: 'loadend', file: theFile, result: result })
+        if (this.formatConstructors_.length) {
+          // Load file
+          var reader = new FileReader()
+          var formatConstructors = this.formatConstructors_
+          var theFile = file
+          reader.onload = function (e) {
+            var result = e.target.result
+            var features = []
+            var i, ii
+            for (i = 0, ii = formatConstructors.length; i < ii; ++i) {
+              var formatConstructor = formatConstructors[i]
+              try {
+                var format = new formatConstructor()
+                features = format.readFeatures(result, { featureProjection: projection })
+                if (features && features.length > 0) {
+                  this.dispatchEvent({ type: 'addfeatures', features: features, file: theFile, projection: projection })
+                  this.dispatchEvent({ type: 'loadend', features: features, file: theFile, projection: projection })
+                  return
+                }
+              } catch (e) { /* ok */ }
+            }
+            // Nothing match, try to load by yourself
+            this.dispatchEvent({ type: 'loadend', file: theFile, result: result })
+          }.bind(this)
+          // Start loading
+          reader.readAsText(file)
         }
-        // Start loading
-        reader.readAsText(file)
-      }
+      }.bind(this))
     }
     return false
   }
