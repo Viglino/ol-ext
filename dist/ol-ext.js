@@ -18932,9 +18932,10 @@ ol.control.WMTSCapabilities = class olcontrolWMTSCapabilities extends ol.control
    */
   isSupportedSet(tm) {
     return tm.TileMatrixSet === 'PM' 
-      || tm.TileMatrixSet === '3857' 
-      || tm.TileMatrixSet === 'EPSG:3857' 
-      || tm.TileMatrixSet === 'webmercator'
+    || tm.TileMatrixSet === '3857' 
+    || tm.TileMatrixSet === 'EPSG:3857' 
+    || tm.TileMatrixSet === 'webmercator'
+    || tm.TileMatrixSet === 'GoogleMapsCompatible'
   }
   /** Return a WMTS options for the given capabilities
    * @param {*} caps layer capabilities (read from the capabilities)
