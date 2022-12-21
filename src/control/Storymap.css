@@ -27,6 +27,7 @@
 }
 
 .ol-control.ol-storymap .chapter {
+  position: relative;
   padding: .5em;
 }
 .ol-storymap .chapter {
@@ -86,4 +87,81 @@
 
 .ol-storymap img[data-title] {
   cursor: pointer;
+}
+
+/* scrollLine / scrollbox */
+.ol-storymap.scrollLine,
+.ol-storymap.scrollBox {
+  top: 0;
+  bottom: 0;
+  background-color: transparent;
+  border-radius: 0;
+  max-width: 40%;
+}
+.ol-storymap.scrollLine .chapter,
+.ol-storymap.scrollBox .chapter {
+  background-color: #fff;
+  margin: 100% 0;
+}
+.ol-storymap.scrollLine .chapter:first-child,
+.ol-storymap.scrollBox .chapter:first-child {
+  margin-top: 3em;
+}
+.ol-storymap.scrollLine .chapter.ol-select,
+.ol-storymap.scrollLine .chapter,
+.ol-storymap.scrollBox .chapter.ol-select,
+.ol-storymap.scrollBox .chapter {
+  opacity: 1;
+}
+
+.ol-storymap.scrollLine .ol-scrolldiv,
+.ol-storymap.scrollBox .ol-scrolldiv {
+  padding-right: 30px;
+}
+.ol-storymap.scrollLine .ol-scroll,
+.ol-storymap.scrollBox .ol-scroll {
+  display: block!important;
+  background-color: #fff;
+  padding: 0;
+  width: 2px;
+  opacity: 1!important;
+  right: 15px;
+  overflow: visible;
+  transition: none;
+}
+.ol-storymap.scrollLine .ol-scroll > div {
+  background-color: transparent;
+  overflow: visible;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: unset;
+}
+.ol-storymap.scrollLine .ol-scroll > div:before {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #0af;
+  border: 2px solid #fff;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ol-storymap.scrollBox .ol-scroll > div {
+  display: none;
+}
+.ol-storymap.scrollBox .chapter:after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: Min(30%, 5em);
+  right: -24.5px;
+  box-shadow: 0 0 0 2px #fff, inset 0 0 0 15px #0af; 
+  border-radius: 50%;
+  border: 5px solid transparent;
+  box-sizing: border-box;
+  z-index: 1;
 }

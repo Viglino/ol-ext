@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿  <!DOCTYPE html>
 <html>
 <head>
 <!--
@@ -44,7 +44,9 @@
       max-width: 100%;
     }
     #story .chapter.ol-select {
+      /*
       background-color: rgba(255,255,255,.8);
+      */
     }
     .options a {
       cursor: pointer;
@@ -95,6 +97,13 @@
   <div id="map" style="width:600px; height:400px;"></div>
   
   <div class="options">
+    <label>ClassName: </label>
+    <select onchange="setClassName(this.value)">
+      <option value="">default</option>
+      <option value="scrollLine">scrollLine</option>
+      <option value="scrollBox">scrollBox</option>
+    </select>
+    <br/><br/>
     Set chapters:
     <ol>
       <li>
@@ -177,7 +186,8 @@
   var story = new ol.control.Storymap({
     html: document.getElementById('story'),
     //target: document.getElementById('story')
-    minibar: true
+    minibar: true,
+    //className: 'scrollBox'
   });
 
   // Show image fullscreen on click
@@ -198,6 +208,13 @@
   });
   map.addControl (story);
 
+  function setClassName(c) {
+    console.log(c)
+    story.element.classList.remove('scrollLine')
+    story.element.classList.remove('scrollBox')
+    if (c) story.element.classList.add(c)
+    window.dispatchEvent(new Event('resize'))
+  }
   </script>
   
 </body>

@@ -16,6 +16,7 @@
   -webkit-transition: all 0.5s;
   transition: all 0.5s;
   pointer-events: none;
+  z-index: 9;
 }
 
 .ol-overlay.slide-up {
