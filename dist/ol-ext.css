@@ -4073,6 +4073,7 @@ ul.ol-legend li div {
 .ol-control.ol-storymap .chapter {
   position: relative;
   padding: .5em;
+  overflow: hidden;
 }
 .ol-control.ol-storymap .chapter:last-child {
   margin-bottom: 100%;
