@@ -16253,7 +16253,7 @@ ol.control.Status = class olcontrolStatus extends ol.control.Control {
  * @fires scrollto
  * @fires clickimage
  * @param {Object=} options Control options.
- *	@param {String} options.className class of the control
+ *	@param {String} options.className class of the control (scrollLine, scrollBox or any)
  *	@param {Element | string | undefined} [options.html] The storymap content
  *	@param {Element | string | undefined} [options.target] The target element to place the story. If no html is provided the content of the target will be used.
  *	@param {boolean} [options.minibar=false] add a mini scroll bar

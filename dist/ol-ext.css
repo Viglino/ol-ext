@@ -4074,6 +4074,9 @@ ul.ol-legend li div {
   position: relative;
   padding: .5em;
 }
+.ol-control.ol-storymap .chapter:last-child {
+  margin-bottom: 100%;
+}
 .ol-storymap .chapter {
   cursor: pointer;
   opacity: .4;
@@ -4081,6 +4084,7 @@ ul.ol-legend li div {
 .ol-storymap .chapter.ol-select {
   cursor: default;
   opacity: 1;
+  background-color: rgba(255,255,255,.8);
 }
 
 .ol-storymap .ol-scroll-top,
@@ -4174,12 +4178,23 @@ ul.ol-legend li div {
 .ol-storymap.scrollBox .ol-scrolldiv {
   padding-right: 30px;
 }
+.ol-storymap.scrollLine:before,
+.ol-storymap.scrollBox:before {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  top: 0;
+  bottom: 0;
+  right: 14px;
+  background-color: #fff;
+}
+
 .ol-storymap.scrollLine .ol-scroll,
 .ol-storymap.scrollBox .ol-scroll {
   display: block!important;
-  background-color: #fff;
   padding: 0;
-  width: 2px;
+  width: 1px;
   opacity: 1!important;
   right: 15px;
   overflow: visible;
