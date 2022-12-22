@@ -28,6 +28,14 @@
   <link rel="stylesheet" href="../style.css" />
 
   <style>
+    [data-fullscreen] #map {
+      position: fixed;
+      inset: 0;
+      margin: 0;
+      width: unset!important;
+      height: unset!important;
+      z-index: 10;
+    }
     .ol-zoom {
       left: auto;
       right: .5em;
@@ -116,7 +124,9 @@
         <a onclick="story.setChapter('Berlin')">Berlin</a>
       </li>
     </ol>
-    Click on the image to show it fullscreen.
+    <a onclick="document.body.dataset.fullscreen=''; map.updateSize();">Show fullscreen</a>
+    <br/>
+    Click on image to show it fullscreen.
   </div>
 
   <div id="story">
