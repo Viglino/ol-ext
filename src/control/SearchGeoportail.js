@@ -15,6 +15,7 @@ import ol_control_SearchJSON from './SearchJSON.js'
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
+ *	@param {string | undefined} [options.version] API version '2' to use geocodage-beta-2, default v1
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -26,13 +27,18 @@ import ol_control_SearchJSON from './SearchJSON.js'
  *
  *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
  * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
+ * @see {@link https://geoservices.ign.fr/documentation/services/api-et-services-ogc/geocodage-beta-20/documentation-technique-de-lapi}
  */
 var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_control_SearchJSON {
   constructor(options) {
     options = options || {};
     options.className = options.className || 'IGNF';
     options.typing = options.typing || 500;
-    options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
+    if (options.version == 2) {
+      options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/geoportail/geocodage/rest/0.1/completion';
+    } else {
+      options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
+    }
     options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
     super(options);
     this.set('type', options.type || 'StreetAddress,PositionOfInterest');
@@ -55,65 +61,108 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
 
     // Search type
     var type = this.get('type') === 'Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
-    if (/,/.test(type))
-      type = 'StreetAddress';
-    // request
-    var request = '<?xml version="1.0" encoding="UTF-8"?>'
-      + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
-      + ' <Request requestID="1" version="1.2" methodName="ReverseGeocodeRequest" maximumResponses="1" >'
-      + '  <ReverseGeocodeRequest>'
-      + '   <ReverseGeocodePreference>' + type + '</ReverseGeocodePreference>'
-      + '   <Position>'
-      + '    <gml:Point><gml:pos>' + lonlat[1] + ' ' + lonlat[0] + '</gml:pos></gml:Point>'
-      + '   </Position>'
-      + '  </ReverseGeocodeRequest>'
-      + ' </Request>'
-      + '</XLS>';
+    if (/,/.test(type)) type = 'StreetAddress';
 
-    this.ajax(this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
-      { xls: request },
-      function (xml) {
-        var f = {};
-        if (!xml) {
-          f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) };
-        } else {
-          xml = xml.replace(/\n|\r/g, '');
-          var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-          if (!Number(p[1]) && !Number(p[0])) {
+    // Search url
+    var url = this.get('url').replace('ols/apis/completion', 'geoportail/ols').replace('completion', 'reverse');
+    if (/ols/.test(url)) {
+      // request
+      var request = '<?xml version="1.0" encoding="UTF-8"?>'
+        + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+        + ' <Request requestID="1" version="1.2" methodName="ReverseGeocodeRequest" maximumResponses="1" >'
+        + '  <ReverseGeocodeRequest>'
+        + '   <ReverseGeocodePreference>' + type + '</ReverseGeocodePreference>'
+        + '   <Position>'
+        + '    <gml:Point><gml:pos>' + lonlat[1] + ' ' + lonlat[0] + '</gml:pos></gml:Point>'
+        + '   </Position>'
+        + '  </ReverseGeocodeRequest>'
+        + ' </Request>'
+        + '</XLS>';
+
+      this.ajax(url,
+        { xls: request },
+        function (xml) {
+          var f = {};
+          if (!xml) {
             f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) };
           } else {
-            f.x = lonlat[0];
-            f.y = lonlat[1];
-            f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
-            f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
-            f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
-            if (/<Street>/.test(xml)) {
-              f.kind = '';
-              f.country = 'StreetAddress';
-              f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
-              var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
-              f.fulltext = number + ' ' + f.street + ', ' + f.zipcode + ' ' + f.city;
+            xml = xml.replace(/\n|\r/g, '');
+            var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+            if (!Number(p[1]) && !Number(p[0])) {
+              f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) };
             } else {
-              f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
-              f.country = 'PositionOfInterest';
-              f.street = '';
-              f.fulltext = f.zipcode + ' ' + f.city;
+              f.x = lonlat[0];
+              f.y = lonlat[1];
+              f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
+              f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+              f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
+              if (/<Street>/.test(xml)) {
+                f.kind = '';
+                f.country = 'StreetAddress';
+                f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
+                var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
+                f.fulltext = number + ' ' + f.street + ', ' + f.zipcode + ' ' + f.city;
+              } else {
+                f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+                f.country = 'PositionOfInterest';
+                f.street = '';
+                f.fulltext = f.zipcode + ' ' + f.city;
+              }
             }
           }
+          if (typeof (options) === 'function') {
+            options.call(this, [f]);
+          } else {
+            this.getHistory().shift();
+            this._handleSelect(f, true, options);
+            // this.setInput('', true);
+            // this.drawList_();
+          }
+        }.bind(this), {
+        timeout: this.get('timeout'),
+        dataType: 'XML'
+      });
+    } else {
+      this.ajax(url + '?lon='+lonlat[0] + '&lat=' + lonlat[1], 
+        {}, 
+        function(resp) {
+          var f;
+          try {
+            resp = JSON.parse(resp).features[0];
+            f = resp.properties;
+            // lonlat
+            f.x = resp.geometry.coordinates[0];
+            f.y = resp.geometry.coordinates[1];
+            f.click = lonlat;
+            // Fulltext
+            if (f.name) {
+              f.fulltext = f.name + ', ' + f.postcode + ' ' + f.city;
+            } else {
+              f.fulltext = f.postcode + ' ' + f.city;
+            }
+          } catch(e) {
+            f = { 
+              x: lonlat[0], 
+              y: lonlat[1], 
+              lonlat: lonlat,
+              fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
+            };
+          }
+          if (typeof (options) === 'function') {
+            options.call(this, [f]);
+          } else {
+            this.getHistory().shift();
+            this._handleSelect(f, true, options);
+            // this.setInput('', true);
+            // this.drawList_();
+          }
+        }.bind(this), {
+          timeout: this.get('timeout'),
+          dataType: 'XML'
         }
-        if (typeof (options) === 'function') {
-          options.call(this, [f]);
-        } else {
-          this.getHistory().shift();
-          this._handleSelect(f, true, options);
-          // this.setInput('', true);
-          // this.drawList_();
-        }
-      }.bind(this), {
-      timeout: this.get('timeout'),
-      dataType: 'XML'
+      );
     }
-    );
+
   }
   /** Returns the text to be displayed in the menu
    *	@param {ol.Feature} f the feature
