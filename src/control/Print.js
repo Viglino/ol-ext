@@ -159,7 +159,6 @@ var ol_control_Print = class olcontrolPrint extends ol_control_Control {
     }
   }
   /** Print the map
-   * @param {function} cback a callback function that take a string containing the requested data URI.
    * @param {Object} options
    *	@param {string} options.imageType A string indicating the image format, default the control one
    *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
