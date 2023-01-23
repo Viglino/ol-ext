@@ -6067,7 +6067,7 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
       if (hp > h - dh) {
         // Bug IE: need to have an height defined
         ol.ext.element.setStyle(this.element, { height: '100%' })
-        var li = this.panel_.querySelectorAll('li.visible .li-content')[0]
+        var li = this.panel_.querySelectorAll('li.ol-visible .li-content')[0]
         var lh = li ? 2 * ol.ext.element.getStyle(li, 'height') : 0
         switch (dir) {
           case 1: top += lh; break
@@ -6141,8 +6141,9 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
    */
   setLayerOpacity(layer, li) {
     var i = li.querySelector('.layerswitcher-opacity-cursor')
-    if (i)
+    if (i){
       i.style.left = (layer.getOpacity() * 100) + "%"
+    }
     this.dispatchEvent({ type: 'layer:opacity', layer: layer })
   }
   /** Set visibility for a layer
@@ -6152,12 +6153,14 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
    */
   setLayerVisibility(layer, li) {
     var i = li.querySelector('.ol-visibility')
-    if (i)
+    if (i) {
       i.checked = layer.getVisible()
-    if (layer.getVisible())
+    }
+    if (layer.getVisible()){
       li.classList.add('ol-visible')
-    else
+    } else{
       li.classList.remove('ol-visible')
+    }
     this.dispatchEvent({ type: 'layer:visible', layer: layer })
   }
   /** Clear layers associated with li
@@ -6178,8 +6181,9 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
    */
   _getLayerForLI(li) {
     for (var i = 0, l; l = this._layers[i]; i++) {
-      if (l.li === li)
+      if (l.li === li) {
         return l.layer
+      }
     }
     return null
   }
@@ -6191,10 +6195,11 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
     this.panel_.querySelectorAll('li').forEach(function (li) {
       var l = this._getLayerForLI(li)
       if (l) {
-        if (this.testLayerVisibility(l))
+        if (this.testLayerVisibility(l)) {
           li.classList.remove('ol-layer-hidden')
-        else
+        } else {
           li.classList.add('ol-layer-hidden')
+        }
       }
     }.bind(this))
   }
@@ -6219,8 +6224,9 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
    * @private
    */
   drawPanel_() {
-    if (--this.dcount || this.dragging_)
+    if (--this.dcount || this.dragging_) {
       return
+    }
     var scrollTop = this.panelContainer_.scrollTop
     // Remove existing layers
     this._clearLayerForLI()
@@ -6229,10 +6235,11 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
         li.remove()
     }.bind(this))
     // Draw list
-    if (this._layerGroup)
+    if (this._layerGroup) {
       this.drawList(this.panel_, this._layerGroup.getLayers())
-    else if (this.getMap())
+    } else if (this.getMap()) {
       this.drawList(this.panel_, this.getMap().getLayers())
+    }
     // Reset scrolltop
     this.panelContainer_.scrollTop = scrollTop
   }
@@ -6245,11 +6252,13 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
     if (!l.get('baseLayer')) {
       l.setVisible(!l.getVisible())
     } else {
-      if (!l.getVisible())
+      if (!l.getVisible()) {
         l.setVisible(true)
+      }
       layers.forEach(function (li) {
-        if (l !== li && li.get('baseLayer') && li.getVisible())
+        if (l !== li && li.get('baseLayer') && li.getVisible()) {
           li.setVisible(false)
+        }
       })
     }
   }
@@ -6502,10 +6511,11 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
       e.stopPropagation()
       e.preventDefault()
       var l = self._getLayerForLI(this.parentNode.parentNode)
-      if (self.onextent)
+      if (self.onextent) {
         self.onextent(l)
-      else
+      } else {
         self.getMap().getView().fit(l.getExtent(), self.getMap().getSize())
+      }
       self.dispatchEvent({ type: "extent", layer: l })
     }
     // Remove a layer on trash click
@@ -6533,7 +6543,7 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
         return
       }
       var li = ol.ext.element.create('LI', {
-        className: (layer.getVisible() ? "visible " : " ") + (layer.get('baseLayer') ? "baselayer" : ""),
+        className: (layer.getVisible() ? "ol-visible " : " ") + (layer.get('baseLayer') ? "baselayer" : ""),
         parent: ul
       })
       this._setLayerForLI(li, layer)
@@ -11990,7 +12000,6 @@ ol.control.Print = class olcontrolPrint extends ol.control.Control {
     }
   }
   /** Print the map
-   * @param {function} cback a callback function that take a string containing the requested data URI.
    * @param {Object} options
    *	@param {string} options.imageType A string indicating the image format, default the control one
    *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
