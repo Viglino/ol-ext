@@ -1991,24 +1991,27 @@ body > .ol-ext-dialog > form {
 .ol-layerswitcher .layerExtent {
   background: #369;
 }
-.ol-layerswitcher .layerExtent:before,
-.ol-layerswitcher .layerExtent:after {
-  content: "";
-  position: absolute;
-  display: block;
-  border: 1px solid #fff;
-  width: 4px;
-  height: 4px;
-}
 .ol-layerswitcher .layerExtent:before {
-  border-width: 1px 1px 0 0;
-  top: 2px;
+  border-right: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+  content: "";
+  display: block;
+  position: absolute;
+  left: 6px;
   right: 2px;
+  top: 6px;
+  bottom: 3px;
 }
 .ol-layerswitcher .layerExtent:after {
-  border-width: 0 0 1px 1px;
-  bottom: 2px;
+  border-left: 1px solid #fff;
+  border-top: 1px solid #fff;
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: 6px;
   left: 2px;
+  right: 6px;
+  top: 3px;
 }
 
 .ol-layerswitcher .expend-layers,
