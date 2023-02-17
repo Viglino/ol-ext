@@ -37876,123 +37876,6 @@ ol.geom.Polygon.prototype.scribbleFill = function (options) {
   mline.rotate(-angle,[0,0]);
 	return mline.cspline({ pointsPerSeg:8, tension:.9 });
 };
-/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
-	released under the CeCILL-B license (French BSD license)
-	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
-	Usefull function to handle geometric operations
-*/
-/*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
-/**
- * Calculate a MultiPolyline to fill a Polygon with a scribble effect that appears hand-made
- * @param {} options
- *  @param {Number} options.interval interval beetween lines
- *  @param {Number} options.angle hatch angle in radian, default PI/2
- * @return {ol.geom.MultiLineString|null} the resulting MultiLineString geometry or null if none
- */
-ol.geom.MultiPolygon.prototype.scribbleFill = function (options) {
-  var scribbles = [];
-  var poly = this.getPolygons();
-  var i, p, s;
-  for (i=0; p=poly[i]; i++) {
-    var mls = p.scribbleFill(options);
-    if (mls) scribbles.push(mls);
-  } 
-  if (!scribbles.length) return null;
-  // Merge scribbles
-  var scribble = scribbles[0];
-    var ls;
-    for (i = 0; s = scribbles[i]; i++) {
-      ls = s.getLineStrings();
-      for (var k = 0; k < ls.length; k++) {
-        scribble.appendLineString(ls[k]);
-      }
-    }
-  return scribble;
-};
-/**
- * Calculate a MultiPolyline to fill a Polygon with a scribble effect that appears hand-made
- * @param {} options
- *  @param {Number} options.interval interval beetween lines
- *  @param {Number} options.angle hatch angle in radian, default PI/2
- * @return {ol.geom.MultiLineString|null} the resulting MultiLineString geometry or null if none
- */
-ol.geom.Polygon.prototype.scribbleFill = function (options) {
-	var step = options.interval;
-  var angle = options.angle || Math.PI/2;
-  var i, k,l;
-  // Geometry + rotate
-	var geom = this.clone();
-	geom.rotate(angle, [0,0]);
-  var coords = geom.getCoordinates();
-  // Merge holes
-  var coord = coords[0];
-  for (i=1; i<coords.length; i++) {
-    // Add a separator
-    coord.push([]);
-    // Add the hole
-    coord = coord.concat(coords[i]);
-  }
-  // Extent 
-	var ext = geom.getExtent();
-	// Split polygon with horizontal lines
-  var lines = [];
-	for (var y = (Math.floor(ext[1]/step)+1)*step; y<ext[3]; y += step) {
-    l = ol.coordinate.splitH(coord, y, i);
-    lines = lines.concat(l);
-  }
-  if (!lines.length) return null;
-  // Order lines on segment index
-  var mod = coord.length-1;
-	var first = lines[0][0].index;
-	for (k=0; l=lines[k]; k++) {
-		lines[k][0].index = (lines[k][0].index-first+mod) % mod;
-		lines[k][1].index = (lines[k][1].index-first+mod) % mod;
-	}
-  var scribble = [];
-  while (true) {
-    for (k=0; l=lines[k]; k++) {
-      if (!l[0].done) break;
-    }
-    if (!l) break;
-    var scrib = [];
-    while (l) {
-      l[0].done = true;
-      scrib.push(l[0].pt);
-      scrib.push(l[1].pt);
-      var nexty = l[0].pt[1] + step;
-      var d0 = Infinity;
-      var l2 = null;
-      while (lines[k]) {
-        if (lines[k][0].pt[1] > nexty) break;
-        if (lines[k][0].pt[1] === nexty) {
-          var d = Math.min(
-            (lines[k][0].index - l[0].index + mod) % mod,
-            (l[0].index - lines[k][0].index + mod) % mod
-          );
-          var d2 = Math.min(
-            (l[1].index - l[0].index + mod) % mod,
-            (l[0].index - l[1].index + mod) % mod
-          );
-          if (d<d0 && d<d2) {
-            d0 = d;
-            if (!lines[k][0].done) l2 = lines[k];
-            else l2 = null;
-          }
-        }
-        k++;
-      }
-      l = l2;
-    }
-    if (scrib.length) {
-      scribble.push(scrib);
-    }
-  }
-  // Return the scribble as MultiLineString
-  if (!scribble.length) return null;
-  var mline = new ol.geom.MultiLineString(scribble);
-  mline.rotate(-angle,[0,0]);
-	return mline.cspline({ pointsPerSeg:8, tension:.9 });
-};
 /** Calculate a MultiPolyline to fill a geomatry (Polygon or MultiPolygon) with a scribble effect that appears hand-made
  * @param {ol.geom.Geometry} geom the geometry to scribble
  * @param {Object} options
@@ -38183,6 +38066,165 @@ ol.geohash.getNeighbours = function(geohash) {
     'nw': ol.geohash.getAdjacent(ol.geohash.getAdjacent(geohash, 'n'), 'w'),
   };
 }
+
+ol.geom.simplify;
+(function() {
+function getArcs(coords, arcs, contour) {
+  // New contour
+  if (coords[0][0][0].length) {
+    coords.forEach(function(c, i) {
+      getArcs(c, arcs, contour + '-' + i)
+    })
+  } else {
+    coords.forEach(function(c, k) {
+      var p1, p0 = c[0];
+      var ct = contour + '-' + k;
+      for (var i=1; i<c.length; i++) {
+        p1 = c[i];
+        if (!ol.coordinate.equal(p0, p1)) {
+          arcs.push({ seg: [p0, p1], contour: ct });
+        }
+        p0 = p1;
+      }
+    });
+  }
+  return arcs
+}
+/*
+function equalSeg(a, b) {
+  return (ol.coordinate.equal(a[0], b[0]) && ol.coordinate.equal(a[1], b[1]))
+    || (ol.coordinate.equal(a[0], b[1]) && ol.coordinate.equal(a[1], b[0]))
+}
+function getFeaturesAtCoordinate(c, source) {
+  var result = []
+  source.forEachFeatureInExtent([c[0],c[1],c[0],c[1]], function(f) {
+    if (ol.coordinate.equal(f.getGeometry().getFirstCoordinate(), c) 
+    || ol.coordinate.equal(f.getGeometry().getLastCoordinate(), c)) {
+      result.push(f);
+    }
+  });
+  return result;
+}
+*/
+function chainEdges(edges) {
+  // 2 edges are connected
+  function isConnected(edge1, edge2) {
+    if (edge1.length === edge2.length) {
+      var connected, e1, e2;
+      for (var i=0; i < edge1.length; i++) {
+        e1 = edge1[i]
+        connected = false;
+        for (var j=0; j < edge2.length; j++) {
+          e2 = edge2[j];
+          if (e1.feature === e2.feature && e1.contour === e2.contour) {
+            connected = true;
+            break;
+          }
+        }
+        if (!connected) return false;
+      }
+      return true
+    }
+    return false;
+  }
+  // Chain features back
+  function chainBack(f) {
+    if (f.del) return;
+    // Previous edge
+    var prev = f.prev;
+    if (!prev) return;
+    // Merge edges
+    if (isConnected(f.edge, prev.edge)) {
+      // Remove prev...
+      prev.del = true;
+      // ...and  merge with current
+      var g = prev.geometry;
+      var g1 = f.geometry;
+      g1.shift();
+      f.geometry = g.concat(g1);
+      f.prev = prev.prev;
+      // Chain
+      chainBack(f);
+    }
+  }
+  // Chain features back
+  edges.forEach(chainBack)
+  // New arcs features
+  var result = [];
+  edges.forEach(function(f) { 
+    if (!f.del) {
+      var feat = new ol.Feature({
+        geometry: new ol.geom.LineString(f.geometry),
+        geom: new ol.geom.LineString(f.geometry),
+        edge: f.edge,
+        prev: f.prev
+      });
+      result.push(feat);
+    }
+  })
+  return result;
+}
+function getEdges(features) {
+  var edges = {};
+  var prev, prevEdge;
+  function createEdge(f, a) {
+    var id = a.seg[0].join() + '-' + a.seg[1].join();
+    // Existing edge
+    var e = edges[id];
+    // Test revert
+    if (!e) {
+      id = a.seg[1].join() + '-' + a.seg[0].join();
+      e = edges[id];
+    }
+    // Add or create a new one
+    if (e) {
+      e.edge.push({ feature: f, contour: a.contour })
+    } else {
+      var edge = {
+        geometry: a.seg,
+        edge: [{ feature: f, contour: a.contour }],
+        prev: prev === a.contour ? prevEdge : false
+      };
+      prev = a.contour;
+      // For back chain
+      prevEdge = edge;
+      edges[id] = edge
+    }
+  }
+  // Get all edges
+  features.forEach(function(f) {
+    var arcs = getArcs(f.getGeometry().getCoordinates(), [], '0');
+    // Create edges for arcs
+    prev = '';
+    arcs.forEach(function (a) { createEdge(f, a) });
+  })
+  // Convert to Array
+  var tedges = [];
+  for (var i in edges) tedges.push(edges[i])
+  return tedges;
+}
+/** Simply geometries in the source
+ * @param {ol.source.Vector} source
+ * @returns {Array<ol.Features>}
+ */
+ol.geom.simplify = function (source) {
+  var features = source.getFeatures();
+  console.time('arcs')
+  var edges = getEdges(features)
+  console.timeLog('arcs')
+  console.time('chain')
+  features = chainEdges(edges)
+  console.timeLog('chain')
+  console.time('Filter')
+  // Filter
+  features.forEach(function(f) {
+    f.setGeometry(f.getGeometry().simplify(100))
+  })
+  console.timeLog('Filter')
+  // DEBUG
+  return features;
+}
+})();
 
 /** Compute great circle bearing of two points.
  * @See http://www.movable-type.co.uk/scripts/latlong.html for the original code
