@@ -23,6 +23,22 @@
   -->
 
   <link rel="stylesheet" href="../style.css" />
+  <style>
+    #map {
+      margin: 0;
+      width: 100%;
+      min-height: 60vh;
+      height: 20em;
+    }
+    .options {
+      position: fixed;
+      right: 0;
+    }
+    input[type="range"] {
+      display: block;
+      width: 20em;
+    }
+  </style>
 </head>
 <body >
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
@@ -34,10 +50,12 @@
   </div>
 
   <!-- Map div -->
-  <div id="map" style="width:600px; height:400px;"></div>
+  <div id="map"></div>
   
   <div class="options">
     <button onclick="simplify()">Simplify</button>
+    <input type="range" min="0" max="99" value="0" onchange="filter(this.value)"/>
+    <span class="nb"></span> points
   </div>
 
   <script type="text/javascript">
@@ -103,12 +121,30 @@
     }
   })
 
+  var simplificator, nb0;
   function simplify() {
-    console.time('simplify')
-    var features = ol.geom.simplify(vectorSource)
-    console.timeLog('simplify')
-    layer.getSource().clear();
-    layer.getSource().addFeatures(features)
+    simplificator = new ol.geom.Simplificator()
+    layer.setSource(simplificator.getEdgeSource())
+    simplificator.setFeatures(vectorSource.getFeatures());
+    nb0 = 0;
+    simplificator.getEdgeSource().getFeatures().forEach(function(f) {
+      nb0 += f.getGeometry().getCoordinates().length
+    });
+    document.querySelector('.nb').innerHTML = nb0.toLocaleString();
+  }
+
+  function filter(val) {
+    if (simplificator) {
+      simplificator.simplify({
+        ratio: (100-val) / 100,
+        minPoints: 4
+      })
+      var nb = 0;
+      simplificator.getEdgeSource().getFeatures().forEach(function(f) {
+        nb += f.getGeometry().getCoordinates().length
+      });
+      document.querySelector('.nb').innerHTML = nb.toLocaleString() + '/' + nb0.toLocaleString();
+    }
   }
   </script>
   

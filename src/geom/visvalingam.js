@@ -174,3 +174,5 @@ function minHeap() {
   return heap;
 }
 })();
+
+export default ol_geom_LineString
