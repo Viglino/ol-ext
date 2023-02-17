@@ -167,11 +167,17 @@ ol_geom_simplify = function (source) {
   features = chainEdges(edges)
   console.timeLog('chain')
   
-
   console.time('Filter')
   // Filter
   features.forEach(function(f) {
-    f.setGeometry(f.getGeometry().simplify(100))
+    // f.setGeometry(f.getGeometry().simplify(100))
+    f.setGeometry(f.getGeometry().simplifyVisvalingam({
+      ratio: .5,
+      // pointsToKeep: 4,
+      // dist: 1000
+      // area: 100000
+      minPoints: 4
+    }))
   })
   console.timeLog('Filter')
 
