@@ -2,7 +2,6 @@ import {asString as ol_color_asString} from 'ol/color.js'
 import ol_control_CanvasBase from './CanvasBase.js'
 // eslint-disable-next-line no-unused-vars
 import ol_legend_Legend from '../legend/Legend.js'
-import ol_ext_element from '../util/element.js';
 
 /** Create a legend for styles
  * @constructor
