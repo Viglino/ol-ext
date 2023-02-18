@@ -33,11 +33,24 @@
     .options {
       position: fixed;
       right: 0;
+      text-align: right;
     }
     input[type="range"] {
       display: block;
       width: 20em;
     }
+    #simplificator {
+      display: none;
+      margin-top: .5em;
+    }
+    .ol-ext-toggle-switch,
+    .ol-input-range {
+      display: block;
+    }
+    .ol-input-range input {
+      float: right;
+    }
+
   </style>
 </head>
 <body >
@@ -54,8 +67,11 @@
   
   <div class="options">
     <button onclick="simplify()">Simplify</button>
-    <input type="range" min="0" max="99" value="0" onchange="filter(this.value)"/>
-    <span class="nb"></span> points
+    <div id="simplificator">
+      <input type="number" min="0" max="99" value="0" />
+      <input class="visva" type="checkbox" />
+      <span class="nb"></span> points
+    </div>
   </div>
 
   <script type="text/javascript">
@@ -124,26 +140,57 @@
   var simplificator, nb0;
   function simplify() {
     simplificator = new ol.geom.Simplificator()
-    layer.setSource(simplificator.getEdgeSource())
     simplificator.setFeatures(vectorSource.getFeatures());
+    layer.getSource().clear();
+    layer.getSource().addFeatures(simplificator.getEdges());
+    // Count vertex
     nb0 = 0;
-    simplificator.getEdgeSource().getFeatures().forEach(function(f) {
+    simplificator.getEdges().forEach(function(f) {
       nb0 += f.getGeometry().getCoordinates().length
     });
     document.querySelector('.nb').innerHTML = nb0.toLocaleString();
+    document.getElementById('simplificator').style.display = 'block';
   }
 
+  var range = new ol.ext.input.Range({ 
+    input: document.querySelector('#simplificator input')
+  });
+  range.on('change:value', function(e) { 
+    if (!filtering) {
+      filter(e.value)
+    }
+  })
+
+  var check = new ol.ext.input.Switch({
+    input: document.querySelector('#simplificator input[type="checkbox"]'),
+    html: 'Douglas Peucker', 
+    after: 'Visvalingam'
+  })
+  check.on('check', function() { filter(range.getValue()) });
+
+  var filtering = false;
   function filter(val) {
     if (simplificator) {
-      simplificator.simplify({
-        ratio: (100-val) / 100,
-        minPoints: 4
-      })
+      filtering = true;
+      if (check.isChecked()) {
+        simplificator.simplifyVisvalingam({
+          ratio: (100-val) / 100,
+          minPoints: 4
+        })
+      } else {
+        var ex = vectorSource.getFeatures()[0].getGeometry().getExtent()
+        var d = ol.coordinate.dist2d([ex[0], ex[1]], [ex[2], ex[3]]) / 500000;
+        simplificator.simplify(d * val*val)
+      }
       var nb = 0;
-      simplificator.getEdgeSource().getFeatures().forEach(function(f) {
+      simplificator.getEdges().forEach(function(f) {
         nb += f.getGeometry().getCoordinates().length
       });
       document.querySelector('.nb').innerHTML = nb.toLocaleString() + '/' + nb0.toLocaleString();
+      setTimeout(function() { 
+        filtering = false;
+        if (range.getValue() != val) filter(range.getValue())
+      }, 0);
     }
   }
   </script>

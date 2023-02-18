@@ -37903,11 +37903,11 @@ ol.geom.scribbleFill = function(geom, options) {
 ol.geom.Simplificator = class olgeomSimplificator extends ol.Object {
   constructor(options) {
     super(options);
-    this._edges = new ol.source.Vector();
+    this._edges = [];
   }
   /** Get source edge
    */
-  getEdgeSource() {
+  getEdges() {
     return this._edges;
   }
   /** Set the features to process
@@ -37917,25 +37917,69 @@ ol.geom.Simplificator = class olgeomSimplificator extends ol.Object {
     console.time('arcs')
     var edges = this._calcEdges(features)
     console.timeLog('arcs')
-    console.time('chain')
+    /* DEBUG * /
     this._edges.clear(true);
-    this._edges.addFeatures(this._chainEdges(edges));
+    var eds = []
+    edges.forEach(function(e) {
+      eds.push(e.feature);
+    })
+    this._edges.addFeatures(eds)
+    /**/
+    console.time('chain')
+    this._edges = this._chainEdges(edges);
     console.timeLog('chain')
+    return this._edges
   }
-  /** Get simplified features
-   * @returns {}
+  /** Get the simplified features
+   * @returns {Array<ol.Feature>}
    */
   getFeatures() {
-    return [];
-  }
-  /** Simplify edges
-   * @param {Object} options
-   */
-  simplify(options) {
-    var features = this._edges.getFeatures();
+    var features = [];
+    this._edges.forEach(function(edge) {
+      edge.get('edge').forEach(function(ed) {
+        // Already inserted?
+        var f = features.find(function(e) {
+          return ed.feature === e.feature;
+        })
+        // New one
+        if (!f) {
+          f = {
+            feature: ed.feature,
+            contour: {}
+          }
+          features.push(f)
+        }
+        // add contour
+        if (!f.contour[ed.contour]) f.contour[ed.contour] = [];
+        f.contour[ed.contour].push(ed.feature)
+      })
+    })
+    // Recreate objects
     features.forEach(function(f) {
-      // f.setGeometry(f.getGeometry().simplify(100))
+      for (var c in f.contour) {
+        f.contour[c].forEach(function(contour) {
+          // TODO
+        })
+      }
+    })
+    //
+    return features;
+  }
+  /** Simplify edges using Visvalingam algorithm
+   * @param {Object} options
+   *  @param {string} options.algo
+   */
+  simplifyVisvalingam(options) {
+    this._edges.forEach(function(f) {
       f.setGeometry(f.get('geom').simplifyVisvalingam(options))
+    })
+  }
+  /** Simplify edges using  Douglas Peucker algorithm
+   * @param {number} tolerance
+   */
+  simplify(tolerance) {
+    this._edges.forEach(function(f) {
+      f.setGeometry(f.get('geom').simplify(tolerance))
     })
   }
   /** Calculate edges
@@ -37958,12 +38002,20 @@ ol.geom.Simplificator = class olgeomSimplificator extends ol.Object {
       // Add or create a new one
       if (e) {
         e.edge.push({ feature: f, contour: a.contour })
+        prev = '';
       } else {
         var edge = {
           geometry: a.seg,
           edge: [{ feature: f, contour: a.contour }],
           prev: prev === a.contour ? prevEdge : false
         };
+        /* DEBUG * /
+        edge.feature = new ol.Feature({
+          geometry: new ol.geom.LineString(a.seg),
+          edge: edge.edge,
+          prev: edge.prev
+        })
+        /* */
         prev = a.contour;
         // For back chain
         prevEdge = edge;
