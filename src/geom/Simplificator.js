@@ -64,16 +64,46 @@ var ol_geom_Simplificator = class olgeomSimplificator extends ol_Object {
         }
         // add contour
         if (!f.contour[ed.contour]) f.contour[ed.contour] = [];
-        f.contour[ed.contour].push(ed.feature)
+        f.contour[ed.contour].push({
+          edge: edge,
+          index: ed.index
+        })
       })
     })
     // Recreate objects
     features.forEach(function(f) {
+      f.typeGeom = f.feature.getGeometry().getType();
+      f.nom = f.feature.get('nom');
+      var g = [];
+      console.log(f.contour)
       for (let c in f.contour) {
+        var t = c.split('-');
+        t.shift();
+        var coordinates = g;
+        while (t.length) {
+          var i = parseInt(t.shift())
+          coordinates = coordinates[i] = []
+        }
+        // Join
+        f.contour[c].sort(function(a,b) { return a.index - b.index; });
         f.contour[c].forEach(function(contour) {
-          // TODO
+          var coord = contour.edge.getGeometry().getCoordinates();
+          if (!coordinates.length || ol_coordinate_equal(coordinates[coordinates.length-1], coord[0])) {
+            for (let i=0; i<coord.length; i++) {
+              coordinates.push(coord[i]);
+            }
+          } else {
+            // revert
+            for (let i=coord.length-1; i>=0; i--) {
+              coordinates.push(coord[i]);
+            }
+          }
+          console.log(c, coordinates.length, coord.length)
         })
       }
+      f.geom = g;
+      console.log(g)
+      f.feature.getGeometry().setCoordinates(g);
     })
     //
     return features;
@@ -107,7 +137,7 @@ var ol_geom_Simplificator = class olgeomSimplificator extends ol_Object {
     var edges = {};
     var prev, prevEdge;
     
-    function createEdge(f, a) {
+    function createEdge(f, a, i) {
       var id = a.seg[0].join() + '-' + a.seg[1].join();
       // Existing edge
       var e = edges[id];
@@ -118,12 +148,12 @@ var ol_geom_Simplificator = class olgeomSimplificator extends ol_Object {
       }
       // Add or create a new one
       if (e) {
-        e.edge.push({ feature: f, contour: a.contour })
+        e.edge.push({ feature: f, contour: a.contour, index: i })
         prev = '';
       } else {
         var edge = {
           geometry: a.seg,
-          edge: [{ feature: f, contour: a.contour }],
+          edge: [{ feature: f, contour: a.contour, index: i }],
           prev: prev === a.contour ? prevEdge : false
         };
         /* DEBUG * /
@@ -145,7 +175,7 @@ var ol_geom_Simplificator = class olgeomSimplificator extends ol_Object {
       var arcs = this._getArcs(f.getGeometry().getCoordinates(), [], '0');
       // Create edges for arcs
       prev = '';
-      arcs.forEach(function (a) { createEdge(f, a) });
+      arcs.forEach(function (a, i) { createEdge(f, a, i) });
     }.bind(this))
   
     // Convert to Array
