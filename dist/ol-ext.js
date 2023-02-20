@@ -6807,6 +6807,8 @@ ol.control.LayerSwitcher.prototype.tip = {
  * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
  * @class
  * @constructor
+ * @fires control:active
+ * @fires control:add
  * @extends ol.control.Control
  * @param {Object=} options Control options.
  *  @param {String} options.className class of the control
@@ -6971,6 +6973,11 @@ ol.control.Bar = class olcontrolBar extends ol.control.Control {
           }
         }
       }
+    }
+    if (e.type) {
+      this.dispatchEvent({ type: 'control:active', control: ctrl, active: e.active })
+    } else {
+      this.dispatchEvent({ type: 'control:add', control: ctrl, active: e.active })
     }
   }
   /**
