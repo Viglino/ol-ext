@@ -18,9 +18,10 @@
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
-  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -- >
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
-  -->
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
 
   <link rel="stylesheet" href="../style.css" />
   <style>
@@ -50,14 +51,17 @@
     .ol-input-range input {
       float: right;
     }
-
+    #simplificator button {
+      min-width: 10em;
+      margin-top: .5em;
+    }
   </style>
 </head>
 <body >
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
-    <h1>ol-ext: Simplify a source</h1>
+    <h1>ol-ext: Simplify a Vector source</h1>
   </a>
   <div class="info">
   </div>
@@ -71,6 +75,9 @@
       <input type="number" min="0" max="99" value="0" />
       <input class="visva" type="checkbox" />
       <span class="nb"></span> points
+      <br/>
+      <button onclick="simplificator.getFeatures(); $('.save').prop('disabled', false)">Apply</button>
+      <button class="save" onclick="save()" disabled>Save</button>
     </div>
   </div>
 
@@ -94,11 +101,22 @@
     format: new ol.format.GeoJSONX(),
     attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
   });
-  map.addLayer(new ol.layer.Vector({
+  map.addLayer(new ol.layer.VectorImage({
     name: 'Departements',
     source: vectorSource,
   }))
 
+  var ddrop = new ol.interaction.DropFile()
+  map.addInteraction(ddrop)
+  ddrop.on('addfeatures', function(e) {
+    console.log('loading')
+    vectorSource.clear();
+    vectorSource.addFeatures(e.features);
+    map.getView().fit(vectorSource.getExtent());
+    simplify();
+  })
+
+/*
   var result = new ol.source.Vector
   map.addLayer(new ol.layer.Vector({
     name: 'Simplify',
@@ -110,8 +128,9 @@
       })
     })
   }))
+*/
 
-  var layer = new ol.layer.Vector({
+  var layer = new ol.layer.VectorImage({
     source: new ol.source.Vector,
     style: function(f) {
       return new ol.style.Style({
@@ -125,7 +144,7 @@
   map.addLayer(layer)
 
   var sel = new ol.interaction.Select({
-    layers: [layer],
+    // layers: [layer],
     hitTolerance: 3,
     multi: true
   })
@@ -140,7 +159,7 @@
   var simplificator, nb0;
   function simplify() {
     simplificator = new ol.geom.Simplificator()
-    simplificator.setFeatures(vectorSource.getFeatures());
+    simplificator.setFeatures(vectorSource.getFeatures(), 3);
     layer.getSource().clear();
     layer.getSource().addFeatures(simplificator.getEdges());
     // Count vertex
@@ -150,6 +169,7 @@
     });
     document.querySelector('.nb').innerHTML = nb0.toLocaleString();
     document.getElementById('simplificator').style.display = 'block';
+    document.querySelector('.options button').style.display = 'none';
   }
 
   var range = new ol.ext.input.Range({ 
@@ -170,11 +190,14 @@
 
   var filtering = false;
   function filter(val) {
+    val = parseFloat(val)
     if (simplificator) {
       filtering = true;
       if (check.isChecked()) {
+        var ex = vectorSource.getFeatures()[0].getGeometry().getExtent()
+        var d = ol.coordinate.dist2d([ex[0], ex[1]], [ex[2], ex[3]]) / 50000;
         simplificator.simplifyVisvalingam({
-          ratio: (100-val) / 100,
+          dist: (d * val*val) || .1,
           minPoints: 4
         })
       } else {
@@ -193,6 +216,15 @@
       }, 0);
     }
   }
+
+  function save() {
+    var features = vectorSource.getFeatures();
+    var format = new ol.format.GeoJSON();
+    var data = format.writeFeatures(features, { dataProjection: 'EPSG:4326', featureProjection: map.getView().getProjection()});
+    var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, "map.geojson");
+  }
+
   </script>
   
 </body>

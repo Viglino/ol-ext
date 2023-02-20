@@ -1,4 +1,5 @@
 import ol_geom_LineString from 'ol/geom/LineString.js'
+import { ol_coordinate_equal } from './GeomUtils';
 
 (function () {
 
@@ -8,14 +9,17 @@ import ol_geom_LineString from 'ol/geom/LineString.js'
  * @param {Object} options
  *  @param {number} [area] the tolerance area for simplification
  *  @param {number} [dist] a tolerance distance for simplification
- *  @param {number} [pointsToKeep] number of points to keep
  *  @param {number} [ratio=.8] a ratio of points to keep
  *  @param {number} [minPoints=2] minimum number of points to keep
+ *  @param {boolean} [keepEnds] keep line ends
  * @return { LineString } A new, simplified version of the original geometry.
  * @api
  */
 ol_geom_LineString.prototype.simplifyVisvalingam = function (options) {
   var points = this.getCoordinates();
+  if (options.minPoints && options.minPoints >= points.length) {
+    return new ol_geom_LineString(points);
+  }
   var heap = minHeap(),
       maxArea = 0,
       triangle,
@@ -70,7 +74,7 @@ ol_geom_LineString.prototype.simplifyVisvalingam = function (options) {
   var w = options.area;
   if (options.dist) w = options.dist * options.dist / 2;
   // If no area
-  if (!w || options.minPoints) {
+  if (w === undefined || options.minPoints) {
     // Get ordered weights 
     var weights = points.map(function (d) { return d.length < 3 ? Infinity : d[2] += Math.random(); /* break ties */ });
     weights.sort(function (a, b) {
@@ -78,17 +82,16 @@ ol_geom_LineString.prototype.simplifyVisvalingam = function (options) {
     });
     if (w) {
       // Check min points
-      if (weights[options.minPoints] > w) {
+      if (weights[options.minPoints] < w) {
         w = weights[options.minPoints]
       }
     } else {
-      var pointsToKeep = options.pointsToKeep;
+      var pointsToKeep = options.minPoints;
       // Calculate ratio
       if (!pointsToKeep) {
         var ratio = options.ratio || .8
         pointsToKeep = Math.round(points.length * ratio);
       }
-      pointsToKeep = Math.max(pointsToKeep, options.minPoints || 2);
       pointsToKeep = Math.min(pointsToKeep, weights.length -1);
       w = weights[pointsToKeep]
     }
@@ -97,6 +100,10 @@ ol_geom_LineString.prototype.simplifyVisvalingam = function (options) {
   var result = points.filter(function (d) {
     return d[2] > w;
   });
+  if (options.keepEnds) {
+    if (!ol_coordinate_equal(result[0], points[0])) result.unshift(points[0]);
+    if (!ol_coordinate_equal(result[result.length-1], points[points.length-1])) result.push(points[points.length-1]);
+  }
 
   return new ol_geom_LineString(result);
 };
