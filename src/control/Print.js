@@ -118,10 +118,9 @@ var ol_control_Print = class olcontrolPrint extends ol_control_Control {
           if (c.parentNode.style.opacity === '0')
             return;
           ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
-          // Blend mode ?
-          if (ol_ext_element.getStyle(c.parentNode, 'mix-blend-mode') === 'multiply') {
-            ctx.globalCompositeOperation = 'multiply';
-          }
+          // Blend mode & filter
+          ctx.globalCompositeOperation = ol_ext_element.getStyle(c.parentNode, 'mix-blend-mode');
+          ctx.filter = ol_ext_element.getStyle(c.parentNode, 'filter');
           // transform
           var tr = ol_ext_element.getStyle(c, 'transform') || ol_ext_element.getStyle(c, '-webkit-transform');
           if (/^matrix/.test(tr)) {
