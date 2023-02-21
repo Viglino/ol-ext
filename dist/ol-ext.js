@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.5
+ * @version v4.0.6
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -11966,10 +11966,9 @@ ol.control.Print = class olcontrolPrint extends ol.control.Control {
           if (c.parentNode.style.opacity === '0')
             return;
           ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
-          // Blend mode ?
-          if (ol.ext.element.getStyle(c.parentNode, 'mix-blend-mode') === 'multiply') {
-            ctx.globalCompositeOperation = 'multiply';
-          }
+          // Blend mode & filter
+          ctx.globalCompositeOperation = ol.ext.element.getStyle(c.parentNode, 'mix-blend-mode');
+          ctx.filter = ol.ext.element.getStyle(c.parentNode, 'filter');
           // transform
           var tr = ol.ext.element.getStyle(c, 'transform') || ol.ext.element.getStyle(c, '-webkit-transform');
           if (/^matrix/.test(tr)) {
