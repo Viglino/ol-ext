@@ -5584,10 +5584,10 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
     options = options || {};
     options.className = options.className || 'IGNF';
     options.typing = options.typing || 500;
-    if (options.version == 2) {
-      options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/geoportail/geocodage/rest/0.1/completion';
-    } else {
+    if (options.version == 1) {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
+    } else {
+      options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/geoportail/geocodage/rest/0.1/completion';
     }
     options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
     super(options);
@@ -5780,50 +5780,72 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
    * @param {string} s le nom de la commune
    */
   searchCommune(f, cback) {
-    var request = '<?xml version="1.0" encoding="UTF-8"?>'
-      + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
-      + '<RequestHeader/>'
-      + '<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
-      + '<GeocodeRequest returnFreeForm="false">'
-      + '<Address countryCode="PositionOfInterest">'
-      + '<freeFormAddress>' + f.zipcode + ' ' + f.city + '+</freeFormAddress>'
-      + '</Address>'
-      + '</GeocodeRequest>'
-      + '</Request>'
-      + '</XLS>';
-    // Search 
-    this.ajax(this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
-      { 'xls': request },
-      function (xml) {
-        if (xml) {
-          // XML to JSON
-          var parser = new DOMParser();
-          var xmlDoc = parser.parseFromString(xml, "text/xml");
-          var com = xmlDoc.getElementsByTagName('GeocodedAddress')[0];
-          var coord = com.getElementsByTagName('gml:Point')[0].textContent.trim().split(' ');
-          f.x = Number(coord[1]);
-          f.y = Number(coord[0]);
-          var place = com.getElementsByTagName('Place');
-          for (var i = 0; i < place.length; i++) {
-            switch (place[i].attributes.type.value) {
-              case 'Nature':
-                f.kind = place[i].textContent;
-                break;
-              case 'INSEE':
-                f.insee = place[i].textContent;
-                break;
+    // Search url
+    var url = this.get('url').replace('ols/apis/completion', 'geoportail/ols').replace('completion', 'reverse');
+    if (/ols/.test(url)) {
+      var request = '<?xml version="1.0" encoding="UTF-8"?>'
+        + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+        + '<RequestHeader/>'
+        + '<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
+        + '<GeocodeRequest returnFreeForm="false">'
+        + '<Address countryCode="PositionOfInterest">'
+        + '<freeFormAddress>' + f.zipcode + ' ' + f.city + '+</freeFormAddress>'
+        + '</Address>'
+        + '</GeocodeRequest>'
+        + '</Request>'
+        + '</XLS>';
+      // Search 
+      this.ajax(this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
+        { 'xls': request },
+        function (xml) {
+          if (xml) {
+            // XML to JSON
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(xml, "text/xml");
+            var com = xmlDoc.getElementsByTagName('GeocodedAddress')[0];
+            var coord = com.getElementsByTagName('gml:Point')[0].textContent.trim().split(' ');
+            f.x = Number(coord[1]);
+            f.y = Number(coord[0]);
+            var place = com.getElementsByTagName('Place');
+            for (var i = 0; i < place.length; i++) {
+              switch (place[i].attributes.type.value) {
+                case 'Nature':
+                  f.kind = place[i].textContent;
+                  break;
+                case 'INSEE':
+                  f.insee = place[i].textContent;
+                  break;
+              }
+            }
+            if (f.x || f.y) {
+              if (cback)
+                cback.call(this, [f]);
+              else
+                this._handleSelect(f);
             }
           }
-          if (f.x || f.y) {
-            if (cback)
+        }.bind(this),
+        { dataType: 'XML' }
+      );
+    } else {
+      this.ajax(url + '?lon=' + f.x + '&lat=' + f.y + '&limit=1', 
+        {},
+        function (resp) {
+          try {
+            var r = JSON.parse(resp).features[0];
+            f.insee = r.properties.citycode
+            if (cback) {
               cback.call(this, [f]);
-            else
+            } else {
               this._handleSelect(f);
-          }
+            }
+          } catch(e) {}
+        }.bind(this), {
+          timeout: this.get('timeout'),
+          dataType: 'XML'
         }
-      }.bind(this),
-      { dataType: 'XML' }
-    );
+      )
+    } 
   }
 }
 
@@ -14930,9 +14952,9 @@ ol.control.SearchGPS = class olcontrolSearchGPS extends ol.control.Search {
  */
 ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle extends ol.control.SearchGeoportail {
   constructor(options) {
-    options.type = "Commune";
+    options.type = 'Commune';
     options.className = (options.className ? options.className : "") + " IGNF-parcelle ol-collapsed-list ol-collapsed-num";
-    options.inputLabel = "Commune";
+    options.inputLabel = 'Commune';
     options.noCollapse = true;
     options.placeholder = options.placeholder || "Choisissez une commune...";
     super(options);
@@ -15014,7 +15036,7 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
    * @private
    */
   selectCommune(e) {
-    this._commune = e.search.insee;
+    this._commune = e.search.insee || e.sear;
     this._input.value = e.search.insee + ' - ' + e.search.fulltext;
     this.activateParcelle(true);
     this._inputParcelle.numero.focus();
@@ -15032,8 +15054,9 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
     this._inputParcelle.prefix.value = (p.Commune || '') + (p.CommuneAbsorbee || '');
     this._inputParcelle.section.value = p.Section || '';
     this._inputParcelle.numero.value = p.Numero || '';
-    if (search)
+    if (search) {
       this._triggerCustomEvent("keyup", this._inputParcelle.prefix);
+    }
   }
   /** Activate parcelle inputs
    * @param {bolean} b
@@ -15054,11 +15077,11 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
   autocompleteParcelle() {
     // Add 0 to fit the format
     function complete(s, n, c) {
-      if (!s)
-        return s;
-      c = c || "0";
-      while (s.length < n)
+      if (!s) return s;
+      c = c || '0';
+      while (s.length < n) {
         s = c + s;
+      }
       return s.replace(/\*/g, '_');
     }
     // The selected commune
@@ -15069,9 +15092,8 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
     }
     // Get parcelle number
     var section = complete(this._inputParcelle.section.value, 2);
-    var numero = complete(this._inputParcelle.numero.value, 4, "0");
-    var search = commune + (prefix || '___') + (section || "__") + (numero ? numero : section ? "____" : "0001");
-    this.searchParcelle(search,
+    var numero = complete(this._inputParcelle.numero.value, 4, '0');
+    this.searchParcelle(commune, prefix, section, numero,
       function (jsonResp) {
         this._listParcelle(jsonResp);
       }.bind(this),
@@ -15084,46 +15106,83 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
    * @param {function} success callback function called on success
    * @param {function} error callback function called on error
    */
-  searchParcelle(search, success /*, error */) {
-    // Request
-    var request = '<?xml version="1.0" encoding="UTF-8"?>'
-      + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
-      + '<RequestHeader/>'
-      + '<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
-      + '<GeocodeRequest returnFreeForm="false">'
-      + '<Address countryCode="CadastralParcel">'
-      + '<freeFormAddress>' + search + '+</freeFormAddress>'
-      + '</Address>'
-      + '</GeocodeRequest>'
-      + '</Request>'
-      + '</XLS>';
-    // Geocode
-    this.ajax(
-      this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
-      { xls: request },
-      function (xml) {
-        // XML to JSON
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(xml, "text/xml");
-        var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
-        var jsonResp = [];
-        for (var i = 0, parc; parc = parcelles[i]; i++) {
-          var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
-          var p = node.childNodes[0].nodeValue.split(' ');
-          var att = parc.getElementsByTagName('Place');
-          var json = {
-            lon: Number(p[1]),
-            lat: Number(p[0])
-          };
-          for (var k = 0, a; a = att[k]; k++) {
-            json[a.attributes.type.value] = a.childNodes[0].nodeValue;
+  searchParcelle(commune, prefix, section, numero, success /*, error */) {
+    // Search url
+    var url = this.get('url').replace('ols/apis/completion', 'geoportail/ols').replace('completion', 'search');
+    // v2 ?
+    if (/ols/.test(url)) {
+      var search = commune + (prefix || '___') + (section || "__") + (numero ? numero : section ? "____" : "0001");
+      // Request
+      var request = '<?xml version="1.0" encoding="UTF-8"?>'
+        + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+        + '<RequestHeader/>'
+        + '<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
+        + '<GeocodeRequest returnFreeForm="false">'
+        + '<Address countryCode="CadastralParcel">'
+        + '<freeFormAddress>' + search + '+</freeFormAddress>'
+        + '</Address>'
+        + '</GeocodeRequest>'
+        + '</Request>'
+        + '</XLS>';
+      // Geocode
+      this.ajax(
+        this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
+        { xls: request },
+        function (xml) {
+          // XML to JSON
+          var parser = new DOMParser();
+          var xmlDoc = parser.parseFromString(xml, "text/xml");
+          var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
+          var jsonResp = [];
+          for (var i = 0, parc; parc = parcelles[i]; i++) {
+            var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
+            var p = node.childNodes[0].nodeValue.split(' ');
+            var att = parc.getElementsByTagName('Place');
+            var json = {
+              lon: Number(p[1]),
+              lat: Number(p[0])
+            };
+            for (var k = 0, a; a = att[k]; k++) {
+              json[a.attributes.type.value] = a.childNodes[0].nodeValue;
+            }
+            jsonResp.push(json);
           }
-          jsonResp.push(json);
+          console.log(jsonResp)
+          success(jsonResp);
+        },
+        { dataType: 'XML' }
+      );
+    } else {
+      this.ajax(url + '?index=parcel&q='
+        + '&departmentcode=' + commune.substr(0,2)
+        + '&municipalitycode=' + commune.substr(-3)
+        + (prefix ? '&oldmunicipalitycode=' + prefix.replace(/_/g, '0') : '')
+        + (section ? '&section=' + section : '')
+        + (numero ? '&number=' + numero : '')
+        + '&limit=20',
+        {},
+        function(resp) {
+          var jsonResp = [];
+          resp.features.forEach(function(f) {
+            var prop = f.properties;
+            jsonResp.push({
+              id: prop.id,
+              INSEE: prop.departmentcode + prop.municipalitycode,
+              Commune: prop.municipalitycode, 
+              Departement: prop.departmentcode, 
+              CommuneAbsorbee: prop.oldmunicipalitycode, 
+              Section: prop.section,
+              Numero: prop.number,
+              Municipality: prop.city,
+              Feuille: prop.sheet,
+              lon: f.geometry.coordinates[0],
+              lat: f.geometry.coordinates[1],
+            })
+          })
+          success(jsonResp);
         }
-        success(jsonResp);
-      },
-      { dataType: 'XML' }
-    );
+      )
+    }
   }
   /**
    * Draw the autocomplete list
