@@ -40754,16 +40754,18 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
       this.getImage();
   }
   /** Static function : add new font defs
-   * @param {String|Object} font the font desciption
-   * @param {} glyphs a key / value list of glyph definitions.
+   * @param {String|Object} font the font name or a description ({ font: font_name, name: font_name, copyright: '', prefix })
+   * @param {Object} glyphs a key / value list of glyph definitions.
    * 		Each key is the name of the glyph,
    * 		the value is an object that code the font, the caracter code,
    * 		the name and a search string for the glyph.
+   *    { char: the char, code: the char code (if no char), theme: a theme for search puposes, name: the symbol name, search: a search string (separated with ',') }
    */
   static addDefs(font, glyphs) {
     var thefont = font;
-    if (typeof (font) == 'string')
+    if (typeof (font) == 'string') {
       thefont = { font: font, name: font, copyright: '' };
+    }
     if (!thefont.font || typeof (thefont.font) !== 'string') {
       console.log('bad font def');
       return;
@@ -40772,9 +40774,10 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
     ol.style.FontSymbol.defs.fonts[fontname] = thefont;
     for (var i in glyphs) {
       var g = glyphs[i];
-      if (typeof (g) === 'string' && g.length == 1)
+      if (typeof (g) === 'string' && g.length == 1) {
         g = { char: g };
-        ol.style.FontSymbol.defs.glyphs[i] = {
+      }
+      ol.style.FontSymbol.defs.glyphs[i] = {
         font: thefont.font,
         char: g.char || '' + String.fromCharCode(g.code) || '',
         theme: g.theme || thefont.name,
