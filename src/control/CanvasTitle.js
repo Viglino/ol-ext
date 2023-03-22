@@ -131,8 +131,8 @@ var ol_control_CanvasTitle = class olcontrolCanvasTitle extends ol_control_Canva
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = this.getTextFont();
-    if (ctx.lineWidth)
-      ctx.strokeText(this.getTitle(), left, h / 2);
+    ctx.lineJoin = 'round';
+    if (ctx.lineWidth) ctx.strokeText(this.getTitle(), left, h / 2);
     ctx.fillText(this.getTitle(), left, h / 2);
     ctx.closePath();
 

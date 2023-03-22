@@ -127,8 +127,8 @@ var ol_control_CenterPosition = class olcontrolCenterPosition extends ol_control
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.font = this.getTextFont()
-    if (ctx.lineWidth)
-      ctx.strokeText(coord, w / 2, h / 2)
+    ctx.lineJoin = 'round';
+    if (ctx.lineWidth) ctx.strokeText(coord, w / 2, h / 2)
     ctx.fillText(coord, w / 2, h / 2)
     ctx.closePath()
 

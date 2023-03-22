@@ -7151,6 +7151,7 @@ ol.control.CanvasAttribution = class olcontrolCanvasAttribution extends ol.contr
     ctx.textAlign = textAlign
     ctx.textBaseline = 'middle'
     ctx.font = this.font_
+    ctx.lineJoin = 'round';
     ctx.strokeText(text, left, h / 2)
     ctx.fillText(text, left, h / 2)
     ctx.closePath()
@@ -7264,9 +7265,10 @@ ol.control.CanvasScaleLine = class olcontrolCanvasScaleLine extends ol.control.S
     ctx.strokeStyle = this.fontStrokeStyle_
     ctx.fillStyle = this.fontFillStyle_
     ctx.lineWidth = this.fontStrokeWidth_
-    ctx.textAlign = "center"
-    ctx.textBaseline = "bottom"
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'bottom'
     ctx.font = this.font_
+    ctx.lineJoin = 'round';
     ctx.strokeText(text, position.left + scalewidth / 2, position.top)
     ctx.fillText(text, position.left + scalewidth / 2, position.top)
     ctx.closePath()
@@ -7276,10 +7278,8 @@ ol.control.CanvasScaleLine = class olcontrolCanvasScaleLine extends ol.control.S
     ctx.strokeStyle = this.strokeStyle_
     var max = 4
     var n = parseInt(text)
-    while (n % 10 === 0)
-      n /= 10
-    if (n % 5 === 0)
-      max = 5
+    while (n % 10 === 0) n /= 10
+    if (n % 5 === 0) max = 5
     for (var i = 0; i < max; i++) {
       ctx.beginPath()
       ctx.fillStyle = i % 2 ? this.fillStyle_ : this.strokeStyle_
@@ -7418,8 +7418,8 @@ ol.control.CanvasTitle = class olcontrolCanvasTitle extends ol.control.CanvasBas
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = this.getTextFont();
-    if (ctx.lineWidth)
-      ctx.strokeText(this.getTitle(), left, h / 2);
+    ctx.lineJoin = 'round';
+    if (ctx.lineWidth) ctx.strokeText(this.getTitle(), left, h / 2);
     ctx.fillText(this.getTitle(), left, h / 2);
     ctx.closePath();
     ctx.restore();
@@ -7539,8 +7539,8 @@ ol.control.CenterPosition = class olcontrolCenterPosition extends ol.control.Can
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.font = this.getTextFont()
-    if (ctx.lineWidth)
-      ctx.strokeText(coord, w / 2, h / 2)
+    ctx.lineJoin = 'round';
+    if (ctx.lineWidth) ctx.strokeText(coord, w / 2, h / 2)
     ctx.fillText(coord, w / 2, h / 2)
     ctx.closePath()
     ctx.restore()
