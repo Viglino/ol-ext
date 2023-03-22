@@ -40774,7 +40774,7 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
     ol.style.FontSymbol.defs.fonts[fontname] = thefont;
     for (var i in glyphs) {
       var g = glyphs[i];
-      if (typeof (g) === 'string' && g.length == 1) {
+      if (typeof (g) === 'string' && (g.length == 1 || g.length == 2)) {
         g = { char: g };
       }
       ol.style.FontSymbol.defs.glyphs[i] = {
