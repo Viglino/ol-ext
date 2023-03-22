@@ -95,7 +95,7 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
     ol_style_FontSymbol.defs.fonts[fontname] = thefont;
     for (var i in glyphs) {
       var g = glyphs[i];
-      if (typeof (g) === 'string' && g.length == 1) {
+      if (typeof (g) === 'string' && (g.length == 1 || g.length == 2)) {
         g = { char: g };
       }
       ol_style_FontSymbol.defs.glyphs[i] = {
