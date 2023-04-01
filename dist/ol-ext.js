@@ -5839,7 +5839,7 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
             } else {
               this._handleSelect(f);
             }
-          } catch(e) {}
+          } catch(e) { /* ok */ }
         }.bind(this), {
           timeout: this.get('timeout'),
           dataType: 'XML'
@@ -37960,6 +37960,7 @@ ol.geom.scribbleFill = function(geom, options) {
   }
 }
 
+// 
 /** An object to simplify geometry
  * @extends {ol.Object}
  * @param {Object=} options 
@@ -38571,7 +38572,7 @@ ol.geom.LineString.prototype.simplifyVisvalingam = function (options) {
       heap.push(triangle);
     }
   }
-  for (var i = 0, n = triangles.length; i < n; ++i) {
+  for (i = 0, n = triangles.length; i < n; ++i) {
     triangle = triangles[i];
     triangle.previous = triangles[i - 1];
     triangle.next = triangles[i + 1];
@@ -38687,7 +38688,7 @@ function minHeap() {
   }
   function down(i) {
     var object = array[i];
-    while (true) {
+    for (;;) {
       var right = (i + 1) * 2,
           left = right - 1,
           down = i,

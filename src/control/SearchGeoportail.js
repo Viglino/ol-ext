@@ -293,7 +293,7 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
             } else {
               this._handleSelect(f);
             }
-          } catch(e) {}
+          } catch(e) { /* ok */ }
         }.bind(this), {
           timeout: this.get('timeout'),
           dataType: 'XML'

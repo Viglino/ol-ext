@@ -1,7 +1,7 @@
 import ol_Object from 'ol/Object.js'
 import { ol_coordinate_equal } from './GeomUtils.js'
 import ol_Feature from 'ol/Feature.js'
-import ol_source_Vector from 'ol/source/Vector.js'
+// import ol_source_Vector from 'ol/source/Vector.js'
 import ol_geom_LineString from './visvalingam.js'
 
 /** An object to simplify geometry

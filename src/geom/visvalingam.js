@@ -33,7 +33,7 @@ ol_geom_LineString.prototype.simplifyVisvalingam = function (options) {
     }
   }
 
-  for (var i = 0, n = triangles.length; i < n; ++i) {
+  for (i = 0, n = triangles.length; i < n; ++i) {
     triangle = triangles[i];
     triangle.previous = triangles[i - 1];
     triangle.next = triangles[i + 1];
@@ -165,7 +165,7 @@ function minHeap() {
 
   function down(i) {
     var object = array[i];
-    while (true) {
+    for (;;) {
       var right = (i + 1) * 2,
           left = right - 1,
           down = i,
