@@ -41298,9 +41298,11 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
    * @api
    */
   getImage(pixelratio) {
-    pixelratio = pixelratio || 1
+    pixelratio = pixelratio || window.devicePixelRatio;
     var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio)
-    if (this._gethit || this.img_) return canvas;
+    if ((this._gethit || this.img_) && this._currentRatio === pixelratio) return canvas;
+    // Calculate image at pixel ratio
+    this._currentRatio = pixelratio;
     var strokeStyle
     var strokeWidth = 0
     if (this._stroke) {
