@@ -163,6 +163,21 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
     this.removed_ = []
 
     var c = feature.getGeometry().getCoordinates()
+    // Geom type
+    switch (feature.getGeometry().getType()) {
+      case 'Point': {
+        c = [c]; 
+        break;
+      }
+      case 'LineString': {
+        break;
+      }
+      default: {
+        c = []; 
+        break;
+      }
+    }
+
     var seg, split = []
     function intersect(f) {
       if (f !== feature) {
@@ -180,6 +195,25 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
         }
       }
       return false
+    }
+
+    // Split with a point
+    if (c.length === 1) {
+      seg = [c[0], c[0]]
+      var extent = ol_extent_buffer(ol_extent_boundingExtent(seg), this.tolerance_ /*0.01*/)
+      this.source_.forEachFeatureIntersectingExtent(extent, function(f) {
+        if (f.getGeometry().splitAt) {
+          var g = f.getGeometry().splitAt(c[0], this.tolerance_)
+          if (g.length > 1) {
+            this.source_.removeFeature(f)
+            for (k = 0; k < g.length; k++) {
+              f2 = f.clone()
+              f2.setGeometry(g[k])
+              this.source_.addFeature(f2)
+            }
+          }
+        }
+      }.bind(this))
     }
     // Split existing features
     for (i = 0; i < c.length - 1; i++) {
