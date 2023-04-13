@@ -27430,7 +27430,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
     }
     var seg, split = []
     function intersect(f) {
-      if (f !== feature) {
+      if (f !== feature && f.getGeometry().splitAt) {
         var c2 = f.getGeometry().getCoordinates()
         for (var j = 0; j < c2.length - 1; j++) {
           var p = this.intersectSegs(seg, [c2[j], c2[j + 1]])
