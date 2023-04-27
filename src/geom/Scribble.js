@@ -8,7 +8,7 @@
 
 import ol_geom_MultiLineString from 'ol/geom/MultiLineString.js'
 import ol_geom_Polygon from 'ol/geom/Polygon.js'
-import ol_geom_MultiPolygon from 'ol/geom/multipolygon.js'
+import ol_geom_MultiPolygon from 'ol/geom/MultiPolygon.js'
 import '../render/Cspline.js'
 import { ol_coordinate_splitH } from "./GeomUtils.js";
 
@@ -131,4 +131,23 @@ ol_geom_Polygon.prototype.scribbleFill = function (options) {
 	return mline.cspline({ pointsPerSeg:8, tension:.9 });
 };
 
-// import('ol-ext/geom/Scribble')
+/** Calculate a MultiPolyline to fill a geomatry (Polygon or MultiPolygon) with a scribble effect that appears hand-made
+ * @param {ol_geom_Geometry} geom the geometry to scribble
+ * @param {Object} options
+ *  @param {Number} options.interval interval beetween lines
+ *  @param {Number} options.angle hatch angle in radian, default PI/2
+ * @return {ol_geom_Geometry} the resulting MultiLineString geometry or initial geometry
+ */
+var ol_geom_scribbleFill = function(geom, options) {
+  switch (geom.getType()) {
+    case 'Polygon': {
+      return ol_geom_Polygon.prototype.scribbleFill.call(geom, options)
+    }
+    case 'MultiPolygon': {
+      return ol_geom_MultiPolygon.prototype.scribbleFill.call(geom, options)
+    }
+    default: return geom
+  }
+}
+
+export default ol_geom_scribbleFill

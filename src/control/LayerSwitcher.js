@@ -262,7 +262,7 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
       if (hp > h - dh) {
         // Bug IE: need to have an height defined
         ol_ext_element.setStyle(this.element, { height: '100%' })
-        var li = this.panel_.querySelectorAll('li.visible .li-content')[0]
+        var li = this.panel_.querySelectorAll('li.ol-visible .li-content')[0]
         var lh = li ? 2 * ol_ext_element.getStyle(li, 'height') : 0
         switch (dir) {
           case 1: top += lh; break
@@ -336,8 +336,9 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
    */
   setLayerOpacity(layer, li) {
     var i = li.querySelector('.layerswitcher-opacity-cursor')
-    if (i)
+    if (i){
       i.style.left = (layer.getOpacity() * 100) + "%"
+    }
     this.dispatchEvent({ type: 'layer:opacity', layer: layer })
   }
   /** Set visibility for a layer
@@ -347,12 +348,14 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
    */
   setLayerVisibility(layer, li) {
     var i = li.querySelector('.ol-visibility')
-    if (i)
+    if (i) {
       i.checked = layer.getVisible()
-    if (layer.getVisible())
+    }
+    if (layer.getVisible()){
       li.classList.add('ol-visible')
-    else
+    } else{
       li.classList.remove('ol-visible')
+    }
     this.dispatchEvent({ type: 'layer:visible', layer: layer })
   }
   /** Clear layers associated with li
@@ -373,8 +376,9 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
    */
   _getLayerForLI(li) {
     for (var i = 0, l; l = this._layers[i]; i++) {
-      if (l.li === li)
+      if (l.li === li) {
         return l.layer
+      }
     }
     return null
   }
@@ -386,10 +390,11 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
     this.panel_.querySelectorAll('li').forEach(function (li) {
       var l = this._getLayerForLI(li)
       if (l) {
-        if (this.testLayerVisibility(l))
+        if (this.testLayerVisibility(l)) {
           li.classList.remove('ol-layer-hidden')
-        else
+        } else {
           li.classList.add('ol-layer-hidden')
+        }
       }
     }.bind(this))
   }
@@ -414,8 +419,9 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
    * @private
    */
   drawPanel_() {
-    if (--this.dcount || this.dragging_)
+    if (--this.dcount || this.dragging_) {
       return
+    }
     var scrollTop = this.panelContainer_.scrollTop
 
     // Remove existing layers
@@ -425,11 +431,11 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
         li.remove()
     }.bind(this))
     // Draw list
-    if (this._layerGroup)
+    if (this._layerGroup) {
       this.drawList(this.panel_, this._layerGroup.getLayers())
-    else if (this.getMap())
+    } else if (this.getMap()) {
       this.drawList(this.panel_, this.getMap().getLayers())
-
+    }
     // Reset scrolltop
     this.panelContainer_.scrollTop = scrollTop
   }
@@ -442,11 +448,13 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
     if (!l.get('baseLayer')) {
       l.setVisible(!l.getVisible())
     } else {
-      if (!l.getVisible())
+      if (!l.getVisible()) {
         l.setVisible(true)
+      }
       layers.forEach(function (li) {
-        if (l !== li && li.get('baseLayer') && li.getVisible())
+        if (l !== li && li.get('baseLayer') && li.getVisible()) {
           li.setVisible(false)
+        }
       })
     }
   }
@@ -710,10 +718,11 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
       e.stopPropagation()
       e.preventDefault()
       var l = self._getLayerForLI(this.parentNode.parentNode)
-      if (self.onextent)
+      if (self.onextent) {
         self.onextent(l)
-      else
+      } else {
         self.getMap().getView().fit(l.getExtent(), self.getMap().getSize())
+      }
       self.dispatchEvent({ type: "extent", layer: l })
     }
     // Remove a layer on trash click
@@ -743,7 +752,7 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
       }
 
       var li = ol_ext_element.create('LI', {
-        className: (layer.getVisible() ? "visible " : " ") + (layer.get('baseLayer') ? "baselayer" : ""),
+        className: (layer.getVisible() ? "ol-visible " : " ") + (layer.get('baseLayer') ? "baselayer" : ""),
         parent: ul
       })
       this._setLayerForLI(li, layer)

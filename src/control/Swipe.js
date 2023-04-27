@@ -12,11 +12,11 @@ import ol_control_Control from 'ol/control/Control.js'
  * @constructor
  * @extends {ol_control_Control}
  * @param {Object=} Control options.
- *  @param {ol.layer} options.layers layer to swipe
- *  @param {ol.layer} options.rightLayer layer to swipe on right side
+ *  @param {ol.layer|Array<ol.layer>} options.layers layers to swipe
+ *  @param {ol.layer|Array<ol.layer>} options.rightLayers layers to swipe on right side
  *  @param {string} options.className control class name
- *  @param {number} options.position position propertie of the swipe [0,1], default 0.5
- *  @param {string} options.orientation orientation propertie (vertical|horizontal), default vertical
+ *  @param {number} options.position position property of the swipe [0,1], default 0.5
+ *  @param {string} options.orientation orientation property (vertical|horizontal), default vertical
  */
 var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
   constructor(options) {

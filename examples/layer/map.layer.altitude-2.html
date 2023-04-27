@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Elevation layer</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="[ol-ext] Elevation map" />
+  <meta name="keywords" content="ol, openlayers, layer, elevation, altitude, geoportail" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    pre {
+      padding: .2em 1em;
+      margin: .2em 1em;
+      background: #ddd;
+      width: auto;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: x-bil elevation layer</h1>
+  </a>
+  <div class="info">
+    This example use a TileWMS layer with an x-bil (Band Interleaved by Line) image format and a 
+    <a href="https://openlayers.org/en/latest/apidoc/module-ol_Tile.html#~LoadFunction">tileLoadFunction</a>
+    to encode altitude as RGB pixels.
+    <br/>
+    The following equation will decode pixel values to height values:
+    <br/>
+    <pre>height = -12000 + ((R * 256 * 256 + G * 256 + B) * 0.01)</pre>
+    <br/>
+    It ensure a 2 digit precision and a maximum deep watter trench up to -12000 m.
+    <br/>
+    Use the <i>ol.ext.getElevationFromPixel</i> function to get elevation from RGB pixel value.
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width: 100%; height: 600px;"></div>
+  <label>
+    <input type="checkbox" onchange="hide.setDisplay(this.checked)"/>
+    display elevation map
+  </label>
+
+<script>
+
+var plan = new ol.layer.Geoportail({
+  layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
+  className: 'plan',
+});
+
+// The map
+var map = new ol.Map ({
+  target: 'map',
+  view: new ol.View ({
+    zoom: 0,
+    center: [951487, 3467896]
+  }),
+  layers: [ plan ]
+});
+map.addControl(new ol.control.LayerSwitcher());
+map.addControl(new ol.control.Permalink({ visible: false }));
+map.addControl(new ol.control.SearchNominatim({ zoomOnSelect: 16 }));
+
+// A set of elevation layers
+var layers = [
+  {
+    title: 'MNT SRTM3',
+    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SRTM3',
+    //extent: [ -20037554.725947514, -8625918.87376409, 20037554.725947514, 8625918.87376409 ]
+  },{
+    title: 'MNS',
+    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES.MNS',
+    extent: [ -578959.605490584, 5203133.393641367, 921974.2487313666, 6643289.75487211 ]
+  }, {
+    title: 'MNT-RGE-Alti',
+    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES',
+    extent: [ -7007874.496280316, -1460624.494037931, 5043253.3127169, 6639937.650114076 ]
+  }, {
+    title: 'MNT BDAlti V1',
+    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE',
+    extent: [ -7007874.496280316, -1460624.494037931, 5043253.3127169, 6639937.650114076 ]
+  }
+];
+
+// Add tile layer
+var layer = layers[2]
+var elev = new ol.layer.Tile ({
+  title: layer.title,
+  displayInLayerSwitcher: false,
+  extent: layer.extent,
+  minResolution: 0,
+  maxResolution: 197231.79878968254,
+  source: new ol.source.TileWMS({
+    url: layer.url,
+    projection: 'EPSG:3857',
+    attributions: [ 'Geoservices-IGN' ],
+    crossOrigin: 'anonymous',
+    params: {
+      LAYERS: layer.layer,
+      FORMAT: 'image/x-bil;bits=32',
+      VERSION: '1.3.0'
+    }
+  })
+});
+map.addLayer(elev);
+
+// Tile load function to convert elevation
+var alti = ol.ext.imageLoader.elevationMap();
+elev.getSource().setTileLoadFunction(alti);
+
+// Hide the layer (but keep it on the map)
+var hide = new ol.filter.CSS({ display: false });
+elev.addFilter(hide);
+
+// Prevent layer smoothing
+elev.once('prerender', function(evt) {
+  evt.context.imageSmoothingEnabled = false;
+  evt.context.webkitImageSmoothingEnabled = false;
+  evt.context.mozImageSmoothingEnabled = false;
+  evt.context.msImageSmoothingEnabled = false;
+});
+
+// Add a popup to display elevation
+var popup = new ol.Overlay.Tooltip();
+map.addOverlay(popup)
+map.on('pointermove', function(e) {
+  var pix = elev.getData(e.pixel);
+  var h = ol.ext.getElevationFromPixel(pix);
+  popup.setInfo(h > -5000 ? h.toFixed(2)+' m' : '');
+});
+
+// SHADE 
+/**
+ * Generates a shaded relief image given elevation data.  Uses a 3x3
+ * neighborhood for determining slope and aspect.
+ * @param {Array<ImageData>} inputs Array of input images.
+ * @param {Object} data Data added in the "beforeoperations" event.
+ * @return {ImageData} Output image.
+ */
+ function shade(inputs, data) {
+  const elevationImage = inputs[0];
+  const width = elevationImage.width;
+  const height = elevationImage.height;
+  const elevationData = elevationImage.data;
+  const shadeData = new Uint8ClampedArray(elevationData.length);
+  const dp = data.resolution * 2;
+  const maxX = width - 1;
+  const maxY = height - 1;
+  const pixel = [0, 0, 0, 0];
+  const twoPi = 2 * Math.PI;
+  const halfPi = Math.PI / 2;
+  const sunEl = (Math.PI * data.sunEl) / 180;
+  const sunAz = (Math.PI * data.sunAz) / 180;
+  const cosSunEl = Math.cos(sunEl);
+  const sinSunEl = Math.sin(sunEl);
+  let pixelX,
+    pixelY,
+    x0,
+    x1,
+    y0,
+    y1,
+    offset,
+    z0,
+    z1,
+    dzdx,
+    dzdy,
+    slope,
+    aspect,
+    cosIncidence,
+    scaled;
+  function calculateElevation(pixel) {
+    // The method used to extract elevations from the DEM.
+    // In this case the format used is
+    // red + green * 2 + blue * 3
+    //
+    // Other frequently used methods include the Mapbox format
+    // (red * 256 * 256 + green * 256 + blue) * 0.1 - 10000
+    // and the Terrarium format
+    // (red * 256 + green + blue / 256) - 32768
+    //
+    // return pixel[0] + pixel[1] * 2 + pixel[2] * 3;
+    return -12000 + ((pixel[0] << 16) + (pixel[1] << 8) + pixel[2]) * 0.01;
+    // return -12000 + ((pixel[0] * 256 * 256 + pixel[1] * 256 + pixel[2]) * 0.01)
+  }
+  for (pixelY = 0; pixelY <= maxY; ++pixelY) {
+    y0 = pixelY === 0 ? 0 : pixelY - 1;
+    y1 = pixelY === maxY ? maxY : pixelY + 1;
+    for (pixelX = 0; pixelX <= maxX; ++pixelX) {
+      x0 = pixelX === 0 ? 0 : pixelX - 1;
+      x1 = pixelX === maxX ? maxX : pixelX + 1;
+
+      // determine elevation for (x0, pixelY)
+      offset = (pixelY * width + x0) * 4;
+      pixel[0] = elevationData[offset];
+      pixel[1] = elevationData[offset + 1];
+      pixel[2] = elevationData[offset + 2];
+      pixel[3] = elevationData[offset + 3];
+      z0 = data.vert * calculateElevation(pixel);
+
+      // determine elevation for (x1, pixelY)
+      offset = (pixelY * width + x1) * 4;
+      pixel[0] = elevationData[offset];
+      pixel[1] = elevationData[offset + 1];
+      pixel[2] = elevationData[offset + 2];
+      pixel[3] = elevationData[offset + 3];
+      z1 = data.vert * calculateElevation(pixel);
+
+      dzdx = (z1 - z0) / dp;
+
+      // determine elevation for (pixelX, y0)
+      offset = (y0 * width + pixelX) * 4;
+      pixel[0] = elevationData[offset];
+      pixel[1] = elevationData[offset + 1];
+      pixel[2] = elevationData[offset + 2];
+      pixel[3] = elevationData[offset + 3];
+      z0 = data.vert * calculateElevation(pixel);
+
+      // determine elevation for (pixelX, y1)
+      offset = (y1 * width + pixelX) * 4;
+      pixel[0] = elevationData[offset];
+      pixel[1] = elevationData[offset + 1];
+      pixel[2] = elevationData[offset + 2];
+      pixel[3] = elevationData[offset + 3];
+      z1 = data.vert * calculateElevation(pixel);
+
+      dzdy = (z1 - z0) / dp;
+
+      slope = Math.atan(Math.sqrt(dzdx * dzdx + dzdy * dzdy));
+
+      aspect = Math.atan2(dzdy, -dzdx);
+      if (aspect < 0) {
+        aspect = halfPi - aspect;
+      } else if (aspect > halfPi) {
+        aspect = twoPi - aspect + halfPi;
+      } else {
+        aspect = halfPi - aspect;
+      }
+
+      cosIncidence =
+        sinSunEl * Math.cos(slope) +
+        cosSunEl * Math.sin(slope) * Math.cos(sunAz - aspect);
+
+      offset = (pixelY * width + pixelX) * 4;
+      scaled = Math.round(255 * cosIncidence);
+
+      shadeData[offset] = 0;
+      shadeData[offset + 1] = 0;
+      shadeData[offset + 2] = 0;
+      shadeData[offset + 3] = scaled;
+    }
+  }
+
+  return {data: shadeData, width: width, height: height};
+}
+
+const raster = new ol.source.Raster({
+  sources: [elev.getSource()],
+  operationType: 'image',
+  operation: shade,
+});
+var shade = new ol.layer.Image({
+  title: 'Shaded relief',
+  className: 'shade',
+  opacity: .5,
+  source: raster,
+})
+var blurFilter = new ol.filter.CSS({ filter: 'blur(2px)' });
+shade.addFilter(blurFilter)
+map.addLayer(shade)
+map.getView().on('change:resolution', function() {
+  blurFilter.setFilter('blur('+Math.round(map.getView().getZoom()/4)+'px)')
+})
+
+var controls = {
+  vert: 5,
+  sunEl: 0,
+  sunAz: 180
+}
+raster.on('beforeoperations', function (event) {
+  // the event.data object will be passed to operations
+  const data = event.data;
+  data.resolution = event.resolution;
+  for (const id in controls) {
+    data[id] = Number(controls[id]);
+  }
+});
+
+</script>
+</body>
+</html>

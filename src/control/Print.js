@@ -118,10 +118,9 @@ var ol_control_Print = class olcontrolPrint extends ol_control_Control {
           if (c.parentNode.style.opacity === '0')
             return;
           ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
-          // Blend mode ?
-          if (ol_ext_element.getStyle(c.parentNode, 'mix-blend-mode') === 'multiply') {
-            ctx.globalCompositeOperation = 'multiply';
-          }
+          // Blend mode & filter
+          ctx.globalCompositeOperation = ol_ext_element.getStyle(c.parentNode, 'mix-blend-mode');
+          ctx.filter = ol_ext_element.getStyle(c.parentNode, 'filter');
           // transform
           var tr = ol_ext_element.getStyle(c, 'transform') || ol_ext_element.getStyle(c, '-webkit-transform');
           if (/^matrix/.test(tr)) {
@@ -159,7 +158,6 @@ var ol_control_Print = class olcontrolPrint extends ol_control_Control {
     }
   }
   /** Print the map
-   * @param {function} cback a callback function that take a string containing the requested data URI.
    * @param {Object} options
    *	@param {string} options.imageType A string indicating the image format, default the control one
    *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp

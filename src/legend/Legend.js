@@ -9,10 +9,11 @@ import ol_geom_Point from 'ol/geom/Point.js'
 import ol_geom_LineString from 'ol/geom/LineString.js';
 import ol_geom_Polygon from 'ol/geom/Polygon.js'
 import {extend as ol_extent_extend} from 'ol/extent.js'
-import ol_legend_Item from './Item.js'
 import ol_ext_element from '../util/element.js'
 import ol_style_Text from 'ol/style/Text.js'
 import ol_style_Fill from 'ol/style/Fill.js'
+import ol_legend_Item from './Item.js'
+import ol_legend_Image from './Image.js'
 
 /** @namespace  ol.legend
  */
@@ -27,10 +28,12 @@ if (window.ol && !ol.legend) {
  * @fires refresh
  * @param {*} options
  *  @param {String} options.title Legend title
- *  @param {ol.size | undefined} options.size Size of the symboles in the legend, default [40, 25]
- *  @param {number | undefined} options.margin Size of the symbole's margin, default 10
- *  @param { ol.style.Text | undefined } options.textStyle a text style for the legend, default 16px sans-serif
- *  @param { ol.style.Text | undefined } options.titleStyle a text style for the legend title, default textStyle + bold
+ *  @param {number} [options.maxWidth] maximum legend width
+ *  @param {ol.size} [options.size] Size of the symboles in the legend, default [40, 25]
+ *  @param {number} [options.margin=10] Size of the symbole's margin, default 10
+ *  @param { ol.layer.Base } [layer] layer associated with the legend
+ *  @param { ol.style.Text} [options.textStyle='16px sans-serif'] a text style for the legend, default 16px sans-serif
+ *  @param { ol.style.Text} [options.titleStyle='bold 16px sans-serif'] a text style for the legend title, default textStyle + bold
  *  @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} options.style a style or a style function to use with features
  */
 var ol_legend_Legend = class ollegendLegend extends ol_Object {
@@ -38,6 +41,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
     super()
     options = options || {}
 
+    // Handle item collection
     this._items = new ol_Collection()
     var listeners = []
     var tout
@@ -68,11 +72,18 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
       }
       tout = setTimeout(function () { this.refresh() }.bind(this), 0)
     }.bind(this))
+
+    // List item element
     this._listElement = ol_ext_element.create('UL', {
       className: 'ol-legend'
     })
+    // Legend canvas
     this._canvas = document.createElement('canvas')
+    // Set layer
+    this.setLayer(options.layer)
 
+    // Properties
+    this.set('maxWidth', options.maxWidth, true)
     this.set('size', options.size || [40, 25], true)
     this.set('margin', options.margin === 0 ? 0 : options.margin || 10, true)
     this._textStyle = options.textStyle || new ol_style_Text({
@@ -110,8 +121,9 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
    */
   static getLegendImage(item, canvas, offsetY) {
     item = item || {}
-    if (typeof (item.margin) === 'undefined')
+    if (typeof (item.margin) === 'undefined'){
       item.margin = 10
+    }
     var size = item.size || [40, 25]
     if (item.width) size[0] = item.width
     if (item.heigth) size[1] = item.heigth
@@ -263,6 +275,20 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
   getTitle() {
     return this._title.get('title')
   }
+  /** Set the layer associated with the legend
+   * @param {ol.layer.Layer} [layer]
+   */
+  setLayer(layer) {
+    if (this._layerListener) ol_Observable_unByKey(this._layerListener)
+    this._layer = layer;
+    if (layer) {
+      this._layerListener = layer.on('change:visible', function() {
+        this.refresh();
+      }.bind(this))
+    } else {
+      this._layerListener = null;
+    }
+  }
   /** Get text Style
    * @returns {ol_style_Text}
    */
@@ -299,11 +325,26 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
    * @param {olLegendItemOptions|ol_legend_Item} item
    */
   addItem(item) {
-    if (item instanceof ol_legend_Item) {
+    if (item instanceof ol_legend_Legend) {
+      this._items.push(item)
+      item.on('refresh', function() { this.refresh(true) }.bind(this))
+    } else if (item instanceof ol_legend_Item || item instanceof ol_legend_Image) {
       this._items.push(item)
     } else {
       this._items.push(new ol_legend_Item(item))
     }
+  }
+  /** Remove an item at index
+   * @param {ol_legend_Item} item
+   */
+  removeItem(item) {
+    this._items.remove(item)
+  }
+  /** Remove an item at index
+   * @param {number} index
+   */
+  removeItemAt(index) {
+    this._items.removeAt(index)
   }
   /** Get item collection
    * @param {ol_Collection}
@@ -344,8 +385,9 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
   }
   /** Refresh the legend
    */
-  refresh() {
+  refresh(opt_silent) {
     var table = this._listElement
+    if (!table) return;
     table.innerHTML = ''
     var margin = this.get('margin')
     var width = this.get('size')[0] + 2 * margin
@@ -357,20 +399,10 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
     ctx.textBaseline = 'middle'
     var ratio = ol_has_DEVICE_PIXEL_RATIO
 
-    // Calculate width
-    ctx.font = this._titleStyle.getFont()
-    var textWidth = this._measureText(ctx, this.getTitle('title')).width
-    this._items.forEach(function (r) {
-      if (r.get('feature') || r.get('typeGeom')) {
-        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
-        textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width)
-      } else {
-        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
-        textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width)
-      }
-    }.bind(this))
-    canvas.width = (textWidth + 2 * margin) * ratio
+    // Canvas size
+    var w = Math.min(this.getWidth(), this.get('maxWidth') || Infinity);
     var h = this.getHeight()
+    canvas.width = w * ratio
     canvas.height = h * ratio
     canvas.style.height = h + 'px'
 
@@ -395,40 +427,80 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
     var offsetY = 0;
     if (this.getTitle()) offsetY = height;
     this._items.forEach(function (r, i) {
-      var index = i + (this.getTitle() ? 1 : 0)
-      table.appendChild(r.getElement([width, height], function (b) {
-        this.dispatchEvent({
-          type: 'select',
-          index: i,
-          symbol: b,
-          item: r
-        })
-      }.bind(this)))
-      var item = r.getProperties()
-      var h = item.height || height;
-      ctx.textAlign = 'left'
-      if (item.feature || item.typeGeom) {
-        canvas = this.getLegendImage(item, canvas, offsetY)
-        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
-        this._drawText(ctx, r.get('title'), width + margin, offsetY + h / 2)
-      } else {
-        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
-        if (/\bcenter\b/.test(item.className)) {
-          ctx.textAlign = 'center'
-          this._drawText(ctx, r.get('title'), canvas.width / ratio / 2, offsetY + h / 2)
-        } else {
-          this._drawText(ctx, r.get('title'), margin, offsetY + h / 2)
+      if (r instanceof ol_legend_Legend) {
+        if ((!r._layer || r._layer.getVisible()) && r.getCanvas().height) {
+          ctx.drawImage(r.getCanvas(), 0, offsetY * ratio)
+          var list = r._listElement.querySelectorAll('li')
+          for (var l=0; l<list.length; l++) {
+            var li = list[l].cloneNode();
+            li.innerHTML = list[l].innerHTML;
+            table.appendChild(li);
+          }
+          offsetY += r.getHeight();
         }
+      } else {
+        if (r instanceof ol_legend_Image) {
+          // Title
+          if (r.get('title')) {
+            table.appendChild(this._title.getElement([width, height], function (b) {
+              this.dispatchEvent({
+                type: 'select',
+                index: -1,
+                symbol: b,
+                item: this._title
+              })
+            }.bind(this)))
+            ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
+            if (/\bcenter\b/.test(r.get('className'))) {
+              ctx.textAlign = 'center'
+              this._drawText(ctx, r.get('title'), canvas.width / ratio / 2, offsetY + height / 2)
+            } else {
+              this._drawText(ctx, r.get('title'), margin, offsetY + height / 2)
+            }
+            offsetY += height;
+          }
+          // Image
+          var img = r.getImage()
+          ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
+          offsetY += r.getHeight();
+        } else {
+          var item = r.getProperties()
+          var h = item.height || height;
+          ctx.textAlign = 'left'
+          if (item.feature || item.typeGeom) {
+            canvas = this.getLegendImage(item, canvas, offsetY)
+            ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
+            this._drawText(ctx, r.get('title'), width + margin, offsetY + h / 2)
+          } else {
+            ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
+            if (/\bcenter\b/.test(item.className)) {
+              ctx.textAlign = 'center'
+              this._drawText(ctx, r.get('title'), canvas.width / ratio / 2, offsetY + h / 2)
+            } else {
+              this._drawText(ctx, r.get('title'), margin, offsetY + h / 2)
+            }
+          }
+          offsetY += h;
+        }
+        table.appendChild(r.getElement([width, height], function (b) {
+          this.dispatchEvent({
+            type: 'select',
+            index: i,
+            symbol: b,
+            item: r
+          })
+        }.bind(this)))
       }
-      offsetY += h;
     }.bind(this))
 
     // Done
-    this.dispatchEvent({
-      type: 'refresh',
-      width: width,
-      height: (this._items.length + 1) * height
-    })
+    if (!opt_silent) {
+      this.dispatchEvent({
+        type: 'refresh',
+        width: width,
+        height: (this._items.length + 1) * height
+      })
+    }
   }
   /** Calculate the legend height
    * @return {number}
@@ -439,14 +511,57 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
     var hitem = this.get('lineHeight') || this.get('size')[1] + 2 * margin
     var height = this.getTitle() ? hitem : 0;
     this._items.forEach(function (r) {
-      if (r.get('height')) height += r.get('height') + 2 * margin; 
-      else height += hitem
+      if (r instanceof ol_legend_Legend) {
+        if (!r._layer || r._layer.getVisible()) {
+          height += r.getHeight()
+        }
+      } else if (r instanceof ol_legend_Image) {
+        if (r.get('title')) height += hitem; 
+        height += r.getHeight()
+      } else {
+        if (r.get('height')) height += r.get('height') + 2 * margin; 
+        else height += hitem
+      }
     })
     return height
   }
+  /** Calculate the legend height
+   * @return {number}
+   */
+  getWidth() {
+    var canvas = this.getCanvas()
+    var ctx = canvas.getContext('2d')
+    var margin = this.get('margin');
+    var width = this.get('size')[0] + 2 * margin
+
+    ctx.font = this._titleStyle.getFont()
+    var textWidth = this._measureText(ctx, this.getTitle('title')).width
+    this._items.forEach(function (r) {
+      if (r instanceof ol_legend_Legend) {
+        if (!r._layer || r._layer.getVisible()) {
+          textWidth = Math.max(textWidth, r.getWidth())
+        }
+      } else if (r instanceof ol_legend_Image) {
+        textWidth = Math.max(textWidth, r.getWidth())
+        if (r.get('title')) {
+          ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
+          textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width)
+        }
+      } else {
+        if (r.get('feature') || r.get('typeGeom')) {
+          ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
+          textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width)
+        } else {
+          ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
+          textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width)
+        }
+      }
+    }.bind(this))
+    return textWidth + 2 * margin
+  }
   /** Get the image for a style 
    * @param {olLegendItemOptions} item 
-   * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
+   * @param {Canvas|undefined} canvas a canvas to draw in, if none create one
    * @param {int|undefined} offsetY Y offset to draw in canvas, default 0
    * @return {CanvasElement}
    */

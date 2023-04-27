@@ -19,13 +19,6 @@
   <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
-  <!-- Prevent image error on load with https -->
-	<script>
-		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
-      location.href = window.location.href.replace(/^https:/,'http:');
-		}
-	</script>
-
   <!-- ol-ext -->
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
@@ -35,6 +28,7 @@
   <style>
     .options { max-width:400px;  }
     .options p { margin:0; font-size:0.9em; }
+    .options img { max-width: 300px; max-height: 300px; }
     .options p.copy {
       font-size: 0.8em;
       color: navy;
@@ -92,8 +86,8 @@
   var map = new ol.Map ({
     target: 'map',
     view: new ol.View ({
-      zoom: 6,
-      center: [166326, 5992663]
+      zoom: 16,
+      center: [260767, 6250718]
     }),
     layers: [layer]
   });
@@ -126,16 +120,15 @@
 
   // GeoJSON layer
   var vectorSource = new ol.source.Vector({
-    url: '../data/fond_guerre.geojson',
+    url: '../data/paris-1900.geojson',
     projection: 'EPSG:3857',
     format: new ol.format.GeoJSON(),
-    attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
-    logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
+    attributions: [ "&copy; <a href='https://twitter.com/search?q=paris%20autrefois%20(from%3ASamuelMartin75)&src=typed_query&f=live'>@SamuelMartin75</a>" ]
   });
 
   var vector = new ol.layer.Vector({
-    name: '1914-18',
-    preview: "http://www.culture.gouv.fr/Wave/image/memoire/2445/sap40_z0004141_v.jpg",
+    name: 'Paris 1900',
+    preview: "https://pbs.twimg.com/media/Fnnx0ylXgAABNjV?format=jpg&name=small",
     source: vectorSource,
     // y ordering
     renderOrder: ol.ordering.yOrdering(),
@@ -158,10 +151,10 @@
     if (e.type=="add") {
       var info = $("#select").html("<p>Selection:</p>");
       var el = e.element;
+      $("<h3>").text(el.get("title")).appendTo(info);
       $("<img>").attr('src',el.get("img")).appendTo(info);
-      $("<p>").text(el.get("text")).appendTo(info);
-      $("<p>").text(el.get("commune")+" ("+el.get("region")+" - "+el.get("date").replace(".","/")+")").appendTo(info);
-      $("<p>").addClass('copy').html("&copy; "+el.get("copy")+" - "+el.get("author")).appendTo(info);
+      $("<p>").text(el.get("description")).appendTo(info);
+      $("<p>").addClass('copy').html("&copy; "+el.get("copy")).appendTo(info);
     }
     else $("#select").html("<p>Select an image.</p>");
   });

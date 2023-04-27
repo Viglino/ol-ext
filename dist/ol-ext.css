@@ -2224,6 +2224,10 @@ body > .ol-ext-dialog > form {
   max-width: 90%;
   overflow-x: hidden;
   overflow-y: auto;
+  background-color: rgba(255,255,255,.6);
+}
+.ol-control.ol-legend:hover {
+  background-color: rgba(255,255,255,.8);
 }
 .ol-control.ol-legend.ol-collapsed {
   overflow: hidden;
@@ -2324,7 +2328,7 @@ ul.ol-legend li {
 }
 ul.ol-legend li div {
   display: inline-block;
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 .ol-control.ol-legend .ol-legend {
@@ -2493,6 +2497,7 @@ ul.ol-legend li div {
   -webkit-transition: all 0.5s;
   transition: all 0.5s;
   pointer-events: none;
+  z-index: 9;
 }
 
 .ol-overlay.slide-up {
@@ -3046,6 +3051,9 @@ ul.ol-legend li div {
   }
   body.ol-print-document > .ol-ext-print-dialog .ol-content {
     max-height: unset!important;
+    max-width: unset!important;
+    width: unset!important;
+    height: unset!important;
   }
   .ol-ext-print-dialog > form,
   .ol-ext-print-dialog {
@@ -4063,7 +4071,12 @@ ul.ol-legend li div {
 }
 
 .ol-control.ol-storymap .chapter {
+  position: relative;
   padding: .5em;
+  overflow: hidden;
+}
+.ol-control.ol-storymap .chapter:last-child {
+  margin-bottom: 100%;
 }
 .ol-storymap .chapter {
   cursor: pointer;
@@ -4072,6 +4085,7 @@ ul.ol-legend li div {
 .ol-storymap .chapter.ol-select {
   cursor: default;
   opacity: 1;
+  background-color: rgba(255,255,255,.8);
 }
 
 .ol-storymap .ol-scroll-top,
@@ -4134,6 +4148,100 @@ ul.ol-legend li div {
 
 .ol-storymap img[data-title] {
   cursor: pointer;
+}
+
+/* scrollLine / scrollbox */
+.ol-storymap.scrollLine,
+.ol-storymap.scrollBox {
+  top: 0;
+  bottom: 0;
+  background-color: transparent;
+  border-radius: 0;
+  max-width: 40%;
+}
+.ol-storymap.scrollLine .chapter,
+.ol-storymap.scrollBox .chapter {
+  background-color: #fff;
+  margin: 100% 0;
+}
+.ol-storymap.scrollLine .chapter:first-child,
+.ol-storymap.scrollBox .chapter:first-child {
+  margin-top: 3em;
+}
+.ol-storymap.scrollLine .chapter.ol-select,
+.ol-storymap.scrollLine .chapter,
+.ol-storymap.scrollBox .chapter.ol-select,
+.ol-storymap.scrollBox .chapter {
+  opacity: 1;
+}
+
+.ol-storymap.scrollLine .ol-scrolldiv,
+.ol-storymap.scrollBox .ol-scrolldiv {
+  padding-right: 30px;
+}
+.ol-storymap.scrollLine:before,
+.ol-storymap.scrollBox:before {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  top: 0;
+  bottom: 0;
+  right: 14px;
+  background-color: #fff;
+}
+
+.ol-storymap.scrollLine .ol-scroll,
+.ol-storymap.scrollBox .ol-scroll {
+  display: block!important;
+  padding: 0;
+  width: 1px;
+  opacity: 1!important;
+  right: 15px;
+  overflow: visible;
+  -webkit-transition: none;
+  transition: none;
+}
+.ol-storymap.scrollLine .ol-scroll > div {
+  background-color: transparent;
+  overflow: visible;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+          transform: translateX(-50%);
+  -webkit-box-shadow: unset;
+          box-shadow: unset;
+}
+.ol-storymap.scrollLine .ol-scroll > div:before {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #0af;
+  border: 2px solid #fff;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+}
+
+.ol-storymap.scrollBox .ol-scroll > div {
+  display: none;
+}
+.ol-storymap.scrollBox .chapter:after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: Min(30%, 5em);
+  right: -24.5px;
+  -webkit-box-shadow: 0 0 0 2px #fff, inset 0 0 0 15px #0af;
+          box-shadow: 0 0 0 2px #fff, inset 0 0 0 15px #0af; 
+  border-radius: 50%;
+  border: 5px solid transparent;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  z-index: 1;
 }
 
 .ol-swipe {

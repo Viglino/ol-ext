@@ -23,6 +23,7 @@ import ol_control_Search from './Search.js'
  *	@param {string | undefined} options.property a property to display in the index, default 'name'.
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property 
  *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
+ *	@param {function | undefined} options.sort a function to sort autocomplete list. Takes 2 features and return 0, -1 or 1.
  */
 var ol_control_SearchFeature = class olcontrolSearchFeature extends ol_control_Search {
   constructor(options) {
@@ -37,6 +38,7 @@ var ol_control_SearchFeature = class olcontrolSearchFeature extends ol_control_S
     this.set('property', options.property || 'name');
 
     this.source_ = options.source;
+    this._sort = options.sort;
   }
   /** No history avaliable on features
    */
@@ -67,26 +69,32 @@ var ol_control_SearchFeature = class olcontrolSearchFeature extends ol_control_S
     return this.getTitle(f);
   }
   /** Get the source
-  *	@return {ol.source.Vector}
-  *	@api
-  */
+   *	@return {ol.source.Vector}
+   *	@api
+   */
   getSource() {
     return this.source_;
   }
   /** Get the source
-  *	@param {ol.source.Vector} source
-  *	@api
-  */
+   *	@param {ol.source.Vector} source
+   *	@api
+   */
   setSource(source) {
     this.source_ = source;
   }
+  /** Set function to sort autocomplete results
+   * @param {function} sort a sort function that takes 2 features and returns 0, -1 or 1
+   */
+  setSortFunction(sort) {
+    this._sort = sort
+  }
   /** Autocomplete function
-  * @param {string} s search string
-  * @param {int} max max
-  * @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
-  * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
-  * @api
-  */
+   * @param {string} s search string
+   * @param {int} max max
+   * @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
+   * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
+   * @api
+   */
   autocomplete(s) {
     var result = [];
     if (this.source_) {
@@ -104,6 +112,9 @@ var ol_control_SearchFeature = class olcontrolSearchFeature extends ol_control_S
             break;
         }
       }
+    }
+    if (typeof(this._sort) === 'function') {
+      result = result.sort(this._sort)
     }
     return result;
   }

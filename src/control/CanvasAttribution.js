@@ -151,6 +151,7 @@ var ol_control_CanvasAttribution = class olcontrolCanvasAttribution extends ol_c
     ctx.textAlign = textAlign
     ctx.textBaseline = 'middle'
     ctx.font = this.font_
+    ctx.lineJoin = 'round';
     ctx.strokeText(text, left, h / 2)
     ctx.fillText(text, left, h / 2)
     ctx.closePath()

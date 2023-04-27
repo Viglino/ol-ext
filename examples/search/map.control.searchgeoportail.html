@@ -106,10 +106,11 @@
   });
   map.addControl(new ol.control.LayerSwitcher());
 
-  // Set the control grid reference
+  // Set the search control
   var search = new ol.control.SearchGeoportail({
     //apiKey: apiKey,
     // type: 'Commune',
+    version: '2',
     reverse: true
   });
   map.addControl (search);

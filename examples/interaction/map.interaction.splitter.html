@@ -45,7 +45,7 @@
     <br />
     <b>TODO:</b> Split with more than one feature (when moving nodes)
     <br />
-    <b>NB:</b> If you look to an interaction that split a linestringjust on clicking a point on the feature, look at <a href="map.interaction.split.html">ol.interaction.Split</a>.
+    <b>NB:</b> If you look to an interaction that split a linestring just on clicking a point on the feature, look at <a href="map.interaction.split.html">ol.interaction.Split</a>.
   </div>
 
   <!-- Map div -->
@@ -99,6 +99,7 @@
     map.addLayer(vector);
     vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[-288626, 5757848], [210354, 5576845], [34243, 6305749]])));
     vector.getSource().addFeature(new ol.Feature(new ol.geom.LineString([[406033, 5664901], [689767, 5718712], [699551, 6149206], [425601, 6183449]])));
+    vector.getSource().addFeature(new ol.Feature(new ol.geom.Point([261720, 5951081])));
 
     // Add splitter before other interaction
     var splitter = new ol.interaction.Splitter({ source: vector.getSource() });
@@ -111,6 +112,7 @@
       draw: new ol.interaction.Draw({
         source: vector.getSource(),
         type: "LineString"
+        // type: "Point"
       })
     }
     for (var i in interactions) map.addInteraction(interactions[i]);

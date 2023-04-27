@@ -36,6 +36,7 @@ import ol_geom_Polygon from 'ol/geom/Polygon.js'
  *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
  *	@param {boolean} options.enableRotatedTransform Enable transform when map is rotated
  *	@param {boolean} [options.keepRectangle=false] keep rectangle when possible
+ *  @param {number} [options.buffer] Increase the extent used as bounding box, default 0
  *	@param {*} options.style list of ol.style for handles
  *  @param {number|Array<number>|function} [options.pointRadius=0] radius for points or a function that takes a feature and returns the radius (or [radiusX, radiusY]). If not null show handles to transform the points
  */
@@ -105,7 +106,8 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
     this.set('enableRotatedTransform', (options.enableRotatedTransform || false))
     /* Keep rectangle angles 90 degrees */
     this.set('keepRectangle', (options.keepRectangle || false))
-
+    /* Add buffer to the feature's extent */
+    this.set('buffer', (options.buffer || 0))
 
     // Force redraw when changed
     this.on('propertychange', function () {
@@ -355,7 +357,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
       coords.unshift(coords[3])
     }
     // Clone and extend
-    ext = ol_extent_buffer(ext, 0)
+    ext = ol_extent_buffer(ext, this.get('buffer'))
     this.selection_.forEach(function (f) {
       var extendExt = this.getGeometryRotateToZero_(f).getExtent()
       ol_extent_extend(ext, extendExt)
@@ -701,8 +703,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
         for (i = 0, f; f = this.selection_.item(i); i++) {
           geometry = (viewRotation === 0 || !this.get('enableRotatedTransform')) ? this.geoms_[i].clone() : this.rotatedGeoms_[i].clone()
           geometry.applyTransform(function (g1, g2, dim) {
-            if (dim < 2)
-              return g2
+            if (dim < 2) return g2
 
             if (!keepRectangle) {
               for (j = 0; j < g1.length; j += dim) {
@@ -772,10 +773,9 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
             }
 
             // bug: ol, bad calculation circle geom extent
-            if (geometry.getType() == 'Circle')
-              geometry.setCenterAndRadius(geometry.getCenter(), geometry.getRadius())
+            if (geometry.getType() == 'Circle') geometry.setCenterAndRadius(geometry.getCenter(), geometry.getRadius())
             return g2
-          })
+          }.bind(this))
           if (this.get('enableRotatedTransform') && viewRotation !== 0) {
             //geometry.rotate(viewRotation, rotationCenter);
             geometry.rotate(viewRotation, this.getMap().getView().getCenter())

@@ -115,9 +115,10 @@ var ol_control_CanvasScaleLine = class olcontrolCanvasScaleLine extends ol_contr
     ctx.strokeStyle = this.fontStrokeStyle_
     ctx.fillStyle = this.fontFillStyle_
     ctx.lineWidth = this.fontStrokeWidth_
-    ctx.textAlign = "center"
-    ctx.textBaseline = "bottom"
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'bottom'
     ctx.font = this.font_
+    ctx.lineJoin = 'round';
     ctx.strokeText(text, position.left + scalewidth / 2, position.top)
     ctx.fillText(text, position.left + scalewidth / 2, position.top)
     ctx.closePath()
@@ -128,10 +129,8 @@ var ol_control_CanvasScaleLine = class olcontrolCanvasScaleLine extends ol_contr
     ctx.strokeStyle = this.strokeStyle_
     var max = 4
     var n = parseInt(text)
-    while (n % 10 === 0)
-      n /= 10
-    if (n % 5 === 0)
-      max = 5
+    while (n % 10 === 0) n /= 10
+    if (n % 5 === 0) max = 5
     for (var i = 0; i < max; i++) {
       ctx.beginPath()
       ctx.fillStyle = i % 2 ? this.fillStyle_ : this.strokeStyle_

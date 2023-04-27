@@ -51,11 +51,13 @@ var ol_control_Legend = class olcontrolLegend extends ol_control_CanvasBase {
     // The legend
     this._legend = options.legend;
     this._legend.getCanvas().className = 'ol-legendImg';
+    // Legend element
     element.appendChild(this._legend.getCanvas());
     element.appendChild(this._legend.getListElement());
 
-    if (options.collapsible !== false && options.collapsed === false)
+    if (options.collapsible !== false && options.collapsed === false) {
       this.show();
+    }
 
     this._legend.on('select', function (e) {
       this.dispatchEvent(e);

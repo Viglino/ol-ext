@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.3
+ * @version v4.0.7
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -3494,16 +3494,19 @@ if (window.ol && !ol.legend) {
  * @fires refresh
  * @param {*} options
  *  @param {String} options.title Legend title
- *  @param {ol.size | undefined} options.size Size of the symboles in the legend, default [40, 25]
- *  @param {number | undefined} options.margin Size of the symbole's margin, default 10
- *  @param { ol.style.Text | undefined } options.textStyle a text style for the legend, default 16px sans-serif
- *  @param { ol.style.Text | undefined } options.titleStyle a text style for the legend title, default textStyle + bold
+ *  @param {number} [options.maxWidth] maximum legend width
+ *  @param {ol.size} [options.size] Size of the symboles in the legend, default [40, 25]
+ *  @param {number} [options.margin=10] Size of the symbole's margin, default 10
+ *  @param { ol.layer.Base } [layer] layer associated with the legend
+ *  @param { ol.style.Text} [options.textStyle='16px sans-serif'] a text style for the legend, default 16px sans-serif
+ *  @param { ol.style.Text} [options.titleStyle='bold 16px sans-serif'] a text style for the legend title, default textStyle + bold
  *  @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} options.style a style or a style function to use with features
  */
 ol.legend.Legend = class ollegendLegend extends ol.Object {
   constructor(options) {
     super()
     options = options || {}
+    // Handle item collection
     this._items = new ol.Collection()
     var listeners = []
     var tout
@@ -3534,10 +3537,16 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
       }
       tout = setTimeout(function () { this.refresh() }.bind(this), 0)
     }.bind(this))
+    // List item element
     this._listElement = ol.ext.element.create('UL', {
       className: 'ol-legend'
     })
+    // Legend canvas
     this._canvas = document.createElement('canvas')
+    // Set layer
+    this.setLayer(options.layer)
+    // Properties
+    this.set('maxWidth', options.maxWidth, true)
     this.set('size', options.size || [40, 25], true)
     this.set('margin', options.margin === 0 ? 0 : options.margin || 10, true)
     this._textStyle = options.textStyle || new ol.style.Text({
@@ -3567,23 +3576,26 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
   /** Get a symbol image for a given legend item
    * @param {olLegendItemOptions} item
    * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
-   * @param {int|undefined} row row number to draw in canvas, default 0
+   * @param {int|undefined} offsetY Y offset to draw in canvas, default 0
    */
-  static getLegendImage(item, canvas, row) {
+  static getLegendImage(item, canvas, offsetY) {
     item = item || {}
-    if (typeof (item.margin) === 'undefined')
+    if (typeof (item.margin) === 'undefined'){
       item.margin = 10
+    }
     var size = item.size || [40, 25]
+    if (item.width) size[0] = item.width
+    if (item.heigth) size[1] = item.heigth
     item.onload = item.onload || function () {
       setTimeout(function () {
-        ol.legend.Legend.getLegendImage(item, canvas, row)
+        ol.legend.Legend.getLegendImage(item, canvas, offsetY)
       }, 100)
     }
     var width = size[0] + 2 * item.margin
     var height = item.lineHeight || (size[1] + 2 * item.margin)
     var ratio = item.pixelratio || ol.has.DEVICE_PIXEL_RATIO
     if (!canvas) {
-      row = 0
+      offsetY = 0
       canvas = document.createElement('canvas')
       canvas.width = width * ratio
       canvas.height = height * ratio
@@ -3595,14 +3607,16 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
     var style
     var feature = item.feature
     if (!feature && typeGeom) {
-      if (/Point/.test(typeGeom))
+      if (/Point/.test(typeGeom)){
         feature = new ol.Feature(new ol.geom.Point([0, 0]))
-      else if (/LineString/.test(typeGeom))
+      } else if (/LineString/.test(typeGeom)) {
         feature = new ol.Feature(new ol.geom.LineString([0, 0]))
-      else
+      } else {
         feature = new ol.Feature(new ol.geom.Polygon([[0, 0]]))
-      if (item.properties)
+      }
+      if (item.properties) {
         feature.setProperties(item.properties)
+      }
     }
     if (feature) {
       style = feature.getStyle()
@@ -3615,8 +3629,7 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
     } else {
       style = []
     }
-    if (!(style instanceof Array))
-      style = [style]
+    if (!(style instanceof Array)) style = [style]
     var cx = width / 2
     var cy = height / 2
     var sx = size[0] / 2
@@ -3663,7 +3676,7 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
       }
     }
     // Draw image
-    cy += (row * height) || 0
+    cy += offsetY || 0
     for (i = 0; s = style[i]; i++) {
       vectorContext.setStyle(s)
       ctx.save()
@@ -3694,12 +3707,9 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
       // Geometry function?
       if (s.getGeometryFunction()) {
         geom = s.getGeometryFunction()(new ol.Feature(geom))
-        ctx.restore()
-        vectorContext.drawGeometry(geom)
-      } else {
-        vectorContext.drawGeometry(geom)
-        ctx.restore()
       }
+      vectorContext.drawGeometry(geom)
+      ctx.restore()
     }
     ctx.restore()
     return canvas
@@ -3717,6 +3727,20 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
   getTitle() {
     return this._title.get('title')
   }
+  /** Set the layer associated with the legend
+   * @param {ol.layer.Layer} [layer]
+   */
+  setLayer(layer) {
+    if (this._layerListener) ol.Observable.unByKey(this._layerListener)
+    this._layer = layer;
+    if (layer) {
+      this._layerListener = layer.on('change:visible', function() {
+        this.refresh();
+      }.bind(this))
+    } else {
+      this._layerListener = null;
+    }
+  }
   /** Get text Style
    * @returns {ol.style.Text}
    */
@@ -3728,8 +3752,7 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
    */
   set(key, value, opt_silent) {
     super.set(key, value, opt_silent)
-    if (!opt_silent)
-      this.refresh()
+    if (!opt_silent) this.refresh()
   }
   /** Get legend list element
    * @returns {Element}
@@ -3754,11 +3777,26 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
    * @param {olLegendItemOptions|ol.legend.Item} item
    */
   addItem(item) {
-    if (item instanceof ol.legend.Item) {
+    if (item instanceof ol.legend.Legend) {
+      this._items.push(item)
+      item.on('refresh', function() { this.refresh(true) }.bind(this))
+    } else if (item instanceof ol.legend.Item || item instanceof ol.legend.Image) {
       this._items.push(item)
     } else {
       this._items.push(new ol.legend.Item(item))
     }
+  }
+  /** Remove an item at index
+   * @param {ol.legend.Item} item
+   */
+  removeItem(item) {
+    this._items.remove(item)
+  }
+  /** Remove an item at index
+   * @param {number} index
+   */
+  removeItemAt(index) {
+    this._items.removeAt(index)
   }
   /** Get item collection
    * @param {ol.Collection}
@@ -3799,8 +3837,9 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
   }
   /** Refresh the legend
    */
-  refresh() {
+  refresh(opt_silent) {
     var table = this._listElement
+    if (!table) return;
     table.innerHTML = ''
     var margin = this.get('margin')
     var width = this.get('size')[0] + 2 * margin
@@ -3810,21 +3849,12 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
     var ratio = ol.has.DEVICE_PIXEL_RATIO
-    // Calculate width
-    ctx.font = this._titleStyle.getFont()
-    var textWidth = this._measureText(ctx, this.getTitle('title')).width
-    this._items.forEach(function (r) {
-      if (r.get('feature') || r.get('typeGeom')) {
-        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
-        textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width)
-      } else {
-        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
-        textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width)
-      }
-    }.bind(this))
-    canvas.width = (textWidth + 2 * margin) * ratio
-    canvas.height = (this._items.getLength() + 1) * height * ratio
-    canvas.style.height = ((this._items.getLength() + 1) * height) + 'px'
+    // Canvas size
+    var w = Math.min(this.getWidth(), this.get('maxWidth') || Infinity);
+    var h = this.getHeight()
+    canvas.width = w * ratio
+    canvas.height = h * ratio
+    canvas.style.height = h + 'px'
     ctx.textBaseline = 'middle'
     ctx.fillStyle = ol.color.asString(this._textStyle.getFill().getColor())
     // Add Title
@@ -3842,47 +3872,148 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
       this._drawText(ctx, this.getTitle(), canvas.width / ratio / 2, height / 2)
     }
     // Add items
+    var offsetY = 0;
+    if (this.getTitle()) offsetY = height;
     this._items.forEach(function (r, i) {
-      var index = i + (this.getTitle() ? 1 : 0)
-      table.appendChild(r.getElement([width, height], function (b) {
-        this.dispatchEvent({
-          type: 'select',
-          index: i,
-          symbol: b,
-          item: r
-        })
-      }.bind(this)))
-      var item = r.getProperties()
-      ctx.textAlign = 'left'
-      if (item.feature || item.typeGeom) {
-        canvas = this.getLegendImage(item, canvas, index)
-        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
-        this._drawText(ctx, r.get('title'), width + margin, (i + 1.5) * height)
-      } else {
-        ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
-        if (/\bcenter\b/.test(item.className)) {
-          ctx.textAlign = 'center'
-          this._drawText(ctx, r.get('title'), canvas.width / ratio / 2, (i + 1.5) * height)
-        } else {
-          this._drawText(ctx, r.get('title'), margin, (i + 1.5) * height)
+      if (r instanceof ol.legend.Legend) {
+        if ((!r._layer || r._layer.getVisible()) && r.getCanvas().height) {
+          ctx.drawImage(r.getCanvas(), 0, offsetY * ratio)
+          var list = r._listElement.querySelectorAll('li')
+          for (var l=0; l<list.length; l++) {
+            var li = list[l].cloneNode();
+            li.innerHTML = list[l].innerHTML;
+            table.appendChild(li);
+          }
+          offsetY += r.getHeight();
         }
+      } else {
+        if (r instanceof ol.legend.Image) {
+          // Title
+          if (r.get('title')) {
+            table.appendChild(this._title.getElement([width, height], function (b) {
+              this.dispatchEvent({
+                type: 'select',
+                index: -1,
+                symbol: b,
+                item: this._title
+              })
+            }.bind(this)))
+            ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
+            if (/\bcenter\b/.test(r.get('className'))) {
+              ctx.textAlign = 'center'
+              this._drawText(ctx, r.get('title'), canvas.width / ratio / 2, offsetY + height / 2)
+            } else {
+              this._drawText(ctx, r.get('title'), margin, offsetY + height / 2)
+            }
+            offsetY += height;
+          }
+          // Image
+          var img = r.getImage()
+          ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
+          offsetY += r.getHeight();
+        } else {
+          var item = r.getProperties()
+          var h = item.height || height;
+          ctx.textAlign = 'left'
+          if (item.feature || item.typeGeom) {
+            canvas = this.getLegendImage(item, canvas, offsetY)
+            ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
+            this._drawText(ctx, r.get('title'), width + margin, offsetY + h / 2)
+          } else {
+            ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
+            if (/\bcenter\b/.test(item.className)) {
+              ctx.textAlign = 'center'
+              this._drawText(ctx, r.get('title'), canvas.width / ratio / 2, offsetY + h / 2)
+            } else {
+              this._drawText(ctx, r.get('title'), margin, offsetY + h / 2)
+            }
+          }
+          offsetY += h;
+        }
+        table.appendChild(r.getElement([width, height], function (b) {
+          this.dispatchEvent({
+            type: 'select',
+            index: i,
+            symbol: b,
+            item: r
+          })
+        }.bind(this)))
       }
     }.bind(this))
     // Done
-    this.dispatchEvent({
-      type: 'refresh',
-      width: width,
-      height: (this._items.length + 1) * height
+    if (!opt_silent) {
+      this.dispatchEvent({
+        type: 'refresh',
+        width: width,
+        height: (this._items.length + 1) * height
+      })
+    }
+  }
+  /** Calculate the legend height
+   * @return {number}
+   */
+  getHeight() {
+    // default item height
+    var margin = this.get('margin')
+    var hitem = this.get('lineHeight') || this.get('size')[1] + 2 * margin
+    var height = this.getTitle() ? hitem : 0;
+    this._items.forEach(function (r) {
+      if (r instanceof ol.legend.Legend) {
+        if (!r._layer || r._layer.getVisible()) {
+          height += r.getHeight()
+        }
+      } else if (r instanceof ol.legend.Image) {
+        if (r.get('title')) height += hitem; 
+        height += r.getHeight()
+      } else {
+        if (r.get('height')) height += r.get('height') + 2 * margin; 
+        else height += hitem
+      }
     })
+    return height
+  }
+  /** Calculate the legend height
+   * @return {number}
+   */
+  getWidth() {
+    var canvas = this.getCanvas()
+    var ctx = canvas.getContext('2d')
+    var margin = this.get('margin');
+    var width = this.get('size')[0] + 2 * margin
+    ctx.font = this._titleStyle.getFont()
+    var textWidth = this._measureText(ctx, this.getTitle('title')).width
+    this._items.forEach(function (r) {
+      if (r instanceof ol.legend.Legend) {
+        if (!r._layer || r._layer.getVisible()) {
+          textWidth = Math.max(textWidth, r.getWidth())
+        }
+      } else if (r instanceof ol.legend.Image) {
+        textWidth = Math.max(textWidth, r.getWidth())
+        if (r.get('title')) {
+          ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
+          textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width)
+        }
+      } else {
+        if (r.get('feature') || r.get('typeGeom')) {
+          ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
+          textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width + width)
+        } else {
+          ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
+          textWidth = Math.max(textWidth, this._measureText(ctx, r.get('title')).width)
+        }
+      }
+    }.bind(this))
+    return textWidth + 2 * margin
   }
   /** Get the image for a style 
    * @param {olLegendItemOptions} item 
-   * @param {Canvas|undefined} canvas a canvas to draw in, if none creat one
-   * @param {int|undefined} row row number to draw in canvas, default 0
+   * @param {Canvas|undefined} canvas a canvas to draw in, if none create one
+   * @param {int|undefined} offsetY Y offset to draw in canvas, default 0
    * @return {CanvasElement}
    */
-  getLegendImage(options, canvas, row) {
+  getLegendImage(options, canvas, offsetY) {
     options = options || {};
+    var size = this.get('size');
     return ol.legend.Legend.getLegendImage({
       className: options.className,
       feature: options.feature,
@@ -3890,13 +4021,106 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
       style: options.style || this._style,
       properties: options.properties,
       margin: options.margin || this.get('margin'),
-      size: options.size || this.get('size'),
+      size: [ options.width || size[0], options.height || size[1]],
       lineHeight: options.lineHeight || this.get('lineHeight'),
       onload: function() {
         // Force refresh
         this.refresh();
       }.bind(this)
-    }, canvas, row);
+    }, canvas, offsetY);
+  }
+}
+
+/** A class for legend image
+ * @constructor
+ * @fires changed
+ * @param {Object} options
+ *  @param {string} url
+ *  @param {string} [title]
+ *  @param {HTMLImageElement|HTMLCanvasElement} [img] an image to display
+ *  @param {string} [src] legend image url (if no img option)
+ *  @param {string} [className] 'center' to center the title
+ *  @param {number} [width] legend width, default use the image width
+ */
+ol.legend.Image = class ollegendImage extends ol.Object {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.set('width', options.width);
+    // The image
+    this._img = options.img || new Image()
+    this._img.onload = function () {
+      this.changed()
+    }.bind(this);
+    // Get source
+    if (!options.img) {
+      this._img.src = options.src;
+    }
+  }
+  /** Set the legend title
+   * @param {string} title
+   */
+  setTitle(title) {
+    this.set('title', title || '');
+    this.changed();
+  }
+  /** Set the item width
+   * @param {number} [width] legend width, default use the image width
+   */
+  setWidth(width) {
+    this.set('width', width || null);
+    this.changed();
+  }
+  /** Get image width
+   * @return {number}
+   */
+  getWidth() {
+    if (!this._img.naturalWidth) return 0;
+    return this.get('width') || this._img.naturalWidth
+  }
+  /** Get image height
+   * @return {number}
+   */
+  getHeight() {
+    if (!this._img.naturalWidth) return 0;
+    if (this.get('width')) {
+      return this.get('width') * this._img.naturalHeight / this._img.naturalWidth
+    }
+    return this._img.naturalHeight || 0
+  }
+  /** Get Image
+   * @returns {Image}
+   */
+  getImage() {
+    return this._img
+  }
+  /** Get element
+   * @param {ol.size} size symbol size
+   */
+  getElement(size, onclick) {
+    if (this.get('width')) size[1] = this.get('width');
+    if (this.get('height')) size[1] = this.get('height');
+    var element = ol.ext.element.create('LI', {
+      className: this.get('className'),
+      click: function (e) {
+        onclick(false);
+        e.stopPropagation();
+      },
+      style: { height: this.getHeight() + 'px' },
+      'aria-label': this.get('title')
+    });
+    ol.ext.element.create('DIV', {
+      click: function (e) {
+        onclick(true);
+        e.stopPropagation();
+      },
+      style: {
+        width: this.getWidth() + 'px',
+        height: this.getHeight() + 'px'
+      },
+      parent: element
+    });
+    return element;
   }
 }
 
@@ -3909,7 +4133,8 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
  *  @property {Object} properties a set of properties to use with a style function
  *  @property {ol.style.Style.styleLike} style a style or a style function to use to draw the legend symbol
  *  @property {ol.style.Text} textStyle a text style to draw the item title in the legend
- *  @property {ol.size|undefined} size
+ *  @property {number|undefined} width the symbol width, default use the default width
+ *  @property {number|undefined} height ths symbol height, default use the default height
  *  @property {number|undefined} margin
  */
 /** A class for legend items
@@ -3922,6 +4147,8 @@ ol.legend.Item = class ollegendItem extends ol.Object {
     options = options || {};
     super(options);
     if (options.feature) this.set('feature', options.feature.clone());
+    this.setWidth(options.width)
+    this.setHeight(options.height)
   }
   /** Set the legend title
    * @param {string} title
@@ -3930,10 +4157,26 @@ ol.legend.Item = class ollegendItem extends ol.Object {
     this.set('title', title || '');
     this.changed();
   }
+  /** Set the item width
+   * @param {number} [width]
+   */
+  setWidth(width) {
+    this.set('width', width || null);
+    this.changed();
+  }
+  /** Set the item heigth
+   * @param {number} [heigth]
+   */
+  setHeight(heigth) {
+    this.set('heigth', heigth || null);
+    this.changed();
+  }
   /** Get element
    * @param {ol.size} size symbol size
    */
   getElement(size, onclick) {
+    if (this.get('width')) size[1] = this.get('width');
+    if (this.get('height')) size[1] = this.get('height');
     var element = ol.ext.element.create('LI', {
       className: this.get('className'),
       click: function (e) {
@@ -5322,6 +5565,7 @@ ol.control.SearchPhoton = class olcontrolSearchPhoton extends ol.control.SearchJ
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
+ *	@param {string | undefined} [options.version] API version '2' to use geocodage-beta-2, default v1
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -5333,13 +5577,18 @@ ol.control.SearchPhoton = class olcontrolSearchPhoton extends ol.control.SearchJ
  *
  *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
  * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
+ * @see {@link https://geoservices.ign.fr/documentation/services/api-et-services-ogc/geocodage-beta-20/documentation-technique-de-lapi}
  */
 ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control.SearchJSON {
   constructor(options) {
     options = options || {};
     options.className = options.className || 'IGNF';
     options.typing = options.typing || 500;
-    options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
+    if (options.version == 1) {
+      options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
+    } else {
+      options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/geoportail/geocodage/rest/0.1/completion';
+    }
     options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
     super(options);
     this.set('type', options.type || 'StreetAddress,PositionOfInterest');
@@ -5361,64 +5610,105 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
     }, true, options);
     // Search type
     var type = this.get('type') === 'Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress';
-    if (/,/.test(type))
-      type = 'StreetAddress';
-    // request
-    var request = '<?xml version="1.0" encoding="UTF-8"?>'
-      + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
-      + ' <Request requestID="1" version="1.2" methodName="ReverseGeocodeRequest" maximumResponses="1" >'
-      + '  <ReverseGeocodeRequest>'
-      + '   <ReverseGeocodePreference>' + type + '</ReverseGeocodePreference>'
-      + '   <Position>'
-      + '    <gml:Point><gml:pos>' + lonlat[1] + ' ' + lonlat[0] + '</gml:pos></gml:Point>'
-      + '   </Position>'
-      + '  </ReverseGeocodeRequest>'
-      + ' </Request>'
-      + '</XLS>';
-    this.ajax(this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
-      { xls: request },
-      function (xml) {
-        var f = {};
-        if (!xml) {
-          f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) };
-        } else {
-          xml = xml.replace(/\n|\r/g, '');
-          var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
-          if (!Number(p[1]) && !Number(p[0])) {
+    if (/,/.test(type)) type = 'StreetAddress';
+    // Search url
+    var url = this.get('url').replace('ols/apis/completion', 'geoportail/ols').replace('completion', 'reverse');
+    if (/ols/.test(url)) {
+      // request
+      var request = '<?xml version="1.0" encoding="UTF-8"?>'
+        + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+        + ' <Request requestID="1" version="1.2" methodName="ReverseGeocodeRequest" maximumResponses="1" >'
+        + '  <ReverseGeocodeRequest>'
+        + '   <ReverseGeocodePreference>' + type + '</ReverseGeocodePreference>'
+        + '   <Position>'
+        + '    <gml:Point><gml:pos>' + lonlat[1] + ' ' + lonlat[0] + '</gml:pos></gml:Point>'
+        + '   </Position>'
+        + '  </ReverseGeocodeRequest>'
+        + ' </Request>'
+        + '</XLS>';
+      this.ajax(url,
+        { xls: request },
+        function (xml) {
+          var f = {};
+          if (!xml) {
             f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) };
           } else {
-            f.x = lonlat[0];
-            f.y = lonlat[1];
-            f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
-            f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
-            f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
-            if (/<Street>/.test(xml)) {
-              f.kind = '';
-              f.country = 'StreetAddress';
-              f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
-              var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
-              f.fulltext = number + ' ' + f.street + ', ' + f.zipcode + ' ' + f.city;
+            xml = xml.replace(/\n|\r/g, '');
+            var p = (xml.replace(/.*<gml:pos>(.*)<\/gml:pos>.*/, "$1")).split(' ');
+            if (!Number(p[1]) && !Number(p[0])) {
+              f = { x: lonlat[0], y: lonlat[1], fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) };
             } else {
-              f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
-              f.country = 'PositionOfInterest';
-              f.street = '';
-              f.fulltext = f.zipcode + ' ' + f.city;
+              f.x = lonlat[0];
+              f.y = lonlat[1];
+              f.city = (xml.replace(/.*<Place type="Municipality">([^<]*)<\/Place>.*/, "$1"));
+              f.insee = (xml.replace(/.*<Place type="INSEE">([^<]*)<\/Place>.*/, "$1"));
+              f.zipcode = (xml.replace(/.*<PostalCode>([^<]*)<\/PostalCode>.*/, "$1"));
+              if (/<Street>/.test(xml)) {
+                f.kind = '';
+                f.country = 'StreetAddress';
+                f.street = (xml.replace(/.*<Street>([^<]*)<\/Street>.*/, "$1"));
+                var number = (xml.replace(/.*<Building number="([^"]*).*/, "$1"));
+                f.fulltext = number + ' ' + f.street + ', ' + f.zipcode + ' ' + f.city;
+              } else {
+                f.kind = (xml.replace(/.*<Place type="Nature">([^<]*)<\/Place>.*/, "$1"));
+                f.country = 'PositionOfInterest';
+                f.street = '';
+                f.fulltext = f.zipcode + ' ' + f.city;
+              }
             }
           }
+          if (typeof (options) === 'function') {
+            options.call(this, [f]);
+          } else {
+            this.getHistory().shift();
+            this._handleSelect(f, true, options);
+            // this.setInput('', true);
+            // this.drawList_();
+          }
+        }.bind(this), {
+        timeout: this.get('timeout'),
+        dataType: 'XML'
+      });
+    } else {
+      this.ajax(url + '?lon='+lonlat[0] + '&lat=' + lonlat[1], 
+        {}, 
+        function(resp) {
+          var f;
+          try {
+            resp = JSON.parse(resp).features[0];
+            f = resp.properties;
+            // lonlat
+            f.x = resp.geometry.coordinates[0];
+            f.y = resp.geometry.coordinates[1];
+            f.click = lonlat;
+            // Fulltext
+            if (f.name) {
+              f.fulltext = f.name + ', ' + f.postcode + ' ' + f.city;
+            } else {
+              f.fulltext = f.postcode + ' ' + f.city;
+            }
+          } catch(e) {
+            f = { 
+              x: lonlat[0], 
+              y: lonlat[1], 
+              lonlat: lonlat,
+              fulltext: lonlat[0].toFixed(6) + ',' + lonlat[1].toFixed(6) 
+            };
+          }
+          if (typeof (options) === 'function') {
+            options.call(this, [f]);
+          } else {
+            this.getHistory().shift();
+            this._handleSelect(f, true, options);
+            // this.setInput('', true);
+            // this.drawList_();
+          }
+        }.bind(this), {
+          timeout: this.get('timeout'),
+          dataType: 'XML'
         }
-        if (typeof (options) === 'function') {
-          options.call(this, [f]);
-        } else {
-          this.getHistory().shift();
-          this._handleSelect(f, true, options);
-          // this.setInput('', true);
-          // this.drawList_();
-        }
-      }.bind(this), {
-      timeout: this.get('timeout'),
-      dataType: 'XML'
+      );
     }
-    );
   }
   /** Returns the text to be displayed in the menu
    *	@param {ol.Feature} f the feature
@@ -5490,50 +5780,72 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
    * @param {string} s le nom de la commune
    */
   searchCommune(f, cback) {
-    var request = '<?xml version="1.0" encoding="UTF-8"?>'
-      + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
-      + '<RequestHeader/>'
-      + '<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
-      + '<GeocodeRequest returnFreeForm="false">'
-      + '<Address countryCode="PositionOfInterest">'
-      + '<freeFormAddress>' + f.zipcode + ' ' + f.city + '+</freeFormAddress>'
-      + '</Address>'
-      + '</GeocodeRequest>'
-      + '</Request>'
-      + '</XLS>';
-    // Search 
-    this.ajax(this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
-      { 'xls': request },
-      function (xml) {
-        if (xml) {
-          // XML to JSON
-          var parser = new DOMParser();
-          var xmlDoc = parser.parseFromString(xml, "text/xml");
-          var com = xmlDoc.getElementsByTagName('GeocodedAddress')[0];
-          var coord = com.getElementsByTagName('gml:Point')[0].textContent.trim().split(' ');
-          f.x = Number(coord[1]);
-          f.y = Number(coord[0]);
-          var place = com.getElementsByTagName('Place');
-          for (var i = 0; i < place.length; i++) {
-            switch (place[i].attributes.type.value) {
-              case 'Nature':
-                f.kind = place[i].textContent;
-                break;
-              case 'INSEE':
-                f.insee = place[i].textContent;
-                break;
+    // Search url
+    var url = this.get('url').replace('ols/apis/completion', 'geoportail/ols').replace('completion', 'reverse');
+    if (/ols/.test(url)) {
+      var request = '<?xml version="1.0" encoding="UTF-8"?>'
+        + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+        + '<RequestHeader/>'
+        + '<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
+        + '<GeocodeRequest returnFreeForm="false">'
+        + '<Address countryCode="PositionOfInterest">'
+        + '<freeFormAddress>' + f.zipcode + ' ' + f.city + '+</freeFormAddress>'
+        + '</Address>'
+        + '</GeocodeRequest>'
+        + '</Request>'
+        + '</XLS>';
+      // Search 
+      this.ajax(this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
+        { 'xls': request },
+        function (xml) {
+          if (xml) {
+            // XML to JSON
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(xml, "text/xml");
+            var com = xmlDoc.getElementsByTagName('GeocodedAddress')[0];
+            var coord = com.getElementsByTagName('gml:Point')[0].textContent.trim().split(' ');
+            f.x = Number(coord[1]);
+            f.y = Number(coord[0]);
+            var place = com.getElementsByTagName('Place');
+            for (var i = 0; i < place.length; i++) {
+              switch (place[i].attributes.type.value) {
+                case 'Nature':
+                  f.kind = place[i].textContent;
+                  break;
+                case 'INSEE':
+                  f.insee = place[i].textContent;
+                  break;
+              }
+            }
+            if (f.x || f.y) {
+              if (cback)
+                cback.call(this, [f]);
+              else
+                this._handleSelect(f);
             }
           }
-          if (f.x || f.y) {
-            if (cback)
+        }.bind(this),
+        { dataType: 'XML' }
+      );
+    } else {
+      this.ajax(url + '?lon=' + f.x + '&lat=' + f.y + '&limit=1', 
+        {},
+        function (resp) {
+          try {
+            var r = JSON.parse(resp).features[0];
+            f.insee = r.properties.citycode
+            if (cback) {
               cback.call(this, [f]);
-            else
+            } else {
               this._handleSelect(f);
-          }
+            }
+          } catch(e) { /* ok */ }
+        }.bind(this), {
+          timeout: this.get('timeout'),
+          dataType: 'XML'
         }
-      }.bind(this),
-      { dataType: 'XML' }
-    );
+      )
+    } 
   }
 }
 
@@ -5777,7 +6089,7 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
       if (hp > h - dh) {
         // Bug IE: need to have an height defined
         ol.ext.element.setStyle(this.element, { height: '100%' })
-        var li = this.panel_.querySelectorAll('li.visible .li-content')[0]
+        var li = this.panel_.querySelectorAll('li.ol-visible .li-content')[0]
         var lh = li ? 2 * ol.ext.element.getStyle(li, 'height') : 0
         switch (dir) {
           case 1: top += lh; break
@@ -5851,8 +6163,9 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
    */
   setLayerOpacity(layer, li) {
     var i = li.querySelector('.layerswitcher-opacity-cursor')
-    if (i)
+    if (i){
       i.style.left = (layer.getOpacity() * 100) + "%"
+    }
     this.dispatchEvent({ type: 'layer:opacity', layer: layer })
   }
   /** Set visibility for a layer
@@ -5862,12 +6175,14 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
    */
   setLayerVisibility(layer, li) {
     var i = li.querySelector('.ol-visibility')
-    if (i)
+    if (i) {
       i.checked = layer.getVisible()
-    if (layer.getVisible())
+    }
+    if (layer.getVisible()){
       li.classList.add('ol-visible')
-    else
+    } else{
       li.classList.remove('ol-visible')
+    }
     this.dispatchEvent({ type: 'layer:visible', layer: layer })
   }
   /** Clear layers associated with li
@@ -5888,8 +6203,9 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
    */
   _getLayerForLI(li) {
     for (var i = 0, l; l = this._layers[i]; i++) {
-      if (l.li === li)
+      if (l.li === li) {
         return l.layer
+      }
     }
     return null
   }
@@ -5901,10 +6217,11 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
     this.panel_.querySelectorAll('li').forEach(function (li) {
       var l = this._getLayerForLI(li)
       if (l) {
-        if (this.testLayerVisibility(l))
+        if (this.testLayerVisibility(l)) {
           li.classList.remove('ol-layer-hidden')
-        else
+        } else {
           li.classList.add('ol-layer-hidden')
+        }
       }
     }.bind(this))
   }
@@ -5929,8 +6246,9 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
    * @private
    */
   drawPanel_() {
-    if (--this.dcount || this.dragging_)
+    if (--this.dcount || this.dragging_) {
       return
+    }
     var scrollTop = this.panelContainer_.scrollTop
     // Remove existing layers
     this._clearLayerForLI()
@@ -5939,10 +6257,11 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
         li.remove()
     }.bind(this))
     // Draw list
-    if (this._layerGroup)
+    if (this._layerGroup) {
       this.drawList(this.panel_, this._layerGroup.getLayers())
-    else if (this.getMap())
+    } else if (this.getMap()) {
       this.drawList(this.panel_, this.getMap().getLayers())
+    }
     // Reset scrolltop
     this.panelContainer_.scrollTop = scrollTop
   }
@@ -5955,11 +6274,13 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
     if (!l.get('baseLayer')) {
       l.setVisible(!l.getVisible())
     } else {
-      if (!l.getVisible())
+      if (!l.getVisible()) {
         l.setVisible(true)
+      }
       layers.forEach(function (li) {
-        if (l !== li && li.get('baseLayer') && li.getVisible())
+        if (l !== li && li.get('baseLayer') && li.getVisible()) {
           li.setVisible(false)
+        }
       })
     }
   }
@@ -6212,10 +6533,11 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
       e.stopPropagation()
       e.preventDefault()
       var l = self._getLayerForLI(this.parentNode.parentNode)
-      if (self.onextent)
+      if (self.onextent) {
         self.onextent(l)
-      else
+      } else {
         self.getMap().getView().fit(l.getExtent(), self.getMap().getSize())
+      }
       self.dispatchEvent({ type: "extent", layer: l })
     }
     // Remove a layer on trash click
@@ -6243,7 +6565,7 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
         return
       }
       var li = ol.ext.element.create('LI', {
-        className: (layer.getVisible() ? "visible " : " ") + (layer.get('baseLayer') ? "baselayer" : ""),
+        className: (layer.getVisible() ? "ol-visible " : " ") + (layer.get('baseLayer') ? "baselayer" : ""),
         parent: ul
       })
       this._setLayerForLI(li, layer)
@@ -6507,6 +6829,8 @@ ol.control.LayerSwitcher.prototype.tip = {
  * Control bars can be nested and combined with ol.control.Toggle to handle activate/deactivate.
  * @class
  * @constructor
+ * @fires control:active
+ * @fires control:add
  * @extends ol.control.Control
  * @param {Object=} options Control options.
  *  @param {String} options.className class of the control
@@ -6672,6 +6996,11 @@ ol.control.Bar = class olcontrolBar extends ol.control.Control {
         }
       }
     }
+    if (e.type) {
+      this.dispatchEvent({ type: 'control:active', control: ctrl, active: e.active })
+    } else {
+      this.dispatchEvent({ type: 'control:add', control: ctrl, active: e.active })
+    }
   }
   /**
    * @param {string} name of the control to search
@@ -6822,6 +7151,7 @@ ol.control.CanvasAttribution = class olcontrolCanvasAttribution extends ol.contr
     ctx.textAlign = textAlign
     ctx.textBaseline = 'middle'
     ctx.font = this.font_
+    ctx.lineJoin = 'round';
     ctx.strokeText(text, left, h / 2)
     ctx.fillText(text, left, h / 2)
     ctx.closePath()
@@ -6935,9 +7265,10 @@ ol.control.CanvasScaleLine = class olcontrolCanvasScaleLine extends ol.control.S
     ctx.strokeStyle = this.fontStrokeStyle_
     ctx.fillStyle = this.fontFillStyle_
     ctx.lineWidth = this.fontStrokeWidth_
-    ctx.textAlign = "center"
-    ctx.textBaseline = "bottom"
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'bottom'
     ctx.font = this.font_
+    ctx.lineJoin = 'round';
     ctx.strokeText(text, position.left + scalewidth / 2, position.top)
     ctx.fillText(text, position.left + scalewidth / 2, position.top)
     ctx.closePath()
@@ -6947,10 +7278,8 @@ ol.control.CanvasScaleLine = class olcontrolCanvasScaleLine extends ol.control.S
     ctx.strokeStyle = this.strokeStyle_
     var max = 4
     var n = parseInt(text)
-    while (n % 10 === 0)
-      n /= 10
-    if (n % 5 === 0)
-      max = 5
+    while (n % 10 === 0) n /= 10
+    if (n % 5 === 0) max = 5
     for (var i = 0; i < max; i++) {
       ctx.beginPath()
       ctx.fillStyle = i % 2 ? this.fillStyle_ : this.strokeStyle_
@@ -7089,8 +7418,8 @@ ol.control.CanvasTitle = class olcontrolCanvasTitle extends ol.control.CanvasBas
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = this.getTextFont();
-    if (ctx.lineWidth)
-      ctx.strokeText(this.getTitle(), left, h / 2);
+    ctx.lineJoin = 'round';
+    if (ctx.lineWidth) ctx.strokeText(this.getTitle(), left, h / 2);
     ctx.fillText(this.getTitle(), left, h / 2);
     ctx.closePath();
     ctx.restore();
@@ -7210,8 +7539,8 @@ ol.control.CenterPosition = class olcontrolCenterPosition extends ol.control.Can
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.font = this.getTextFont()
-    if (ctx.lineWidth)
-      ctx.strokeText(coord, w / 2, h / 2)
+    ctx.lineJoin = 'round';
+    if (ctx.lineWidth) ctx.strokeText(coord, w / 2, h / 2)
     ctx.fillText(coord, w / 2, h / 2)
     ctx.closePath()
     ctx.restore()
@@ -9685,14 +10014,13 @@ ol.control.Imageline = class olcontrolImageline extends ol.control.Control {
         // On click > dispatch event
         img.addEventListener('click', function () {
           if (!this._moving) {
-            this.dispatchEvent({ type: 'select', feature: f });
             this._scrolldiv.scrollLeft = img.offsetLeft
-              + ol.ext.element.getStyle(img, 'width') / 2
-              - ol.ext.element.getStyle(this.element, 'width') / 2;
-            if (this._select)
-              this._select.elt.classList.remove('select');
+            + ol.ext.element.getStyle(img, 'width') / 2
+            - ol.ext.element.getStyle(this.element, 'width') / 2;
+            if (this._select) this._select.elt.classList.remove('select');
             this._select = sel;
-            this._select.elt.classList.add('select');
+            if (this._select) this._select.elt.classList.add('select');
+            this.dispatchEvent({ type: 'select', feature: f });
           }
         }.bind(this));
         // Show link
@@ -10349,10 +10677,12 @@ ol.control.Legend = class olcontrolLegend extends ol.control.CanvasBase {
     // The legend
     this._legend = options.legend;
     this._legend.getCanvas().className = 'ol-legendImg';
+    // Legend element
     element.appendChild(this._legend.getCanvas());
     element.appendChild(this._legend.getListElement());
-    if (options.collapsible !== false && options.collapsed === false)
+    if (options.collapsible !== false && options.collapsed === false) {
       this.show();
+    }
     this._legend.on('select', function (e) {
       this.dispatchEvent(e);
     }.bind(this));
@@ -11658,10 +11988,9 @@ ol.control.Print = class olcontrolPrint extends ol.control.Control {
           if (c.parentNode.style.opacity === '0')
             return;
           ctx.globalAlpha = parseFloat(c.parentNode.style.opacity) || 1;
-          // Blend mode ?
-          if (ol.ext.element.getStyle(c.parentNode, 'mix-blend-mode') === 'multiply') {
-            ctx.globalCompositeOperation = 'multiply';
-          }
+          // Blend mode & filter
+          ctx.globalCompositeOperation = ol.ext.element.getStyle(c.parentNode, 'mix-blend-mode');
+          ctx.filter = ol.ext.element.getStyle(c.parentNode, 'filter');
           // transform
           var tr = ol.ext.element.getStyle(c, 'transform') || ol.ext.element.getStyle(c, '-webkit-transform');
           if (/^matrix/.test(tr)) {
@@ -11699,7 +12028,6 @@ ol.control.Print = class olcontrolPrint extends ol.control.Control {
     }
   }
   /** Print the map
-   * @param {function} cback a callback function that take a string containing the requested data URI.
    * @param {Object} options
    *	@param {string} options.imageType A string indicating the image format, default the control one
    *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
@@ -12130,7 +12458,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
         return
       }
       ol.ext.element.create('OPTION', {
-        html: format.title,
+        html: this.i18n(format.title),
         value: i,
         parent: save
       })
@@ -12220,7 +12548,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
     })
     this.formats.forEach(function (format, i) {
       ol.ext.element.create('OPTION', {
-        html: format.title,
+        html: this.i18n(format.title),
         value: i,
         parent: saveLegend
       })
@@ -14327,6 +14655,7 @@ ol.control.SearchDFCI = class olcontrolSearchDFCI extends ol.control.Search {
  *	@param {string | undefined} options.property a property to display in the index, default 'name'.
  *	@param {function} options.getTitle a function that takes a feature and return the name to display in the index, default return the property 
  *	@param {function | undefined} options.getSearchString a function that take a feature and return a text to be used as search string, default geTitle() is used as search string
+ *	@param {function | undefined} options.sort a function to sort autocomplete list. Takes 2 features and return 0, -1 or 1.
  */
 ol.control.SearchFeature = class olcontrolSearchFeature extends ol.control.Search {
   constructor(options) {
@@ -14338,6 +14667,7 @@ ol.control.SearchFeature = class olcontrolSearchFeature extends ol.control.Searc
     }
     this.set('property', options.property || 'name');
     this.source_ = options.source;
+    this._sort = options.sort;
   }
   /** No history avaliable on features
    */
@@ -14368,26 +14698,32 @@ ol.control.SearchFeature = class olcontrolSearchFeature extends ol.control.Searc
     return this.getTitle(f);
   }
   /** Get the source
-  *	@return {ol.source.Vector}
-  *	@api
-  */
+   *	@return {ol.source.Vector}
+   *	@api
+   */
   getSource() {
     return this.source_;
   }
   /** Get the source
-  *	@param {ol.source.Vector} source
-  *	@api
-  */
+   *	@param {ol.source.Vector} source
+   *	@api
+   */
   setSource(source) {
     this.source_ = source;
   }
+  /** Set function to sort autocomplete results
+   * @param {function} sort a sort function that takes 2 features and returns 0, -1 or 1
+   */
+  setSortFunction(sort) {
+    this._sort = sort
+  }
   /** Autocomplete function
-  * @param {string} s search string
-  * @param {int} max max
-  * @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
-  * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
-  * @api
-  */
+   * @param {string} s search string
+   * @param {int} max max
+   * @param {function} cback a callback function that takes an array to display in the autocomplete field (for asynchronous search)
+   * @return {Array<any>|false} an array of search solutions or false if the array is send with the cback argument (asnchronous)
+   * @api
+   */
   autocomplete(s) {
     var result = [];
     if (this.source_) {
@@ -14405,6 +14741,9 @@ ol.control.SearchFeature = class olcontrolSearchFeature extends ol.control.Searc
             break;
         }
       }
+    }
+    if (typeof(this._sort) === 'function') {
+      result = result.sort(this._sort)
     }
     return result;
   }
@@ -14613,9 +14952,9 @@ ol.control.SearchGPS = class olcontrolSearchGPS extends ol.control.Search {
  */
 ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle extends ol.control.SearchGeoportail {
   constructor(options) {
-    options.type = "Commune";
+    options.type = 'Commune';
     options.className = (options.className ? options.className : "") + " IGNF-parcelle ol-collapsed-list ol-collapsed-num";
-    options.inputLabel = "Commune";
+    options.inputLabel = 'Commune';
     options.noCollapse = true;
     options.placeholder = options.placeholder || "Choisissez une commune...";
     super(options);
@@ -14697,7 +15036,7 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
    * @private
    */
   selectCommune(e) {
-    this._commune = e.search.insee;
+    this._commune = e.search.insee || e.sear;
     this._input.value = e.search.insee + ' - ' + e.search.fulltext;
     this.activateParcelle(true);
     this._inputParcelle.numero.focus();
@@ -14715,8 +15054,9 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
     this._inputParcelle.prefix.value = (p.Commune || '') + (p.CommuneAbsorbee || '');
     this._inputParcelle.section.value = p.Section || '';
     this._inputParcelle.numero.value = p.Numero || '';
-    if (search)
+    if (search) {
       this._triggerCustomEvent("keyup", this._inputParcelle.prefix);
+    }
   }
   /** Activate parcelle inputs
    * @param {bolean} b
@@ -14737,11 +15077,11 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
   autocompleteParcelle() {
     // Add 0 to fit the format
     function complete(s, n, c) {
-      if (!s)
-        return s;
-      c = c || "0";
-      while (s.length < n)
+      if (!s) return s;
+      c = c || '0';
+      while (s.length < n) {
         s = c + s;
+      }
       return s.replace(/\*/g, '_');
     }
     // The selected commune
@@ -14752,9 +15092,8 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
     }
     // Get parcelle number
     var section = complete(this._inputParcelle.section.value, 2);
-    var numero = complete(this._inputParcelle.numero.value, 4, "0");
-    var search = commune + (prefix || '___') + (section || "__") + (numero ? numero : section ? "____" : "0001");
-    this.searchParcelle(search,
+    var numero = complete(this._inputParcelle.numero.value, 4, '0');
+    this.searchParcelle(commune, prefix, section, numero,
       function (jsonResp) {
         this._listParcelle(jsonResp);
       }.bind(this),
@@ -14767,46 +15106,83 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
    * @param {function} success callback function called on success
    * @param {function} error callback function called on error
    */
-  searchParcelle(search, success /*, error */) {
-    // Request
-    var request = '<?xml version="1.0" encoding="UTF-8"?>'
-      + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
-      + '<RequestHeader/>'
-      + '<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
-      + '<GeocodeRequest returnFreeForm="false">'
-      + '<Address countryCode="CadastralParcel">'
-      + '<freeFormAddress>' + search + '+</freeFormAddress>'
-      + '</Address>'
-      + '</GeocodeRequest>'
-      + '</Request>'
-      + '</XLS>';
-    // Geocode
-    this.ajax(
-      this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
-      { xls: request },
-      function (xml) {
-        // XML to JSON
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(xml, "text/xml");
-        var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
-        var jsonResp = [];
-        for (var i = 0, parc; parc = parcelles[i]; i++) {
-          var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
-          var p = node.childNodes[0].nodeValue.split(' ');
-          var att = parc.getElementsByTagName('Place');
-          var json = {
-            lon: Number(p[1]),
-            lat: Number(p[0])
-          };
-          for (var k = 0, a; a = att[k]; k++) {
-            json[a.attributes.type.value] = a.childNodes[0].nodeValue;
+  searchParcelle(commune, prefix, section, numero, success /*, error */) {
+    // Search url
+    var url = this.get('url').replace('ols/apis/completion', 'geoportail/ols').replace('completion', 'search');
+    // v2 ?
+    if (/ols/.test(url)) {
+      var search = commune + (prefix || '___') + (section || "__") + (numero ? numero : section ? "____" : "0001");
+      // Request
+      var request = '<?xml version="1.0" encoding="UTF-8"?>'
+        + '<XLS xmlns:xls="http://www.opengis.net/xls" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.opengis.net/xls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.2/olsAll.xsd">'
+        + '<RequestHeader/>'
+        + '<Request requestID="1" version="1.2" methodName="LocationUtilityService">'
+        + '<GeocodeRequest returnFreeForm="false">'
+        + '<Address countryCode="CadastralParcel">'
+        + '<freeFormAddress>' + search + '+</freeFormAddress>'
+        + '</Address>'
+        + '</GeocodeRequest>'
+        + '</Request>'
+        + '</XLS>';
+      // Geocode
+      this.ajax(
+        this.get('url').replace('ols/apis/completion', 'geoportail/ols'),
+        { xls: request },
+        function (xml) {
+          // XML to JSON
+          var parser = new DOMParser();
+          var xmlDoc = parser.parseFromString(xml, "text/xml");
+          var parcelles = xmlDoc.getElementsByTagName('GeocodedAddress');
+          var jsonResp = [];
+          for (var i = 0, parc; parc = parcelles[i]; i++) {
+            var node = parc.getElementsByTagName('gml:pos')[0] || parc.getElementsByTagName('pos')[0];
+            var p = node.childNodes[0].nodeValue.split(' ');
+            var att = parc.getElementsByTagName('Place');
+            var json = {
+              lon: Number(p[1]),
+              lat: Number(p[0])
+            };
+            for (var k = 0, a; a = att[k]; k++) {
+              json[a.attributes.type.value] = a.childNodes[0].nodeValue;
+            }
+            jsonResp.push(json);
           }
-          jsonResp.push(json);
+          console.log(jsonResp)
+          success(jsonResp);
+        },
+        { dataType: 'XML' }
+      );
+    } else {
+      this.ajax(url + '?index=parcel&q='
+        + '&departmentcode=' + commune.substr(0,2)
+        + '&municipalitycode=' + commune.substr(-3)
+        + (prefix ? '&oldmunicipalitycode=' + prefix.replace(/_/g, '0') : '')
+        + (section ? '&section=' + section : '')
+        + (numero ? '&number=' + numero : '')
+        + '&limit=20',
+        {},
+        function(resp) {
+          var jsonResp = [];
+          resp.features.forEach(function(f) {
+            var prop = f.properties;
+            jsonResp.push({
+              id: prop.id,
+              INSEE: prop.departmentcode + prop.municipalitycode,
+              Commune: prop.municipalitycode, 
+              Departement: prop.departmentcode, 
+              CommuneAbsorbee: prop.oldmunicipalitycode, 
+              Section: prop.section,
+              Numero: prop.number,
+              Municipality: prop.city,
+              Feuille: prop.sheet,
+              lon: f.geometry.coordinates[0],
+              lat: f.geometry.coordinates[1],
+            })
+          })
+          success(jsonResp);
         }
-        success(jsonResp);
-      },
-      { dataType: 'XML' }
-    );
+      )
+    }
   }
   /**
    * Draw the autocomplete list
@@ -15998,7 +16374,7 @@ ol.control.Status = class olcontrolStatus extends ol.control.Control {
  * @fires scrollto
  * @fires clickimage
  * @param {Object=} options Control options.
- *	@param {String} options.className class of the control
+ *	@param {String} options.className class of the control (scrollLine, scrollBox or any)
  *	@param {Element | string | undefined} [options.html] The storymap content
  *	@param {Element | string | undefined} [options.target] The target element to place the story. If no html is provided the content of the target will be used.
  *	@param {boolean} [options.minibar=false] add a mini scroll bar
@@ -16174,11 +16550,11 @@ ol.control.Storymap = class olcontrolStorymap extends ol.control.Control {
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} Control options.
- *  @param {ol.layer} options.layers layer to swipe
- *  @param {ol.layer} options.rightLayer layer to swipe on right side
+ *  @param {ol.layer|Array<ol.layer>} options.layers layers to swipe
+ *  @param {ol.layer|Array<ol.layer>} options.rightLayers layers to swipe on right side
  *  @param {string} options.className control class name
- *  @param {number} options.position position propertie of the swipe [0,1], default 0.5
- *  @param {string} options.orientation orientation propertie (vertical|horizontal), default vertical
+ *  @param {number} options.position position property of the swipe [0,1], default 0.5
+ *  @param {string} options.orientation orientation property (vertical|horizontal), default vertical
  */
 ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
   constructor(options) {
@@ -16577,11 +16953,10 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} Control options.
- *  @param {ol.layer} options.layers layer to swipe
- *  @param {ol.layer} options.rightLayer layer to swipe on right side
  *  @param {string} options.className control class name
- *  @param {number} options.position position propertie of the swipe [0,1], default 0.5
- *  @param {string} options.orientation orientation propertie (vertical|horizontal), default vertical
+ *  @param {number} options.position position property of the swipe [0,1], default 0.5
+ *  @param {string} options.orientation orientation property (vertical|horizontal), default vertical
+ *  @param {boolean} options.right true to position map on right side (resp. bottom for horizontal orientation), default false
  */
 ol.control.SwipeMap = class olcontrolSwipeMap extends ol.control.Control {
   constructor(options) {
@@ -17610,8 +17985,9 @@ ol.control.VideoRecorder = class olcontrolVideoRecorder extends ol.control.Contr
     var print = this._printCtrl
     var stop = false
     function capture(canvas) {
-      if (stop)
-        return
+      //  Stop recording
+      if (stop) return
+      // New frame
       print.fastPrint({
         canvas: canvas
       }, capture)
@@ -18671,6 +19047,17 @@ ol.control.WMTSCapabilities = class olcontrolWMTSCapabilities extends ol.control
   getTileGrid(tileMatrixSet, minZoom, maxZoom, tilePrefix) {
     return new ol.tilegrid.WMTS(this._getTG(tileMatrixSet, minZoom, maxZoom, tilePrefix));
   }
+  /** Check if the TileMatrixSet is supported
+   * @param {Object} tm
+   * @returns {boolean}
+   */
+  isSupportedSet(tm) {
+    return tm.TileMatrixSet === 'PM' 
+    || tm.TileMatrixSet === '3857' 
+    || tm.TileMatrixSet === 'EPSG:3857' 
+    || tm.TileMatrixSet === 'webmercator'
+    || tm.TileMatrixSet === 'GoogleMapsCompatible'
+  }
   /** Return a WMTS options for the given capabilities
    * @param {*} caps layer capabilities (read from the capabilities)
    * @param {*} parent capabilities
@@ -18678,17 +19065,16 @@ ol.control.WMTSCapabilities = class olcontrolWMTSCapabilities extends ol.control
    */
   getOptionsFromCap(caps, parent) {
     var bbox = caps.WGS84BoundingBox;
-    if (bbox)
-      bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
+    if (bbox) bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection());
     // Tilematrix zoom
     var minZoom = Infinity, maxZoom = -Infinity;
     var tmatrix;
     caps.TileMatrixSetLink.forEach(function (tm) {
-      if (tm.TileMatrixSet === 'PM' || tm.TileMatrixSet === 'EPSG:3857' || tm.TileMatrixSet === 'webmercator') {
+      if (this.isSupportedSet(tm)) {
         tmatrix = tm;
         caps.TileMatrixSet = tm.TileMatrixSet;
       }
-    });
+    }.bind(this));
     if (!tmatrix) {
       this.showError({ type: 'TileMatrix' });
       return;
@@ -20672,7 +21058,7 @@ ol.filter.Halftone = class olfilterHalftone extends ol.filter.Base {
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = ol.color.asString(this.get('color') || '#000');
     for (var x = 0; x < w2; x++)
-      for (var y = 0; y < h2; y++) {
+      for (var y = 0; y < h2; y++) if (data[x * 4 + 3 + y * w2 * 4]) {
         var pix;
         switch (this.get('channel')) {
           case 'r': pix = data[x * 4 + y * w2 * 4] / 2.55; break;
@@ -23549,10 +23935,9 @@ ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.Int
     this.formatConstructors_ = options.formatConstructors || [ol.format.GPX, ol.format.GeoJSONX, ol.format.GeoJSONP, ol.format.GeoJSON, ol.format.IGC, ol.format.KML, ol.format.TopoJSON]
     this.projection_ = options.projection
     this.accept_ = options.accept || ["gpx", "json", "geojsonx", "geojsonp", "geojson", "igc", "kml", "topojson"]
-    var self = this
     zone.addEventListener('drop', function (e) { 
-      return self.ondrop(e) 
-    })
+      return this.ondrop(e) 
+    }.bind(this))
   }
   /** Set the map
   */
@@ -23571,46 +23956,44 @@ ol.interaction.DropFile = class olinteractionDropFile extends ol.interaction.Int
   ondrop(e) {
     e.preventDefault()
     if (e.dataTransfer && e.dataTransfer.files.length) {
-      var self = this
       var projection = this.projection_ || (this.getMap() ? this.getMap().getView().getProjection() : null)
       // fetch FileList object
       var files = e.dataTransfer.files // e.originalEvent.target.files ?
       // process all File objects
-      var file
       var pat = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/
-      for (var i = 0; file = files[i]; i++) {
+      Array.prototype.forEach.call(files, function(file) {
         var ex = file.name.match(pat)[0]
         var isok = (this.accept_.indexOf(ex.toLocaleLowerCase()) >= 0)
-        self.dispatchEvent({ type: 'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, isok: isok })
+        this.dispatchEvent({ type: 'loadstart', file: file, filesize: file.size, filetype: file.type, fileextension: ex, projection: projection, isok: isok })
         // Don't load file
-        if (!this.formatConstructors_.length)
-          continue
-        // Load file
-        var reader = new FileReader()
-        var formatConstructors = this.formatConstructors_
-        var theFile = file
-        reader.onload = function (e) {
-          var result = e.target.result
-          var features = []
-          var i, ii
-          for (i = 0, ii = formatConstructors.length; i < ii; ++i) {
-            var formatConstructor = formatConstructors[i]
-            try {
-              var format = new formatConstructor()
-              features = format.readFeatures(result, { featureProjection: projection })
-              if (features && features.length > 0) {
-                self.dispatchEvent({ type: 'addfeatures', features: features, file: theFile, projection: projection })
-                self.dispatchEvent({ type: 'loadend', features: features, file: theFile, projection: projection })
-                return
-              }
-            } catch (e) { /* ok */ }
-          }
-          // Nothing match, try to load by yourself
-          self.dispatchEvent({ type: 'loadend', file: theFile, result: result })
+        if (this.formatConstructors_.length) {
+          // Load file
+          var reader = new FileReader()
+          var formatConstructors = this.formatConstructors_
+          var theFile = file
+          reader.onload = function (e) {
+            var result = e.target.result
+            var features = []
+            var i, ii
+            for (i = 0, ii = formatConstructors.length; i < ii; ++i) {
+              var formatConstructor = formatConstructors[i]
+              try {
+                var format = new formatConstructor()
+                features = format.readFeatures(result, { featureProjection: projection })
+                if (features && features.length > 0) {
+                  this.dispatchEvent({ type: 'addfeatures', features: features, file: theFile, projection: projection })
+                  this.dispatchEvent({ type: 'loadend', features: features, file: theFile, projection: projection })
+                  return
+                }
+              } catch (e) { /* ok */ }
+            }
+            // Nothing match, try to load by yourself
+            this.dispatchEvent({ type: 'loadend', file: theFile, result: result })
+          }.bind(this)
+          // Start loading
+          reader.readAsText(file)
         }
-        // Start loading
-        reader.readAsText(file)
-      }
+      }.bind(this))
     }
     return false
   }
@@ -27031,9 +27414,23 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
     this.added_ = []
     this.removed_ = []
     var c = feature.getGeometry().getCoordinates()
+    // Geom type
+    switch (feature.getGeometry().getType()) {
+      case 'Point': {
+        c = [c]; 
+        break;
+      }
+      case 'LineString': {
+        break;
+      }
+      default: {
+        c = []; 
+        break;
+      }
+    }
     var seg, split = []
     function intersect(f) {
-      if (f !== feature) {
+      if (f !== feature && f.getGeometry().splitAt) {
         var c2 = f.getGeometry().getCoordinates()
         for (var j = 0; j < c2.length - 1; j++) {
           var p = this.intersectSegs(seg, [c2[j], c2[j + 1]])
@@ -27048,6 +27445,24 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
         }
       }
       return false
+    }
+    // Split with a point
+    if (c.length === 1) {
+      seg = [c[0], c[0]]
+      var extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/)
+      this.source_.forEachFeatureIntersectingExtent(extent, function(f) {
+        if (f.getGeometry().splitAt) {
+          var g = f.getGeometry().splitAt(c[0], this.tolerance_)
+          if (g.length > 1) {
+            this.source_.removeFeature(f)
+            for (k = 0; k < g.length; k++) {
+              f2 = f.clone()
+              f2.setGeometry(g[k])
+              this.source_.addFeature(f2)
+            }
+          }
+        }
+      }.bind(this))
     }
     // Split existing features
     for (i = 0; i < c.length - 1; i++) {
@@ -28876,8 +29291,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
         for (i = 0, f; f = this.selection_.item(i); i++) {
           geometry = (viewRotation === 0 || !this.get('enableRotatedTransform')) ? this.geoms_[i].clone() : this.rotatedGeoms_[i].clone()
           geometry.applyTransform(function (g1, g2, dim) {
-            if (dim < 2)
-              return g2
+            if (dim < 2) return g2
             if (!keepRectangle) {
               for (j = 0; j < g1.length; j += dim) {
                 if (scx != 1)
@@ -28943,10 +29357,9 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
               }
             }
             // bug: ol, bad calculation circle geom extent
-            if (geometry.getType() == 'Circle')
-              geometry.setCenterAndRadius(geometry.getCenter(), geometry.getRadius())
+            if (geometry.getType() == 'Circle') geometry.setCenterAndRadius(geometry.getCenter(), geometry.getRadius())
             return g2
-          })
+          }.bind(this))
           if (this.get('enableRotatedTransform') && viewRotation !== 0) {
             //geometry.rotate(viewRotation, rotationCenter);
             geometry.rotate(viewRotation, this.getMap().getView().getCenter())
@@ -37560,7 +37973,310 @@ ol.geom.Polygon.prototype.scribbleFill = function (options) {
   mline.rotate(-angle,[0,0]);
 	return mline.cspline({ pointsPerSeg:8, tension:.9 });
 };
-// import('ol-ext/geom/Scribble')
+/** Calculate a MultiPolyline to fill a geomatry (Polygon or MultiPolygon) with a scribble effect that appears hand-made
+ * @param {ol.geom.Geometry} geom the geometry to scribble
+ * @param {Object} options
+ *  @param {Number} options.interval interval beetween lines
+ *  @param {Number} options.angle hatch angle in radian, default PI/2
+ * @return {ol.geom.Geometry} the resulting MultiLineString geometry or initial geometry
+ */
+ol.geom.scribbleFill = function(geom, options) {
+  switch (geom.getType()) {
+    case 'Polygon': {
+      return ol.geom.Polygon.prototype.scribbleFill.call(geom, options)
+    }
+    case 'MultiPolygon': {
+      return ol.geom.MultiPolygon.prototype.scribbleFill.call(geom, options)
+    }
+    default: return geom
+  }
+}
+
+// 
+/** An object to simplify geometry
+ * @extends {ol.Object}
+ * @param {Object=} options 
+ * @api
+ */
+ol.geom.Simplificator = class olgeomSimplificator extends ol.Object {
+  constructor(options) {
+    super(options);
+    this._edges = [];
+  }
+  /** Get source edge
+   */
+  getEdges() {
+    return this._edges;
+  }
+  /** Set the features to process
+   * @param {Array<ol.Feature>} features
+   * @param {number} [round] round features
+   */
+  setFeatures(features, round) {
+    console.time('arcs')
+    if (round) round = Math.pow(10, round);
+    var edges = this._calcEdges(features, round)
+    console.timeLog('arcs')
+    /* DEBUG * /
+    this._edges.clear(true);
+    var eds = []
+    edges.forEach(function(e) {
+      eds.push(e.feature);
+    })
+    this._edges.addFeatures(eds)
+    /**/
+    console.time('chain')
+    this._edges = this._chainEdges(edges);
+    console.timeLog('chain')
+    return this._edges
+  }
+  /** Get the simplified features
+   * @returns {Array<ol.Feature>}
+   */
+  getFeatures() {
+    var features = [];
+    this._edges.forEach(function(edge) {
+      edge.get('edge').forEach(function(ed) {
+        // Already inserted?
+        var f = features.find(function(e) {
+          return ed.feature === e.feature;
+        })
+        // New one
+        if (!f) {
+          f = {
+            feature: ed.feature,
+            contour: {}
+          }
+          features.push(f)
+        }
+        // add contour
+        if (!f.contour[ed.contour]) f.contour[ed.contour] = [];
+        f.contour[ed.contour].push({
+          edge: edge,
+          index: ed.index
+        })
+      })
+    })
+    // Recreate objects
+    features.forEach(function(f) {
+      f.typeGeom = f.feature.getGeometry().getType();
+      f.nom = f.feature.get('nom');
+      var g = [];
+      // console.log(f.contour)
+      for (var c in f.contour) {
+        var t = c.split('-');
+        t.shift();
+        var coordinates = g;
+        while (t.length) {
+          var i = parseInt(t.shift())
+          if (!coordinates[i]) {
+            coordinates[i] = [];
+          }
+          coordinates = coordinates[i];
+        }
+        // Join
+        f.contour[c].sort(function(a,b) { return a.index - b.index; });
+        f.contour[c].forEach(function(contour) {
+          var coord = contour.edge.getGeometry().getCoordinates();
+          if (!coordinates.length || ol.coordinate.equal(coordinates[coordinates.length-1], coord[0])) {
+            for (var i= coordinates.length ? 1 : 0; i<coord.length; i++) {
+              coordinates.push(coord[i]);
+            }
+          } else if (ol.coordinate.equal(coordinates[0], coord[0])) {
+            for (var i=1; i<coord.length; i++) {
+              coordinates.unshift(coord[i]);
+            }
+          } else if (ol.coordinate.equal(coordinates[0], coord[coord.length-1])) {
+            for (var i=coord.length-2; i>=0; i--) {
+              coordinates.unshift(coord[i]);
+            }
+          } else {
+            // revert
+            for (var i=coord.length-2; i>=0; i--) {
+              coordinates.push(coord[i]);
+            }
+          }
+          // console.log(c, coordinates.length, coord.length)
+        })
+      }
+      f.geom = g;
+      // console.log(g)
+      f.feature.getGeometry().setCoordinates(g);
+    })
+    //
+    return features;
+  }
+  /** Simplify edges using Visvalingam algorithm
+   * @param {Object} options
+   *  @param {string} options.algo
+   */
+  simplifyVisvalingam(options) {
+    this._edges.forEach(function(f) {
+      var gtype = f.get('edge')[0].feature.getGeometry().getType();
+      f.setGeometry(f.get('geom').simplifyVisvalingam({
+        area: options.area,
+        dist: options.dist,
+        ratio: options.ratio,
+        minPoints: options.minPoints,
+        keepEnds: /Polygon/.test(gtype) ? true : options.keepEnds
+      }))
+    })
+  }
+  /** Simplify edges using  Douglas Peucker algorithm
+   * @param {number} tolerance
+   */
+  simplify(tolerance) {
+    this._edges.forEach(function(f) {
+      f.setGeometry(f.get('geom').simplify(tolerance))
+    })
+  }
+  /** Calculate edges
+   * @param {Array<ol.Features>} features 
+   * @returns {Array<Object>}
+   * @private
+   */
+  _calcEdges(features, round) {
+    var edges = {};
+    var prev, prevEdge;
+    function createEdge(f, a, i) {
+      var id = a.seg[0] +'-'+ a.seg[1];
+      // Existing edge
+      var e = edges[id];
+      // Test revert
+      if (!e) {
+        id = a.seg[1] +'-'+ a.seg[0];
+        e = edges[id];
+      }
+      // Add or create a new one
+      if (e) {
+        e.edge.push({ feature: f, contour: a.contour, index: i })
+        prev = '';
+      } else {
+        var edge = {
+          geometry: a.seg,
+          edge: [{ feature: f, contour: a.contour, index: i }],
+          prev: prev === a.contour ? prevEdge : false
+        };
+        /* DEBUG * /
+        edge.feature = new ol.Feature({
+          geometry: new ol.geom.LineString(a.seg),
+          edge: edge.edge,
+          prev: edge.prev
+        })
+        /* */
+        prev = a.contour;
+        // For back chain
+        prevEdge = edge;
+        edges[id] = edge
+      }
+    }
+    // Get all edges
+    features.forEach(function(f) {
+      if (!/Point/.test(f.getGeometry().getType())) {
+        var arcs = this._getArcs(f.getGeometry().getCoordinates(), [], '0', round);
+        // Create edges for arcs
+        prev = '';
+        arcs.forEach(function (a, i) { createEdge(f, a, i) });
+      }
+    }.bind(this))
+    // Convert to Array
+    var tedges = [];
+    for (var i in edges) tedges.push(edges[i])
+    return tedges;
+  }
+  /** Retrieve edges of arcs
+   * @param {*} coords 
+   * @param {*} arcs 
+   * @param {*} contour 
+   * @returns 
+   * @private
+   */
+  _getArcs(coords, arcs, contour, round) {
+    // New contour
+    if (coords[0][0][0].length) {
+      coords.forEach(function(c, i) {
+        this._getArcs(c, arcs, contour + '-' + i, round)
+      }.bind(this))
+    } else {
+      coords.forEach(function(c, k) {
+        var p1, p0 = c[0];
+        // p0 = round ? [Math.round(c[0][0] * round) / round, Math.round(c[0][1] * round) / round] : c[0];
+        var ct = contour + '-' + k;
+        for (var i=1; i<c.length; i++) {
+          p1 = c[i];
+          // p1 = round ? [Math.round(c[i][0] * round) / round, Math.round(c[i][1] * round) / round] : c[i];
+          if (!ol.coordinate.equal(p0, p1)) {
+            arcs.push({ seg: [p0, p1], contour: ct });
+          }
+          p0 = p1;
+        }
+      });
+    }
+    return arcs
+  }
+  /** Chain edges backward
+   * @param {*} edges 
+   * @returns {Array<ol.Feature>}
+   */
+  _chainEdges(edges) {
+    // 2 edges are connected
+    function isConnected(edge1, edge2) {
+      if (edge1.length === edge2.length) {
+        var connected, e1, e2;
+        for (var i=0; i < edge1.length; i++) {
+          e1 = edge1[i]
+          connected = false;
+          for (var j=0; j < edge2.length; j++) {
+            e2 = edge2[j];
+            if (e1.feature === e2.feature && e1.contour === e2.contour) {
+              connected = true;
+              break;
+            }
+          }
+          if (!connected) return false;
+        }
+        return true
+      }
+      return false;
+    }
+    // Chain features back
+    function chainBack(f) {
+      if (f.del) return;
+      // Previous edge
+      var prev = f.prev;
+      if (!prev) return;
+      // Merge edges
+      if (isConnected(f.edge, prev.edge)) {
+        // Remove prev...
+        prev.del = true;
+        // ...and  merge with current
+        var g = prev.geometry;
+        var g1 = f.geometry;
+        g1.shift();
+        f.geometry = g.concat(g1);
+        f.prev = prev.prev;
+        // Chain
+        chainBack(f);
+      }
+    }
+    // Chain features back
+    edges.forEach(chainBack)
+    // New arcs features
+    var result = [];
+    edges.forEach(function(f) { 
+      if (!f.del) {
+        result.push(new ol.Feature({
+          geometry: new ol.geom.LineString(f.geometry),
+          geom: new ol.geom.LineString(f.geometry),
+          edge: f.edge,
+          prev: f.prev
+        }));
+      }
+    })
+    return result;
+  }
+}
+
 /** Geohash encoding/decoding and associated functions
  * (c) Chris Veness 2014-2019 / MIT Licence
  * https://github.com/chrisveness/latlon-geohash
@@ -37857,6 +38573,168 @@ ol.sphere.setMapScale = function (map, scale, dpi) {
     return fac;
   }
 };
+
+(function () {
+/**
+ * Visvalingam polyline simplification algorithm, adapted from http://bost.ocks.org/mike/simplify/simplify.js
+ * This uses the [Visvalingam–Whyatt](https://en.wikipedia.org/wiki/Visvalingam%E2%80%93Whyatt_algorithm) algorithm.
+ * @param {Object} options
+ *  @param {number} [area] the tolerance area for simplification
+ *  @param {number} [dist] a tolerance distance for simplification
+ *  @param {number} [ratio=.8] a ratio of points to keep
+ *  @param {number} [minPoints=2] minimum number of points to keep
+ *  @param {boolean} [keepEnds] keep line ends
+ * @return { LineString } A new, simplified version of the original geometry.
+ * @api
+ */
+ol.geom.LineString.prototype.simplifyVisvalingam = function (options) {
+  var points = this.getCoordinates();
+  if (options.minPoints && options.minPoints >= points.length) {
+    return new ol.geom.LineString(points);
+  }
+  var heap = minHeap(),
+      maxArea = 0,
+      triangle,
+      triangles = [];
+  points = points.map(function (d) { return d.slice(0,2); });
+  for (var i = 1, n = points.length - 1; i < n; ++i) {
+    triangle = points.slice(i - 1, i + 2);
+    if (triangle[1][2] = area(triangle)) {
+      triangles.push(triangle);
+      heap.push(triangle);
+    }
+  }
+  for (i = 0, n = triangles.length; i < n; ++i) {
+    triangle = triangles[i];
+    triangle.previous = triangles[i - 1];
+    triangle.next = triangles[i + 1];
+  }
+  while (triangle = heap.pop()) {
+    // If the area of the current point is less than that of the previous point
+    // to be eliminated, use the latters area instead. This ensures that the
+    // current point cannot be eliminated without eliminating previously-
+    // eliminated points.
+    if (triangle[1][2] < maxArea) triangle[1][2] = maxArea;
+    else maxArea = triangle[1][2];
+    if (triangle.previous) {
+      triangle.previous.next = triangle.next;
+      triangle.previous[2] = triangle[2];
+      update(triangle.previous);
+    } else {
+      triangle[0][2] = triangle[1][2];
+    }
+    if (triangle.next) {
+      triangle.next.previous = triangle.previous;
+      triangle.next[0] = triangle[0];
+      update(triangle.next);
+    } else {
+      triangle[2][2] = triangle[1][2];
+    }
+  }
+  function update(triangle) {
+    heap.remove(triangle);
+    triangle[1][2] = area(triangle);
+    heap.push(triangle);
+  }
+  // Get area to remove
+  var w = options.area;
+  if (options.dist) w = options.dist * options.dist / 2;
+  // If no area
+  if (w === undefined || options.minPoints) {
+    // Get ordered weights 
+    var weights = points.map(function (d) { return d.length < 3 ? Infinity : d[2] += Math.random(); /* break ties */ });
+    weights.sort(function (a, b) {
+      return b - a;
+    });
+    if (w) {
+      // Check min points
+      if (weights[options.minPoints] < w) {
+        w = weights[options.minPoints]
+      }
+    } else {
+      var pointsToKeep = options.minPoints;
+      // Calculate ratio
+      if (!pointsToKeep) {
+        var ratio = options.ratio || .8
+        pointsToKeep = Math.round(points.length * ratio);
+      }
+      pointsToKeep = Math.min(pointsToKeep, weights.length -1);
+      w = weights[pointsToKeep]
+    }
+  }
+  var result = points.filter(function (d) {
+    return d[2] > w;
+  });
+  if (options.keepEnds) {
+    if (!ol.coordinate.equal(result[0], points[0])) result.unshift(points[0]);
+    if (!ol.coordinate.equal(result[result.length-1], points[points.length-1])) result.push(points[points.length-1]);
+  }
+  return new ol.geom.LineString(result);
+};
+function compare(a, b) {
+  return a[1][2] - b[1][2];
+}
+function area(t) {
+  return Math.abs((t[0][0] - t[2][0]) * (t[1][1] - t[0][1]) - (t[0][0] - t[1][0]) * (t[2][1] - t[0][1]));
+}
+function minHeap() {
+  var heap = {},
+      array = [];
+  heap.push = function() {
+    for (var i = 0, n = arguments.length; i < n; ++i) {
+      var object = arguments[i];
+      up(object.index = array.push(object) - 1);
+    }
+    return array.length;
+  };
+  heap.pop = function() {
+    var removed = array[0],
+        object = array.pop();
+    if (array.length) {
+      array[object.index = 0] = object;
+      down(0);
+    }
+    return removed;
+  };
+  heap.size = function () {
+    return array.length;
+  };
+  heap.remove = function(removed) {
+    var i = removed.index,
+        object = array.pop();
+    if (i !== array.length) {
+      array[object.index = i] = object;
+      (compare(object, removed) < 0 ? up : down)(i);
+    }
+    return i;
+  };
+  function up(i) {
+    var object = array[i];
+    while (i > 0) {
+      var up = ((i + 1) >> 1) - 1,
+          parent = array[up];
+      if (compare(object, parent) >= 0) break;
+      array[parent.index = i] = parent;
+      array[object.index = i = up] = object;
+    }
+  }
+  function down(i) {
+    var object = array[i];
+    for (;;) {
+      var right = (i + 1) * 2,
+          left = right - 1,
+          down = i,
+          child = array[down];
+      if (left < array.length && compare(array[left], child) < 0) child = array[down = left];
+      if (right < array.length && compare(array[right], child) < 0) child = array[down = right];
+      if (down === i) break;
+      array[child.index = i] = child;
+      array[object.index = i = down] = object;
+    }
+  }
+  return heap;
+}
+})();
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -39909,16 +40787,18 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
       this.getImage();
   }
   /** Static function : add new font defs
-   * @param {String|Object} font the font desciption
-   * @param {} glyphs a key / value list of glyph definitions.
+   * @param {String|Object} font the font name or a description ({ font: font_name, name: font_name, copyright: '', prefix })
+   * @param {Object} glyphs a key / value list of glyph definitions.
    * 		Each key is the name of the glyph,
    * 		the value is an object that code the font, the caracter code,
    * 		the name and a search string for the glyph.
+   *    { char: the char, code: the char code (if no char), theme: a theme for search puposes, name: the symbol name, search: a search string (separated with ',') }
    */
   static addDefs(font, glyphs) {
     var thefont = font;
-    if (typeof (font) == 'string')
+    if (typeof (font) == 'string') {
       thefont = { font: font, name: font, copyright: '' };
+    }
     if (!thefont.font || typeof (thefont.font) !== 'string') {
       console.log('bad font def');
       return;
@@ -39927,9 +40807,10 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
     ol.style.FontSymbol.defs.fonts[fontname] = thefont;
     for (var i in glyphs) {
       var g = glyphs[i];
-      if (typeof (g) === 'string' && g.length == 1)
+      if (typeof (g) === 'string' && (g.length == 1 || g.length == 2)) {
         g = { char: g };
-        ol.style.FontSymbol.defs.glyphs[i] = {
+      }
+      ol.style.FontSymbol.defs.glyphs[i] = {
         font: thefont.font,
         char: g.char || '' + String.fromCharCode(g.code) || '',
         theme: g.theme || thefont.name,
@@ -40286,6 +41167,7 @@ ol.style.Image.prototype.getImagePNG = function(ratio) {
  * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
  * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
  *  @param {function} [options.onload] callback when image is loaded (to redraw the layer)
+ *  @param {function} [options.onerror] callback when image is on error (not loaded)
  * @extends {ol.style.RegularShape}
  * @implements {ol.structs.IHasChecksum}
  * @api
@@ -40342,6 +41224,7 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
     this._src = options.src
     this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0]
     this._onload = options.onload
+    this._onerror = options.onerror
     if (typeof (options.opacity) == 'number')
       this.setOpacity(options.opacity)
     if (typeof (options.rotation) == 'number')
@@ -40448,10 +41331,11 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
    * @api
    */
   getImage(pixelratio) {
-    pixelratio = pixelratio || 1
+    pixelratio = pixelratio || window.devicePixelRatio;
     var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio)
-    if (this._gethit)
-      return canvas
+    if ((this._gethit || this.img_) && this._currentRatio === pixelratio) return canvas;
+    // Calculate image at pixel ratio
+    this._currentRatio = pixelratio;
     var strokeStyle
     var strokeWidth = 0
     if (this._stroke) {
@@ -40460,12 +41344,12 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
     }
     // Draw hitdetection image
     this._gethit = true
-    var context = this.getHitDetectionImage().getContext('2d')
-    context.save()
-    context.setTransform(1, 0, 0, 1, 0, 0)
-    this.drawBack_(context, "#000", strokeWidth, 1)
-    context.fill()
-    context.restore()
+      var context = this.getHitDetectionImage().getContext('2d')
+      context.save()
+      context.setTransform(1, 0, 0, 1, 0, 0)
+      this.drawBack_(context, "#000", strokeWidth, 1)
+      context.fill()
+      context.restore()
     this._gethit = false
     // Draw the image
     context = canvas.getContext('2d')
@@ -40483,8 +41367,7 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
     context.restore()
     var self = this
     var img = this.img_ = new Image()
-    if (this._crossOrigin)
-      img.crossOrigin = this._crossOrigin
+    if (this._crossOrigin) img.crossOrigin = this._crossOrigin
     img.src = this._src
     // Draw image
     if (img.width) {
@@ -40494,8 +41377,12 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
         self.drawImage_(canvas, img, pixelratio)
         // Force change (?!)
         // self.setScale(1);
-        if (self._onload)
-          self._onload()
+        if (self._onload) self._onload()
+      }
+      if (self._onerror) {
+        img.onerror = function () {
+          self._onerror()
+        }
       }
     }
     // Set anchor (ol < 6)
