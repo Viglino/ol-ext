@@ -12,7 +12,7 @@ import {asString as ol_color_asString} from 'ol/color.js'
  * Fill style with named pattern
  *
  * @constructor
- * @param {olx.style.FillPatternOption=}  options
+ * @param {any}  options
  *  @param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
  *  @param {number|undefined} options.opacity opacity with image pattern, default:1
  *  @param {string} options.pattern pattern name (override by image option)

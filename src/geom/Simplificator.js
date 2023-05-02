@@ -211,7 +211,7 @@ var ol_geom_Simplificator = class olgeomSimplificator extends ol_Object {
    * @param {*} coords 
    * @param {*} arcs 
    * @param {*} contour 
-   * @returns 
+   * @returns Array
    * @private
    */
   _getArcs(coords, arcs, contour, round) {

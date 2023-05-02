@@ -27,6 +27,7 @@
   "scripts": {
     "test": "npm test npmtest.js",
     "start": "node ./node_modules/gulp/bin/gulp.js --gulpfile ./gulpfile.cjs serve",
+    "doc": "node ./node_modules/gulp/bin/gulp.js --gulpfile ./gulpfile.cjs doc",
     "lint": "eslint --fix src/ || exit 0",
     "prepack": "gulp prepublish --gulpfile ./gulpfile.cjs",
     "postpack": "gulp postpublish --gulpfile ./gulpfile.cjs"

@@ -28650,6 +28650,7 @@ ol.interaction.TouchCursorSelect = class olinteractionTouchCursorSelect extends 
  *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
  *	@param {boolean} options.enableRotatedTransform Enable transform when map is rotated
  *	@param {boolean} [options.keepRectangle=false] keep rectangle when possible
+ *  @param {number} [options.buffer] Increase the extent used as bounding box, default 0
  *	@param {*} options.style list of ol.style for handles
  *  @param {number|Array<number>|function} [options.pointRadius=0] radius for points or a function that takes a feature and returns the radius (or [radiusX, radiusY]). If not null show handles to transform the points
  */
@@ -28715,6 +28716,8 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
     this.set('enableRotatedTransform', (options.enableRotatedTransform || false))
     /* Keep rectangle angles 90 degrees */
     this.set('keepRectangle', (options.keepRectangle || false))
+    /* Add buffer to the feature's extent */
+    this.set('buffer', (options.buffer || 0))
     // Force redraw when changed
     this.on('propertychange', function () {
       this.drawSketch_()
@@ -28959,7 +28962,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
       coords.unshift(coords[3])
     }
     // Clone and extend
-    ext = ol.extent.buffer(ext, 0)
+    ext = ol.extent.buffer(ext, this.get('buffer'))
     this.selection_.forEach(function (f) {
       var extendExt = this.getGeometryRotateToZero_(f).getExtent()
       ol.extent.extend(ext, extendExt)
@@ -38188,7 +38191,7 @@ ol.geom.Simplificator = class olgeomSimplificator extends ol.Object {
    * @param {*} coords 
    * @param {*} arcs 
    * @param {*} contour 
-   * @returns 
+   * @returns Array
    * @private
    */
   _getArcs(coords, arcs, contour, round) {
@@ -39720,7 +39723,7 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       anchor[1] = c - this._offset[1];
     }
   }
-}
+};
 /** Default color set: classic, dark, pale, pastel, neon
 */
 ol.style.Chart.colors = {
@@ -39729,7 +39732,7 @@ ol.style.Chart.colors = {
   "pale":		["#fd0","#369","#f64","#3b7","#880","#b5d","#666"],
   "pastel":	["#fb4","#79c","#f66","#7d7","#acc","#fdd","#ff9","#b9b"], 
   "neon":		["#ff0","#0ff","#0f0","#f0f","#f00","#00f"]
-}
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -39740,7 +39743,7 @@ ol.style.Chart.colors = {
  * Fill style with named pattern
  *
  * @constructor
- * @param {olx.style.FillPatternOption=}  options
+ * @param {any}  options
  *  @param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
  *  @param {number|undefined} options.opacity opacity with image pattern, default:1
  *  @param {string} options.pattern pattern name (override by image option)
