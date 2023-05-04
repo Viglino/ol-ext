@@ -57,7 +57,7 @@ var ol_interaction_Split = class olinteractionSplit extends ol_interaction_Inter
     this.cursor_ = options.cursor
 
     // List of source to split
-    this.setSources(options.sources)
+    this.sources_ = options.sources ? (options.sources instanceof Array) ? options.sources:[options.sources] : [];
 
     if (options.features) {
       this.sources_.push(new ol_source_Vector({ features: options.features }))
