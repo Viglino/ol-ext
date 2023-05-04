@@ -60,6 +60,7 @@ var ol_interaction_Split = class olinteractionSplit extends ol_interaction_Inter
     this.setSources(options.sources)
 
     if (options.features) {
+      if (!this.sources_) this.sources_ = [];
       this.sources_.push(new ol_source_Vector({ features: options.features }))
     }
 
