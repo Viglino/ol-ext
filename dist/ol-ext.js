@@ -27032,6 +27032,7 @@ ol.interaction.Split = class olinteractionSplit extends ol.interaction.Interacti
     // List of source to split
     this.setSources(options.sources)
     if (options.features) {
+      if (!this.sources_) this.sources_ = [];
       this.sources_.push(new ol.source.Vector({ features: options.features }))
     }
     // Get all features candidate
