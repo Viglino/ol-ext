@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.7
+ * @version v4.0.8
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -27137,7 +27137,7 @@ ol.interaction.Split = class olinteractionSplit extends ol.interaction.Interacti
     return this.sources_ || []
   }
   /** Set sources to split features in
-   * @param {ol.source.Vector|Array<ol.source.Vector>} [sources]
+   * @param {ol.source.Vector|Array<ol.source.Vector>|boolean} [sources] if not defined get all map vector sources
    */
   setSources(sources) {
     this.sources_ = sources ? (sources instanceof Array ? sources || false : [sources]) : false

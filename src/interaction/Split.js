@@ -170,7 +170,7 @@ var ol_interaction_Split = class olinteractionSplit extends ol_interaction_Inter
     return this.sources_ || []
   }
   /** Set sources to split features in
-   * @param {ol.source.Vector|Array<ol.source.Vector>} [sources]
+   * @param {ol.source.Vector|Array<ol.source.Vector>|boolean} [sources] if not defined get all map vector sources
    */
   setSources(sources) {
     this.sources_ = sources ? (sources instanceof Array ? sources || false : [sources]) : false
