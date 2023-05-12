@@ -36994,7 +36994,7 @@ ol.graph = {};
  *  @param {integer} [options.stepIteration=2000] number of iterations before a calculating event is fired, default 2000
  *  @param {number} [options.epsilon=1E-6] geometric precision (min distance beetween 2 points), default 1E-6
  */
-ol.graph.Dijskra = class olgraphDijskra extends ol.Object {
+ol.graph.Dijkstra = class olgraphDijskra extends ol.Object {
   constructor(options) {
     options = options || {};
     super();
@@ -37293,6 +37293,8 @@ ol.graph.Dijskra = class olgraphDijskra extends ol.Object {
     return route;
   }
 }
+// Typo error for compatibility purposes (to be removed)
+ol.graph.Dijskra = ol.graph.Dijkstra
 
 /** French Geoportail alti coding
  * @param {ol.geom.Geometry} geom
