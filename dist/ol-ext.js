@@ -6,11 +6,26 @@
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
  */
-/** @namespace  ol.ext
- */
 /*global ol*/
-if (window.ol && !ol.ext) {
-  ol.ext = {};
+if (window.ol) {
+  /** @namespace  ol.ext */
+  if (!ol.ext) ol.ext = {};
+  /** @namespace  ol.legend */
+  if (!ol.legend) ol.legend = {};
+  /** @namespace  ol.particule */
+  if (!ol.particule) ol.particule = {};
+  /** @namespace ol.ext.imageLoader */
+  if (!ol.ext.imageLoader) ol.ext.imageLoader = {};
+  /** @namespace  ol.ext.input */
+  if (!ol.ext.input) ol.ext.input = {};
+  /* Version */
+  if (!ol.util) {
+    ol.util = {
+      VERSION: ol.VERSION || '5.3.0'
+    };
+  } else if (!ol.util.VERSION) {
+    ol.util.VERSION = ol.VERSION || '6.1.0'
+  }
 }
 /** Inherit the prototype methods from one constructor into another.
  * replace deprecated ol method
@@ -1349,16 +1364,6 @@ ol.ext.getMapCanvas = function(map) {
   return canvas;
 };
   
-/*global ol*/
-if (window.ol) {
-  if (!ol.util) {
-    ol.util = {
-      VERSION: ol.VERSION || '5.3.0'
-    };
-  } else if (!ol.util.VERSION) {
-    ol.util.VERSION = ol.VERSION || '6.1.0'
-  }
-}
 ol.ext.olVersion = ol.util.VERSION.split('.');
 ol.ext.olVersion = parseInt(ol.ext.olVersion[0])*100 + parseInt(ol.ext.olVersion[1]);
 /** Get style to use in a VectorContext
@@ -1393,11 +1398,6 @@ ol.ext.getVectorContextStyle = function(e, s) {
   return s;
 }
 
-/** @namespace ol.ext.imageLoader
- */
-if (window.ol && window.ol.ext && !window.ol.ext.imageLoader) {
-  window.ol.ext.imageLoader = {};
-}
 /** Helper for loading BIL-32 (Band Interleaved by Line) image
  * @param {string} src
  * @param {function} onload a function that takes a Float32Array and a ol.size.Size (array size)
@@ -2237,12 +2237,6 @@ ol.ext.SVGFilter.Sobel = class olextSVGFilterSobel extends ol.ext.SVGFilter {
 /** Vanilla JS geographic inputs
  * color, size, width, font, symboles, dash, arrow, pattern
  */
-/** @namespace  ol.ext.input
- */
-/*global ol*/
-if (window.ol && ol.ext && !ol.ext.input) {
-  ol.ext.input = {};
-}
 /** Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
  * @constructor
  * @extends {ol.Object}
@@ -3482,12 +3476,6 @@ ol.ext.input.Width = class olextinputWidth extends ol.ext.input.List {
   }
 }
 
-/** @namespace  ol.legend
- */
-/*global ol*/
-if (window.ol && !ol.legend) {
-  ol.legend = {};
-}
 /** Legend class to draw features in a legend element
  * @constructor
  * @fires select
@@ -25040,7 +25028,7 @@ ol.interaction.Modify.prototype.getModifiedFeatures = function() {
   this.dragSegments_.forEach( function(s) {
     var feature = s[0].feature;
     // Openlayers > v.6
-    if (window.ol && window.ol.util) featuresById[ol.util.getUid(feature)] = feature;
+    if (window && window.ol && window.ol.util) featuresById[ol.util.getUid(feature)] = feature;
     // old version of Openlayers (< v.6) or ol all versions
     else featuresById[ol.getUid(feature)] = feature;
   });
@@ -34794,10 +34782,6 @@ ol.Overlay.prototype.updatePixelPosition = function () {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/*global ol*/
-if (window.ol && !ol.particule) {
-  ol.particule = {};
-}
 /** Abstract base class; normally only used for creating subclasses. 
  * An object with coordinates, draw and update
  * @constructor
