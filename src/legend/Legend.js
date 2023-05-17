@@ -15,13 +15,6 @@ import ol_style_Fill from 'ol/style/Fill.js'
 import ol_legend_Item from './Item.js'
 import ol_legend_Image from './Image.js'
 
-/** @namespace  ol.legend
- */
-/*global ol*/
-if (window.ol && !ol.legend) {
-  ol.legend = {};
-}
-
 /** Legend class to draw features in a legend element
  * @constructor
  * @fires select

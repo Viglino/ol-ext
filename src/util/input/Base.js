@@ -3,13 +3,6 @@
  */
 import ol_Object from 'ol/Object.js'
 
-/** @namespace  ol.ext.input
- */
-/*global ol*/
-if (window.ol && ol.ext && !ol.ext.input) {
-  ol.ext.input = {};
-}
-
 /** Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
  * @constructor
  * @extends {ol_Object}

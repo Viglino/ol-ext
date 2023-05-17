@@ -1,11 +1,5 @@
 import { asArray as ol_color_asArray } from 'ol/color.js'
 
-/** @namespace ol.ext.imageLoader
- */
-if (window.ol && window.ol.ext && !window.ol.ext.imageLoader) {
-  window.ol.ext.imageLoader = {};
-}
-
 /** Helper for loading BIL-32 (Band Interleaved by Line) image
  * @param {string} src
  * @param {function} onload a function that takes a Float32Array and a ol.size.Size (array size)
