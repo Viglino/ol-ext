@@ -4094,9 +4094,10 @@ ol.legend.Image = class ollegendImage extends ol.Object {
   }
   /** Get element
    * @param {ol.size} size symbol size
+   * @param {function} onclick
    */
   getElement(size, onclick) {
-    if (this.get('width')) size[1] = this.get('width');
+    if (this.get('width')) size[0] = this.get('width');
     if (this.get('height')) size[1] = this.get('height');
     var element = ol.ext.element.create('LI', {
       className: this.get('className'),
@@ -4173,7 +4174,7 @@ ol.legend.Item = class ollegendItem extends ol.Object {
    * @param {ol.size} size symbol size
    */
   getElement(size, onclick) {
-    if (this.get('width')) size[1] = this.get('width');
+    if (this.get('width')) size[0] = this.get('width');
     if (this.get('height')) size[1] = this.get('height');
     var element = ol.ext.element.create('LI', {
       className: this.get('className'),
@@ -31431,7 +31432,7 @@ ol.source.GeoImage = class olsourceGeoImage extends ol.source.ImageCanvas {
   }
   /**
    * Get image rotation.
-   * @return {Number} rotation in degre.
+   * @return {Number} rotation in radian.
    * @api stable
    */
   getRotation() {
