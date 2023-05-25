@@ -11,6 +11,7 @@
 .ol-control.ol-legend:hover {
   background-color: rgba(255,255,255,.8);
 }
+.ol-control.ol-legend.ol-empty,
 .ol-control.ol-legend.ol-collapsed {
   overflow: hidden;
 }
@@ -18,6 +19,7 @@
   position: relative;
   display: none;
 }
+.ol-control.ol-legend.ol-empty button,
 .ol-control.ol-legend.ol-collapsed button {
   display: block;
 }
@@ -39,6 +41,7 @@
   cursor: pointer;
   z-index: 1;
 }
+.ol-control.ol-legend.ol-empty button.ol-closebox,
 .ol-control.ol-legend.ol-uncollapsible button.ol-closebox,
 .ol-control.ol-legend.ol-collapsed button.ol-closebox {
   display: none;
@@ -55,6 +58,7 @@
 .ol-control.ol-legend .ol-legendImg {
   display: block;
 }
+.ol-control.ol-legend.ol-empty .ol-legendImg,
 .ol-control.ol-legend.ol-collapsed .ol-legendImg {
   display: none;
 }
@@ -89,6 +93,7 @@ ul.ol-legend {
   padding: 0;
   list-style: none;
 }
+.ol-control.ol-legend.ol-empty ul,
 .ol-control.ol-legend.ol-collapsed ul {
   display: none;
 }
@@ -115,6 +120,10 @@ ul.ol-legend li div {
 .ol-control.ol-legend .ol-legend {
   display: inline-block;
 }
+.ol-control.ol-legend.ol-empty .ol-legend,
 .ol-control.ol-legend.ol-collapsed .ol-legend {
   display: none;
+}
+.ol-control.ol-legend.ol-empty button {
+  opacity: .4;
 }

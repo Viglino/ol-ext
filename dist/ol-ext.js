@@ -3862,6 +3862,7 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
     // Add items
     var offsetY = 0;
     if (this.getTitle()) offsetY = height;
+    var nb = 0;
     this._items.forEach(function (r, i) {
       if (r instanceof ol.legend.Legend) {
         if ((!r._layer || r._layer.getVisible()) && r.getCanvas().height) {
@@ -3871,6 +3872,7 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
             var li = list[l].cloneNode();
             li.innerHTML = list[l].innerHTML;
             table.appendChild(li);
+            nb++;
           }
           offsetY += r.getHeight();
         }
@@ -3897,7 +3899,9 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
           }
           // Image
           var img = r.getImage()
-          ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
+          try {
+            ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
+          } catch(e) { /* ok */ }
           offsetY += r.getHeight();
         } else {
           var item = r.getProperties()
@@ -3926,8 +3930,14 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
             item: r
           })
         }.bind(this)))
+        nb++;
       }
     }.bind(this))
+    this.set('items', nb, true)
+    this.dispatchEvent({
+      type: 'items',
+      nb: nb
+    })
     // Done
     if (!opt_silent) {
       this.dispatchEvent({
@@ -10627,6 +10637,8 @@ ol.control.LayerSwitcherImage = class olcontrolLayerSwitcherImage extends ol.con
  * @fires select
  * @param {*} options
  *  @param {String} options.className class of the control
+ *  @param {String} [options.title="legend"] control title
+ *  @param {String} [options.emptyTitle="no legend"] control title when legend is empty
  *  @param {ol.legend.Legend} options.legend
  *  @param {boolean | undefined} options.collapsed Specify if legend should be collapsed at startup. Default is true.
  *  @param {boolean | undefined} options.collapsible Specify if legend can be collapsed, default true.
@@ -10671,13 +10683,26 @@ ol.control.Legend = class olcontrolLegend extends ol.control.CanvasBase {
     if (options.collapsible !== false && options.collapsed === false) {
       this.show();
     }
+    // Select item on legend
     this._legend.on('select', function (e) {
       this.dispatchEvent(e);
     }.bind(this));
+    // Refresh legend
     this._legend.on('refresh', function () {
       if (this._onCanvas && this.getMap()) {
         try { this.getMap().renderSync(); } catch (e) { /* ok */ }
       }
+    }.bind(this));
+    // Legend has items
+    this._legend.on('items', function (e) {
+      if (e.nb) {
+        this.element.classList.remove('ol-empty');
+        this.element.title = options.title || 'legend';
+      } else {
+        this.element.classList.add('ol-empty');
+        this.element.title = options.emptyTitle || 'no legend';
+      }
+      this.dispatchEvent(e)
     }.bind(this));
   }
   /** Get the legend associated with the control
