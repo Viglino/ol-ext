@@ -52,6 +52,7 @@ var ol_legend_Item = class ollegendItem extends ol_Object {
   }
   /** Get element
    * @param {ol.size} size symbol size
+   * @param {function} onclick
    */
   getElement(size, onclick) {
     if (this.get('width')) size[0] = this.get('width');
