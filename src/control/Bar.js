@@ -111,10 +111,27 @@ var ol_control_Bar = class olcontrolBar extends ol_control_Control {
       this.getMap().addControl(c);
     }
     // Activate and toogleOne
-    c.on('change:active', function (e) { this.onActivateControl_(e, c); }.bind(this));
+    if (c._activateBar) c.un('change:active', c._activateBar);
+    c._activateBar = function (e) { this.onActivateControl_(e, c); }.bind(this);
+    c.on('change:active', c._activateBar);
     if (c.getActive) {
       // c.dispatchEvent({ type:'change:active', key:'active', oldValue:false, active:true });
       this.onActivateControl_({ target: c, active: c.getActive() }, c);
+    }
+  }
+  /** Remove a control from the bar
+   *	@param {ol_control_Control} c control to remove
+   */
+  removeControl(c) {
+    const index = this.controls_.indexOf(c);
+    if (index > -1) {
+      this.controls_.splice(index, 1);
+      if (this.getMap()) {
+        this.getMap().removeControl(c);
+      }
+      // remove and toogleOne
+      if (c._activateBar) c.un('change:active', c._activateBar);
+      delete c._activateBar;
     }
   }
   /** Deativate all controls in a bar
