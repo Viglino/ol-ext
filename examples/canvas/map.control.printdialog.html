@@ -149,7 +149,9 @@ map.addControl(legendCtrl);
 map.addControl(new ol.control.CanvasScaleLine());
 
 // Print control
-var printControl = new ol.control.PrintDialog();
+var printControl = new ol.control.PrintDialog({ 
+  // targetDialog: map.getTargetElement() 
+});
 printControl.setSize('A4');
 map.addControl(printControl);
 

@@ -27,6 +27,8 @@ import ol_control_Compass from './Compass.js';
  *	@param {string} options.className class of the control
  *	@param {String} options.title button title
  *  @param {string} [options.lang=en] control language, default en
+ *  @param {HTMLElement|string|undefined} [options.target] target element to render the control button outside of the map's viewport
+ *  @param {HTMLElement|string|undefined} [options.targetDialog] target element for the dialog, default document body
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
@@ -69,7 +71,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     }
 
     // Print control
-    options.target = ol_ext_element.create('DIV')
+    options.target = options.target || ol_ext_element.create('DIV')
     var printCtrl = this._printCtrl = new ol_control_Print(options)
     printCtrl.on(['print', 'error', 'printing'], function (e) {
       content.setAttribute('data-status', e.type)
@@ -88,7 +90,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
 
     // Print dialog
     var printDialog = this._printDialog = new ol_control_Dialog({
-      target: document.body,
+      target: options.targetDialog || document.body,
       closeBox: true,
       className: 'ol-ext-print-dialog'
     })
