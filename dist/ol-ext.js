@@ -12147,6 +12147,8 @@ ol.control.Print = class olcontrolPrint extends ol.control.Control {
  *	@param {string} options.className class of the control
  *	@param {String} options.title button title
  *  @param {string} [options.lang=en] control language, default en
+ *  @param {HTMLElement|string|undefined} [options.target] target element to render the control button outside of the map's viewport
+ *  @param {HTMLElement|string|undefined} [options.targetDialog] target element for the dialog, default document body
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
@@ -12186,7 +12188,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
       })
     }
     // Print control
-    options.target = ol.ext.element.create('DIV')
+    options.target = options.target || ol.ext.element.create('DIV')
     var printCtrl = this._printCtrl = new ol.control.Print(options)
     printCtrl.on(['print', 'error', 'printing'], function (e) {
       content.setAttribute('data-status', e.type)
@@ -12203,7 +12205,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
     })
     // Print dialog
     var printDialog = this._printDialog = new ol.control.Dialog({
-      target: document.body,
+      target: options.targetDialog || document.body,
       closeBox: true,
       className: 'ol-ext-print-dialog'
     })
