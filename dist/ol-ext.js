@@ -39782,7 +39782,7 @@ ol.style.Chart.colors = {
  *  @param {string} options.pattern pattern name (override by image option)
  *  @param {ol.color} options.color pattern color
  *  @param {ol.style.Fill} options.fill fill color (background)
- *  @param {number} options.offset pattern offset for hash/dot/circle/cross pattern
+ *  @param {number|Array<number>} options.offset pattern offset for hash/dot/circle/cross pattern
  *  @param {number} options.size line size for hash/dot/circle/cross pattern
  *  @param {number} options.spacing spacing for hash/dot/circle/cross pattern
  *  @param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
@@ -41968,7 +41968,7 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
  *	@param {string} options.pattern pattern name (override by image option)
  *	@param {ol.colorLike} options.color pattern color
  *	@param {ol.style.Fill} options.fill fill color (background)
- *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
+ *	@param {number|Array<number>} options.offset pattern offset for hash/dot/circle/cross pattern
  *	@param {number} options.size line size for hash/dot/circle/cross pattern
  *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
  *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross

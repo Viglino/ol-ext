@@ -19,7 +19,7 @@ import ol_style_FillPattern from './FillPattern.js'
  *	@param {string} options.pattern pattern name (override by image option)
  *	@param {ol.colorLike} options.color pattern color
  *	@param {ol.style.Fill} options.fill fill color (background)
- *	@param {number|[number, number]} options.offset pattern offset for hash/dot/circle/cross pattern
+ *	@param {number|Array<number>} options.offset pattern offset for hash/dot/circle/cross pattern
  *	@param {number} options.size line size for hash/dot/circle/cross pattern
  *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
  *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
