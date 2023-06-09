@@ -89,11 +89,11 @@ var ol_control_SelectBase = class olcontrolSelectBase extends ol_control_Control
     return this._features;
   }
   /** Escape string for regexp
-   * @param {string} search
+   * @param {*} s value to escape
    * @return {string}
    */
   _escape(s) {
-    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+    return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
   }
   /**
    * Test if a feature check aconditino
