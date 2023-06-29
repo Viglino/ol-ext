@@ -19,7 +19,7 @@ var ol_ext_getVectorContextStyle = function(e, s) {
     img.setScale(img.getScale()*ratio);
     /* BUG anchor don't use ratio */
     var anchor = img.getAnchor();
-    if (img.setDisplacement) {
+    if (anchor && img.setDisplacement) {
       var disp = img.getDisplacement();
       if (disp) {
         disp[0] -= anchor[0]/ratio;
