@@ -22944,6 +22944,14 @@ ol.interaction.CopyPaste = class olinteractionCopyPaste extends ol.interaction.C
     this.setSources(options.sources);
     this.setDestination(options.destination);
   }
+  /**
+   * Remove the interaction from its current map and attach it to the new map.
+   * @param {ol.Map} map The map instance.
+   */
+  setMap(map) {
+    super.setMap(map);
+    this.features = [];
+  }
   /** Sources to cut feature from
    * @param { ol.source.Vector | Array<ol.source.Vector> } sources
    */
