@@ -641,7 +641,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
    * @returns {string}
    */
   i18n(what) {
-    var rep = this._labels.en[what] || 'bad param';
+    var rep = this._labels.en[what] || what;
     if (this._labels[this._lang] && this._labels[this._lang][what]) {
       rep = this._labels[this._lang][what]
     }
