@@ -35,7 +35,7 @@ import ol_control_Compass from './Compass.js';
  *	@param {boolean} options.immediate force print even if render is not complete,  default false
  *	@param {boolean} [options.openWindow=false] open the file in a new window on print
  *	@param {boolean} [options.copy=true] add a copy select option
- *	@param {boolean} [options.print=true] add a print select option
+ *	@param {boolean} [options.save=true] add a save select option
  *	@param {boolean} [options.pdf=true] add a pdf select option
  *	@param {function} [options.saveAs] a function to save the image as blob
  *	@param {*} [options.jsPDF] jsPDF object to save map as pdf
@@ -52,14 +52,16 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     })
     
     this._lang = options.lang || 'en'
-    ol_ext_element.create('BUTTON', {
-      type: 'button',
-      title: options.title || 'Print',
-      click: function () {
-        this.print()
-      }.bind(this),
-      parent: element
-    })
+    if (!options.target) {
+      ol_ext_element.create('BUTTON', {
+        type: 'button',
+        title: options.title || 'Print',
+        click: function () {
+          this.print()
+        }.bind(this),
+        parent: element
+      })
+    }
     // Open in a new window
     if (options.openWindow) {
       this.on('print', function (e) {

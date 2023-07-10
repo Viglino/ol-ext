@@ -150,7 +150,11 @@ map.addControl(new ol.control.CanvasScaleLine());
 
 // Print control
 var printControl = new ol.control.PrintDialog({ 
+  // target: document.querySelector('.info'),
   // targetDialog: map.getTargetElement() 
+  // save: false,
+  // copy: false,
+  // pdf: false
 });
 printControl.setSize('A4');
 map.addControl(printControl);
