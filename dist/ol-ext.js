@@ -18785,7 +18785,7 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
     if (bbox)
       bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection())
     var attributions = []
-    if (caps.Attribution) {
+    if (caps.Attribution && caps.Attribution.Title) {
       attributions.push('<a href="' + encodeURI(caps.Attribution.OnlineResource) + '">&copy; ' + caps.Attribution.Title.replace(/</g, '&lt;') + '</a>')
     }
     var layer_opt = {
