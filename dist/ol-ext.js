@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.9
+ * @version v4.0.10
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -21807,7 +21807,8 @@ ol.format.GeoJSONX = class olformatGeoJSONX extends ol.format.GeoJSON {
           v[i] = tp;
           var dx = v[i][0] - dxy[0];
           var dy = v[i][1] - dxy[1];
-          if (i == 0 || (dx !== 0 || dy !== 0)) {
+          // Prevent same coords
+          if (i == 0 || (dx !== 0 || dy !== 0) || v.length===2) {
             p = this.encodeNumber(dx, 0) + ','
               + this.encodeNumber(dy, 0)
               + (hasZ ? ',' + this.encodeNumber(v[i][2] - dxy[2], 2) : '')
@@ -21959,8 +21960,9 @@ ol.format.GeoJSONX = class olformatGeoJSONX extends ol.format.GeoJSON {
           found = true;
         }
       }
-      if (found)
+      if (found) {
         f.push(prop);
+      }
     }
     return f;
   }
