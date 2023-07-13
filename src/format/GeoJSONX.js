@@ -148,7 +148,8 @@ var ol_format_GeoJSONX = class olformatGeoJSONX extends ol_format_GeoJSON {
           v[i] = tp;
           var dx = v[i][0] - dxy[0];
           var dy = v[i][1] - dxy[1];
-          if (i == 0 || (dx !== 0 || dy !== 0)) {
+          // Prevent same coords
+          if (i == 0 || (dx !== 0 || dy !== 0) || v.length===2) {
             p = this.encodeNumber(dx, 0) + ','
               + this.encodeNumber(dy, 0)
               + (hasZ ? ',' + this.encodeNumber(v[i][2] - dxy[2], 2) : '')
@@ -300,8 +301,9 @@ var ol_format_GeoJSONX = class olformatGeoJSONX extends ol_format_GeoJSON {
           found = true;
         }
       }
-      if (found)
+      if (found) {
         f.push(prop);
+      }
     }
     return f;
   }
@@ -416,17 +418,5 @@ ol_format_GeoJSONX.prototype._toType = [
   "MultiLineString",
   "MultiPolygon"
 ];
-
-
-
-
-
-
-
-
-
-
-
-
 
 export default ol_format_GeoJSONX
