@@ -159,7 +159,7 @@ var ol_format_GeoJSONX = class olformatGeoJSONX extends ol_format_GeoJSON {
           }
         }
         // Almost 2 points...
-        // if (xy.length<2) xy.push('A,A');
+        // if (xy.length<2 && v.length>1) xy.push('A,A');
         return xy.join(';');
       } else {
         for (i = 0; i < v.length; i++) {
