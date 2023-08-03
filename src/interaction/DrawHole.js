@@ -22,6 +22,7 @@ import ol_interaction_Select from 'ol/interaction/Select.js'
  * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
  * 	@param {Array<ol.Feature> | ol.Collection<ol.Feature> | function | undefined} options.featureFilter An array or a collection of features the interaction applies on or a function that takes a feature and a layer and returns true if the feature is a candidate
  * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
+ * 	@param {function | undefined}	options.geometryFunction Draw interaction geometry function to customize the hole
  */
 var ol_interaction_DrawHole = class olinteractionDrawHole extends ol_interaction_Draw {
   constructor(options) {
@@ -43,9 +44,9 @@ var ol_interaction_DrawHole = class olinteractionDrawHole extends ol_interaction
     }
     var geomFn = options.geometryFunction
     if (geomFn) {
-      options.geometryFunction = function (c, g) {
-        g = _geometryFn(c, g)
-        return geomFn(c, g)
+      options.geometryFunction = function (c, g, p) {
+        g = _geometryFn.bind(this)(c, g)
+        return geomFn.bind(this)(c, g, p)
       }
     } else {
       options.geometryFunction = _geometryFn
