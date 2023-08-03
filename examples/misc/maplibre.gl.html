@@ -1,0 +1,85 @@
+﻿<html>
+<head>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/75709127" />
+
+  <script src="https://unpkg.com/maplibre-gl@1.13.0-rc.4/dist/mapbox-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@1.13.0-rc.4/dist/mapbox-gl.css" rel="stylesheet" />
+
+  <script src="https://unpkg.com/three@0.106.2/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.106.2/examples/js/loaders/GLTFLoader.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    #map {
+      position: absolute; 
+      top: 5em; 
+      right: 0; 
+      bottom: 0; 
+      left: 0;
+      margin: 0;
+    }
+    h1  {
+      background-image: url("https://avatars.githubusercontent.com/u/75709127");
+    }
+    .b2D,
+    .b3D {
+      position: fixed;
+      bottom: 3.5em;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      width: 100%;
+      text-align: center;
+      height: 0;
+    }
+    .b2D.visible,
+    .b3D.visible {
+      display: block;
+    }
+    .b3D b {
+      transform: scale(1.8) rotate(-45deg);
+      display: inline-block;
+      margin: .2em .5em;
+    }
+    .b2D a {
+      background: #337ab7;
+      padding: .5em;
+      color: #fff;
+      text-decoration: none;
+      top: 1em;
+      position: relative;
+    }
+  </style>
+
+</head>
+
+<body> 
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>MapLibre-GL + Geoportail</h1>
+  </a>
+
+  <div id="map"></div>
+  
+<script>
+
+var layer = document.location.search.replace(/^\?/, '') || 'cyanotype'
+var rep = layer.split('_')[0]
+
+// Mapbox map
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: 'https://viglino.github.io/geoservice-style/'+rep+'/'+layer+'.json',
+  center: [2.324, 48.847],
+  zoom: 14,
+  pitch: 0,
+  antialias: true
+});
+
+
+</script>
+</body>
+</html>
