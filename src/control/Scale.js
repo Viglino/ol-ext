@@ -91,8 +91,9 @@ var ol_control_Scale = class olcontrolScale extends ol_control_Control {
   setScale(value) {
     var map = this.getMap();
     if (map && value) {
-      if (value.target)
+      if (value.target) {
         value = value.target.value;
+      }
       ol_sphere_setMapScale(map, value, this.get('ppi'));
     }
     this.getScale();
