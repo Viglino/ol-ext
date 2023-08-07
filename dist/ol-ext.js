@@ -14520,8 +14520,9 @@ ol.control.Scale = class olcontrolScale extends ol.control.Control {
   setScale(value) {
     var map = this.getMap();
     if (map && value) {
-      if (value.target)
+      if (value.target) {
         value = value.target.value;
+      }
       ol.sphere.setMapScale(map, value, this.get('ppi'));
     }
     this.getScale();
@@ -21818,7 +21819,7 @@ ol.format.GeoJSONX = class olformatGeoJSONX extends ol.format.GeoJSON {
           }
         }
         // Almost 2 points...
-        // if (xy.length<2) xy.push('A,A');
+        // if (xy.length<2 && v.length>1) xy.push('A,A');
         return xy.join(';');
       } else {
         for (i = 0; i < v.length; i++) {
@@ -23246,6 +23247,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
  * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
  * 	@param {Array<ol.Feature> | ol.Collection<ol.Feature> | function | undefined} options.featureFilter An array or a collection of features the interaction applies on or a function that takes a feature and a layer and returns true if the feature is a candidate
  * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
+ * 	@param {function | undefined}	options.geometryFunction Draw interaction geometry function to customize the hole
  */
 ol.interaction.DrawHole = class olinteractionDrawHole extends ol.interaction.Draw {
   constructor(options) {
@@ -23266,9 +23268,9 @@ ol.interaction.DrawHole = class olinteractionDrawHole extends ol.interaction.Dra
     }
     var geomFn = options.geometryFunction
     if (geomFn) {
-      options.geometryFunction = function (c, g) {
-        g = _geometryFn(c, g)
-        return geomFn(c, g)
+      options.geometryFunction = function (c, g, p) {
+        g = _geometryFn.bind(this)(c, g)
+        return geomFn.bind(this)(c, g, p)
       }
     } else {
       options.geometryFunction = _geometryFn
@@ -38600,10 +38602,15 @@ ol.sphere.setMapScale = function (map, scale, dpi) {
   if (map && scale) {
     var fac = scale;
     if (typeof(scale)==='string') {
-      fac = scale.split('/')[1];
-      if (!fac) fac = scale;
+      scale = scale.replace(':','/').split('/');
+      fac = scale[1];
+      if (!fac) fac = scale[0] || '';
       fac = fac.replace(/[^\d]/g,'');
       fac = parseInt(fac);
+      if (scale[1]) {
+        var num = parseInt(scale[0]);
+        if (num) fac /= num;
+      }
     }
     if (!fac) return;
     // Calculate new resolution
