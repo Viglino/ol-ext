@@ -23204,8 +23204,9 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
       if (o === ov)
         return;
     }
+    var element = ov.getElement();
     // Stop event overlay
-    if (ov.element.parentElement && ov.element.parentElement.classList.contains('ol-overlaycontainer-stopevent')) {
+    if (element.parentElement && element.parentElement.classList.contains('ol-overlaycontainer-stopevent')) {
       console.warn('[DragOverlay.addOverlay] overlay must be created with stopEvent set to false!');
       return;
     }
@@ -23218,7 +23219,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
       overlay: ov,
       listener: handler
     });
-    ov.element.addEventListener('pointerdown', handler);
+    element.addEventListener('pointerdown', handler);
   }
   /** Remove an overlay from the interacton
    * @param {ol.Overlay} ov
@@ -23227,7 +23228,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
     for (var i = 0, o; o = this._overlays[i]; i++) {
       if (o.overlay === ov) {
         var l = this._overlays.splice(i, 1)[0];
-        ov.element.removeEventListener('pointerdown', l.listener);
+        ov.getElement().removeEventListener('pointerdown', l.listener);
         break;
       }
     }
