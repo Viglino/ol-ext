@@ -126,9 +126,9 @@ var ol_format_GeoJSONX = class olformatGeoJSONX extends ol_format_GeoJSON {
     if (typeof (v[0]) === 'number') {
       p = this.encodeNumber(v[0], decimal) + ',' + this.encodeNumber(v[1], decimal);
       if (this._layout[2] == 'Z' && v.length > 2)
-        p += ',' + this.encodeNumber(v[i][2], 2);
+        p += ',' + this.encodeNumber(v[2], 2);
       if (this._layout[3] == 'M' && v.length > 3)
-        p += ',' + this.encodeNumber(v[i][3], 0);
+        p += ',' + this.encodeNumber(v[3], 0);
       return p;
     } else if (v.length && v[0]) {
       if (typeof (v[0][0]) === 'number') {
@@ -148,6 +148,7 @@ var ol_format_GeoJSONX = class olformatGeoJSONX extends ol_format_GeoJSON {
           v[i] = tp;
           var dx = v[i][0] - dxy[0];
           var dy = v[i][1] - dxy[1];
+          // Prevent same coords
           if (i == 0 || (dx !== 0 || dy !== 0)) {
             p = this.encodeNumber(dx, 0) + ','
               + this.encodeNumber(dy, 0)
@@ -158,7 +159,11 @@ var ol_format_GeoJSONX = class olformatGeoJSONX extends ol_format_GeoJSON {
           }
         }
         // Almost 2 points...
-        // if (xy.length<2) xy.push('A,A');
+        if (xy.length < 2 && v.length > 1) {
+          var p = 'A,A' + (hasZ ? ',A':'') + (hasM ? ',A':'');
+          xy.push(p);
+        }
+        // encoded
         return xy.join(';');
       } else {
         for (i = 0; i < v.length; i++) {
@@ -300,8 +305,9 @@ var ol_format_GeoJSONX = class olformatGeoJSONX extends ol_format_GeoJSON {
           found = true;
         }
       }
-      if (found)
+      if (found) {
         f.push(prop);
+      }
     }
     return f;
   }
@@ -416,17 +422,5 @@ ol_format_GeoJSONX.prototype._toType = [
   "MultiLineString",
   "MultiPolygon"
 ];
-
-
-
-
-
-
-
-
-
-
-
-
 
 export default ol_format_GeoJSONX

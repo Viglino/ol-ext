@@ -13,7 +13,7 @@ ol_interaction_Modify.prototype.getModifiedFeatures = function() {
   this.dragSegments_.forEach( function(s) {
     var feature = s[0].feature;
     // Openlayers > v.6
-    if (window.ol && window.ol.util) featuresById[ol_util_getUid(feature)] = feature;
+    if (window && window.ol && window.ol.util) featuresById[ol_util_getUid(feature)] = feature;
     // old version of Openlayers (< v.6) or ol all versions
     else featuresById[ol_getUid(feature)] = feature;
   });

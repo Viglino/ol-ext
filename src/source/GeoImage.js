@@ -163,7 +163,7 @@ var ol_source_GeoImage = class olsourceGeoImage extends ol_source_ImageCanvas {
   }
   /**
    * Get image rotation.
-   * @return {Number} rotation in degre.
+   * @return {Number} rotation in radian.
    * @api stable
    */
   getRotation() {

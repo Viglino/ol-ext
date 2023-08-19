@@ -15,13 +15,6 @@ import ol_style_Fill from 'ol/style/Fill.js'
 import ol_legend_Item from './Item.js'
 import ol_legend_Image from './Image.js'
 
-/** @namespace  ol.legend
- */
-/*global ol*/
-if (window.ol && !ol.legend) {
-  ol.legend = {};
-}
-
 /** Legend class to draw features in a legend element
  * @constructor
  * @fires select
@@ -426,6 +419,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
     // Add items
     var offsetY = 0;
     if (this.getTitle()) offsetY = height;
+    var nb = 0;
     this._items.forEach(function (r, i) {
       if (r instanceof ol_legend_Legend) {
         if ((!r._layer || r._layer.getVisible()) && r.getCanvas().height) {
@@ -435,6 +429,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
             var li = list[l].cloneNode();
             li.innerHTML = list[l].innerHTML;
             table.appendChild(li);
+            nb++;
           }
           offsetY += r.getHeight();
         }
@@ -461,7 +456,9 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
           }
           // Image
           var img = r.getImage()
-          ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
+          try {
+            ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
+          } catch(e) { /* ok */ }
           offsetY += r.getHeight();
         } else {
           var item = r.getProperties()
@@ -490,8 +487,15 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
             item: r
           })
         }.bind(this)))
+        nb++;
       }
     }.bind(this))
+
+    this.set('items', nb, true)
+    this.dispatchEvent({
+      type: 'items',
+      nb: nb
+    })
 
     // Done
     if (!opt_silent) {

@@ -9,6 +9,8 @@ import ol_legend_Legend from '../legend/Legend.js'
  * @fires select
  * @param {*} options
  *  @param {String} options.className class of the control
+ *  @param {String} [options.title="legend"] control title
+ *  @param {String} [options.emptyTitle="no legend"] control title when legend is empty
  *  @param {ol_legend_Legend} options.legend
  *  @param {boolean | undefined} options.collapsed Specify if legend should be collapsed at startup. Default is true.
  *  @param {boolean | undefined} options.collapsible Specify if legend can be collapsed, default true.
@@ -59,13 +61,26 @@ var ol_control_Legend = class olcontrolLegend extends ol_control_CanvasBase {
       this.show();
     }
 
+    // Select item on legend
     this._legend.on('select', function (e) {
       this.dispatchEvent(e);
     }.bind(this));
+    // Refresh legend
     this._legend.on('refresh', function () {
       if (this._onCanvas && this.getMap()) {
         try { this.getMap().renderSync(); } catch (e) { /* ok */ }
       }
+    }.bind(this));
+    // Legend has items
+    this._legend.on('items', function (e) {
+      if (e.nb) {
+        this.element.classList.remove('ol-empty');
+        this.element.title = options.title || 'legend';
+      } else {
+        this.element.classList.add('ol-empty');
+        this.element.title = options.emptyTitle || 'no legend';
+      }
+      this.dispatchEvent(e)
     }.bind(this));
   }
   /** Get the legend associated with the control

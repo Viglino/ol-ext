@@ -1,9 +1,26 @@
-/** @namespace  ol.ext
- */
 /*global ol*/
-if (window.ol && !ol.ext) {
-  ol.ext = {};
+if (window.ol) {
+  /** @namespace  ol.ext */
+  if (!ol.ext) ol.ext = {};
+  /** @namespace  ol.legend */
+  if (!ol.legend) ol.legend = {};
+  /** @namespace  ol.particule */
+  if (!ol.particule) ol.particule = {};
+  /** @namespace ol.ext.imageLoader */
+  if (!ol.ext.imageLoader) ol.ext.imageLoader = {};
+  /** @namespace  ol.ext.input */
+  if (!ol.ext.input) ol.ext.input = {};
+
+  /* Version */
+  if (!ol.util) {
+    ol.util = {
+      VERSION: ol.VERSION || '5.3.0'
+    };
+  } else if (!ol.util.VERSION) {
+    ol.util.VERSION = ol.VERSION || '6.1.0'
+  }
 }
+
 
 /** Inherit the prototype methods from one constructor into another.
  * replace deprecated ol method

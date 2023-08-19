@@ -1,16 +1,31 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.7
+ * @version v4.0.11
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
  */
-/** @namespace  ol.ext
- */
 /*global ol*/
-if (window.ol && !ol.ext) {
-  ol.ext = {};
+if (window.ol) {
+  /** @namespace  ol.ext */
+  if (!ol.ext) ol.ext = {};
+  /** @namespace  ol.legend */
+  if (!ol.legend) ol.legend = {};
+  /** @namespace  ol.particule */
+  if (!ol.particule) ol.particule = {};
+  /** @namespace ol.ext.imageLoader */
+  if (!ol.ext.imageLoader) ol.ext.imageLoader = {};
+  /** @namespace  ol.ext.input */
+  if (!ol.ext.input) ol.ext.input = {};
+  /* Version */
+  if (!ol.util) {
+    ol.util = {
+      VERSION: ol.VERSION || '5.3.0'
+    };
+  } else if (!ol.util.VERSION) {
+    ol.util.VERSION = ol.VERSION || '6.1.0'
+  }
 }
 /** Inherit the prototype methods from one constructor into another.
  * replace deprecated ol method
@@ -1349,16 +1364,6 @@ ol.ext.getMapCanvas = function(map) {
   return canvas;
 };
   
-/*global ol*/
-if (window.ol) {
-  if (!ol.util) {
-    ol.util = {
-      VERSION: ol.VERSION || '5.3.0'
-    };
-  } else if (!ol.util.VERSION) {
-    ol.util.VERSION = ol.VERSION || '6.1.0'
-  }
-}
 ol.ext.olVersion = ol.util.VERSION.split('.');
 ol.ext.olVersion = parseInt(ol.ext.olVersion[0])*100 + parseInt(ol.ext.olVersion[1]);
 /** Get style to use in a VectorContext
@@ -1375,7 +1380,7 @@ ol.ext.getVectorContextStyle = function(e, s) {
     img.setScale(img.getScale()*ratio);
     /* BUG anchor don't use ratio */
     var anchor = img.getAnchor();
-    if (img.setDisplacement) {
+    if (anchor && img.setDisplacement) {
       var disp = img.getDisplacement();
       if (disp) {
         disp[0] -= anchor[0]/ratio;
@@ -1393,11 +1398,6 @@ ol.ext.getVectorContextStyle = function(e, s) {
   return s;
 }
 
-/** @namespace ol.ext.imageLoader
- */
-if (window.ol && window.ol.ext && !window.ol.ext.imageLoader) {
-  window.ol.ext.imageLoader = {};
-}
 /** Helper for loading BIL-32 (Band Interleaved by Line) image
  * @param {string} src
  * @param {function} onload a function that takes a Float32Array and a ol.size.Size (array size)
@@ -2237,12 +2237,6 @@ ol.ext.SVGFilter.Sobel = class olextSVGFilterSobel extends ol.ext.SVGFilter {
 /** Vanilla JS geographic inputs
  * color, size, width, font, symboles, dash, arrow, pattern
  */
-/** @namespace  ol.ext.input
- */
-/*global ol*/
-if (window.ol && ol.ext && !ol.ext.input) {
-  ol.ext.input = {};
-}
 /** Abstract base class; normally only used for creating subclasses and not instantiated in apps.    
  * @constructor
  * @extends {ol.Object}
@@ -3482,12 +3476,6 @@ ol.ext.input.Width = class olextinputWidth extends ol.ext.input.List {
   }
 }
 
-/** @namespace  ol.legend
- */
-/*global ol*/
-if (window.ol && !ol.legend) {
-  ol.legend = {};
-}
 /** Legend class to draw features in a legend element
  * @constructor
  * @fires select
@@ -3874,6 +3862,7 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
     // Add items
     var offsetY = 0;
     if (this.getTitle()) offsetY = height;
+    var nb = 0;
     this._items.forEach(function (r, i) {
       if (r instanceof ol.legend.Legend) {
         if ((!r._layer || r._layer.getVisible()) && r.getCanvas().height) {
@@ -3883,6 +3872,7 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
             var li = list[l].cloneNode();
             li.innerHTML = list[l].innerHTML;
             table.appendChild(li);
+            nb++;
           }
           offsetY += r.getHeight();
         }
@@ -3909,7 +3899,9 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
           }
           // Image
           var img = r.getImage()
-          ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
+          try {
+            ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
+          } catch(e) { /* ok */ }
           offsetY += r.getHeight();
         } else {
           var item = r.getProperties()
@@ -3938,8 +3930,14 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
             item: r
           })
         }.bind(this)))
+        nb++;
       }
     }.bind(this))
+    this.set('items', nb, true)
+    this.dispatchEvent({
+      type: 'items',
+      nb: nb
+    })
     // Done
     if (!opt_silent) {
       this.dispatchEvent({
@@ -4096,9 +4094,10 @@ ol.legend.Image = class ollegendImage extends ol.Object {
   }
   /** Get element
    * @param {ol.size} size symbol size
+   * @param {function} onclick
    */
   getElement(size, onclick) {
-    if (this.get('width')) size[1] = this.get('width');
+    if (this.get('width')) size[0] = this.get('width');
     if (this.get('height')) size[1] = this.get('height');
     var element = ol.ext.element.create('LI', {
       className: this.get('className'),
@@ -4173,9 +4172,10 @@ ol.legend.Item = class ollegendItem extends ol.Object {
   }
   /** Get element
    * @param {ol.size} size symbol size
+   * @param {function} onclick
    */
   getElement(size, onclick) {
-    if (this.get('width')) size[1] = this.get('width');
+    if (this.get('width')) size[0] = this.get('width');
     if (this.get('height')) size[1] = this.get('height');
     var element = ol.ext.element.create('LI', {
       className: this.get('className'),
@@ -4409,11 +4409,11 @@ ol.control.SelectBase = class olcontrolSelectBase extends ol.control.Control {
     return this._features;
   }
   /** Escape string for regexp
-   * @param {string} search
+   * @param {*} s value to escape
    * @return {string}
    */
   _escape(s) {
-    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+    return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
   }
   /**
    * Test if a feature check aconditino
@@ -6926,10 +6926,27 @@ ol.control.Bar = class olcontrolBar extends ol.control.Control {
       this.getMap().addControl(c);
     }
     // Activate and toogleOne
-    c.on('change:active', function (e) { this.onActivateControl_(e, c); }.bind(this));
+    if (c._activateBar) c.un('change:active', c._activateBar);
+    c._activateBar = function (e) { this.onActivateControl_(e, c); }.bind(this);
+    c.on('change:active', c._activateBar);
     if (c.getActive) {
       // c.dispatchEvent({ type:'change:active', key:'active', oldValue:false, active:true });
       this.onActivateControl_({ target: c, active: c.getActive() }, c);
+    }
+  }
+  /** Remove a control from the bar
+   *	@param {ol.control.Control} c control to remove
+   */
+  removeControl(c) {
+    var index = this.controls_.indexOf(c);
+    if (index > -1) {
+      this.controls_.splice(index, 1);
+      if (this.getMap()) {
+        this.getMap().removeControl(c);
+      }
+      // remove and toogleOne
+      if (c._activateBar) c.un('change:active', c._activateBar);
+      delete c._activateBar;
     }
   }
   /** Deativate all controls in a bar
@@ -10639,6 +10656,8 @@ ol.control.LayerSwitcherImage = class olcontrolLayerSwitcherImage extends ol.con
  * @fires select
  * @param {*} options
  *  @param {String} options.className class of the control
+ *  @param {String} [options.title="legend"] control title
+ *  @param {String} [options.emptyTitle="no legend"] control title when legend is empty
  *  @param {ol.legend.Legend} options.legend
  *  @param {boolean | undefined} options.collapsed Specify if legend should be collapsed at startup. Default is true.
  *  @param {boolean | undefined} options.collapsible Specify if legend can be collapsed, default true.
@@ -10683,13 +10702,26 @@ ol.control.Legend = class olcontrolLegend extends ol.control.CanvasBase {
     if (options.collapsible !== false && options.collapsed === false) {
       this.show();
     }
+    // Select item on legend
     this._legend.on('select', function (e) {
       this.dispatchEvent(e);
     }.bind(this));
+    // Refresh legend
     this._legend.on('refresh', function () {
       if (this._onCanvas && this.getMap()) {
         try { this.getMap().renderSync(); } catch (e) { /* ok */ }
       }
+    }.bind(this));
+    // Legend has items
+    this._legend.on('items', function (e) {
+      if (e.nb) {
+        this.element.classList.remove('ol-empty');
+        this.element.title = options.title || 'legend';
+      } else {
+        this.element.classList.add('ol-empty');
+        this.element.title = options.emptyTitle || 'no legend';
+      }
+      this.dispatchEvent(e)
     }.bind(this));
   }
   /** Get the legend associated with the control
@@ -12132,13 +12164,15 @@ ol.control.Print = class olcontrolPrint extends ol.control.Control {
  *	@param {string} options.className class of the control
  *	@param {String} options.title button title
  *  @param {string} [options.lang=en] control language, default en
+ *  @param {HTMLElement|string|undefined} [options.target] target element to render the control button outside of the map's viewport
+ *  @param {HTMLElement|string|undefined} [options.targetDialog] target element for the dialog, default document body
  *	@param {string} options.imageType A string indicating the image format, default image/jpeg
  *	@param {number} options.quality Number between 0 and 1 indicating the image quality to use for image formats that use lossy compression such as image/jpeg and image/webp
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
  *	@param {boolean} options.immediate force print even if render is not complete,  default false
  *	@param {boolean} [options.openWindow=false] open the file in a new window on print
  *	@param {boolean} [options.copy=true] add a copy select option
- *	@param {boolean} [options.print=true] add a print select option
+ *	@param {boolean} [options.save=true] add a save select option
  *	@param {boolean} [options.pdf=true] add a pdf select option
  *	@param {function} [options.saveAs] a function to save the image as blob
  *	@param {*} [options.jsPDF] jsPDF object to save map as pdf
@@ -12153,14 +12187,16 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
       element: element
     })
     this._lang = options.lang || 'en'
-    ol.ext.element.create('BUTTON', {
-      type: 'button',
-      title: options.title || 'Print',
-      click: function () {
-        this.print()
-      }.bind(this),
-      parent: element
-    })
+    if (!options.target) {
+      ol.ext.element.create('BUTTON', {
+        type: 'button',
+        title: options.title || 'Print',
+        click: function () {
+          this.print()
+        }.bind(this),
+        parent: element
+      })
+    }
     // Open in a new window
     if (options.openWindow) {
       this.on('print', function (e) {
@@ -12171,7 +12207,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
       })
     }
     // Print control
-    options.target = ol.ext.element.create('DIV')
+    options.target = options.target || ol.ext.element.create('DIV')
     var printCtrl = this._printCtrl = new ol.control.Print(options)
     printCtrl.on(['print', 'error', 'printing'], function (e) {
       content.setAttribute('data-status', e.type)
@@ -12188,7 +12224,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
     })
     // Print dialog
     var printDialog = this._printDialog = new ol.control.Dialog({
-      target: document.body,
+      target: options.targetDialog || document.body,
       closeBox: true,
       className: 'ol-ext-print-dialog'
     })
@@ -12719,7 +12755,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
    * @returns {string}
    */
   i18n(what) {
-    var rep = this._labels.en[what] || 'bad param';
+    var rep = this._labels.en[what] || what;
     if (this._labels[this._lang] && this._labels[this._lang][what]) {
       rep = this._labels[this._lang][what]
     }
@@ -14484,8 +14520,9 @@ ol.control.Scale = class olcontrolScale extends ol.control.Control {
   setScale(value) {
     var map = this.getMap();
     if (map && value) {
-      if (value.target)
+      if (value.target) {
         value = value.target.value;
+      }
       ol.sphere.setMapScale(map, value, this.get('ppi'));
     }
     this.getScale();
@@ -18749,7 +18786,7 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
     if (bbox)
       bbox = ol.proj.transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection())
     var attributions = []
-    if (caps.Attribution) {
+    if (caps.Attribution && caps.Attribution.Title) {
       attributions.push('<a href="' + encodeURI(caps.Attribution.OnlineResource) + '">&copy; ' + caps.Attribution.Title.replace(/</g, '&lt;') + '</a>')
     }
     var layer_opt = {
@@ -21749,9 +21786,9 @@ ol.format.GeoJSONX = class olformatGeoJSONX extends ol.format.GeoJSON {
     if (typeof (v[0]) === 'number') {
       p = this.encodeNumber(v[0], decimal) + ',' + this.encodeNumber(v[1], decimal);
       if (this._layout[2] == 'Z' && v.length > 2)
-        p += ',' + this.encodeNumber(v[i][2], 2);
+        p += ',' + this.encodeNumber(v[2], 2);
       if (this._layout[3] == 'M' && v.length > 3)
-        p += ',' + this.encodeNumber(v[i][3], 0);
+        p += ',' + this.encodeNumber(v[3], 0);
       return p;
     } else if (v.length && v[0]) {
       if (typeof (v[0][0]) === 'number') {
@@ -21771,6 +21808,7 @@ ol.format.GeoJSONX = class olformatGeoJSONX extends ol.format.GeoJSON {
           v[i] = tp;
           var dx = v[i][0] - dxy[0];
           var dy = v[i][1] - dxy[1];
+          // Prevent same coords
           if (i == 0 || (dx !== 0 || dy !== 0)) {
             p = this.encodeNumber(dx, 0) + ','
               + this.encodeNumber(dy, 0)
@@ -21781,7 +21819,11 @@ ol.format.GeoJSONX = class olformatGeoJSONX extends ol.format.GeoJSON {
           }
         }
         // Almost 2 points...
-        // if (xy.length<2) xy.push('A,A');
+        if (xy.length < 2 && v.length > 1) {
+          var p = 'A,A' + (hasZ ? ',A':'') + (hasM ? ',A':'');
+          xy.push(p);
+        }
+        // encoded
         return xy.join(';');
       } else {
         for (i = 0; i < v.length; i++) {
@@ -21923,8 +21965,9 @@ ol.format.GeoJSONX = class olformatGeoJSONX extends ol.format.GeoJSON {
           found = true;
         }
       }
-      if (found)
+      if (found) {
         f.push(prop);
+      }
     }
     return f;
   }
@@ -22910,6 +22953,14 @@ ol.interaction.CopyPaste = class olinteractionCopyPaste extends ol.interaction.C
     this.setSources(options.sources);
     this.setDestination(options.destination);
   }
+  /**
+   * Remove the interaction from its current map and attach it to the new map.
+   * @param {ol.Map} map The map instance.
+   */
+  setMap(map) {
+    super.setMap(map);
+    this.features = [];
+  }
   /** Sources to cut feature from
    * @param { ol.source.Vector | Array<ol.source.Vector> } sources
    */
@@ -23153,8 +23204,9 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
       if (o === ov)
         return;
     }
+    var element = ov.getElement();
     // Stop event overlay
-    if (ov.element.parentElement && ov.element.parentElement.classList.contains('ol-overlaycontainer-stopevent')) {
+    if (element.parentElement && element.parentElement.classList.contains('ol-overlaycontainer-stopevent')) {
       console.warn('[DragOverlay.addOverlay] overlay must be created with stopEvent set to false!');
       return;
     }
@@ -23167,7 +23219,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
       overlay: ov,
       listener: handler
     });
-    ov.element.addEventListener('pointerdown', handler);
+    element.addEventListener('pointerdown', handler);
   }
   /** Remove an overlay from the interacton
    * @param {ol.Overlay} ov
@@ -23176,7 +23228,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
     for (var i = 0, o; o = this._overlays[i]; i++) {
       if (o.overlay === ov) {
         var l = this._overlays.splice(i, 1)[0];
-        ov.element.removeEventListener('pointerdown', l.listener);
+        ov.getElement().removeEventListener('pointerdown', l.listener);
         break;
       }
     }
@@ -23200,6 +23252,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
  * 	@param {Array<ol.layer.Vector> | function | undefined} options.layers A list of layers from which polygons should be selected. Alternatively, a filter function can be provided. default: all visible layers
  * 	@param {Array<ol.Feature> | ol.Collection<ol.Feature> | function | undefined} options.featureFilter An array or a collection of features the interaction applies on or a function that takes a feature and a layer and returns true if the feature is a candidate
  * 	@param { ol.style.Style | Array<ol.style.Style> | StyleFunction | undefined }	Style for the selected features, default: default edit style
+ * 	@param {function | undefined}	options.geometryFunction Draw interaction geometry function to customize the hole
  */
 ol.interaction.DrawHole = class olinteractionDrawHole extends ol.interaction.Draw {
   constructor(options) {
@@ -23220,9 +23273,9 @@ ol.interaction.DrawHole = class olinteractionDrawHole extends ol.interaction.Dra
     }
     var geomFn = options.geometryFunction
     if (geomFn) {
-      options.geometryFunction = function (c, g) {
-        g = _geometryFn(c, g)
-        return geomFn(c, g)
+      options.geometryFunction = function (c, g, p) {
+        g = _geometryFn.bind(this)(c, g)
+        return geomFn.bind(this)(c, g, p)
       }
     } else {
       options.geometryFunction = _geometryFn
@@ -25040,7 +25093,7 @@ ol.interaction.Modify.prototype.getModifiedFeatures = function() {
   this.dragSegments_.forEach( function(s) {
     var feature = s[0].feature;
     // Openlayers > v.6
-    if (window.ol && window.ol.util) featuresById[ol.util.getUid(feature)] = feature;
+    if (window && window.ol && window.ol.util) featuresById[ol.util.getUid(feature)] = feature;
     // old version of Openlayers (< v.6) or ol all versions
     else featuresById[ol.getUid(feature)] = feature;
   });
@@ -27032,6 +27085,7 @@ ol.interaction.Split = class olinteractionSplit extends ol.interaction.Interacti
     // List of source to split
     this.setSources(options.sources)
     if (options.features) {
+      if (!this.sources_) this.sources_ = [];
       this.sources_.push(new ol.source.Vector({ features: options.features }))
     }
     // Get all features candidate
@@ -27136,7 +27190,7 @@ ol.interaction.Split = class olinteractionSplit extends ol.interaction.Interacti
     return this.sources_ || []
   }
   /** Set sources to split features in
-   * @param {ol.source.Vector|Array<ol.source.Vector>} [sources]
+   * @param {ol.source.Vector|Array<ol.source.Vector>|boolean} [sources] if not defined get all map vector sources
    */
   setSources(sources) {
     this.sources_ = sources ? (sources instanceof Array ? sources || false : [sources]) : false
@@ -28650,6 +28704,7 @@ ol.interaction.TouchCursorSelect = class olinteractionTouchCursorSelect extends 
  *	@param {ol.events.ConditionType | undefined} options.modifyCenter A function that takes an ol.MapBrowserEvent and returns a boolean to apply scale & strech from the center, default ol.events.condition.metaKey or ol.events.condition.ctrlKey.
  *	@param {boolean} options.enableRotatedTransform Enable transform when map is rotated
  *	@param {boolean} [options.keepRectangle=false] keep rectangle when possible
+ *  @param {number} [options.buffer] Increase the extent used as bounding box, default 0
  *	@param {*} options.style list of ol.style for handles
  *  @param {number|Array<number>|function} [options.pointRadius=0] radius for points or a function that takes a feature and returns the radius (or [radiusX, radiusY]). If not null show handles to transform the points
  */
@@ -28715,6 +28770,8 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
     this.set('enableRotatedTransform', (options.enableRotatedTransform || false))
     /* Keep rectangle angles 90 degrees */
     this.set('keepRectangle', (options.keepRectangle || false))
+    /* Add buffer to the feature's extent */
+    this.set('buffer', (options.buffer || 0))
     // Force redraw when changed
     this.on('propertychange', function () {
       this.drawSketch_()
@@ -28959,7 +29016,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
       coords.unshift(coords[3])
     }
     // Clone and extend
-    ext = ol.extent.buffer(ext, 0)
+    ext = ol.extent.buffer(ext, this.get('buffer'))
     this.selection_.forEach(function (f) {
       var extendExt = this.getGeometryRotateToZero_(f).getExtent()
       ol.extent.extend(ext, extendExt)
@@ -31414,7 +31471,7 @@ ol.source.GeoImage = class olsourceGeoImage extends ol.source.ImageCanvas {
   }
   /**
    * Get image rotation.
-   * @return {Number} rotation in degre.
+   * @return {Number} rotation in radian.
    * @api stable
    */
   getRotation() {
@@ -34790,10 +34847,6 @@ ol.Overlay.prototype.updatePixelPosition = function () {
   released under the CeCILL-B license (French BSD license)
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
-/*global ol*/
-if (window.ol && !ol.particule) {
-  ol.particule = {};
-}
 /** Abstract base class; normally only used for creating subclasses. 
  * An object with coordinates, draw and update
  * @constructor
@@ -36990,7 +37043,7 @@ ol.graph = {};
  *  @param {integer} [options.stepIteration=2000] number of iterations before a calculating event is fired, default 2000
  *  @param {number} [options.epsilon=1E-6] geometric precision (min distance beetween 2 points), default 1E-6
  */
-ol.graph.Dijskra = class olgraphDijskra extends ol.Object {
+ol.graph.Dijkstra = class olgraphDijskra extends ol.Object {
   constructor(options) {
     options = options || {};
     super();
@@ -37289,6 +37342,8 @@ ol.graph.Dijskra = class olgraphDijskra extends ol.Object {
     return route;
   }
 }
+// Typo error for compatibility purposes (to be removed)
+ol.graph.Dijskra = ol.graph.Dijkstra
 
 /** French Geoportail alti coding
  * @param {ol.geom.Geometry} geom
@@ -38188,7 +38243,7 @@ ol.geom.Simplificator = class olgeomSimplificator extends ol.Object {
    * @param {*} coords 
    * @param {*} arcs 
    * @param {*} contour 
-   * @returns 
+   * @returns Array
    * @private
    */
   _getArcs(coords, arcs, contour, round) {
@@ -38552,10 +38607,15 @@ ol.sphere.setMapScale = function (map, scale, dpi) {
   if (map && scale) {
     var fac = scale;
     if (typeof(scale)==='string') {
-      fac = scale.split('/')[1];
-      if (!fac) fac = scale;
+      scale = scale.replace(':','/').split('/');
+      fac = scale[1];
+      if (!fac) fac = scale[0] || '';
       fac = fac.replace(/[^\d]/g,'');
       fac = parseInt(fac);
+      if (scale[1]) {
+        var num = parseInt(scale[0]);
+        if (num) fac /= num;
+      }
     }
     if (!fac) return;
     // Calculate new resolution
@@ -39720,7 +39780,7 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       anchor[1] = c - this._offset[1];
     }
   }
-}
+};
 /** Default color set: classic, dark, pale, pastel, neon
 */
 ol.style.Chart.colors = {
@@ -39729,7 +39789,7 @@ ol.style.Chart.colors = {
   "pale":		["#fd0","#369","#f64","#3b7","#880","#b5d","#666"],
   "pastel":	["#fb4","#79c","#f66","#7d7","#acc","#fdd","#ff9","#b9b"], 
   "neon":		["#ff0","#0ff","#0f0","#f0f","#f00","#00f"]
-}
+};
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
@@ -39740,13 +39800,13 @@ ol.style.Chart.colors = {
  * Fill style with named pattern
  *
  * @constructor
- * @param {olx.style.FillPatternOption=}  options
+ * @param {any}  options
  *  @param {ol.style.Image|undefined} options.image an image pattern, image must be preloaded to draw on first call
  *  @param {number|undefined} options.opacity opacity with image pattern, default:1
  *  @param {string} options.pattern pattern name (override by image option)
  *  @param {ol.color} options.color pattern color
  *  @param {ol.style.Fill} options.fill fill color (background)
- *  @param {number} options.offset pattern offset for hash/dot/circle/cross pattern
+ *  @param {number|Array<number>} options.offset pattern offset for hash/dot/circle/cross pattern
  *  @param {number} options.size line size for hash/dot/circle/cross pattern
  *  @param {number} options.spacing spacing for hash/dot/circle/cross pattern
  *  @param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross
@@ -41932,7 +41992,7 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
  *	@param {string} options.pattern pattern name (override by image option)
  *	@param {ol.colorLike} options.color pattern color
  *	@param {ol.style.Fill} options.fill fill color (background)
- *	@param {number} options.offset pattern offset for hash/dot/circle/cross pattern
+ *	@param {number|Array<number>} options.offset pattern offset for hash/dot/circle/cross pattern
  *	@param {number} options.size line size for hash/dot/circle/cross pattern
  *	@param {number} options.spacing spacing for hash/dot/circle/cross pattern
  *	@param {number|bool} options.angle angle for hash pattern / true for 45deg dot/circle/cross

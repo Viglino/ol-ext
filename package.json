@@ -1,6 +1,6 @@
 {
   "name": "ol-ext",
-  "version": "4.0.7",
+  "version": "4.0.11",
   "description": "A set of cool extensions for OpenLayers (ol) in node modules structure",
   "main": "dist/ol-ext.js",
   "style": "dist/ol-ext.css",
@@ -27,6 +27,7 @@
   "scripts": {
     "test": "npm test npmtest.js",
     "start": "node ./node_modules/gulp/bin/gulp.js --gulpfile ./gulpfile.cjs serve",
+    "doc": "node ./node_modules/gulp/bin/gulp.js --gulpfile ./gulpfile.cjs doc",
     "lint": "eslint --fix src/ || exit 0",
     "prepack": "gulp prepublish --gulpfile ./gulpfile.cjs",
     "postpack": "gulp postpublish --gulpfile ./gulpfile.cjs"

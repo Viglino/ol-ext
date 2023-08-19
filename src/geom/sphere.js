@@ -121,10 +121,15 @@ var ol_sphere_setMapScale = function (map, scale, dpi) {
   if (map && scale) {
     var fac = scale;
     if (typeof(scale)==='string') {
-      fac = scale.split('/')[1];
-      if (!fac) fac = scale;
+      scale = scale.replace(':','/').split('/');
+      fac = scale[1];
+      if (!fac) fac = scale[0] || '';
       fac = fac.replace(/[^\d]/g,'');
       fac = parseInt(fac);
+      if (scale[1]) {
+        var num = parseInt(scale[0]);
+        if (num) fac /= num;
+      }
     }
     if (!fac) return;
     // Calculate new resolution

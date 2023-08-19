@@ -67,9 +67,10 @@ var ol_legend_Image = class ollegendImage extends ol_Object {
   }
   /** Get element
    * @param {ol.size} size symbol size
+   * @param {function} onclick
    */
   getElement(size, onclick) {
-    if (this.get('width')) size[1] = this.get('width');
+    if (this.get('width')) size[0] = this.get('width');
     if (this.get('height')) size[1] = this.get('height');
     var element = ol_ext_element.create('LI', {
       className: this.get('className'),

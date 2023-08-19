@@ -36,7 +36,7 @@ export {ol_graph};
  *  @param {integer} [options.stepIteration=2000] number of iterations before a calculating event is fired, default 2000
  *  @param {number} [options.epsilon=1E-6] geometric precision (min distance beetween 2 points), default 1E-6
  */
-var ol_graph_Dijskra = class olgraphDijskra extends ol_Object {
+var ol_graph_Dijkstra = class olgraphDijskra extends ol_Object {
   constructor(options) {
     options = options || {};
     super();
@@ -348,4 +348,7 @@ var ol_graph_Dijskra = class olgraphDijskra extends ol_Object {
   }
 }
 
-export default ol_graph_Dijskra;
+// Typo error for compatibility purposes (to be removed)
+var ol_graph_Dijskra = ol_graph_Dijkstra
+
+export default ol_graph_Dijkstra;

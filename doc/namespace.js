@@ -78,6 +78,10 @@
  * @namespace ol.graph
  */
 /** Vector feature rendering styles. 
+ * @namespace ol.style
+ * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_style_Style-Style.html}
+ */
+/** Vector feature rendering styles. 
  * @namespace ol.style.Style
  * @see {@link https://openlayers.org/en/latest/apidoc/module-ol_style_Style-Style.html}
  */

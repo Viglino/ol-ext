@@ -264,7 +264,7 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       anchor[1] = c - this._offset[1];
     }
   }
-}
+};
 
 /** Default color set: classic, dark, pale, pastel, neon
 */
@@ -274,6 +274,6 @@ ol_style_Chart.colors = {
   "pale":		["#fd0","#369","#f64","#3b7","#880","#b5d","#666"],
   "pastel":	["#fb4","#79c","#f66","#7d7","#acc","#fdd","#ff9","#b9b"], 
   "neon":		["#ff0","#0ff","#0f0","#f0f","#f00","#00f"]
-}
+};
 
 export default ol_style_Chart

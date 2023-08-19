@@ -701,7 +701,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
       bbox = ol_proj_transformExtent(bbox, 'EPSG:4326', this.getMap().getView().getProjection())
 
     var attributions = []
-    if (caps.Attribution) {
+    if (caps.Attribution && caps.Attribution.Title) {
       attributions.push('<a href="' + encodeURI(caps.Attribution.OnlineResource) + '">&copy; ' + caps.Attribution.Title.replace(/</g, '&lt;') + '</a>')
     }
 
