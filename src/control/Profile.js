@@ -137,15 +137,11 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
       }
     })
 
-    var div_to_canvas = document.createElement("div")
-    div.appendChild(div_to_canvas)
-    div_to_canvas.style.width = this.canvas_.width / ratio + "px"
-    div_to_canvas.style.height = this.canvas_.height / ratio + "px"
-    div_to_canvas.appendChild(this.canvas_)
-    div_to_canvas.addEventListener('pointerdown', this.onMove.bind(this))
-    document.addEventListener('pointerup', this.onMove.bind(this))
-    div_to_canvas.addEventListener('mousemove', this.onMove.bind(this))
-    div_to_canvas.addEventListener('touchmove', this.onMove.bind(this))
+    this.div_to_canvas_ = document.createElement("div")
+    div.appendChild(this.div_to_canvas_)
+    this.div_to_canvas_.style.width = this.canvas_.width / ratio + "px"
+    this.div_to_canvas_.style.height = this.canvas_.height / ratio + "px"
+    this.div_to_canvas_.appendChild(this.canvas_)
 
     this.setProperties({
       'units': options.units || 'metric',
@@ -256,6 +252,28 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
       }.bind(this))
     }
   }
+
+  /** Add canvas listeners
+   * @private
+   */
+  _addListeners() {
+    this.onMoveBinded = this.onMove.bind(this)
+    this.div_to_canvas_.addEventListener('pointerdown', this.onMoveBinded)
+    this.div_to_canvas_.addEventListener('mousemove', this.onMoveBinded)
+    this.div_to_canvas_.addEventListener('touchmove', this.onMoveBinded)
+    document.addEventListener('pointerup', this.onMoveBinded)
+  }
+
+  /** Remove canvas listeners
+   * @private
+   */
+  _removeListeners() {
+    this.div_to_canvas_.removeEventListener('pointerdown', this.onMoveBinded)
+    this.div_to_canvas_.removeEventListener('mousemove', this.onMoveBinded)
+    this.div_to_canvas_.removeEventListener('touchmove', this.onMoveBinded)
+    document.removeEventListener('pointerup', this.onMoveBinded)
+  }
+
   /** Show popup info
   * @param {string} info to display as a popup
   * @api stable
@@ -484,6 +502,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
   */
   show() {
     this.element.classList.remove("ol-collapsed")
+    this._addListeners()
     this.dispatchEvent({ type: 'show', show: true })
   }
   /** Hide panel
@@ -491,6 +510,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
   */
   hide() {
     this.element.classList.add("ol-collapsed")
+    this._removeListeners()
     this.dispatchEvent({ type: 'show', show: false })
   }
   /** Toggle panel
@@ -838,7 +858,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     }
 
     if (typeof stepsX === 'number') {
-      step = Math.floor((d / (stepsX)))
+      step = (d / stepsX - 1)
     } else {
       if (d > maxLimit) {
         step = Math.round(d / 1000) * 100
@@ -856,10 +876,11 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
       }
     }
     for (i = 0; i <= d; i += step) {
-      var txt = this._numberFormat(this._unitsConversion(i, unit), xDigits)
+      var num = Number(this._unitsConversion(i, unit).toFixed(xDigits))
+      var txt = this._numberFormat(num, xDigits)
       //if (i+step>d) txt += " "+ (options.zunits || "km");
-      ctx.fillText(txt, i * scx, 4 * ratio)
-      ctx.moveTo(i * scx, 2 * ratio); ctx.lineTo(i * scx, 0)
+      ctx.fillText(txt, num * scx, 4 * ratio)
+      ctx.moveTo(num * scx, 2 * ratio); ctx.lineTo(num * scx, 0)
     }
     ctx.font = (12 * ratio) + "px arial"
     var xOldMethod = this.info.xtitle.search('(km)') // Support for old naming convention and replace unit method
@@ -890,6 +911,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
    * Convert meters to another system of measurement or unit 
    * @param {number} nMeters 
    * @param {('m'|'km'|'ft'|'mi')} targetUnit default is m
+   * @return {number}
    * @api stable
    */
   _unitsConversion = function (nMeters, targetUnit = Unit.Meter) {
@@ -917,7 +939,8 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
    */
   _numberFormat = function (number, decimals = 2) {
     var locale = this.get('numberFormat')
-    if (!locale) return Math.round(Number(number) * (10 * decimals)) / (10 * decimals)
+    if (!locale) 
+      return Number(number).toFixed(decimals)
     return Number(number).toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: decimals })
   }
 }
