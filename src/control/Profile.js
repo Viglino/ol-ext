@@ -858,7 +858,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     }
 
     if (typeof stepsX === 'number') {
-      step = (d / stepsX - 1)
+      step = (d / (stepsX - 1))
     } else {
       if (d > maxLimit) {
         step = Math.round(d / 1000) * 100
