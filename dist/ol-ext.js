@@ -35834,7 +35834,7 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
         }
         if (this._style.getStroke()) {
           e.context.strokeStyle = ol.color.asString(this._style.getStroke().getColor())
-          e.context.lineWidth = this._style.getStroke().width()
+          e.context.lineWidth = this._style.getStroke().getWidth()
           e.context.stroke()
         }
         e.context.restore()
