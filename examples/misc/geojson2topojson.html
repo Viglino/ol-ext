@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
   <!-- ol3 to show the map -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 
   <!-- filesaver-js -->
@@ -236,7 +236,7 @@
       zoom: 1,
       center: [270055, 3528229.]
     }),
-    layers: [new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) })]
+    layers: [new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) })]
   });
 
   var vector = new ol.layer.Vector({

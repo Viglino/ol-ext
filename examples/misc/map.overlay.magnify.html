@@ -78,7 +78,7 @@
         zoom: 15,
         center: [270148, 6247782]
       }),
-      layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+      layers: [ new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }) ]
     });
 
     // Layers for the overview
@@ -89,9 +89,7 @@
         preload: 2
       }),
       new ol.layer.Tile({
-        source: new ol.source.Stamen({
-          layer: 'watercolor'
-        }),
+        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }),
         // Use preload to have tile when moving 
         preload: 2
       })
@@ -99,9 +97,7 @@
     var layersOV2 = [
       new ol.layer.Tile({	source: new ol.source.OSM()	}),
       new ol.layer.Tile({
-        source: new ol.source.Stamen({
-          layer: 'watercolor'
-        }),
+        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }),
         // Use preload to have tile when moving 
         preload: 2
       })

@@ -66,15 +66,15 @@
   var layers = [
   new ol.layer.Tile({
       title:'terrain',
-      source: new ol.source.Stamen({ layer: 'terrain-background' })
+      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_background' })
     }),
     new ol.layer.Tile({
       title:'line',
-      source: new ol.source.Stamen({ layer: 'terrain-lines' })
+      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_lines' })
     }),
     new ol.layer.Tile({
       title: 'label',
-      source: new ol.source.Stamen({ layer: 'terrain-labels' })
+      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' })
     })
   ];
 

@@ -72,14 +72,14 @@
         title: "Watercolor",
         className: "Watercolor",
         baseLayer: true,
-        source: new ol.source.Stamen({ layer: 'watercolor' })
+        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
       }),
       new ol.layer.Tile({
         title: "Toner",
         className: "Toner",
         baseLayer: true,
         visible: false,
-        source: new ol.source.Stamen({ layer: 'toner' })
+        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
       }),
       new ol.layer.Tile({
         title: "OSM",
@@ -141,7 +141,7 @@
       new ol.layer.Tile({
         title: 'Labels',
         className: 'Labels',
-        source: new ol.source.Stamen({ layer: 'terrain-labels' })
+        source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' })
       }) 
     ]
   });

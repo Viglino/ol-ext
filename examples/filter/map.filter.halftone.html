@@ -17,8 +17,8 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
-  <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
   <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
@@ -101,7 +101,7 @@
   <script type="text/javascript">
     ol.layer.Geoportail.register("ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW", {"key":"altimetrie","server":"https://wxs.ign.fr/geoportail/wmts","layer":"ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW","title":"Estompage","format":"image/png","style":"estompage_grayscale","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-63.186966,-21.406914,55.8884,50.9218],"desc":"Couche d'ombrage calculée à partir des données altimétriques de l'IGN permettant de mieux appréhender le relief. L'estompage proposé est réalisé à partir des données MNT BDAlti au pas de 25m avec deux soleils : un au nord-est de hauteur 45°, l'autre zénithal.","originators":{"IGN":{"href":"https://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.186966,-21.406914,55.8884,50.9218]}]}}});
     var layers = [
-      new ol.layer.Tile({ title: 'stamen', permalink:'stamen', visible: true, source: new ol.source.Stamen({ layer: 'terrain' }) }),
+      new ol.layer.Tile({ title: 'stamen', permalink:'stamen', visible: true, source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' }) }),
       new ol.layer.Geoportail({ layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', visible: false, permalink:'shadow' }),
       new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', visible: false, permalink:'ortho' })
     ]
