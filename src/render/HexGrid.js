@@ -109,7 +109,7 @@ var ol_HexGrid = class olHexGrid extends ol_Object {
   /** Convert offset to cube coords
   * @param {ol.Coordinate} c cube coordinate
   * @return {ol.Coordinate} offset coordinate
-  * /
+  */
   cube2offset(c) {
     return this.hex2offset(this.cube2hex(c));
   };
@@ -117,7 +117,7 @@ var ol_HexGrid = class olHexGrid extends ol_Object {
   /** Convert cube to offset coords
   * @param {ol.Coordinate} o offset coordinate
   * @return {ol.Coordinate} cube coordinate
-  * /
+  */
   offset2cube(o) {
     return this.hex2cube(this.offset2Hex(o));
   };
