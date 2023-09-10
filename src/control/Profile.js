@@ -297,14 +297,14 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
 
       var zunit = this._isMetric ? Unit.Meter : Unit.Foot
       var zvalue = this._unitsConversion(p[1], zunit)
-      this.element.querySelector(".point-info .z").textContent = this._numberFormat(zvalue, this.get('zDigitsHover')) + zunit
+      this.element.querySelector(".point-info .z").textContent = typeof zvalue === 'number' ? this._numberFormat(zvalue, this.get('zDigitsHover')) + zunit : '-'
 
       var xunit
       if (this._isMetric) xunit = (xvalue > KILOMETER_VALUE) ? Unit.Kilometer : Unit.Meter
       else xunit = (xvalue > MILE_VALUE) ? Unit.Mile : Unit.Foot
 
       var xvalue = this._unitsConversion(p[0], xunit)
-      this.element.querySelector(".point-info .dist").textContent = this._numberFormat(xvalue, this.get('xDigitsHover')) + xunit
+      this.element.querySelector(".point-info .dist").textContent = typeof xvalue === 'number' ? this._numberFormat(xvalue, this.get('xDigitsHover')) + xunit : '-'
 
       this.element.querySelector(".point-info .time").textContent = p[2]
       if (dx > this.canvas_.width / this.ratio / 2)
