@@ -56,10 +56,10 @@
   // Layers
   var mapbox = new ol.layer.Tile({
     title:'terrain-background',
-    source: new ol.source.Stamen({ layer: 'terrain' })
+    source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
   });
   var stamen = new ol.layer.Tile({
-    source: new ol.source.Stamen({ layer: 'watercolor' }) 
+    source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) 
   });
   var vector = new ol.layer.Vector({
     name: '1914-18',

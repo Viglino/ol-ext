@@ -100,18 +100,19 @@
     var layers = [
       new ol.layer.Tile({ 
         title:'terrain-background',
-        source: new ol.source.Stamen({ layer: 'terrain' })
+        source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
       })
     ]
     // The map
     var map = new ol.Map({
       target: 'map',
-        view: new ol.View({
-          zoom: 5,
-          center: [261720, 5951081]
-        }),
-        layers: layers
-      });
+      view: new ol.View({
+        zoom: 5,
+        center: [261720, 5951081]
+      }),
+      layers: layers
+    });
+
 
     // Style
     function getStyle(feature) {
@@ -304,6 +305,11 @@
       $('#info').text(""); 
     });
     
+    /*
+    map.addInteraction(new ol.interaction.Snap({
+      source: vector.getSource()
+    }))
+    */
   </script>
 
 </body>

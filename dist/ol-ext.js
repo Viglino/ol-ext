@@ -17946,7 +17946,7 @@ ol.control.VideoRecorder = class olcontrolVideoRecorder extends ol.control.Contr
     ol.ext.element.create('BUTTON', {
       type: 'button',
       className: 'ol-start',
-      title: 'start',
+      title: ol.control.VideoRecorder.prototype.tips.start,
       click: function () {
         this.start()
       }.bind(this),
@@ -17955,7 +17955,7 @@ ol.control.VideoRecorder = class olcontrolVideoRecorder extends ol.control.Contr
     ol.ext.element.create('BUTTON', {
       type: 'button',
       className: 'ol-stop',
-      title: 'stop',
+      title: ol.control.VideoRecorder.prototype.tips.stop,
       click: function () {
         this.stop()
       }.bind(this),
@@ -17964,7 +17964,7 @@ ol.control.VideoRecorder = class olcontrolVideoRecorder extends ol.control.Contr
     ol.ext.element.create('BUTTON', {
       type: 'button',
       className: 'ol-pause',
-      title: 'pause',
+      title: ol.control.VideoRecorder.prototype.tips.pause,
       click: function () {
         this.pause()
       }.bind(this),
@@ -17973,7 +17973,7 @@ ol.control.VideoRecorder = class olcontrolVideoRecorder extends ol.control.Contr
     ol.ext.element.create('BUTTON', {
       type: 'button',
       className: 'ol-resume',
-      title: 'resume',
+      title: ol.control.VideoRecorder.prototype.tips.resume,
       click: function () {
         this.resume()
       }.bind(this),
@@ -17996,6 +17996,16 @@ ol.control.VideoRecorder = class olcontrolVideoRecorder extends ol.control.Contr
     this._printCtrl = new ol.control.Print({
       target: ol.ext.element.create('DIV')
     })
+  }
+  /** Set button title
+   * @param {string} button button name (start, stop, pause or resume)
+   * @param {string} title
+   */
+  setTooltip(button, title) {
+    var elt = this.element.querySelector('button.ol-'+button)
+    if (elt) {
+      elt.title = title;
+    }
   }
   /**
    * Remove the control from its current map and attach it to the new map.
@@ -18114,6 +18124,13 @@ ol.control.VideoRecorder = class olcontrolVideoRecorder extends ol.control.Contr
       this.element.setAttribute('data-state', 'rec')
     }
   }
+}
+/** Default button tips */
+ol.control.VideoRecorder.prototype.tips = {
+  start: 'start video',
+  stop: 'stop',
+  pause: 'pause',
+  resume: 'resume'
 }
 
 /* 
@@ -29167,8 +29184,9 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
       this.constraint_ = sel.constraint
       // Save info
       var viewRotation = this.getMap().getView().getRotation()
-      this.coordinate_ = evt.coordinate
-      this.pixel_ = evt.pixel
+      // Get coordinate of the handle (for snapping)
+      this.coordinate_ = feature.getGeometry().getCoordinates(); //evt.coordinate
+      this.pixel_ = this.getMap().getCoordinateFromPixel(this.coordinate_) // evt.pixel;
       this.geoms_ = []
       this.rotatedGeoms_ = []
       var extent = ol.extent.createEmpty()
@@ -35817,7 +35835,7 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
         }
         if (this._style.getStroke()) {
           e.context.strokeStyle = ol.color.asString(this._style.getStroke().getColor())
-          e.context.lineWidth = this._style.getStroke().width()
+          e.context.lineWidth = this._style.getStroke().getWidth()
           e.context.stroke()
         }
         e.context.restore()

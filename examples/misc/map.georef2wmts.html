@@ -55,6 +55,7 @@
   <div id="map"></div>
 
   <div class="options">
+    <input type="file"/>
   </div>
 
 <script type="text/javascript">
@@ -80,6 +81,22 @@
     formatConstructors: ['none'] 
   });
   ddrop.on('loadend', function(e) {
+    // Load local image
+    if (/image/.test(e.file.type)) {
+      var reader = new FileReader()
+      reader.readAsDataURL(e.file)
+      reader.onloadend = function() {
+        var img = document.createElement('img')
+        img.src = reader.result
+        geoImage.getSource()._image = img;
+        geoImage.getSource().changed()
+        var n = e.file.name.split('.')
+        n.pop();
+        geoImage.set('title', n.join('.'))
+      }
+      return;
+    }
+    // Load geoimage
     var data = JSON.parse(e.result);
     var layer;
     data.layers.forEach((function(l) {
@@ -90,10 +107,10 @@
         geoImage = new ol.layer.Image({ title: l.name, source: source });
         map.addLayer(geoImage);
         // Get GeoIMage info
-        var ext = geoImage.getSource().getExtent();
+        var ext = geoImage.getSource().calculateExtent();
         map.getView().fit(ext);
         var z = map.getView().getZoomForResolution(l.imageScale[0]);
-        // map.getView().setZoom(z);
+        map.getView().setZoom(z);
         console.log('Zoom: ',z.toFixed(2));
         console.log('Extent: ',[Math.round(ext[0]),Math.round(ext[1]),Math.round(ext[2]),Math.round(ext[3])]);
       }
@@ -114,16 +131,16 @@
         1, 
         [tileSize,tileSize]
       );
-      var dt = canvas.toDataURL('image/jpeg');
+      // var dt = canvas.toDataURL('image/png');
       canvas.toBlob(function(blob) {
         saveAs(blob, geoImage.get('title')+'_'+z+'-'+x+'-'+y+'.png');
-      }, 'image/png', .5);
+      }, 'image/png');
     }
     console.log(tiles.length)
     if (tiles.length) setTimeout(function() { loadFiles(tiles); }, 1000);
   }
   function saveExtent (res, extent) {
-    if (!extent) extent = geoImage.getSource().getExtent();
+    if (!extent) extent = geoImage.getSource().calculateExtent();
     if (!res) res = map.getView().getResolution();
     var tl = tgrid.getTileCoordForCoordAndResolution([extent[0],extent[1]], res);
     var br = tgrid.getTileCoordForCoordAndResolution([extent[2],extent[3]], res);

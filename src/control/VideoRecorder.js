@@ -38,7 +38,7 @@ var ol_control_VideoRecorder = class olcontrolVideoRecorder extends ol_control_C
     ol_ext_element.create('BUTTON', {
       type: 'button',
       className: 'ol-start',
-      title: 'start',
+      title: ol_control_VideoRecorder.prototype.tips.start,
       click: function () {
         this.start()
       }.bind(this),
@@ -47,7 +47,7 @@ var ol_control_VideoRecorder = class olcontrolVideoRecorder extends ol_control_C
     ol_ext_element.create('BUTTON', {
       type: 'button',
       className: 'ol-stop',
-      title: 'stop',
+      title: ol_control_VideoRecorder.prototype.tips.stop,
       click: function () {
         this.stop()
       }.bind(this),
@@ -56,7 +56,7 @@ var ol_control_VideoRecorder = class olcontrolVideoRecorder extends ol_control_C
     ol_ext_element.create('BUTTON', {
       type: 'button',
       className: 'ol-pause',
-      title: 'pause',
+      title: ol_control_VideoRecorder.prototype.tips.pause,
       click: function () {
         this.pause()
       }.bind(this),
@@ -65,7 +65,7 @@ var ol_control_VideoRecorder = class olcontrolVideoRecorder extends ol_control_C
     ol_ext_element.create('BUTTON', {
       type: 'button',
       className: 'ol-resume',
-      title: 'resume',
+      title: ol_control_VideoRecorder.prototype.tips.resume,
       click: function () {
         this.resume()
       }.bind(this),
@@ -90,6 +90,16 @@ var ol_control_VideoRecorder = class olcontrolVideoRecorder extends ol_control_C
     this._printCtrl = new ol_control_Print({
       target: ol_ext_element.create('DIV')
     })
+  }
+  /** Set button title
+   * @param {string} button button name (start, stop, pause or resume)
+   * @param {string} title
+   */
+  setTooltip(button, title) {
+    var elt = this.element.querySelector('button.ol-'+button)
+    if (elt) {
+      elt.title = title;
+    }
   }
   /**
    * Remove the control from its current map and attach it to the new map.
@@ -209,6 +219,14 @@ var ol_control_VideoRecorder = class olcontrolVideoRecorder extends ol_control_C
       this.element.setAttribute('data-state', 'rec')
     }
   }
+}
+
+/** Default button tips */
+ol_control_VideoRecorder.prototype.tips = {
+  start: 'start video',
+  stop: 'stop',
+  pause: 'pause',
+  resume: 'resume'
 }
 
 export default ol_control_VideoRecorder

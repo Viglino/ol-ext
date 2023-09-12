@@ -512,8 +512,9 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
       this.constraint_ = sel.constraint
       // Save info
       var viewRotation = this.getMap().getView().getRotation()
-      this.coordinate_ = evt.coordinate
-      this.pixel_ = evt.pixel
+      // Get coordinate of the handle (for snapping)
+      this.coordinate_ = feature.getGeometry().getCoordinates(); //evt.coordinate
+      this.pixel_ = this.getMap().getCoordinateFromPixel(this.coordinate_) // evt.pixel;
       this.geoms_ = []
       this.rotatedGeoms_ = []
       var extent = ol_extent_createEmpty()

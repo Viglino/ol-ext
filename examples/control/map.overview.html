@@ -101,24 +101,20 @@
         zoom: 15,
         center: [270148, 6247782]
       }),
-      layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+      layers: [ new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }) ]
     });
 
     // Layers for the overview
     var layers = [
       new ol.layer.Tile({	source: new ol.source.OSM()	}),
       new ol.layer.Tile({
-        source: new ol.source.Stamen({
-        layer: 'toner'
-        })
+        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
       })
     ];
     var layers2 = [
       new ol.layer.Tile({	source: new ol.source.OSM()	}),
       new ol.layer.Tile({
-        source: new ol.source.Stamen({
-        layer: 'toner'
-        })
+        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
       })
     ];
 

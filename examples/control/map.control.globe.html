@@ -67,7 +67,7 @@
         zoom: 5,
         center: [270148, 6247782]
       }),
-      layers: [ new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) }) ]
+      layers: [ new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }) ]
     });
 
     // GeoJSON layer
@@ -91,9 +91,7 @@
       vector,
       new ol.layer.Tile({	source: new ol.source.OSM()	}),
       new ol.layer.Tile({
-        source: new ol.source.Stamen({
-        layer: 'toner'
-        })
+        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
       }),
       new ol.layer.Tile({
         source: new ol.source.XYZ({

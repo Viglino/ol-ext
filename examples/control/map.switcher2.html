@@ -61,17 +61,13 @@
       new ol.layer.Tile({
         title: "Watercolor",
         baseLayer: true,
-        source: new ol.source.Stamen({
-          layer: 'watercolor'
-        })
+        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
       }),
       new ol.layer.Tile({
         title: "Toner",
         baseLayer: true,
         visible: false,
-        source: new ol.source.Stamen({
-          layer: 'toner'
-        })
+        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
       }),
       new ol.layer.Tile({
         title: "OSM",
@@ -87,7 +83,7 @@
     title: "Labels (on top)",
     allwaysOnTop: true,			// Stay on top of layer switcher
     noSwitcherDelete: true,		// Prevent deleting from layer switcher
-    source: new ol.source.Stamen({ layer: 'terrain-labels' })
+    source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' })
   });
   // WMS with bbox
   var brgm = new ol.layer.Tile ({
