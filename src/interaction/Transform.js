@@ -513,7 +513,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
       // Save info
       var viewRotation = this.getMap().getView().getRotation()
       // Get coordinate of the handle (for snapping)
-      this.coordinate_ = feature.getGeometry().getCoordinates(); //evt.coordinate
+      this.coordinate_ = feature.get('handle') ? feature.getGeometry().getCoordinates() : evt.coordinate;
       this.pixel_ = this.getMap().getCoordinateFromPixel(this.coordinate_) // evt.pixel;
       this.geoms_ = []
       this.rotatedGeoms_ = []
