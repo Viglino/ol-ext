@@ -53,7 +53,7 @@ var KILOMETER_VALUE = 1000
  *  @param {*} options.info keys/values for i19n
  *  @param {number} [options.width=300]
  *  @param {number} [options.height=150]
- *  @param {'metric'|'imperial'} [options.units='metric'] output system of measurement. Note that input z coords ​​are expected to be in meters in either mode (as determined by GPX, DEM, DSM, etc. standards).
+ *  @param {'metric'|'imperial'} [options.units='metric'] output system of measurement Note that input z coords are expected to be in meters in either mode (as determined by GPX, DEM, DSM, etc. standards).
  *  @param {ol.Feature} [options.feature] the feature to draw profil
  *  @param {boolean} [options.selectable=false] enable selection on the profil, default false
  *  @param {boolean} [options.zoomable=false] can zoom in the profil
@@ -443,6 +443,10 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
       if (!p)
         p = this.tab_[this.tab_.length - 1]
       dx = Math.max(this.margin_.left / ratio, Math.min(dx, (this.canvas_.width - this.margin_.right) / ratio))
+      
+      // invalid y value
+      if (typeof p[1] === 'undefined') return;
+
       this._drawAt(p, dx)
       this.dispatchEvent({ type: 'over', click: e.type === 'click', index: index, coord: p[3], time: p[2], distance: p[0] })
       // Handle drag / click
@@ -546,37 +550,63 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
   _drawGraph(t, style) {
     if (!t.length)
       return
+
+    function closeSegment(inX, outX) {
+        if (style.getStroke()) {
+            var stringColor = style.getStroke().getColor()
+            ctx.strokeStyle = stringColor ? ol_asString(stringColor) : '#000'
+            ctx.lineWidth = style.getStroke().getWidth() * ratio
+            ctx.setLineDash([])
+            ctx.stroke()
+          }
+
+        if (style.getFill()) {
+            var fillColor = style.getFill().getColor()
+            ctx.fillStyle = fillColor ? ol_asString(fillColor) : '#000'
+            ctx.Style = fillColor ? ol_asString(fillColor) : '#000'
+            ctx.lineTo(outX * scx, 0)
+            ctx.lineTo(inX * scx, 0)  
+            ctx.fill()
+          }
+    }
+
     var ctx = this.canvas_.getContext('2d')
     var scx = this.scale_[0]
     var scy = this.scale_[1]
     var dy = this.dy_
     var ratio = this.ratio
-    var i, p
+    var i, p, inX, outX, hasToCloseSegment = false
 
     // Draw Path
     ctx.beginPath()
     for (i = 0; p = t[i]; i++) {
       if (i == 0)
         ctx.moveTo(p[0] * scx, p[1] * scy + dy)
-      else
-        ctx.lineTo(p[0] * scx, p[1] * scy + dy)
+      else {
+        if (p[1]) {
+            hasToCloseSegment = true;
+            if (!inX) inX = p[0];
+            outX = p[0];
+            ctx.lineTo(p[0] * scx, p[1] * scy + dy)
+        } else {
+          if (hasToCloseSegment) {
+              closeSegment(inX, outX)
+              hasToCloseSegment = false
+              inX = null
+              outX =  null
+          }  
+          if (t[i+1]) {
+            ctx.beginPath()
+            ctx.moveTo(t[i+1][0] * scx, t[i+1][1] * scy + dy)
+          }
+        }
+      }    
     }
-    if (style.getStroke()) {
-      var stringColor = style.getStroke().getColor()
-      ctx.strokeStyle = stringColor ? ol_asString(stringColor) : '#000'
-      ctx.lineWidth = style.getStroke().getWidth() * ratio
-      ctx.setLineDash([])
-      ctx.stroke()
-    }
-    // Fill path
-    if (style.getFill()) {
-      var fillColor = style.getFill().getColor()
-      ctx.fillStyle = fillColor ? ol_asString(fillColor) : '#000'
-      ctx.Style = fillColor ? ol_asString(fillColor) : '#000'
-      ctx.lineTo(t[t.length - 1][0] * scx, 0)
-      ctx.lineTo(t[0][0] * scx, 0)
-      ctx.fill()
-    }
+
+    if (hasToCloseSegment)
+        closeSegment(inX, outX)
+    
+
   }
   /**
    * Set the geometry to draw the profil.
@@ -914,7 +944,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
    * @return {number}
    * @api stable
    */
-  _unitsConversion = function (nMeters, targetUnit = Unit.Meter) {
+  _unitsConversion(nMeters, targetUnit = Unit.Meter) {
     switch (targetUnit) {
       case Unit.Kilometer:
         return nMeters / KILOMETER_VALUE;
@@ -937,7 +967,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
    * @returns {string}
    * @api stable
    */
-  _numberFormat = function (number, decimals = 2) {
+  _numberFormat(number, decimals = 2) {
     var locale = this.get('numberFormat')
     if (!locale) 
       return Number(number).toFixed(decimals)
