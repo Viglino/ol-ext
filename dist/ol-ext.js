@@ -35566,9 +35566,11 @@ ol.Overlay.AnimatedCanvas = class olOverlayAnimatedCanvas extends ol.Overlay {
    * @param {ol.Map} map The map instance.
    */
   setMap(map) {
+    /*
     if (this.getMap()) {
       this.getMap().getViewport().querySelector('.ol-overlaycontainer').removeChild(this._canvas);
     }
+    */
     this._listener.forEach(function (l) {
       ol.Observable.unByKey(l);
     });
@@ -35588,6 +35590,7 @@ ol.Overlay.AnimatedCanvas = class olOverlayAnimatedCanvas extends ol.Overlay {
         }
       }.bind(this)));
     }
+    this.setAnimation(!!map);
   }
   /** Create particules or return exiting ones
    */
