@@ -19,6 +19,7 @@ import ol_style_Fill from 'ol/style/Fill.js'
  *  @param {boolean} options.crop crop within square, default is false
  *  @param {Number} options.radius symbol size
  *  @param {boolean} options.shadow drop a shadow
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *  @param {ol_style_Stroke} options.stroke
  *  @param {String} options.src image src
  *  @param {String} options.crossOrigin The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
@@ -51,7 +52,8 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
       points: 0,
       displacement: [options.displacement[0] || 0, (options.displacement[1] || 0) + sanchor],
       // No fill to create a hit detection Image (v5) or transparent (v6) 
-      fill: ol_style_RegularShape.prototype.render ? new ol_style_Fill({ color: [0, 0, 0, 0] }) : null
+      fill: ol_style_RegularShape.prototype.render ? new ol_style_Fill({ color: [0, 0, 0, 0] }) : null,
+      declutterMode: options.declutterMode,
     })
     this.sanchor_ = sanchor;
     this._shadow = shadow;
@@ -123,7 +125,8 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
       offsetX: this._offset[0],
       offsetY: this._offset[1],
       opacity: this.getOpacity(),
-      rotation: this.getRotation()
+      rotation: this.getRotation(),
+      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
     })
     i.getImage()
     return i

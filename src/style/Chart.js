@@ -18,6 +18,7 @@ import {asString as ol_color_asString} from 'ol/color.js'
  *	@param {String} options.type Chart type: pie,pie3D, donut or bar
  *	@param {number} options.radius Chart radius/size, default 20
  *	@param {number} options.rotation Rotation in radians (positive rotation clockwise). Default is 0.
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *	@param {bool} options.snapToPixel use integral numbers of pixels, default true
  *	@param {_ol_style_Stroke_} options.stroke stroke style
  *	@param {String|Array<ol_color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
@@ -42,7 +43,8 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       fill: new ol_style_Fill({ color: [0, 0, 0] }),
       rotation: options.rotation,
       displacement: options.displacement,
-      snapToPixel: options.snapToPixel
+      snapToPixel: options.snapToPixel,
+      declutterMode: options.declutterMode,
     });
     this.setScale(options.scale || 1);
 
@@ -81,7 +83,8 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       colors: this._colors,
       offsetX: this._offset[0],
       offsetY: this._offset[1],
-      animation: this._animation
+      animation: this._animation,
+      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
     });
     s.setScale(this.getScale());
     s.setOpacity(this.getOpacity());

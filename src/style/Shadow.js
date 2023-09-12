@@ -17,6 +17,7 @@ import ol_style_RegularShape from 'ol/style/RegularShape.js'
  *  @param {ol.style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
  *  @param {number} options.radius point radius
  * 	@param {number} options.blur lur radius, default radius/3
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *  @param {Array<number>} [options.displacement] to use with ol > 6
  * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
  * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
@@ -29,7 +30,8 @@ var ol_style_Shadow = class olstyleShadow extends ol_style_RegularShape {
     super({
       radius: options.radius,
       fill: options.fill,
-      displacement: options.displacement
+      displacement: options.displacement,
+      declutterMode: options.declutterMode,
     });
 
     this._fill = options.fill || new ol_style_Fill({ color: "rgba(0,0,0,0.5)" });
@@ -52,7 +54,8 @@ var ol_style_Shadow = class olstyleShadow extends ol_style_RegularShape {
       radius: this._radius,
       blur: this._blur,
       offsetX: this._offset[0],
-      offsetY: this._offset[1]
+      offsetY: this._offset[1],
+      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
     });
     s.setScale(this.getScale());
     s.setOpacity(this.getOpacity());

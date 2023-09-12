@@ -22,6 +22,7 @@ import {asString as ol_color_asString} from 'ol/color.js'
  *  @param {number} options.radius
  *  @param {number} options.rotation
  *  @param {boolean} options.rotateWithView
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *  @param {number} [options.opacity=1]
  *  @param {number} [options.fontSize=1] size of the font compare to the radius, fontSize greater than 1 will exceed the symbol extent
  *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
@@ -51,7 +52,8 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
       fill: options.fill,
       rotation: options.rotation,
       displacement: options.displacement,
-      rotateWithView: options.rotateWithView
+      rotateWithView: options.rotateWithView,
+      declutterMode: options.declutterMode,
     });
 
     if (typeof (options.opacity) == "number")
@@ -127,7 +129,8 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
       offsetY: this._offset[1],
       opacity: this.getOpacity(),
       rotation: this.getRotation(),
-      rotateWithView: this.getRotateWithView()
+      rotateWithView: this.getRotateWithView(),
+      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
     });
     g.setScale(this.getScale());
     return g;
