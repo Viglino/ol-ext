@@ -29185,7 +29185,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
       // Save info
       var viewRotation = this.getMap().getView().getRotation()
       // Get coordinate of the handle (for snapping)
-      this.coordinate_ = feature.getGeometry().getCoordinates(); //evt.coordinate
+      this.coordinate_ = feature.get('handle') ? feature.getGeometry().getCoordinates() : evt.coordinate;
       this.pixel_ = this.getMap().getCoordinateFromPixel(this.coordinate_) // evt.pixel;
       this.geoms_ = []
       this.rotatedGeoms_ = []
@@ -39119,14 +39119,14 @@ ol.HexGrid = class olHexGrid extends ol.Object {
   /** Convert offset to cube coords
   * @param {ol.Coordinate} c cube coordinate
   * @return {ol.Coordinate} offset coordinate
-  * /
+  */
   cube2offset(c) {
     return this.hex2offset(this.cube2hex(c));
   };
   /** Convert cube to offset coords
   * @param {ol.Coordinate} o offset coordinate
   * @return {ol.Coordinate} cube coordinate
-  * /
+  */
   offset2cube(o) {
     return this.hex2cube(this.offset2Hex(o));
   };
@@ -39565,6 +39565,7 @@ ol.Map.prototype.pulse = function(coords, options) {
  *	@param {String} options.type Chart type: pie,pie3D, donut or bar
  *	@param {number} options.radius Chart radius/size, default 20
  *	@param {number} options.rotation Rotation in radians (positive rotation clockwise). Default is 0.
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *	@param {bool} options.snapToPixel use integral numbers of pixels, default true
  *	@param {_ol_style_Stroke_} options.stroke stroke style
  *	@param {String|Array<ol.color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
@@ -39589,7 +39590,8 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       fill: new ol.style.Fill({ color: [0, 0, 0] }),
       rotation: options.rotation,
       displacement: options.displacement,
-      snapToPixel: options.snapToPixel
+      snapToPixel: options.snapToPixel,
+      declutterMode: options.declutterMode,
     });
     this.setScale(options.scale || 1);
     this._stroke = options.stroke;
@@ -39625,7 +39627,8 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       colors: this._colors,
       offsetX: this._offset[0],
       offsetY: this._offset[1],
-      animation: this._animation
+      animation: this._animation,
+      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
     });
     s.setScale(this.getScale());
     s.setOpacity(this.getOpacity());
@@ -40816,6 +40819,7 @@ ol.style.FlowLine = class olstyleFlowLine extends ol.style.Style {
  *  @param {number} options.radius
  *  @param {number} options.rotation
  *  @param {boolean} options.rotateWithView
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *  @param {number} [options.opacity=1]
  *  @param {number} [options.fontSize=1] size of the font compare to the radius, fontSize greater than 1 will exceed the symbol extent
  *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
@@ -40844,7 +40848,8 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
       fill: options.fill,
       rotation: options.rotation,
       displacement: options.displacement,
-      rotateWithView: options.rotateWithView
+      rotateWithView: options.rotateWithView,
+      declutterMode: options.declutterMode,
     });
     if (typeof (options.opacity) == "number")
       this.setOpacity(options.opacity);
@@ -40917,7 +40922,8 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
       offsetY: this._offset[1],
       opacity: this.getOpacity(),
       rotation: this.getRotation(),
-      rotateWithView: this.getRotateWithView()
+      rotateWithView: this.getRotateWithView(),
+      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
     });
     g.setScale(this.getScale());
     return g;
@@ -41238,6 +41244,7 @@ ol.style.Image.prototype.getImagePNG = function(ratio) {
  *  @param {boolean} options.crop crop within square, default is false
  *  @param {Number} options.radius symbol size
  *  @param {boolean} options.shadow drop a shadow
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *  @param {ol.style.Stroke} options.stroke
  *  @param {String} options.src image src
  *  @param {String} options.crossOrigin The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
@@ -41269,7 +41276,8 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
       points: 0,
       displacement: [options.displacement[0] || 0, (options.displacement[1] || 0) + sanchor],
       // No fill to create a hit detection Image (v5) or transparent (v6) 
-      fill: ol.style.RegularShape.prototype.render ? new ol.style.Fill({ color: [0, 0, 0, 0] }) : null
+      fill: ol.style.RegularShape.prototype.render ? new ol.style.Fill({ color: [0, 0, 0, 0] }) : null,
+      declutterMode: options.declutterMode,
     })
     this.sanchor_ = sanchor;
     this._shadow = shadow;
@@ -41334,7 +41342,8 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
       offsetX: this._offset[0],
       offsetY: this._offset[1],
       opacity: this.getOpacity(),
-      rotation: this.getRotation()
+      rotation: this.getRotation(),
+      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
     })
     i.getImage()
     return i
@@ -41918,6 +41927,7 @@ CanvasRenderingContext2D.prototype.textPath = function (text, path)
  *  @param {ol.style.Fill | undefined} options.fill fill style, default rgba(0,0,0,0.5)
  *  @param {number} options.radius point radius
  * 	@param {number} options.blur lur radius, default radius/3
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *  @param {Array<number>} [options.displacement] to use with ol > 6
  * 	@param {number} [options.offsetX=0] Horizontal offset in pixels, deprecated use displacement with ol>6
  * 	@param {number} [options.offsetY=0] Vertical offset in pixels, deprecated use displacement with ol>6
@@ -41930,7 +41940,8 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
     super({
       radius: options.radius,
       fill: options.fill,
-      displacement: options.displacement
+      displacement: options.displacement,
+      declutterMode: options.declutterMode,
     });
     this._fill = options.fill || new ol.style.Fill({ color: "rgba(0,0,0,0.5)" });
     this._radius = options.radius;
@@ -41951,7 +41962,8 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
       radius: this._radius,
       blur: this._blur,
       offsetX: this._offset[0],
-      offsetY: this._offset[1]
+      offsetY: this._offset[1],
+      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
     });
     s.setScale(this.getScale());
     s.setOpacity(this.getOpacity());
