@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.11
+ * @version v4.0.12
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -5740,8 +5740,7 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
     var features = response.results;
     if (this.get('type') === 'Commune') {
       for (var i = features.length - 1; i >= 0; i--) {
-        if (features[i].kind
-          && (features[i].classification > 5 || features[i].kind == "Département")) {
+        if (features[i].kind !== 'commune') {
           features.splice(i, 1);
         }
       }
