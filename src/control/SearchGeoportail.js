@@ -193,8 +193,7 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
     var features = response.results;
     if (this.get('type') === 'Commune') {
       for (var i = features.length - 1; i >= 0; i--) {
-        if (features[i].kind
-          && (features[i].classification > 5 || features[i].kind == "Département")) {
+        if (features[i].kind !== 'commune') {
           features.splice(i, 1);
         }
       }
