@@ -5574,9 +5574,10 @@ ol.control.SearchPhoton = class olcontrolSearchPhoton extends ol.control.SearchJ
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
- *
  *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
+ *	@param {string} options.terr territory METROPOLE|DOMTOM|dep code
  * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
+ * @see {@link https://geoservices.ign.fr/documentation/services/services-deprecies/itineraires-deprecies/autocompletion-rest}
  * @see {@link https://geoservices.ign.fr/documentation/services/api-et-services-ogc/geocodage-beta-20/documentation-technique-de-lapi}
  */
 ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control.SearchJSON {
@@ -5592,6 +5593,7 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
     options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
     super(options);
     this.set('type', options.type || 'StreetAddress,PositionOfInterest');
+    this.set('terr', options.terr);
     this.set('timeout', options.timeout || 2000);
     // Authentication
     // this._auth = options.authentication;
@@ -5727,6 +5729,7 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
     return {
       text: s,
       type: this.get('type') === 'Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest',
+      terr: this.get('terr') || undefined,
       maximumResponses: this.get('maxItems')
     };
   }
