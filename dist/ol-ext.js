@@ -5574,8 +5574,11 @@ ol.control.SearchPhoton = class olcontrolSearchPhoton extends ol.control.SearchJ
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
- *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
- *	@param {string} options.terr territory METROPOLE|DOMTOM|dep code
+ *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} [options.type] type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
+ *	@param {string} [options.terr] territory METROPOLE|DOMTOM|dep code
+ *  @param {boolean} [options.position] Search, with priority to geo position (map center), default false
+ *	@param {ol.extent} [options.bbox] if set search inside the bbox (in map projection)
+ *	@param {boolean} [options.useExtent] returns candidates inside the current map extent, default false
  * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
  * @see {@link https://geoservices.ign.fr/documentation/services/services-deprecies/itineraires-deprecies/autocompletion-rest}
  * @see {@link https://geoservices.ign.fr/documentation/services/api-et-services-ogc/geocodage-beta-20/documentation-technique-de-lapi}
@@ -5592,6 +5595,9 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
     }
     options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
     super(options);
+    this.set('position', options.position);
+    this.set('useExtent', options.useExtent);
+    this.set('bbox', options.bbox)
     this.set('type', options.type || 'StreetAddress,PositionOfInterest');
     this.set('terr', options.terr);
     this.set('timeout', options.timeout || 2000);
@@ -5726,12 +5732,23 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
    * @api
    */
   requestData(s) {
-    return {
+    var rdata = {
       text: s,
       type: this.get('type') === 'Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest',
       terr: this.get('terr') || undefined,
       maximumResponses: this.get('maxItems')
     };
+    if (this.get('position')) {
+      var center = this.getMap().getView().getCenter()
+      rdata.lonlat = ol.proj.transform(center, this.getMap().getView().getProjection(), 'EPSG:4326').join(',');
+    }
+    if (this.get('bbox')) {
+      rdata.bbox = ol.proj.transformExtent(this.get('bbox'), this.getMap().getView().getProjection(), 'EPSG:4326').join(',')
+    } else if (this.get('useExtent')) {
+      var bbox = this.getMap().getView().calculateExtent()
+      rdata.bbox = ol.proj.transformExtent(bbox, this.getMap().getView().getProjection(), 'EPSG:4326').join(',')
+    }
+    return rdata;
   }
   /**
    * Handle server response to pass the features array to the display list
