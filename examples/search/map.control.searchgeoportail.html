@@ -84,6 +84,14 @@
 
   <div class="options">
     <i>Use the search control to start a new search.</i>
+    <br/>
+    <label>
+      <input type="checkbox" class="position"/> priority to geo position (map center)
+    </label>
+    <br/>
+    <label>
+      <input type="checkbox" class="bbox"/> inside the current map extent
+    </label>
   </div>
   
   <script type="text/javascript">
@@ -124,6 +132,14 @@
     });
   });
 
+  document.querySelector('input.position').addEventListener('change', function(e) {
+    search.set('position', e.target.checked)
+    search.search()
+  })
+  document.querySelector('input.bbox').addEventListener('change', function(e) {
+    search.set('useExtent', e.target.checked)
+    search.search()
+  })
   </script>
   
 </body>
