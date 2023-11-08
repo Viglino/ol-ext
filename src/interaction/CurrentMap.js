@@ -33,26 +33,33 @@ var ol_interaction_CurrentMap = class olinteractionCurrentMap extends ol_interac
     });
 
     // Add a key listener
+    this._olinteractionCurrentMap_cleanup = [];
     if (options.onKeyDown) {
-      document.addEventListener('keydown', function (e) {
+      const listener = function (e) {
         if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
           options.onKeyDown({ type: e.type, map: this.getMap(), originalEvent: e });
         }
-      }.bind(this));
+      }.bind(this);
+      document.addEventListener('keydown', listener);
+      this._olinteractionCurrentMap_cleanup.push(() => document.removeEventListener('keydown', listener));
     }
     if (options.onKeyPress) {
-      document.addEventListener('keypress', function (e) {
+      const listener = function (e) {
         if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
           options.onKeyPress({ type: e.type, map: this.getMap(), originalEvent: e });
         }
-      }.bind(this));
+      }.bind(this);
+      document.addEventListener('keypress', listener);
+      this._olinteractionCurrentMap_cleanup.push(() => document.removeEventListener('keypress', listener));
     }
     if (options.onKeyUp) {
-      document.addEventListener('keyup', function (e) {
+      const listener = function (e) {
         if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
           options.onKeyUp({ type: e.type, map: this.getMap(), originalEvent: e });
         }
-      }.bind(this));
+      }.bind(this);
+      document.addEventListener('keyup', listener);
+      this._olinteractionCurrentMap_cleanup.push(() => document.removeEventListener('keyup', listener));
     }
   }
   /** Check if is the current map
@@ -72,6 +79,11 @@ var ol_interaction_CurrentMap = class olinteractionCurrentMap extends ol_interac
    */
   setCurrentMap(map) {
     ol_interaction_CurrentMap.prototype._currentMap = map;
+  }
+  /** @private */
+  disposeInternal() {
+    super.disposeInternal();
+    this._olinteractionCurrentMap_cleanup.forEach(f => f())
   }
 }
 
