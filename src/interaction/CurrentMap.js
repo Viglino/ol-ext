@@ -41,14 +41,14 @@ var ol_interaction_CurrentMap = class olinteractionCurrentMap extends ol_interac
       }.bind(this));
     }
     if (options.onKeyPress) {
-      document.addEventListener('keydown', function (e) {
+      document.addEventListener('keypress', function (e) {
         if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
           options.onKeyPress({ type: e.type, map: this.getMap(), originalEvent: e });
         }
       }.bind(this));
     }
     if (options.onKeyUp) {
-      document.addEventListener('keydown', function (e) {
+      document.addEventListener('keyup', function (e) {
         if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
           options.onKeyUp({ type: e.type, map: this.getMap(), originalEvent: e });
         }
