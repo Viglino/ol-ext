@@ -13,17 +13,17 @@ Go in the project directory and run the `npm install` that will install the depe
 Since v.2 the extensions are provided as ES6 modules. 
 To be used in a web page you have to create the distribution.
 
-Use the gulp command to create a distribution of the project into the `/dist` directory:
+Use the build command to create a distribution of the project into the `/dist` directory:
 ````
-gulp
+npm run build
 ````
 
 ### Create individual files
 
 If you don't want to use the whole distribution in a web page, you can create individual js compatible with your browser.
-Use the `gulp lib` command to create individual files into the `/lib` directory then link tpo this files:
+Use the `build lib` command to create individual files into the `/lib` directory then link tpo this files:
 ````
-gulp lib
+npm run build lib
 ````
 
 ## Watch files and live reload
