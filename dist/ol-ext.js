@@ -31700,7 +31700,7 @@ ol.source.GeoRSS = class olsourceGeoRSS extends ol.source.Vector {
  *  @param {number} options.minZoom
  *  @param {number} options.maxZoom
  *  @param {string} options.server
- *  @param {string} options.gppKey api key, default 'choisirgeoportail'
+ *  @param {string} options.gppKey api key or 'gpf' for new Geoplatform services, default 'choisirgeoportail'
  *  @param {string} options.authentication basic authentication associated with the gppKey as btoa("login:pwd")
  *  @param {string} options.format image format, default 'image/jpeg'
  *  @param {string} options.style layer style, default 'normal'
@@ -31873,6 +31873,9 @@ ol.source.Geoportail.defaultAttribution = '<a href="http://www.geoportail.gouv.f
 /** Get service URL according to server url or standard url
  */
 ol.source.Geoportail.getServiceURL = function(server, gppKey) {
+  if (gppKey === 'gpf') {
+    return 'https://data.geopf.fr/wmts';
+  }
   if (server) {
     return server.replace(/^(https?:\/\/[^/]*)(.*)$/, "$1/" + gppKey + "$2")
   } else {
@@ -33459,7 +33462,7 @@ ol.layer.GeoImage = class ollayerGeoImage extends ol.layer.Image {
  * @extends {ol.layer.Tile}
  * @param {olx.layer.WMTSOptions=} options WMTS options if not defined default are used
  *  @param {string} options.layer Geoportail layer name
- *  @param {string} options.gppKey Geoportail API key, default use layer registered key
+ *  @param {string} options.gppKey Geoportail API key or 'gpf' for new Geoplatform services, default use layer registered key
  *  @param {ol.projectionLike} [options.projection=EPSG:3857] projection for the extent, default EPSG:3857
  * @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
  */
@@ -33493,7 +33496,8 @@ ol.layer.GeoImage = class ollayerGeoImage extends ol.layer.Image {
       if (typeof tileoptions[i] == "undefined")
         tileoptions[i] = capabilities[i]
     }
-    if (!tileoptions.gppKey && !tileoptions.key) tileoptions.gppKey = options.gppKey || options.key
+    if (options.gppKey || options.key) tileoptions.gppKey = options.gppKey || options.key;
+    // if (!tileoptions.gppKey && !tileoptions.key) tileoptions.gppKey = options.gppKey || options.key
     if (!options.source) options.source = new ol.source.Geoportail(layer, tileoptions)
     if (!options.title) options.title = capabilities.title
     if (!options.name) options.name = layer
