@@ -1374,7 +1374,10 @@ ol.ext.olVersion = parseInt(ol.ext.olVersion[0])*100 + parseInt(ol.ext.olVersion
 ol.ext.getVectorContextStyle = function(e, s) {
   var ratio = e.frameState.pixelRatio;
   // Bug with Icon images
-  if (ol.ext.olVersion > 605 && ratio !== 1 && (s.getImage() instanceof ol.style.Icon)) {
+  if (ol.ext.olVersion > 605 
+    && ol.ext.olVersion < 700 
+    && ratio !== 1 
+    && (s.getImage() instanceof ol.style.Icon)) {
     s = s.clone();
     var img = s.getImage();
     img.setScale(img.getScale()*ratio);
@@ -5565,7 +5568,7 @@ ol.control.SearchPhoton = class olcontrolSearchPhoton extends ol.control.SearchJ
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
- *	@param {string | undefined} [options.version] API version '2' to use geocodage-beta-2, default v1
+ *	@param {string | undefined} [options.version] API version 1 or 2 or gpf, default 2
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -5588,7 +5591,9 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
     options = options || {};
     options.className = options.className || 'IGNF';
     options.typing = options.typing || 500;
-    if (options.version == 1) {
+    if (options.version == 'gpf') {
+      options.url = 'https://data.geopf.fr/geocodage/completion';
+    } else if (options.version == 1) {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
     } else {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/geoportail/geocodage/rest/0.1/completion';
@@ -5760,7 +5765,11 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
     var features = response.results;
     if (this.get('type') === 'Commune') {
       for (var i = features.length - 1; i >= 0; i--) {
-        if (features[i].kind !== 'commune') {
+        if (features[i].poiType && features[i].poiType.indexOf) {
+          if (features[i].poiType.indexOf('commune') < 0) {
+            features.splice(i, 1);
+          }
+        } else if (features[i].kind !== 'commune') {
           features.splice(i, 1);
         }
       }
@@ -5847,12 +5856,13 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
         { dataType: 'XML' }
       );
     } else {
-      this.ajax(url + '?lon=' + f.x + '&lat=' + f.y + '&limit=1', 
+      this.ajax(url + '?lon=' + f.x + '&lat=' + f.y + '&index=parcel&limit=1', 
         {},
         function (resp) {
           try {
             var r = JSON.parse(resp).features[0];
-            f.insee = r.properties.citycode
+            f.insee = r.properties.departmentcode + r.properties.municipalitycode
+            // f.insee = r.properties.citycode
             if (cback) {
               cback.call(this, [f]);
             } else {
@@ -15213,28 +15223,30 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
         + '&departmentcode=' + commune.substr(0,2)
         + '&municipalitycode=' + commune.substr(-3)
         + (prefix ? '&oldmunicipalitycode=' + prefix.replace(/_/g, '0') : '')
-        + (section ? '&section=' + section : '')
+        + (section ? '&section=' + section.toUpperCase() : '')
         + (numero ? '&number=' + numero : '')
         + '&limit=20',
         {},
         function(resp) {
           var jsonResp = [];
-          resp.features.forEach(function(f) {
-            var prop = f.properties;
-            jsonResp.push({
-              id: prop.id,
-              INSEE: prop.departmentcode + prop.municipalitycode,
-              Commune: prop.municipalitycode, 
-              Departement: prop.departmentcode, 
-              CommuneAbsorbee: prop.oldmunicipalitycode, 
-              Section: prop.section,
-              Numero: prop.number,
-              Municipality: prop.city,
-              Feuille: prop.sheet,
-              lon: f.geometry.coordinates[0],
-              lat: f.geometry.coordinates[1],
+          if (resp.features) {
+            resp.features.forEach(function(f) {
+              var prop = f.properties;
+              jsonResp.push({
+                id: prop.id,
+                INSEE: prop.departmentcode + prop.municipalitycode,
+                Commune: prop.municipalitycode, 
+                Departement: prop.departmentcode, 
+                CommuneAbsorbee: prop.oldmunicipalitycode, 
+                Section: prop.section,
+                Numero: prop.number,
+                Municipality: prop.city,
+                Feuille: prop.sheet,
+                lon: f.geometry.coordinates[0],
+                lat: f.geometry.coordinates[1],
+              })
             })
-          })
+          }
           success(jsonResp);
         }
       )
@@ -22549,26 +22561,33 @@ ol.interaction.CurrentMap = class olinteractionCurrentMap extends ol.interaction
       }
     });
     // Add a key listener
+    this._olinteractionCurrentMap_cleanup = [];
     if (options.onKeyDown) {
-      document.addEventListener('keydown', function (e) {
+      var listener = function (e) {
         if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
           options.onKeyDown({ type: e.type, map: this.getMap(), originalEvent: e });
         }
-      }.bind(this));
+      }.bind(this);
+      document.addEventListener('keydown', listener);
+      this._olinteractionCurrentMap_cleanup.push(() => document.removeEventListener('keydown', listener));
     }
     if (options.onKeyPress) {
-      document.addEventListener('keydown', function (e) {
+      var listener = function (e) {
         if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
           options.onKeyPress({ type: e.type, map: this.getMap(), originalEvent: e });
         }
-      }.bind(this));
+      }.bind(this);
+      document.addEventListener('keypress', listener);
+      this._olinteractionCurrentMap_cleanup.push(() => document.removeEventListener('keypress', listener));
     }
     if (options.onKeyUp) {
-      document.addEventListener('keydown', function (e) {
+      var listener = function (e) {
         if (this.isCurrentMap() && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
           options.onKeyUp({ type: e.type, map: this.getMap(), originalEvent: e });
         }
-      }.bind(this));
+      }.bind(this);
+      document.addEventListener('keyup', listener);
+      this._olinteractionCurrentMap_cleanup.push(() => document.removeEventListener('keyup', listener));
     }
   }
   /** Check if is the current map
@@ -22588,6 +22607,11 @@ ol.interaction.CurrentMap = class olinteractionCurrentMap extends ol.interaction
    */
   setCurrentMap(map) {
     ol.interaction.CurrentMap.prototype._currentMap = map;
+  }
+  /** @private */
+  disposeInternal() {
+    super.disposeInternal();
+    this._olinteractionCurrentMap_cleanup.forEach(f => f())
   }
 }
 /** The current map */
