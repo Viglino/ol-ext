@@ -16,7 +16,7 @@ import ol_control_SearchJSON from './SearchJSON.js'
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
- *	@param {string | undefined} [options.version] API version '2' to use geocodage-beta-2, default v1
+ *	@param {string | undefined} [options.version] API version 1 or 2 or gpf, default 2
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -39,7 +39,9 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
     options = options || {};
     options.className = options.className || 'IGNF';
     options.typing = options.typing || 500;
-    if (options.version == 1) {
+    if (options.version == 'gpf') {
+      options.url = 'https://data.geopf.fr/geocodage/completion';
+    } else if (options.version == 1) {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
     } else {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/geoportail/geocodage/rest/0.1/completion';
@@ -214,7 +216,11 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
     var features = response.results;
     if (this.get('type') === 'Commune') {
       for (var i = features.length - 1; i >= 0; i--) {
-        if (features[i].kind !== 'commune') {
+        if (features[i].poiType && features[i].poiType.indexOf) {
+          if (features[i].poiType.indexOf('commune') < 0) {
+            features.splice(i, 1);
+          }
+        } else if (features[i].kind !== 'commune') {
           features.splice(i, 1);
         }
       }
@@ -302,12 +308,13 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
         { dataType: 'XML' }
       );
     } else {
-      this.ajax(url + '?lon=' + f.x + '&lat=' + f.y + '&limit=1', 
+      this.ajax(url + '?lon=' + f.x + '&lat=' + f.y + '&index=parcel&limit=1', 
         {},
         function (resp) {
           try {
             var r = JSON.parse(resp).features[0];
-            f.insee = r.properties.citycode
+            f.insee = r.properties.departmentcode + r.properties.municipalitycode
+            // f.insee = r.properties.citycode
             if (cback) {
               cback.call(this, [f]);
             } else {

@@ -242,28 +242,30 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
         + '&departmentcode=' + commune.substr(0,2)
         + '&municipalitycode=' + commune.substr(-3)
         + (prefix ? '&oldmunicipalitycode=' + prefix.replace(/_/g, '0') : '')
-        + (section ? '&section=' + section : '')
+        + (section ? '&section=' + section.toUpperCase() : '')
         + (numero ? '&number=' + numero : '')
         + '&limit=20',
         {},
         function(resp) {
           var jsonResp = [];
-          resp.features.forEach(function(f) {
-            var prop = f.properties;
-            jsonResp.push({
-              id: prop.id,
-              INSEE: prop.departmentcode + prop.municipalitycode,
-              Commune: prop.municipalitycode, 
-              Departement: prop.departmentcode, 
-              CommuneAbsorbee: prop.oldmunicipalitycode, 
-              Section: prop.section,
-              Numero: prop.number,
-              Municipality: prop.city,
-              Feuille: prop.sheet,
-              lon: f.geometry.coordinates[0],
-              lat: f.geometry.coordinates[1],
+          if (resp.features) {
+            resp.features.forEach(function(f) {
+              var prop = f.properties;
+              jsonResp.push({
+                id: prop.id,
+                INSEE: prop.departmentcode + prop.municipalitycode,
+                Commune: prop.municipalitycode, 
+                Departement: prop.departmentcode, 
+                CommuneAbsorbee: prop.oldmunicipalitycode, 
+                Section: prop.section,
+                Numero: prop.number,
+                Municipality: prop.city,
+                Feuille: prop.sheet,
+                lon: f.geometry.coordinates[0],
+                lat: f.geometry.coordinates[1],
+              })
             })
-          })
+          }
           success(jsonResp);
         }
       )
