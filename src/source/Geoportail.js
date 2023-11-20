@@ -16,7 +16,7 @@ import ol_ext_Ajax from '../util/Ajax.js'
  *  @param {number} options.minZoom
  *  @param {number} options.maxZoom
  *  @param {string} options.server
- *  @param {string} options.gppKey api key, default 'choisirgeoportail'
+ *  @param {string} options.gppKey api key or 'gpf' for new Geoplatform services, default 'choisirgeoportail'
  *  @param {string} options.authentication basic authentication associated with the gppKey as btoa("login:pwd")
  *  @param {string} options.format image format, default 'image/jpeg'
  *  @param {string} options.style layer style, default 'normal'
@@ -196,6 +196,9 @@ ol_source_Geoportail.defaultAttribution = '<a href="http://www.geoportail.gouv.f
 /** Get service URL according to server url or standard url
  */
 ol_source_Geoportail.getServiceURL = function(server, gppKey) {
+  if (gppKey === 'gpf') {
+    return 'https://data.geopf.fr/wmts';
+  }
   if (server) {
     return server.replace(/^(https?:\/\/[^/]*)(.*)$/, "$1/" + gppKey + "$2")
   } else {

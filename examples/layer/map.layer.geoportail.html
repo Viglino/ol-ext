@@ -186,12 +186,15 @@
 
   map.addControl(new ol.control.LayerSwitcher({ trash: true, extent:true }));
 
-  map.addLayer (new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS', {
+  map.addLayer (new ol.layer.Geoportail({
+    layer: 'ORTHOIMAGERY.ORTHOPHOTOS',
+    key: 'gpf', // Use new geoservice
     permalink: 'ortho',
     className: 'photo',
   }));
   map.addLayer (new ol.layer.Geoportail({
     layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
+    key: 'gpf', // Use new geoservice
     permalink: 'plan',
     className: 'plan',
     visible: true,
