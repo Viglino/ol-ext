@@ -21868,7 +21868,7 @@ ol.format.GeoJSONX = class olformatGeoJSONX extends ol.format.GeoJSON {
         }
         // Almost 2 points...
         if (xy.length < 2 && v.length > 1) {
-          var p = 'A,A' + (hasZ ? ',A':'') + (hasM ? ',A':'');
+          p = 'A,A' + (hasZ ? ',A':'') + (hasM ? ',A':'');
           xy.push(p);
         }
         // encoded
@@ -27542,7 +27542,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
         break;
       }
     }
-    var seg, split = []
+    var seg, extent, split = []
     function intersect(f) {
       if (f !== feature && f.getGeometry().splitAt) {
         var c2 = f.getGeometry().getCoordinates()
@@ -27563,7 +27563,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
     // Split with a point
     if (c.length === 1) {
       seg = [c[0], c[0]]
-      var extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/)
+      extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/)
       this.source_.forEachFeatureIntersectingExtent(extent, function(f) {
         if (f.getGeometry().splitAt) {
           var g = f.getGeometry().splitAt(c[0], this.tolerance_)
@@ -27581,7 +27581,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
     // Split existing features
     for (i = 0; i < c.length - 1; i++) {
       seg = [c[i], c[i + 1]]
-      var extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/)
+      extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/)
       var g
       while (true) {
         var found = false
@@ -39172,14 +39172,14 @@ ol.HexGrid = class olHexGrid extends ol.Object {
   */
   cube2offset(c) {
     return this.hex2offset(this.cube2hex(c));
-  };
+  }
   /** Convert cube to offset coords
   * @param {ol.Coordinate} o offset coordinate
   * @return {ol.Coordinate} cube coordinate
   */
   offset2cube(o) {
     return this.hex2cube(this.offset2Hex(o));
-  };
+  }
   /** Round cube coords
   * @param {ol.Coordinate} h cube coordinate
   * @return {ol.Coordinate} rounded cube coordinate
@@ -39678,7 +39678,7 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       offsetX: this._offset[0],
       offsetY: this._offset[1],
       animation: this._animation,
-      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
+      declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     });
     s.setScale(this.getScale());
     s.setOpacity(this.getOpacity());
@@ -40973,7 +40973,7 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
       opacity: this.getOpacity(),
       rotation: this.getRotation(),
       rotateWithView: this.getRotateWithView(),
-      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
+      declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     });
     g.setScale(this.getScale());
     return g;
@@ -41393,7 +41393,7 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
       offsetY: this._offset[1],
       opacity: this.getOpacity(),
       rotation: this.getRotation(),
-      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
+      declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     })
     i.getImage()
     return i
@@ -42013,7 +42013,7 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
       blur: this._blur,
       offsetX: this._offset[0],
       offsetY: this._offset[1],
-      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
+      declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     });
     s.setScale(this.getScale());
     s.setOpacity(this.getOpacity());
