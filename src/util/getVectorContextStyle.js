@@ -14,7 +14,7 @@ var ol_ext_getVectorContextStyle = function(e, s) {
 
   // Bug with Icon images
   if (ol_ext_olVersion > 605 
-    && ol.ext.olVersion < 700 
+    && ol_ext_olVersion < 700 
     && ratio !== 1 
     && (s.getImage() instanceof ol_style_Icon)) {
     s = s.clone();
