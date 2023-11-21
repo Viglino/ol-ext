@@ -76,7 +76,8 @@
       target: 'map',
       view: new ol.View({
         zoom: 8,
-        center: [-337743, 6059005]
+        center: [-337743, 6059005],
+        showFullExtent: true
       }),
       layers:[
         new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }),
