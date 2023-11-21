@@ -351,4 +351,5 @@ var ol_graph_Dijkstra = class olgraphDijskra extends ol_Object {
 // Typo error for compatibility purposes (to be removed)
 var ol_graph_Dijskra = ol_graph_Dijkstra
 
+export { ol_graph_Dijskra };
 export default ol_graph_Dijkstra;

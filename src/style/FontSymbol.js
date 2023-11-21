@@ -130,7 +130,7 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
       opacity: this.getOpacity(),
       rotation: this.getRotation(),
       rotateWithView: this.getRotateWithView(),
-      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
+      declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     });
     g.setScale(this.getScale());
     return g;

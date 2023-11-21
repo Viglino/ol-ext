@@ -84,7 +84,7 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       offsetX: this._offset[0],
       offsetY: this._offset[1],
       animation: this._animation,
-      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
+      declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     });
     s.setScale(this.getScale());
     s.setOpacity(this.getOpacity());

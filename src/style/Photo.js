@@ -126,7 +126,7 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
       offsetY: this._offset[1],
       opacity: this.getOpacity(),
       rotation: this.getRotation(),
-      declutterMode: this.getDeclutterMode ? getDeclutterMode() : null,
+      declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     })
     i.getImage()
     return i

@@ -112,7 +112,7 @@ var ol_HexGrid = class olHexGrid extends ol_Object {
   */
   cube2offset(c) {
     return this.hex2offset(this.cube2hex(c));
-  };
+  }
   
   /** Convert cube to offset coords
   * @param {ol.Coordinate} o offset coordinate
@@ -120,7 +120,7 @@ var ol_HexGrid = class olHexGrid extends ol_Object {
   */
   offset2cube(o) {
     return this.hex2cube(this.offset2Hex(o));
-  };
+  }
   
   /** Round cube coords
   * @param {ol.Coordinate} h cube coordinate

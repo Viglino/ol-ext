@@ -178,7 +178,7 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
       }
     }
 
-    var seg, split = []
+    var seg, extent, split = []
     function intersect(f) {
       if (f !== feature && f.getGeometry().splitAt) {
         var c2 = f.getGeometry().getCoordinates()
@@ -200,7 +200,7 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
     // Split with a point
     if (c.length === 1) {
       seg = [c[0], c[0]]
-      var extent = ol_extent_buffer(ol_extent_boundingExtent(seg), this.tolerance_ /*0.01*/)
+      extent = ol_extent_buffer(ol_extent_boundingExtent(seg), this.tolerance_ /*0.01*/)
       this.source_.forEachFeatureIntersectingExtent(extent, function(f) {
         if (f.getGeometry().splitAt) {
           var g = f.getGeometry().splitAt(c[0], this.tolerance_)
@@ -218,7 +218,7 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
     // Split existing features
     for (i = 0; i < c.length - 1; i++) {
       seg = [c[i], c[i + 1]]
-      var extent = ol_extent_buffer(ol_extent_boundingExtent(seg), this.tolerance_ /*0.01*/)
+      extent = ol_extent_buffer(ol_extent_boundingExtent(seg), this.tolerance_ /*0.01*/)
       var g
       while (true) {
         var found = false
