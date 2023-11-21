@@ -20372,8 +20372,8 @@ ol.filter.Mask = class olfilterMask extends ol.filter.Base {
       var extent = e.frameState.extent;
       var fExtent = this.feature_.getGeometry().getExtent();
       var fWidth = fExtent[2] - fExtent[1];
-      var start = Math.floor((extent[0] + fWidth - worldExtent[0]) / worldWidth);
-      var end = Math.floor((extent[2] - fWidth - worldExtent[2]) / worldWidth) + 1;
+      var start = Math.floor((extent[0] - fWidth - worldExtent[0]) / worldWidth);
+      var end = Math.floor((extent[2] + fWidth - worldExtent[2]) / worldWidth) + 1;
       if (start > end) {
         [start, end] = [end, start];
       }
