@@ -245,10 +245,8 @@ ol_control_FeatureList.prototype._drawList = function(delay) {
     this._listFeatures.sort(function(a, b) {
       for (let i=0; i<sort.length; i++) {
         var p = sort[i];
-        var v1 = a.feature.get(p) || '';
-        var v2 = b.feature.get(p) || '';
-        if (v1 < v2) return this._sort[p] ? -1 : 1;
-        if (v1 > v2) return this._sort[p] ? 1 : -1;
+        var s = this.sortFn(a.feature, b.feature, p);
+        if (s) return this._sort[p] ? s : -s;
       }
       return 0;
     }.bind(this));
@@ -258,6 +256,20 @@ ol_control_FeatureList.prototype._drawList = function(delay) {
   })
   // resize
   this.resize();
+}
+
+/** A sort function to compare 2 properties
+ * @param {ol_Feature} f1
+ * @param {ol_Feature} f2
+ * @param {string} prop property name
+ * @return number -1: v1 < v2, 1: v1 > v2, 0: v1 = v2
+ */
+ol_control_FeatureList.prototype.sortFn = function(f1, f2, p) {
+  var v1 = f1.get(p) || '';
+  var v2 = f2.get(p) || '';
+  if (v1 < v2) return -1;
+  if (v1 > v2) return 1;
+  return 0;
 }
 
 /** Format feature property
