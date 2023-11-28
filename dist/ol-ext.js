@@ -19062,7 +19062,7 @@ ol.control.WMTSCapabilities = class olcontrolWMTSCapabilities extends ol.control
     options = options || {};
     options.title = options.title || 'WMTS';
     super(options);
-    this.getDialog().element.classList.add('ol-wmtscapabilities');
+    this.getDialog().set('className', this.getDialog().get('className') + ' ol-wmtscapabilities' );
   }
   /** Get service parser
    * @private
