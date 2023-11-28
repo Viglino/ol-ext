@@ -739,6 +739,183 @@ body > .ol-ext-dialog > form {
   margin: 0 0 0 .5em;
 }
 
+.ol-control.ol-feature-list {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+.ol-control.ol-feature-list > button:before {
+  content: "";
+  position: absolute;
+  width: 60%;
+  height: 50%;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  -webkit-box-shadow: inset 0 2.5px;
+          box-shadow: inset 0 2.5px;  
+  background-image: -webkit-gradient(linear, left top, right top, from(currentColor), to(transparent));  
+  background-image: linear-gradient(90deg, currentColor, transparent);
+}
+
+.ol-control.ol-feature-list.ol-collapsed {
+  bottom: .5em;
+  left: .5em;
+  width: auto;
+}
+.ol-control.ol-feature-list .ol-content {
+  background-color: #f4f6f8;
+}
+.ol-control.ol-feature-list > button,
+.ol-control.ol-feature-list.ol-collapsed .ol-content {
+  display: none;
+}
+.ol-control.ol-feature-list.ol-collapsed > button {
+  display: block;
+}
+
+.ol-feature-list .ol-sizer {
+  width: 100%;
+  height: 1px;
+  cursor: row-resize;
+  background-color: #ccc;
+  position: relative;
+  border: 1px solid #f4f6f8;
+  border-width: 1px 0;
+}
+.ol-feature-list .ol-sizer:before {
+  content: "";
+  width: 1.5em;
+  height: 4px;
+  background-color: #ddd;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  z-index: 1;
+  border: 3px solid transparent;
+  border-width: 3px 1.5em;
+  -webkit-box-shadow: inset 0 -1px #aaa, inset 0 1px #aaa;
+          box-shadow: inset 0 -1px #aaa, inset 0 1px #aaa;
+  border-radius: 2px;
+}
+.ol-feature-list .ol-sizer:hover:before {
+  background-color: #ccc;
+}
+
+.ol-feature-list .ol-content .ol-header p {
+  display: inline-block;
+  margin: 0 .25em;
+  vertical-align: middle;
+}
+.ol-feature-list .ol-content .ol-header .ol-buttons {
+  float: right;
+}
+.ol-feature-list .ol-content .ol-header:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.ol-feature-list .ol-content .ol-header button {
+  border: 0;
+  background: transparent;
+  position: relative;
+}
+.ol-feature-list .ol-content .ol-header button.ol-closebox i:before,
+.ol-feature-list .ol-content .ol-header button.ol-closebox i:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%) rotate(45deg);
+          transform: translate(-50%, -50%) rotate(45deg);
+  background: currentColor;
+  width: .1em;
+  height: 1em;
+  display: block;
+  font-style: normal;
+}
+.ol-feature-list .ol-content .ol-header button.ol-closebox i:after {
+  -webkit-transform: translate(-50%, -50%) rotate(-45deg);
+          transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.ol-feature-list .ol-scroll-container {
+  overflow: auto;
+  height: 10em;
+  min-height: 3em;
+}
+
+.ol-feature-list table {
+  background-color: #fff;
+  border-collapse: collapse;
+  white-space: nowrap;
+  position: relative;
+}
+.ol-feature-list table thead {
+  background-color: #f4f6f8;
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+}
+.ol-feature-list table tbody tr:hover {
+  background-color: #eee;
+  cursor: pointer;
+}
+.ol-feature-list table tbody tr.ol-selected {
+  background-color: #eee;
+}
+
+.ol-feature-list table td {
+  border: 0 solid #ddd;
+  border-width: 0 0 1px 1px;
+}
+.ol-feature-list table td.number {
+  text-align: right;
+}
+.ol-feature-list table td.undefined {
+  text-align: center;
+  background-color: #fafafa;
+}
+
+.ol-feature-list thead td {
+  position: relative;
+}
+.ol-feature-list thead td.sort {
+  padding-right: 1.5em;
+}
+
+.ol-feature-list thead td p {
+  margin: 0;
+  display: inline-block;
+}
+.ol-feature-list table td button {
+  position: absolute;
+  width: 1.2em;
+  height: 1.4em;
+  top: 0;
+  right: 0;
+  margin: .1em 0;
+  padding: 0;
+  background-color: transparent;
+  border: 0;
+}
+.ol-feature-list thead td button.sort:before {
+  content: '⇅';
+  font-style: normal;
+  font-weight: normal;
+  cursor: pointer;
+}
+.ol-feature-list thead td button.sortup:before {
+  content: '↧';
+}
+.ol-feature-list thead td button.sortdown:before {
+  content: '↥';
+}
+
 .ol-gauge {
   top: 0.5em;
   left: 50%;
