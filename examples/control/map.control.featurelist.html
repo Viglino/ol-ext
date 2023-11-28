@@ -136,7 +136,8 @@
   var listCtrl = new ol.control.FeatureList({
     title: 'Communes',
     collapsed: false,
-    features: vectorSource
+    features: vectorSource,
+    // target: document.body
   });
   listCtrl.enableSort('nom', 'region')
   map.addControl (listCtrl);
@@ -145,6 +146,9 @@
     selecti.getFeatures().push(e.feature);
     showInfo(e.feature)
   });
+  listCtrl.on('resize', function(e) {
+    console.log(e)
+  })
 
 
   </script>

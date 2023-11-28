@@ -152,16 +152,17 @@
   margin: .1em 0;
   padding: 0;
   background-color: transparent;
+  border: 0;
 }
-.ol-feature-list thead td button.sort i:before {
+.ol-feature-list thead td button.sort:before {
   content: '⇅';
   font-style: normal;
   font-weight: normal;
   cursor: pointer;
 }
-.ol-feature-list thead td button.sortup i:before {
+.ol-feature-list thead td button.sortup:before {
   content: '↧';
 }
-.ol-feature-list thead td button.sortdown i:before {
+.ol-feature-list thead td button.sortdown:before {
   content: '↥';
 }

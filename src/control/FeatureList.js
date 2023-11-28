@@ -7,6 +7,7 @@ import ol_ext_element from '../util/element';
  * @constructor
  * @extends {ol_control_Control}
  * @fires select
+ * @fires resize
  * @param {Object=} options
  */
 var ol_control_FeatureList = class olcontrolFeatureList extends ol_control_Control {
@@ -140,6 +141,20 @@ ol_control_FeatureList.prototype.sortBy = function(prop, sort) {
   this._drawList();
 }
 
+/** Get sorted properties list
+ * @return Object
+ */
+ol_control_FeatureList.prototype.getSort = function() {
+  return this._sort;
+}
+
+/** Reset all sorts
+ */
+ol_control_FeatureList.prototype.resetSort = function() {
+  this._sort = {};
+  this._drawList();
+}
+
 /** Enable sort list by properties
  * @param {...string} propName 
  */
@@ -178,7 +193,6 @@ ol_control_FeatureList.prototype._drawList = function(delay) {
       td.classList.add('sort')
       var b = ol_ext_element.create('BUTTON', {
         className: 'sort' + (this._sort[c]===true ? ' sortup' : this._sort[c]===false ? ' sortdown' : ''),
-        html: '<i></i>',
         click: function() {
           var sort;
           if (b.classList.contains('sortup')) {
@@ -350,6 +364,10 @@ ol_control_FeatureList.prototype.resize = function(height) {
     this._list.parentNode.style.maxHeight = Math.min(h, this._list.getBoundingClientRect().height)  + 'px';
     //this._list.parentNode.style.minHeight = Math.min(100, this._list.getBoundingClientRect().height)  + 'px';
   }
+  this.dispatchEvent({
+    type: 'resize',
+    height: this._list.parentNode.getBoundingClientRect().height
+  })
 }
 
 /** Select a feature in the list
