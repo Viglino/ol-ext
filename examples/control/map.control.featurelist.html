@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Select control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Control to select features by attributes	." />
+  <meta name="keywords" content="ol3, control, select, vector, feature, attribute" />
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <link rel="stylesheet" href="../style.css"/>
+
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+  <a href="../../index.html">
+    <h1>ol-ext: FeatureList control</h1>
+  </a>
+
+  <div class="info">
+    <i>ol/control/FeatureList</i> is a control to display features in a list.
+    <ul>
+      <li>
+        You have to define a <i>ol/source/Vector</i> or a list of feature to display in the list.
+      </li>
+      <li>
+      </li>
+    </ul>
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options" style="max-width:20em;">
+    <h2>Options:</h2>
+    <i>Click on the map to select a feature / use the control to look for features by attributes.</i>
+    <ul style="list-style:initial; padding: 0 1em;"></ul>
+  </div>
+  
+  <script type="text/javascript">
+  // Layers
+  var layers = [
+    new ol.layer.Tile({
+			title:'terrain-background',
+			source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
+		})
+  ]
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers
+  });
+
+  // GeoJSON layer
+  var vectorSource = new ol.source.Vector({
+    url: '../data/departements.geojsonx',
+    format: new ol.format.GeoJSONX(),
+    attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
+  });
+
+  map.addLayer(new ol.layer.Vector({
+    name: 'Departements',
+    source: vectorSource,
+    style: function(f) {
+      return new ol.style.Style({ 
+        image: new ol.style.RegularShape({
+          radius: 5,
+          radius2: 0,
+          points: 4,
+          stroke: new ol.style.Stroke({ color: "#000", width:1 })  
+        }),
+        text: new ol.style.Text ({
+          text: f.get('id').toString(),
+          font: 'bold 11px sans-serif',
+        }),
+        stroke: new ol.style.Stroke({
+          width: 1,
+          color: [255,128,0]
+        }),
+        fill: new ol.style.Fill({
+          color: [255,128,0,.2]
+        })
+      })
+    }
+  }));
+
+  // Select  interaction
+  var selecti = new ol.interaction.Select({
+    hitTolerance: 5,
+    condition: ol.events.condition.singleClick
+  });
+  map.addInteraction(selecti);
+  // Select feature when click on the reference index
+  selecti.on('select', function(e) {
+    var f = e.selected[0];
+    if (f) {
+      showInfo(f)
+      listCtrl.select(f)
+    }
+  });
+
+  function showInfo(f) {
+    var prop = f.getProperties();
+    var ul = $('.options ul').html('');
+    for (var p in prop) if (p!=='geometry') {
+      $('<li>').text(p+': '+prop[p]).appendTo(ul);
+    }
+  }
+
+  // Select control
+  var listCtrl = new ol.control.FeatureList({
+    title: 'Communes',
+    collapsed: false,
+    features: vectorSource
+  });
+  listCtrl.enableSort('nom', 'region')
+  map.addControl (listCtrl);
+  listCtrl.on('select', function(e) {
+    selecti.getFeatures().clear();
+    selecti.getFeatures().push(e.feature);
+    showInfo(e.feature)
+  });
+
+
+  </script>
+  
+</body>
+</html>
