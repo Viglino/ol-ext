@@ -79,34 +79,14 @@
   // GeoJSON layer
   var vectorSource = new ol.source.Vector({
     url: '../data/departements.geojsonx',
+    url: '../data/habitats_doubs.geojsonx',
     format: new ol.format.GeoJSONX(),
     attributions: [ "&copy; <a href='https://www.insee.fr'>INSEE</a>", "&copy; <a href='https://www.data.gouv.fr/fr/datasets/geofla-r/'>IGN</a>" ],
   });
 
   map.addLayer(new ol.layer.Vector({
     name: 'Departements',
-    source: vectorSource,
-    style: function(f) {
-      return new ol.style.Style({ 
-        image: new ol.style.RegularShape({
-          radius: 5,
-          radius2: 0,
-          points: 4,
-          stroke: new ol.style.Stroke({ color: "#000", width:1 })  
-        }),
-        text: new ol.style.Text ({
-          text: f.get('id').toString(),
-          font: 'bold 11px sans-serif',
-        }),
-        stroke: new ol.style.Stroke({
-          width: 1,
-          color: [255,128,0]
-        }),
-        fill: new ol.style.Fill({
-          color: [255,128,0,.2]
-        })
-      })
-    }
+    source: vectorSource
   }));
 
   // Select  interaction
@@ -135,6 +115,7 @@
   // Select control
   var listCtrl = new ol.control.FeatureList({
     title: 'Communes',
+    // className: 'ol-bottom',
     collapsed: false,
     features: vectorSource,
     // target: document.body
@@ -146,7 +127,12 @@
     selecti.getFeatures().push(e.feature);
     showInfo(e.feature)
   });
-  listCtrl.on('resize', function(e) {
+  listCtrl.on('dblclick', function(e) {
+    map.getView().fit(e.feature.getGeometry().getExtent())
+    map.getView().setZoom(map.getView().getZoom() - 1)
+  })
+
+  listCtrl.on(['resize', 'collapse'], function(e) {
     console.log(e)
   })
 

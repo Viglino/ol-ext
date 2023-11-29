@@ -7,6 +7,7 @@ import ol_ext_element from '../util/element';
  * @constructor
  * @extends {ol_control_Control}
  * @fires select
+ * @fires dblclick
  * @fires resize
  * @param {Object=} options
  */
@@ -16,9 +17,6 @@ var ol_control_FeatureList = class olcontrolFeatureList extends ol_control_Contr
     var element = ol_ext_element.create('DIV', {
       className: ((options.className || '') + ' ol-feature-list').trim()
     })
-    if (options.collapsed !== false) {
-      element.classList.add('ol-collapsed')
-    }
     if (!options.target) {
       element.classList.add('ol-unselectable');
       element.classList.add('ol-control');
@@ -29,6 +27,8 @@ var ol_control_FeatureList = class olcontrolFeatureList extends ol_control_Contr
       element: element,
       target: options.target
     });
+    this.collapse(!!options.collapsed);
+    this._bottomScroll = element.classList.contains('ol-bottom');
 
     // Enable sort
     this._canSort = [];
@@ -39,8 +39,8 @@ var ol_control_FeatureList = class olcontrolFeatureList extends ol_control_Contr
       ol_ext_element.create('BUTTON', {
         type: 'button',
         click: function() {
-          element.classList.toggle('ol-collapsed');
-        },
+          this.collapse()
+        }.bind(this),
         parent: element
       })
     }
@@ -62,11 +62,10 @@ var ol_control_FeatureList = class olcontrolFeatureList extends ol_control_Contr
     })
     this.addButton({
         className: 'ol-closebox',
-        html: '<i></i>',
         type: 'button',
         click: function() {
-          element.classList.toggle('ol-collapsed');
-        },
+          this.collapse()
+        }.bind(this),
         parent: this._menu
     })
     // Sizer
@@ -95,6 +94,7 @@ var ol_control_FeatureList = class olcontrolFeatureList extends ol_control_Contr
     // Source
     this.setFeatures(options.features)
   }
+
   /**
    * Set the map instance the control is associated with
    * and add its controls associated to this map.
@@ -106,6 +106,95 @@ var ol_control_FeatureList = class olcontrolFeatureList extends ol_control_Contr
     this.resize();
   }
 };
+
+/** Scroll at botton
+ * @param {boolean} b
+ */
+ol_control_FeatureList.prototype.setBottomScroll = function(b) {
+  this._bottomScroll = !!b
+  if (this._bottomScroll) {
+    this.element.classList.add('ol-bottom')
+  } else {
+    this.element.classList.remove('ol-bottom')
+  }
+}
+
+/** Scroll to an element / feature
+ * @param {ol_Feature|string} feature a featue or 'select' to scroll at selected row
+ */
+ol_control_FeatureList.prototype.scrollTo = function(feature) {
+  if (feature === 'select') {
+    var tr = this._listbody.querySelector('.ol-selected');
+    if (tr) {
+      this._scrollAt(tr);
+      return tr;
+    }
+  } else {
+    // Select
+    var list = this._listFeatures;
+    if (list) {
+      for (let i=0; i<list.length; i++) {
+        if (list[i].feature === feature) {
+          this._scrollAt(list[i].tr);
+          return list[i].tr
+        }
+      }
+    }
+  }
+  return false;
+}
+
+/** Scroll list at a row
+ * @param {Element} elt row element (TR)
+ * @private
+ */
+ol_control_FeatureList.prototype._scrollAt = function(elt) {
+  if (this.isCollapsed()) return;
+  if (!elt || elt.parentNode.parentNode !== this._list) return;
+  // Scroll
+  var scrollDiv = this._list.parentNode;
+  scrollDiv.scrollTo(scrollDiv.scrollLeft, elt.offsetTop - scrollDiv.getBoundingClientRect().height/2)
+}
+
+/** Find a row given a feature
+ * @param {ol_Feature} feature
+ */
+ol_control_FeatureList.prototype._findRow = function(feature) {
+  var list = this._listFeatures;
+  if (list) {
+    for (let i=0; i<list.length; i++) {
+      if (list[i].feature === feature) {
+        return list[i];
+      }
+    }
+  }
+  return false
+}
+
+/** Collapse the table
+ * @param {boolean} [b] if no parameters toggle it
+ */
+ol_control_FeatureList.prototype.collapse = function(b) {
+  if (b === undefined) b = !this._collapsed;
+  if (b!==this._collapsed) {
+    this._collapsed = b;
+    if (this._collapsed) {
+      this.element.classList.add('ol-collapsed')
+    } else {
+      this.element.classList.remove('ol-collapsed')
+    }
+    this.dispatchEvent({
+      type: 'collapse',
+      collapsed: this._collapsed
+    })
+  }
+}
+
+/** Is the control collapsed
+ */
+ol_control_FeatureList.prototype.isCollapsed = function() {
+  return this._collapsed;
+}
 
 /** Set the features to list
  * @param {ol_source_Vector|ol_Collection} source a vector source or a collection of features to list
@@ -138,7 +227,7 @@ ol_control_FeatureList.prototype.sortBy = function(prop, sort) {
   } else {
     this._sort[prop] = (sort !== 'down');
   }
-  this._drawList();
+  this.sort();
 }
 
 /** Get sorted properties list
@@ -152,7 +241,7 @@ ol_control_FeatureList.prototype.getSort = function() {
  */
 ol_control_FeatureList.prototype.resetSort = function() {
   this._sort = {};
-  this._drawList();
+  this.sort();
 }
 
 /** Enable sort list by properties
@@ -161,9 +250,12 @@ ol_control_FeatureList.prototype.resetSort = function() {
 ol_control_FeatureList.prototype.enableSort = function() {
   this._canSort = [...arguments];
   Object.keys(this._sort).forEach(function(s) {
-    if (this._canSort.indexOf(s) < 0) delete this._sort[s];
+    if (this._canSort.indexOf(s) < 0) {
+      changed = true;
+      delete this._sort[s];
+    }
   }.bind(this))
-  this._drawList();
+  this.sort();
 }
 
 /** Draw the list
@@ -177,9 +269,81 @@ ol_control_FeatureList.prototype._drawList = function(delay) {
     return;
   }
   var features = this._source.getFeatures ? this._source.getFeatures() : this._source;
-  // Columns
-  var columns = this.getColumns(features);
+  this._columns = this.getColumns(features);
   // Head
+  this._drawHead()
+  // List of features
+  this._listFeatures = [];
+  features.forEach(function (f) {
+    var tr = ol_ext_element.create('TR', {
+      on: {
+        click: function (e) {
+          this.dispatchEvent({
+            type: 'select',
+            property: e.target.dataset.prop,
+            feature: f
+          })
+          this._list.querySelectorAll('.ol-selected').forEach(function(li) {
+            li.classList.remove('ol-selected')
+          })
+          tr.classList.add('ol-selected')
+        }.bind(this),
+        dblclick: function(e) {
+          this.dispatchEvent({
+            type: 'dblclick',
+            property: e.target.dataset.prop,
+            feature: f
+          })
+        }.bind(this)
+      }
+    })
+    this._listFeatures.push({
+      feature: f,
+      tr: tr
+    })
+    this._updateFeature(f, tr);
+  }.bind(this))
+  // Sort
+  this.sort();
+}
+
+/** Update a feature line in the table (attribute changed)
+ * @param {ol_Feature} feature
+ * @returns {boolean}
+ */
+ol_control_FeatureList.prototype.updateFeature = function(feature) {
+  for (var i=0; i<this._listFeatures.length; i++) {
+    if (this._listFeatures[i].feature === feature) {
+      this._updateFeature(this._listFeatures[i].feature, this._listFeatures[i].tr)
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Update a feature line in the table
+ * @param {ol_Feature} feature
+ * @param {Element} tr
+ */
+ol_control_FeatureList.prototype._updateFeature = function(f, tr) {
+  tr.innerHTML = '';
+  this._columns.forEach(function(c) {
+    var p = this.formatProperty(f, c);
+    ol_ext_element.create('TD', {
+      text: p.val,
+      html: p.html,
+      className: p.type,
+      'data-prop': c,
+      parent: tr
+    })
+  }.bind(this))
+}
+
+/** Draw columns heads
+ * @private
+ */
+ol_control_FeatureList.prototype._drawHead = function() {
+  var columns = this._columns;
   this._head.innerHTML = '';
   var tr = ol_ext_element.create('TR', {
     parent: this._head
@@ -206,40 +370,11 @@ ol_control_FeatureList.prototype._drawList = function(delay) {
       })
     }
   }.bind(this))
-  // List
-  var body = this._listbody
-  this._listbody.innerHTML = '';
-  this._listFeatures = [];
-  features.forEach(function (f) {
-    var tr = ol_ext_element.create('TR', {
-      click: function (e) {
-        this.dispatchEvent({
-          type: 'select',
-          property: e.target.dataset.prop,
-          feature: f
-        })
-        body.querySelectorAll('.ol-selected').forEach(function(li) {
-          li.classList.remove('ol-selected')
-        })
-        tr.classList.add('ol-selected')
-      }.bind(this),
-    })
-    this._listFeatures.push({
-      feature: f,
-      tr: tr
-    })
-    columns.forEach(function(c) {
-      var p = this.formatProperty(f, c);
-      ol_ext_element.create('TD', {
-        text: p.val,
-        html: p.html,
-        className: p.type,
-        'data-prop': c,
-        parent: tr
-      })
-    }.bind(this))
-  }.bind(this))
-  // Sort
+}
+
+/** Sort the list of features
+ */
+ol_control_FeatureList.prototype.sort = function() {
   var sort = Object.keys(this._sort)
   if (sort.length) {
     this._listFeatures.sort(function(a, b) {
@@ -251,9 +386,20 @@ ol_control_FeatureList.prototype._drawList = function(delay) {
       return 0;
     }.bind(this));
   }
+  // Refresh list
+  this.refresh()
+}
+
+/** Refresh the list
+ */
+ol_control_FeatureList.prototype.refresh = function() {
+  // Draw Head
+  this._drawHead();
+  // Draw list
+  this._listbody.innerHTML = '';
   this._listFeatures.forEach(function(l) {
-    body.appendChild(l.tr)
-  })
+    this._listbody.appendChild(l.tr)
+  }.bind(this))
   // resize
   this.resize();
 }
@@ -289,7 +435,7 @@ ol_control_FeatureList.prototype.formatProperty = function(feature, prop) {
  * @param {Array<ol_Feature>} [features] a list of features to retrieve columns (if no columns defined by setColumns)
  */
 ol_control_FeatureList.prototype.getColumns = function(features) {
-  var columns = this._columns || [];
+  var columns = this.columns || [];
   if (!columns.length && features) {
     var col = {}
     features.forEach(function (f) {
@@ -309,7 +455,7 @@ ol_control_FeatureList.prototype.getColumns = function(features) {
  * @param {Array<string>} columns
  */
 ol_control_FeatureList.prototype.setColumns = function(columns) {
-  this._columns = columns || [];
+  this.columns = columns || [];
   this._drawList();
 }
 
@@ -337,10 +483,9 @@ ol_control_FeatureList.prototype._dragSizer = function(e) {
     case 'mousedown':
     case 'touchstart': {
       self._contentHeight = self._list.parentNode.getBoundingClientRect().height;
-      console.log(self._contentHeight)
       self._pageY =  e.pageY
         || (e.touches && e.touches.length && e.touches[0].pageY)
-        || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);;
+        || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
       ["mouseup", "mousemove", "touchend", "touchcancel", "touchmove"]
         .forEach(function (eventName) {
           document.addEventListener(eventName, self._movefn);
@@ -353,7 +498,11 @@ ol_control_FeatureList.prototype._dragSizer = function(e) {
         var pageY = e.pageY
           || (e.touches && e.touches.length && e.touches[0].pageY)
           || (e.changedTouches && e.changedTouches.length && e.changedTouches[0].pageY);
-        self.resize(self._contentHeight - pageY + self._pageY);
+        if (this._bottomScroll) {
+          self.resize(self._contentHeight + pageY - self._pageY);
+        } else {
+          self.resize(self._contentHeight - pageY + self._pageY);
+        }
       }
       break;
     }
@@ -366,6 +515,8 @@ ol_control_FeatureList.prototype._dragSizer = function(e) {
  */
 ol_control_FeatureList.prototype.resize = function(height) {
   if (!this.getMap()) return;
+  var h0 = this._list.parentNode.getBoundingClientRect().height
+  // Set new height
   if (height !== undefined) {
     this._list.parentNode.style.height = height + 'px';
   }
@@ -376,25 +527,27 @@ ol_control_FeatureList.prototype.resize = function(height) {
     this._list.parentNode.style.maxHeight = Math.min(h, this._list.getBoundingClientRect().height)  + 'px';
     //this._list.parentNode.style.minHeight = Math.min(100, this._list.getBoundingClientRect().height)  + 'px';
   }
-  this.dispatchEvent({
-    type: 'resize',
-    height: this._list.parentNode.getBoundingClientRect().height
-  })
+  var h = this._list.parentNode.getBoundingClientRect().height;
+  if (h !== h0) {
+    this.dispatchEvent({
+      type: 'resize',
+      height: this._list.parentNode.getBoundingClientRect().height
+    })
+  }
 }
 
 /** Select a feature in the list
- * @param {ol_Feature} feature
+ * @param {ol_Feature} [feature] if none remove selection
+ * @param {boolean} [noScroll=false] prevent scrolling to the selected row
  */
-ol_control_FeatureList.prototype.select = function(feature) {
-  var list = this._listFeatures;
-  if (list) {
-    for (let i=0; i<list.length; i++) {
-      if (list[i].feature === feature) {
-        this._listbody.querySelectorAll('.ol-selected').forEach(function(li) { li.classList.remove('ol-selected') })
-        list[i].tr.classList.add('ol-selected')
-        this._list.parentNode.scrollTo(this._list.parentNode.scrollLeft, list[i].tr.offsetTop - this._list.parentNode.getBoundingClientRect().height/2)
-        break;
-      }
+ol_control_FeatureList.prototype.select = function(feature, noScroll) {
+  this._listbody.querySelectorAll('.ol-selected').forEach(function(li) {
+    li.classList.remove('ol-selected') 
+  })
+  if (!noScroll && feature) {
+    var tr = this.scrollTo(feature)
+    if (tr) {
+      tr.classList.add('ol-selected');
     }
   }
 }
@@ -405,12 +558,13 @@ ol_control_FeatureList.prototype.select = function(feature) {
  *  @param {string} [title]
  *  @param {string} [html]
  *  @param {function} click on click function
+ * @returns {Element}
  */
 ol_control_FeatureList.prototype.addButton = function(options) {
-  ol_ext_element.create('BUTTON', {
+  return ol_ext_element.create('BUTTON', {
     className: options.className,
-    title: options.title,
-    html: options.html || '<i></i>',
+    title: options.title || '',
+    html: options.html || '',
     click: options.click,
     parent: this._menu.querySelector('.ol-buttons')
   })
