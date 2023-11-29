@@ -739,7 +739,11 @@ body > .ol-ext-dialog > form {
   margin: 0 0 0 .5em;
 }
 
+.ol-feature-list {
+  position: relative;
+}
 .ol-control.ol-feature-list {
+  position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -764,9 +768,21 @@ body > .ol-ext-dialog > form {
   left: .5em;
   width: auto;
 }
-.ol-control.ol-feature-list .ol-content {
+.ol-feature-list .ol-content {
   background-color: #f4f6f8;
+  clear: both;
 }
+.ol-feature-list.ol-collapsed .ol-content > * {
+  display: none;
+}
+.ol-feature-list .ol-header {
+  position: relative;
+  overflow: hidden;
+}
+.ol-feature-list.ol-collapsed .ol-header {
+  display: block;
+}
+
 .ol-control.ol-feature-list > button,
 .ol-control.ol-feature-list.ol-collapsed .ol-content {
   display: none;
@@ -783,6 +799,10 @@ body > .ol-ext-dialog > form {
   position: relative;
   border: 1px solid #f4f6f8;
   border-width: 1px 0;
+}
+.ol-feature-list.ol-bottom .ol-sizer {
+  position: absolute;
+  bottom: 0;
 }
 .ol-feature-list .ol-sizer:before {
   content: "";
@@ -807,25 +827,34 @@ body > .ol-ext-dialog > form {
 
 .ol-feature-list .ol-content .ol-header p {
   display: inline-block;
-  margin: 0 .25em;
+  margin: 0.1em .25em;
   vertical-align: middle;
+  white-space: nowrap;
+  width: calc(100% - 2em);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 .ol-feature-list .ol-content .ol-header .ol-buttons {
-  float: right;
-}
-.ol-feature-list .ol-content .ol-header:after {
-  content: "";
-  display: block;
-  clear: both;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
 }
 
 .ol-feature-list .ol-content .ol-header button {
+  position: relative;
   border: 0;
   background: transparent;
-  position: relative;
+  vertical-align: middle;
+  width: 1em;
+  height: 1em;
+  margin: 0 .2em;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
 }
-.ol-feature-list .ol-content .ol-header button.ol-closebox i:before,
-.ol-feature-list .ol-content .ol-header button.ol-closebox i:after {
+.ol-feature-list .ol-content .ol-header button.ol-closebox:before,
+.ol-feature-list .ol-content .ol-header button.ol-closebox:after {
   content: "";
   position: absolute;
   left: 50%;
@@ -838,9 +867,20 @@ body > .ol-ext-dialog > form {
   display: block;
   font-style: normal;
 }
-.ol-feature-list .ol-content .ol-header button.ol-closebox i:after {
+.ol-feature-list .ol-content .ol-header button.ol-closebox:after {
   -webkit-transform: translate(-50%, -50%) rotate(-45deg);
           transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.ol-feature-list.ol-collapsed .ol-content .ol-header button.ol-closebox {
+  border: 1px solid currentColor;
+}
+.ol-feature-list.ol-collapsed .ol-content .ol-header button.ol-closebox:before {
+  -webkit-transform: translate(-50%, -50%) rotate(90deg);
+          transform: translate(-50%, -50%) rotate(90deg);
+}
+.ol-feature-list.ol-collapsed .ol-content .ol-header button.ol-closebox:after {
+  display: none;
 }
 
 .ol-feature-list .ol-scroll-container {
@@ -860,11 +900,13 @@ body > .ol-ext-dialog > form {
   position: -webkit-sticky;
   position: sticky;
   top: 0;
+  overflow: hidden;
 }
 .ol-feature-list table tbody tr:hover {
   background-color: #eee;
   cursor: pointer;
 }
+
 .ol-feature-list table tbody tr.ol-selected {
   background-color: #eee;
 }
@@ -908,6 +950,8 @@ body > .ol-ext-dialog > form {
   font-style: normal;
   font-weight: normal;
   cursor: pointer;
+  font-size: 1em;
+  line-height: 1em;
 }
 .ol-feature-list thead td button.sortup:before {
   content: '↧';
