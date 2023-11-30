@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 
-import proj4 from 'proj4.js'
+import proj4 from 'proj4'
 import ol_Object from 'ol/Object.js'
 import {register as ol_proj_proj4_register} from 'ol/proj/proj4.js';
 import {transform as ol_proj_transform} from 'ol/proj.js'
