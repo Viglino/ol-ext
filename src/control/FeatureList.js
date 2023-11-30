@@ -8,6 +8,7 @@ import ol_ext_element from '../util/element';
  * @extends {ol_control_Control}
  * @fires select
  * @fires dblclick
+ * @fires collapse
  * @fires resize
  * @param {Object=} options
  *  @param {number} [options.title] table title
@@ -124,7 +125,7 @@ var ol_control_FeatureList = class olcontrolFeatureList extends ol_control_Contr
   }
 };
 
-/** Scroll at botton
+/** Scroll resize at botton
  * @param {boolean} b
  */
 ol_control_FeatureList.prototype.setBottomScroll = function(b) {
@@ -137,7 +138,7 @@ ol_control_FeatureList.prototype.setBottomScroll = function(b) {
 }
 
 /** Scroll to an element / feature
- * @param {ol_Feature|string} feature a featue or 'select' to scroll at selected row
+ * @param {ol_Feature|string} feature a featue or `select` to scroll at the selected row
  */
 ol_control_FeatureList.prototype.scrollTo = function(feature) {
   if (feature === 'select') {
@@ -150,7 +151,7 @@ ol_control_FeatureList.prototype.scrollTo = function(feature) {
     var i = this._findFeatureIndex(feature)
     if (i >= 0) {
       var scrollDiv = this._list.parentNode;
-      scrollDiv.scrollTo(scrollDiv.scrollLeft, (i+1)*this.getRowHeight() - scrollDiv.getBoundingClientRect().height/2)
+      scrollDiv.scrollTo(scrollDiv.scrollLeft, (i+1.5)*this.getRowHeight() - scrollDiv.getBoundingClientRect().height/2)
       return this._listFeatures[i];
     }
   }
@@ -263,14 +264,13 @@ ol_control_FeatureList.prototype.resetSort = function() {
   this.sort();
 }
 
-/** Enable sort list by properties
+/** Enable sort list by properties in the header
  * @param {...string} propName 
  */
 ol_control_FeatureList.prototype.enableSort = function() {
   this._canSort = [...arguments];
   Object.keys(this._sort).forEach(function(s) {
     if (this._canSort.indexOf(s) < 0) {
-      changed = true;
       delete this._sort[s];
     }
   }.bind(this))
@@ -328,11 +328,10 @@ ol_control_FeatureList.prototype._drawList = function(delay) {
  * @returns {boolean}
  */
 ol_control_FeatureList.prototype.updateFeature = function(feature) {
-  for (var i=0; i<this._listFeatures.length; i++) {
-    if (this._listFeatures[i].feature === feature) {
-      this._updateFeature(this._listFeatures[i].feature, this._listFeatures[i].tr)
-      return true;
-    }
+  var i = this._findFeatureIndex(feature)
+  if (i >= 0) {
+    this._updateFeature(this._listFeatures[i].feature, this._listFeatures[i].tr)
+    return true;
   }
   return false;
 }
@@ -340,6 +339,7 @@ ol_control_FeatureList.prototype.updateFeature = function(feature) {
 /** Update a feature line in the table
  * @param {ol_Feature} feature
  * @param {Element} tr
+ * @private
  */
 ol_control_FeatureList.prototype._updateFeature = function(f, tr) {
   tr.innerHTML = '';
@@ -388,7 +388,7 @@ ol_control_FeatureList.prototype._drawHead = function() {
   }.bind(this))
 }
 
-/** Sort the list of features
+/** Sort features in the table
  */
 ol_control_FeatureList.prototype.sort = function() {
   var sort = Object.keys(this._sort)
@@ -465,8 +465,9 @@ ol_control_FeatureList.prototype._drawPage = function() {
 /** A sort function to compare 2 properties
  * @param {ol_Feature} f1
  * @param {ol_Feature} f2
- * @param {string} prop property name
+ * @param {string} prop property name to sort at
  * @return number -1: v1 < v2, 1: v1 > v2, 0: v1 = v2
+ * @api
  */
 ol_control_FeatureList.prototype.sortFn = function(f1, f2, p) {
   var v1 = f1.get(p) || '';
@@ -490,7 +491,7 @@ ol_control_FeatureList.prototype.formatProperty = function(feature, prop) {
 }
 
 /** Get the list of columns
- * @param {Array<ol_Feature>} [features] a list of features to retrieve columns (if no columns defined by setColumns)
+ * @param {Array<ol_Feature>} [features] a list of features to retrieve columns (if none, returns columns defined by setColumns)
  */
 ol_control_FeatureList.prototype.getColumns = function(features) {
   var columns = this.columns || [];
@@ -569,7 +570,7 @@ ol_control_FeatureList.prototype._dragSizer = function(e) {
 }
 
 /** Resize the control to the map
- * @param {number} [height] 
+ * @param {number} [height] the table height (if in a map sticks to the viewport height)
  */
 ol_control_FeatureList.prototype.resize = function(height) {
   if (!this.getMap()) return;
@@ -578,14 +579,14 @@ ol_control_FeatureList.prototype.resize = function(height) {
   if (height !== undefined) {
     this._list.parentNode.style.height = height + 'px';
   }
+  var h;
   // Prevent getting out of the map
   if (this.element.dataset.control) {
-    var h = this.getMap().getTargetElement().getBoundingClientRect().height 
+    this.getMap().getTargetElement().getBoundingClientRect().height 
       - this._head.getBoundingClientRect().height;
     this._list.parentNode.style.maxHeight = Math.min(h, this._list.getBoundingClientRect().height)  + 'px';
-    //this._list.parentNode.style.minHeight = Math.min(100, this._list.getBoundingClientRect().height)  + 'px';
   }
-  var h = this._list.parentNode.getBoundingClientRect().height;
+  this._list.parentNode.getBoundingClientRect().height;
   if (h !== h0) {
     this.dispatchEvent({
       type: 'resize',
@@ -594,7 +595,7 @@ ol_control_FeatureList.prototype.resize = function(height) {
   }
 }
 
-/** Get the current selection
+/** Get the current selection in the list
  * @returns {ol_Feature} 
  */
 ol_control_FeatureList.prototype.getSelection = function() {
@@ -627,7 +628,7 @@ ol_control_FeatureList.prototype.select = function(feature, noScroll) {
   }
 }
 
-/** Add a button to the list header
+/** Add a button to the list header menu
  * @param {Object} options
  *  @param {string} className
  *  @param {string} [title]

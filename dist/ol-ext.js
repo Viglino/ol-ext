@@ -8610,11 +8610,19 @@ ol.control.EditBar = class olcontrolEditBar extends ol.control.Bar {
  * @extends {ol.control.Control}
  * @fires select
  * @fires dblclick
+ * @fires collapse
  * @fires resize
  * @param {Object=} options
+ *  @param {number} [options.title] table title
+ *  @param {Element} [options.target] to display the control outside the map
+ *  @param {string} [options.className] use `ol-bottom` to scroll at bottom (default top)
+ *  @param {boolean} [options.collapsed=true] collapse the list on start, default true
+ *  @param {Array<ol.Feature>[ol.Collection<ol.Feature>|ol.source.Vector]} [features] a set of feature to display. If provided as Source or Collection the features will stay in sync.
+ *  @param {number} [options.pageLength=100] number of row to display in the table (page optimzation)
  */
 ol.control.FeatureList = class olcontrolFeatureList extends ol.control.Control {
   constructor(options) {
+    options = options || {};
     // Control element
     var element = ol.ext.element.create('DIV', {
       className: ((options.className || '') + ' ol-feature-list').trim()
@@ -8628,8 +8636,14 @@ ol.control.FeatureList = class olcontrolFeatureList extends ol.control.Control {
       element: element,
       target: options.target
     });
-    this.collapse(!!options.collapsed);
+    // List of features / row
+    this._listFeatures = [];
+    // Current columns
+    this._columns = [];
+    // Bottom scroll
     this._bottomScroll = element.classList.contains('ol-bottom');
+    // Page lengeh
+    this.set('pageLength', options.pageLength || 100);
     // Enable sort
     this._canSort = [];
     this._sort = {};
@@ -8681,12 +8695,15 @@ ol.control.FeatureList = class olcontrolFeatureList extends ol.control.Control {
         parent: content
       })
     });
+    list.parentNode.addEventListener('scroll', this._drawPage.bind(this))
     this._head = ol.ext.element.create('THEAD', {
       parent: list
     })
     this._listbody = ol.ext.element.create('TBODY', {
       parent: list
     })
+    // Collapse
+    this.collapse(options.collapsed !== false);
     // Source
     this.setFeatures(options.features)
   }
@@ -8701,7 +8718,7 @@ ol.control.FeatureList = class olcontrolFeatureList extends ol.control.Control {
     this.resize();
   }
 };
-/** Scroll at botton
+/** Scroll resize at botton
  * @param {boolean} b
  */
 ol.control.FeatureList.prototype.setBottomScroll = function(b) {
@@ -8713,7 +8730,7 @@ ol.control.FeatureList.prototype.setBottomScroll = function(b) {
   }
 }
 /** Scroll to an element / feature
- * @param {ol.Feature|string} feature a featue or 'select' to scroll at selected row
+ * @param {ol.Feature|string} feature a featue or `select` to scroll at the selected row
  */
 ol.control.FeatureList.prototype.scrollTo = function(feature) {
   if (feature === 'select') {
@@ -8723,29 +8740,30 @@ ol.control.FeatureList.prototype.scrollTo = function(feature) {
       return tr;
     }
   } else {
-    // Select
-    var list = this._listFeatures;
-    if (list) {
-      for (var i=0; i<list.length; i++) {
-        if (list[i].feature === feature) {
-          this._scrollAt(list[i].tr);
-          return list[i].tr
-        }
-      }
+    var i = this._findFeatureIndex(feature)
+    if (i >= 0) {
+      var scrollDiv = this._list.parentNode;
+      scrollDiv.scrollTo(scrollDiv.scrollLeft, (i+1.5)*this.getRowHeight() - scrollDiv.getBoundingClientRect().height/2)
+      return this._listFeatures[i];
     }
   }
   return false;
 }
-/** Scroll list at a row
- * @param {Element} elt row element (TR)
+/** Find a feature in the list
+ * @param {ol.Feature} feature
+ * @returns {Object}
  * @private
  */
-ol.control.FeatureList.prototype._scrollAt = function(elt) {
-  if (this.isCollapsed()) return;
-  if (!elt || elt.parentNode.parentNode !== this._list) return;
-  // Scroll
-  var scrollDiv = this._list.parentNode;
-  scrollDiv.scrollTo(scrollDiv.scrollLeft, elt.offsetTop - scrollDiv.getBoundingClientRect().height/2)
+ol.control.FeatureList.prototype._findFeatureIndex = function(feature) {
+  var list = this._listFeatures;
+  if (list) {
+    for (var i=0; i<list.length; i++) {
+      if (list[i].feature === feature) {
+        return i
+      }
+    }
+  }
+  return -1;
 }
 /** Find a row given a feature
  * @param {ol.Feature} feature
@@ -8766,7 +8784,7 @@ ol.control.FeatureList.prototype._findRow = function(feature) {
  */
 ol.control.FeatureList.prototype.collapse = function(b) {
   if (b === undefined) b = !this._collapsed;
-  if (b!==this._collapsed) {
+  if (b !== this._collapsed) {
     this._collapsed = b;
     if (this._collapsed) {
       this.element.classList.add('ol-collapsed')
@@ -8777,6 +8795,7 @@ ol.control.FeatureList.prototype.collapse = function(b) {
       type: 'collapse',
       collapsed: this._collapsed
     })
+    if (!this._collapsed) this.refresh();
   }
 }
 /** Is the control collapsed
@@ -8785,7 +8804,7 @@ ol.control.FeatureList.prototype.isCollapsed = function() {
   return this._collapsed;
 }
 /** Set the features to list
- * @param {ol.source.Vector|ol.Collection} source a vector source or a collection of features to list
+ * @param {ol.source.Vector|ol.Collection<ol.Feature>|Array<ol.Feature>} source a vector source or a collection of features to list
  */
 ol.control.FeatureList.prototype.setFeatures = function(source) {
   if (!this._drawbind) {
@@ -8828,14 +8847,13 @@ ol.control.FeatureList.prototype.resetSort = function() {
   this._sort = {};
   this.sort();
 }
-/** Enable sort list by properties
+/** Enable sort list by properties in the header
  * @param {...string} propName 
  */
 ol.control.FeatureList.prototype.enableSort = function() {
   this._canSort = [...arguments];
   Object.keys(this._sort).forEach(function(s) {
     if (this._canSort.indexOf(s) < 0) {
-      changed = true;
       delete this._sort[s];
     }
   }.bind(this))
@@ -8866,10 +8884,7 @@ ol.control.FeatureList.prototype._drawList = function(delay) {
             property: e.target.dataset.prop,
             feature: f
           })
-          this._list.querySelectorAll('.ol-selected').forEach(function(li) {
-            li.classList.remove('ol-selected')
-          })
-          tr.classList.add('ol-selected')
+          this.select(f, true)
         }.bind(this),
         dblclick: function(e) {
           this.dispatchEvent({
@@ -8894,17 +8909,17 @@ ol.control.FeatureList.prototype._drawList = function(delay) {
  * @returns {boolean}
  */
 ol.control.FeatureList.prototype.updateFeature = function(feature) {
-  for (var i=0; i<this._listFeatures.length; i++) {
-    if (this._listFeatures[i].feature === feature) {
-      this._updateFeature(this._listFeatures[i].feature, this._listFeatures[i].tr)
-      return true;
-    }
+  var i = this._findFeatureIndex(feature)
+  if (i >= 0) {
+    this._updateFeature(this._listFeatures[i].feature, this._listFeatures[i].tr)
+    return true;
   }
   return false;
 }
 /** Update a feature line in the table
  * @param {ol.Feature} feature
  * @param {Element} tr
+ * @private
  */
 ol.control.FeatureList.prototype._updateFeature = function(f, tr) {
   tr.innerHTML = '';
@@ -8951,7 +8966,7 @@ ol.control.FeatureList.prototype._drawHead = function() {
     }
   }.bind(this))
 }
-/** Sort the list of features
+/** Sort features in the table
  */
 ol.control.FeatureList.prototype.sort = function() {
   var sort = Object.keys(this._sort)
@@ -8966,26 +8981,66 @@ ol.control.FeatureList.prototype.sort = function() {
     }.bind(this));
   }
   // Refresh list
-  this.refresh()
+  this.refresh(true)
 }
 /** Refresh the list
  */
-ol.control.FeatureList.prototype.refresh = function() {
+ol.control.FeatureList.prototype.refresh = function(force) {
+  if (force) this._curPage = -1;
   // Draw Head
   this._drawHead();
   // Draw list
-  this._listbody.innerHTML = '';
-  this._listFeatures.forEach(function(l) {
-    this._listbody.appendChild(l.tr)
-  }.bind(this))
+  this._drawPage()
   // resize
   this.resize();
+}
+/** Get height of a row
+ * @return {number}
+ */
+ol.control.FeatureList.prototype.getRowHeight = function() {
+  return this._head.getBoundingClientRect().height;
+}
+/** Pagination draw
+ * @private
+ */
+ol.control.FeatureList.prototype._drawPage = function() {
+  // Page length
+  var nb = Math.round(this.get('pageLength') / 2);
+  var nb2 = Math.round(nb/2);
+  // Get current page on scrollTop
+  var top = this._list.parentNode.scrollTop;
+  var h = this.getRowHeight();
+  var page = Math.round((top / h - nb2) / nb);
+  if (page*nb > this._listFeatures.length) page = 0;
+  // No changes
+  if (page === this._curPage) return;
+  // Draw page
+  this._curPage = page;
+  this._listbody.innerHTML = '';
+  // Fist row to preserve space
+  this._listbody.appendChild(ol.ext.element.create('TR', {
+    style: {
+      height: Math.max(0, (page*nb - nb2)*h) + 'px'
+    }
+  }))
+  // Page list
+  var nmax = Math.min(this._listFeatures.length, (page+1)*nb + nb2)
+  for (var i = Math.max(0, page*nb - nb2); i < nmax; i++) {
+    this._listbody.appendChild(this._listFeatures[i].tr)
+  }
+  // Last row to preserve space
+  this._listbody.appendChild(ol.ext.element.create('TR', {
+    style: {
+      height: Math.max(0, (this._listFeatures.length - nmax) * h) + 'px'
+    }
+  }))
 }
 /** A sort function to compare 2 properties
  * @param {ol.Feature} f1
  * @param {ol.Feature} f2
- * @param {string} prop property name
+ * @param {string} prop property name to sort at
  * @return number -1: v1 < v2, 1: v1 > v2, 0: v1 = v2
+ * @api
  */
 ol.control.FeatureList.prototype.sortFn = function(f1, f2, p) {
   var v1 = f1.get(p) || '';
@@ -9007,7 +9062,7 @@ ol.control.FeatureList.prototype.formatProperty = function(feature, prop) {
   }
 }
 /** Get the list of columns
- * @param {Array<ol.Feature>} [features] a list of features to retrieve columns (if no columns defined by setColumns)
+ * @param {Array<ol.Feature>} [features] a list of features to retrieve columns (if none, returns columns defined by setColumns)
  */
 ol.control.FeatureList.prototype.getColumns = function(features) {
   var columns = this.columns || [];
@@ -9083,7 +9138,7 @@ ol.control.FeatureList.prototype._dragSizer = function(e) {
   }
 }
 /** Resize the control to the map
- * @param {number} [height] 
+ * @param {number} [height] the table height (if in a map sticks to the viewport height)
  */
 ol.control.FeatureList.prototype.resize = function(height) {
   if (!this.getMap()) return;
@@ -9092,14 +9147,14 @@ ol.control.FeatureList.prototype.resize = function(height) {
   if (height !== undefined) {
     this._list.parentNode.style.height = height + 'px';
   }
+  var h;
   // Prevent getting out of the map
   if (this.element.dataset.control) {
-    var h = this.getMap().getTargetElement().getBoundingClientRect().height 
+    this.getMap().getTargetElement().getBoundingClientRect().height 
       - this._head.getBoundingClientRect().height;
     this._list.parentNode.style.maxHeight = Math.min(h, this._list.getBoundingClientRect().height)  + 'px';
-    //this._list.parentNode.style.minHeight = Math.min(100, this._list.getBoundingClientRect().height)  + 'px';
   }
-  var h = this._list.parentNode.getBoundingClientRect().height;
+  this._list.parentNode.getBoundingClientRect().height;
   if (h !== h0) {
     this.dispatchEvent({
       type: 'resize',
@@ -9107,22 +9162,38 @@ ol.control.FeatureList.prototype.resize = function(height) {
     })
   }
 }
+/** Get the current selection in the list
+ * @returns {ol.Feature} 
+ */
+ol.control.FeatureList.prototype.getSelection = function() {
+  if (this._curSelection) {
+    return this._listFeatures[this._findFeatureIndex(this._curSelection.feature)];
+  }
+  return null;
+}
 /** Select a feature in the list
  * @param {ol.Feature} [feature] if none remove selection
  * @param {boolean} [noScroll=false] prevent scrolling to the selected row
  */
 ol.control.FeatureList.prototype.select = function(feature, noScroll) {
-  this._listbody.querySelectorAll('.ol-selected').forEach(function(li) {
-    li.classList.remove('ol-selected') 
-  })
-  if (!noScroll && feature) {
-    var tr = this.scrollTo(feature)
-    if (tr) {
-      tr.classList.add('ol-selected');
+  // Remove previous
+  if (this._curSelection) {
+    this._curSelection.tr.classList.remove('ol-selected');
+  }
+  this._curSelection = null;
+  // New selection
+  if (feature) {
+    if (noScroll) {
+      this._curSelection = this._listFeatures[this._findFeatureIndex(feature)];
+    } else {
+      this._curSelection = this.scrollTo(feature)
     }
   }
+  if (this._curSelection) {
+    this._curSelection.tr.classList.add('ol-selected');
+  }
 }
-/** Add a button to the list header
+/** Add a button to the list header menu
  * @param {Object} options
  *  @param {string} className
  *  @param {string} [title]

@@ -902,6 +902,12 @@ body > .ol-ext-dialog > form {
   top: 0;
   overflow: hidden;
 }
+/* Fixed height */
+.ol-feature-list table tr {
+  height: 1.4em;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+}
 .ol-feature-list table tbody tr:hover {
   background-color: #eee;
   cursor: pointer;
@@ -914,6 +920,8 @@ body > .ol-ext-dialog > form {
 .ol-feature-list table td {
   border: 0 solid #ddd;
   border-width: 0 0 1px 1px;
+  overflow: hidden;
+  width: 100px;
 }
 .ol-feature-list table td.number {
   text-align: right;
