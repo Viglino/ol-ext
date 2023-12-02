@@ -9147,15 +9147,14 @@ ol.control.FeatureList.prototype.resize = function(height) {
   if (height !== undefined) {
     this._list.parentNode.style.height = height + 'px';
   }
-  var h;
   // Prevent getting out of the map
   if (this.element.dataset.control) {
-    this.getMap().getTargetElement().getBoundingClientRect().height 
+    var h = this.getMap().getTargetElement().getBoundingClientRect().height 
       - this._head.getBoundingClientRect().height;
     this._list.parentNode.style.maxHeight = Math.min(h, this._list.getBoundingClientRect().height)  + 'px';
   }
-  this._list.parentNode.getBoundingClientRect().height;
-  if (h !== h0) {
+  // Has changed?
+  if (h0 !== this._list.parentNode.getBoundingClientRect().height) {
     this.dispatchEvent({
       type: 'resize',
       height: this._list.parentNode.getBoundingClientRect().height
