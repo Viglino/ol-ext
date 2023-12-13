@@ -191,7 +191,7 @@ var ol_source_Geoportail = class olsourceGeoportail extends ol_source_WMTS {
 
 /** Standard IGN-GEOPORTAIL attribution 
  */
-ol_source_Geoportail.defaultAttribution = '<a href="http://www.geoportail.gouv.fr/">Géoportail</a> &copy; <a href="http://www.ign.fr/">IGN-France</a>';
+ol_source_Geoportail.defaultAttribution = '<a href="https://geoservices.ign.fr/">Géoservices</a> &copy; <a href="http://www.ign.fr/">IGN-France</a>';
 
 /** Get service URL according to server url or standard url
  */

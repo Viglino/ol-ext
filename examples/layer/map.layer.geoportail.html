@@ -130,6 +130,7 @@
         style="width: calc(100% - 1.5em); box-sizing: border-box;" 
       /><select id="keys" style="width: 1.5em;" onchange="$('#key').val(this.value); loadCapabilities()">
         <option value="" style="font-style: italic; color: #fff; background-color: #369;">choisir une couche</option>
+        <option value="gpf">New geoservices Geoplateforme</option>
         <option value="cartes">cartes</option>
         <option value="ortho">ortho</option>
         <option value="orthohisto">orthohisto</option>
@@ -276,7 +277,7 @@
     };
   });
 
-  var currentLayer, currentCap=[];
+  var currentLayer, currentCap = [];
   function addLayer() {
     if (currentLayer) map.addLayer(currentLayer);
   }
