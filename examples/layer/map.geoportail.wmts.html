@@ -164,6 +164,7 @@
 	
 <script type="text/javascript">
 
+/*
 var services = [
   'administratif',
   'agriculture',
@@ -180,18 +181,22 @@ var services = [
   'parcellaire',
   'topographie',
   'transports',
+  'divers'
 ];
+*/
 
 var ul = $('#geoportail')
-services.forEach(function(k) {
-  ol.layer.Geoportail.getCapabilities(k).then(function(caps) {
+ol.layer.Geoportail.getCapabilities('gpf').then(function(caps, themes) {
+  function sort(a, b) {
+    if (a === 'autre') return 1;
+    if (b === 'autre') return -1;
+    return a<b ? -1 : a>b ? 1 : 0
+  }
+  Object.keys(themes).sort(sort).forEach(function(k) {
     var li = $('<li>').append($('<p>').text(k)).appendTo(ul);
     var ul2 = $('<ul>').appendTo(li);
-    Object.keys(caps).forEach(function(c) {
-      caps[c].key = k;
-      var cap = { key: k };
-      for (var i in caps[c]) cap[i] = caps[c][i];
-      cap.desc = cap.desc.replace(/^\<\!\[CDATA\[|\]\]>$/g,'');
+    Object.keys(themes[k]).forEach(function(c) {
+      var cap = themes[k][c]
       ol.layer.Geoportail.register(c, cap);
       var l = new ol.layer.Geoportail({ layer: c });
       var li = $('<li>')
@@ -218,8 +223,9 @@ services.forEach(function(k) {
       $('<p class="desc">').html(cap.desc).appendTo(li);
     })
     $('#nb').text($('#geoportail ul li:visible').length)
-  });
+  })
 });
+
 
 function code(elt, type) {
   $('.choice li').removeClass('select');

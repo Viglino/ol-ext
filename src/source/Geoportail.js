@@ -196,11 +196,18 @@ ol_source_Geoportail.defaultAttribution = '<a href="http://www.geoportail.gouv.f
 /** Get service URL according to server url or standard url
  */
 ol_source_Geoportail.getServiceURL = function(server, gppKey) {
-  if (gppKey === 'gpf') {
-    return 'https://data.geopf.fr/wmts';
-  }
   if (server) {
-    return server.replace(/^(https?:\/\/[^/]*)(.*)$/, "$1/" + gppKey + "$2")
+    if (gppKey === 'gpf') {
+      return 'https://data.geopf.fr/wmts';
+    } else if (/geopf/.test(server)) {
+      if (gppKey) {
+        return server + '?apiKey=' + gppKey;
+      } else {
+        return server;
+      }
+    } else {
+      return server.replace(/^(https?:\/\/[^/]*)(.*)$/, "$1/" + gppKey + "$2")
+    }
   } else {
     return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") + gppKey + "/geoportail/wmts"
   }
