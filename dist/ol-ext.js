@@ -2430,6 +2430,7 @@ ol.ext.input.Slider = class olextinputSlider extends ol.ext.input.Base {
       var tx = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
       cursor.style.left = Math.max(0, Math.min(100, Math.round(tx * 100))) + '%';
       var v = input.value = Math.round((tx * (max - min) + min) * dstep) / dstep;
+      input.focus();
       this.dispatchEvent({ type: 'change:value', value: v });
     }.bind(this));
     // Set value
@@ -2792,6 +2793,7 @@ ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
     options.hidden = options.hidden !== false;
     options.className = ('ol-ext-colorpicker ' + (options.hastab ? 'ol-tab ' : '') + (options.className || '')).trim();
     super(options);
+    this.input.disabled = true;
     if (options.opacity === false) {
       this.element.classList.add('ol-nopacity');
     }
@@ -34489,7 +34491,7 @@ ol.layer.Geoportail.capabilities = {
  */
 ol.layer.Geoportail.themes = [{
   theme: 'edugeo',
-  rex: /EDUGEO|PVA_IGN_zone-marais/
+  rex: /EDUGEO|PVA_IGN_zone-marais|VERDUN|DOUAUMONT/
 }, {
   theme: 'cartes',
   rex: /GEOGRAPHICALGRIDSYSTEMS|CARTES|SCAN/

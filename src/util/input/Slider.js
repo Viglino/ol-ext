@@ -87,6 +87,7 @@ var ol_ext_input_Slider = class olextinputSlider extends ol_ext_input_Base {
       var tx = Math.max(0, Math.min(e.offsetX / slider.clientWidth, 1));
       cursor.style.left = Math.max(0, Math.min(100, Math.round(tx * 100))) + '%';
       var v = input.value = Math.round((tx * (max - min) + min) * dstep) / dstep;
+      input.focus();
       this.dispatchEvent({ type: 'change:value', value: v });
     }.bind(this));
 

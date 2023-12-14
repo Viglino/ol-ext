@@ -30,6 +30,7 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
     options.className = ('ol-ext-colorpicker ' + (options.hastab ? 'ol-tab ' : '') + (options.className || '')).trim();
     super(options);
 
+    this.input.disabled = true;
     if (options.opacity === false) {
       this.element.classList.add('ol-nopacity');
     }

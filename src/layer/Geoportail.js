@@ -447,7 +447,7 @@ ol_layer_Geoportail.capabilities = {
  */
 ol_layer_Geoportail.themes = [{
   theme: 'edugeo',
-  rex: /EDUGEO|PVA_IGN_zone-marais/
+  rex: /EDUGEO|PVA_IGN_zone-marais|VERDUN|DOUAUMONT/
 }, {
   theme: 'cartes',
   rex: /GEOGRAPHICALGRIDSYSTEMS|CARTES|SCAN/
