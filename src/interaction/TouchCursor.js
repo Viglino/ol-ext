@@ -317,10 +317,11 @@ var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_inter
       click: b.click,
       on: b.on
     })
-    if (!b.before || buttons.length === 0)
+    if (!b.before || buttons.length === 0) {
       this.getOverlayElement().appendChild(button)
-    else
+    } else {
       this.getOverlayElement().insertBefore(button, buttons[0])
+    }
     // Reorder buttons
     var start = buttons.length >= max ? 0 : 1
     for (let i = 0; i < buttons.length; i++) {

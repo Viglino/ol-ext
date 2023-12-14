@@ -100,14 +100,16 @@ var ol_interaction_DragOverlay = class olinteractionDragOverlay extends ol_inter
     }
     // Add listener on overlay of the same map
     var handler = function () {
-      if (this.getMap() === ov.getMap())
+      if (this.getMap() === ov.getMap()) {
         this._dragging = ov;
+      }
     }.bind(this);
     this._overlays.push({
       overlay: ov,
       listener: handler
     });
-    element.addEventListener('pointerdown', handler);
+    // element.addEventListener('pointerdown', handler);
+    element.parentNode.addEventListener('pointerdown', handler)
   }
   /** Remove an overlay from the interacton
    * @param {ol.Overlay} ov
