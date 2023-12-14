@@ -34,7 +34,7 @@ var ol_source_DBPedia = class olsourceDBPedia extends ol_source_Vector {
     var options = opt_options || {}
 
     /** Default attribution */
-    if (!options.attributions) options.attributions = [ '&copy; <a href="http://dbpedia.org/"">DBpedia</a> CC-by-SA']
+    if (!options.attributions) options.attributions = [ '&copy; <a href="https://dbpedia.org/"">DBpedia</a> CC-by-SA']
 
     // Bbox strategy : reload at each move
     if (!options.strategy) options.strategy = ol_loadingstrategy_bbox
@@ -44,7 +44,7 @@ var ol_source_DBPedia = class olsourceDBPedia extends ol_source_Vector {
     this.setLoader(this._loaderFn)
 
     /** Url for DBPedia SPARQL */
-    this._url = options.url || 'http://fr.dbpedia.org/sparql'
+    this._url = options.url || 'https://fr.dbpedia.org/sparql'
 
     /** Max resolution to load features  */
     this._maxResolution = options.maxResolution || 100
