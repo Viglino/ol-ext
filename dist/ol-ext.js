@@ -23898,7 +23898,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
     for (var i = 0, o; o = this._overlays[i]; i++) {
       if (o.overlay === ov) {
         var l = this._overlays.splice(i, 1)[0];
-        ov.getElement().removeEventListener('pointerdown', l.listener);
+        ov.getElement().parentNode.removeEventListener('pointerdown', l.listener);
         break;
       }
     }
