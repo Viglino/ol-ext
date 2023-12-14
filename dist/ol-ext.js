@@ -23880,14 +23880,16 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
     }
     // Add listener on overlay of the same map
     var handler = function () {
-      if (this.getMap() === ov.getMap())
+      if (this.getMap() === ov.getMap()) {
         this._dragging = ov;
+      }
     }.bind(this);
     this._overlays.push({
       overlay: ov,
       listener: handler
     });
-    element.addEventListener('pointerdown', handler);
+    // element.addEventListener('pointerdown', handler);
+    element.parentNode.addEventListener('pointerdown', handler)
   }
   /** Remove an overlay from the interacton
    * @param {ol.Overlay} ov
@@ -28934,10 +28936,11 @@ ol.interaction.TouchCursor = class olinteractionTouchCursor extends ol.interacti
       click: b.click,
       on: b.on
     })
-    if (!b.before || buttons.length === 0)
+    if (!b.before || buttons.length === 0) {
       this.getOverlayElement().appendChild(button)
-    else
+    } else {
       this.getOverlayElement().insertBefore(button, buttons[0])
+    }
     // Reorder buttons
     var start = buttons.length >= max ? 0 : 1
     for (var i = 0; i < buttons.length; i++) {
