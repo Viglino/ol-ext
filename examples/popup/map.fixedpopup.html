@@ -12,13 +12,6 @@
   <meta name="description" content="Display fixed popup on the map" />
   <meta name="keywords" content="openlayers, ol, popup, overlay, fix" />
 
-  <!-- Prevent image error on load with https -->
-	<script>
-		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
-      location.href = window.location.href.replace(/^https:/,'http:');
-		}
-	</script>
-
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
@@ -205,7 +198,7 @@
   select.getFeatures().on(['add'], function(e) {
     var feature = e.element;
     var content = "";
-    content += "<img src='"+feature.get("img")+"'/>";
+    content += "<img src='" + '//wsrv.nl/?url=' + feature.get("img") + "'/>";
     content += feature.get("text");
     content += '<br/><i>powered by <a href="https://github.com/Viglino/ol-ext" target="ol">ol-ext</a></i>';
     if (select.getFeatures().getLength()>1) {

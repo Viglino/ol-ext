@@ -80,11 +80,6 @@
   </div>
   
 <script type="text/javascript">
-  // http services load on http
-  if (location.protocol === 'https:' && !/^localhost/.test(location.host)) {
-    location.href = window.location.href.replace(/^https:/,'http:');
-  }
-
   // Define proj4 2154
   proj4.defs("EPSG:2154","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
   if (ol.proj.proj4 && ol.proj.proj4.register) ol.proj.proj4.register(proj4);

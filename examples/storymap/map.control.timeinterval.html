@@ -11,13 +11,6 @@
   <meta name="description" content="A control to add timeline on a map." />
   <meta name="keywords" content="ol, timeline, control, date" />
 
-  <!-- Prevent image error on load with https -->
-	<script>
-		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
-      location.href = window.location.href.replace(/^https:/,'http:');
-		}
-	</script>
-
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
@@ -123,7 +116,7 @@
       var style = cache[f.get('img')+'-'+select];
       if (!style) {
         var img = new ol.style.Photo({
-          src: f.get('img'),
+          src: '//wsrv.nl/?url=' + f.get('img'),
           radius: select ? 20:15,
           shadow: true,
           stroke: new ol.style.Stroke({

@@ -11,13 +11,6 @@
   <meta name="description" content="A control to show image on a map." />
   <meta name="keywords" content="ol, image, control, line" />
 
-  <!-- Prevent image error on load with https -->
-	<script>
-		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
-      location.href = window.location.href.replace(/^https:/,'http:');
-		}
-	</script>
-
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
@@ -147,7 +140,7 @@
       if (!style) {
         style = cache[id] = new ol.style.Style({
           image: new ol.style.Photo({
-            src: f.get('img'),
+            src: '//wsrv.nl/?url=' + f.get('img'),
             radius: select ? 20:15,
             shadow: true,
             stroke: new ol.style.Stroke({
