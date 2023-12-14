@@ -208,7 +208,7 @@ import ol_source_Geoportail from '../source/Geoportail.js'
   }
   /** Get Key capabilities
    * @param {string} gppKey the API key to get capabilities for
-   * @return {*} Promise-like response
+   * @return {*} Promise-like response, use then, catch and finally to get the response
    */
   static getCapabilities(gppKey) {
     var capabilities = {}
@@ -393,8 +393,8 @@ if (gppKey === 'gpf') {
           }
           capabilities[service.layer] = service
         }
-        onSuccess(capabilities, )
-        onFinally(capabilities)
+        onSuccess(capabilities, {})
+        onFinally(capabilities, {})
       }
     })
 }
@@ -493,6 +493,6 @@ ol_layer_Geoportail.themes = [{
 }, {
   theme: 'ortho',
   rex: /ORTHOIMAGERY/
-}]
+}];
 
 export default ol_layer_Geoportail

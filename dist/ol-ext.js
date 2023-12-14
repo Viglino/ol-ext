@@ -34259,7 +34259,7 @@ ol.layer.GeoImage = class ollayerGeoImage extends ol.layer.Image {
   }
   /** Get Key capabilities
    * @param {string} gppKey the API key to get capabilities for
-   * @return {*} Promise-like response
+   * @return {*} Promise-like response, use then, catch and finally to get the response
    */
   static getCapabilities(gppKey) {
     var capabilities = {}
@@ -34440,8 +34440,8 @@ if (gppKey === 'gpf') {
           }
           capabilities[service.layer] = service
         }
-        onSuccess(capabilities, )
-        onFinally(capabilities)
+        onSuccess(capabilities, {})
+        onFinally(capabilities, {})
       }
     })
 }
@@ -34537,7 +34537,7 @@ ol.layer.Geoportail.themes = [{
 }, {
   theme: 'ortho',
   rex: /ORTHOIMAGERY/
-}]
+}];
 
 /*	Copyright (c) 2015 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
