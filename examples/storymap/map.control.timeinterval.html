@@ -113,6 +113,9 @@
   var cache = {};
   function style(select){
     return function(f) {
+      // Is hidden
+      if (!f.get('visible')) return [];
+      // Display feature on the map
       var style = cache[f.get('img')+'-'+select];
       if (!style) {
         var img = new ol.style.Photo({
@@ -126,7 +129,8 @@
           onload: function() { f.changed(); }
         })
         style = cache[f.get('img')+'-'+select] = new ol.style.Style({
-          image: img
+          image: img,
+          zIndex: select ? 1 : 0
         })
       }
       return style;
@@ -189,10 +193,10 @@
     // Filter features visibility
     vectorSource.getFeatures().forEach(function(f) {
       var date = new Date(f.get('date'));
-      if (date<e.dateStart || date>e.dateEnd) {
-        f.setStyle([]);
+      if (date < e.dateStart || date > e.dateEnd) {
+        f.set('visible', false)
       } else {
-        f.setStyle();
+        f.set('visible', true)
       }
     });
   });
@@ -207,7 +211,7 @@
       tline.setDate(f.get('date'));
       // Show info
 			var info = $("#select").html("");
-			$("<img>").attr('src',f.get("img")).appendTo(info);
+			$("<img>").attr('src', '//wsrv.nl/?url=' + f.get("img")).appendTo(info);
 			$("<p>").text(f.get("text")).appendTo(info);
       $("<p>").text(f.get("commune")+" ("+f.get("region")+" - "
         + (new Date(f.get("date"))).toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'})
