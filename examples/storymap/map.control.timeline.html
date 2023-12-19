@@ -163,7 +163,7 @@
     graduation: 'day', // 'month'
     zoomButton: true,
     getHTML: function(f){
-      return '<img src="'+f.get('img')+'"/> '+(f.get('text')||'');
+      return '<img src="//wsrv.nl/?url=' + f.get('img')+'"/> '+(f.get('text')||'');
     },
     getFeatureDate: function(f) {
       return f.get('date');
