@@ -157,8 +157,12 @@
 }
 
 
+.ol-control.ol-search.IGNF-parcelle {
+  background-color: rgba(255,255,255,.7);
+  padding-bottom: .2em;
+}
 .ol-search.IGNF-parcelle input {
-  width: 13.5em;
+  width: 14.5em;
 }
 .ol-search.IGNF-parcelle input:read-only {
   background: #ccc;
@@ -172,13 +176,22 @@
   display: block;
   clear: both;
 }
+
+.ol-search.IGNF-parcelle > div input {
+  text-align: right;
+}
 .ol-search.IGNF-parcelle > div input,
 .ol-search.IGNF-parcelle > div label {
-  width: 5em;
+  width: 4em;
   box-sizing: border-box;
   display: inline-block;
   margin: .1em;
   font-size: 1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ol-search.IGNF-parcelle > div label {
+  letter-spacing: -0.04em;
 }
 .ol-search.IGNF-parcelle ul.autocomplete-page {
   margin-top:.5em;

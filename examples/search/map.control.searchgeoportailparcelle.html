@@ -16,10 +16,6 @@
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-  <!-- IE 9 bug on ajax tranport  -->
-  <!--[if lte IE 9]>
-  <script type='text/javascript' src='//cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.3/jquery.xdomainrequest.min.js'></script>
-  <![endif]-->
 
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
@@ -110,7 +106,7 @@
   // Set the control grid reference
   var search = new ol.control.SearchGeoportailParcelle ({
     // apiKey: apiKey,
-//    version: 'gpf',
+//     version: 'gpf',
     position: true	// Search, with priority to geo position
   });
   map.addControl (search);

@@ -194,6 +194,7 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
       terr: this.get('terr') || undefined,
       maximumResponses: this.get('maxItems')
     };
+    if (this.get('type') === 'Commune') rdata.poiType = 'commune';
     if (this.get('position')) {
       var center = this.getMap().getView().getCenter()
       rdata.lonlat = ol_proj_transform(center, this.getMap().getView().getProjection(), 'EPSG:4326').join(',');
@@ -213,19 +214,7 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
    * @api
    */
   handleResponse(response) {
-    var features = response.results;
-    if (this.get('type') === 'Commune') {
-      for (var i = features.length - 1; i >= 0; i--) {
-        if (features[i].poiType && features[i].poiType.indexOf) {
-          if (features[i].poiType.indexOf('commune') < 0) {
-            features.splice(i, 1);
-          }
-        } else if (features[i].kind !== 'commune') {
-          features.splice(i, 1);
-        }
-      }
-    }
-    return features;
+    return response.results;
   }
   /** A ligne has been clicked in the menu > dispatch event
    * @param {any} f the feature, as passed in the autocomplete
@@ -245,11 +234,9 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
       if (this.get('type') === 'Commune') {
         this.searchCommune(f, function () {
           ol_control_Search.prototype.select.call(this, f, reverse, c, options);
-          //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
         }.bind(this));
       } else {
         super.select(f, reverse, c, options);
-        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
       }
     } else {
       this.searchCommune(f);
@@ -314,6 +301,7 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
           try {
             var r = JSON.parse(resp).features[0];
             f.insee = r.properties.departmentcode + r.properties.municipalitycode
+            f.districtcode = r.properties.districtcode
             // f.insee = r.properties.citycode
             if (cback) {
               cback.call(this, [f]);

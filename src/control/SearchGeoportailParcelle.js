@@ -4,6 +4,7 @@
 */
 import ol_control_SearchGeoportail from "./SearchGeoportail.js";
 import {fromLonLat as ol_proj_fromLonLat} from 'ol/proj.js'
+import ol_ext_element from "../util/element.js";
 
 /**
  * Search places using the French National Base Address (BAN) API.
@@ -40,25 +41,39 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     var self = this;
 
     // Add parcel form
-    var div = document.createElement("DIV");
-    element.appendChild(div);
+    var div = ol_ext_element.create('DIV', {
+      parent: element
+    });
 
-    var label = document.createElement("LABEL");
-    label.innerText = 'Préfixe';
-    div.appendChild(label);
-    label = document.createElement("LABEL");
-    label.innerText = 'Section';
-    div.appendChild(label);
-    label = document.createElement("LABEL");
-    label.innerText = 'Numéro';
-    div.appendChild(label);
-    div.appendChild(document.createElement("BR"));
+    // Labels
+    ol_ext_element.create('LABEL', {
+      text: 'Arrond.',
+      className: 'district',
+      parent: div
+    });
+    ol_ext_element.create('LABEL', {
+      text: 'Préfixe',
+      parent: div
+    });
+    ol_ext_element.create('LABEL', {
+      text: 'Section',
+      parent: div
+    });
+    ol_ext_element.create('LABEL', {
+      text: 'Numéro',
+      parent: div
+    });
+    ol_ext_element.create('BR', {
+      parent: div
+    });
     // Input
     this._inputParcelle = {
-      prefix: document.createElement("INPUT"),
-      section: document.createElement("INPUT"),
-      numero: document.createElement("INPUT")
+      arrond: ol_ext_element.create('INPUT', { className: 'district', disabled: true }),
+      prefix: document.createElement('INPUT'),
+      section: document.createElement('INPUT'),
+      numero: document.createElement('INPUT')
     };
+    this._inputParcelle.arrond.setAttribute('maxlength', 2);
     this._inputParcelle.prefix.setAttribute('maxlength', 3);
     this._inputParcelle.section.setAttribute('maxlength', 2);
     this._inputParcelle.numero.setAttribute('maxlength', 4);
@@ -121,6 +136,17 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
    */
   selectCommune(e) {
     this._commune = e.search.insee || e.sear;
+    this._arrond = e.search.districtcode;
+    if (this._arrond !== '000') {
+      this._inputParcelle.arrond.disabled = false;
+      // Paris
+      if (this._arrond.charAt(0) === '1') this._arrond = '100';
+      // Marseille
+      if (this._arrond.charAt(0) === '2') this._arrond = '200';
+    } else {
+      this._inputParcelle.arrond.disabled = true;
+      this._inputParcelle.arrond.value = '';
+    }
     this._input.value = e.search.insee + ' - ' + e.search.fulltext;
     this.activateParcelle(true);
     this._inputParcelle.numero.focus();
@@ -175,10 +201,16 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     if (prefix === '000') {
       prefix = '___';
     }
+    // Arrondissement
+    var district = this._inputParcelle.arrond.value;
+    if (district) {
+      var n = this._arrond.length - district.length;
+      district = this._arrond.substr(0,n) + district;
+    }
     // Get parcelle number
     var section = complete(this._inputParcelle.section.value, 2);
     var numero = complete(this._inputParcelle.numero.value, 4, '0');
-    this.searchParcelle(commune, prefix, section, numero,
+    this.searchParcelle(commune, district, prefix, section, numero,
       function (jsonResp) {
         this._listParcelle(jsonResp);
       }.bind(this),
@@ -191,7 +223,7 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
    * @param {function} success callback function called on success
    * @param {function} error callback function called on error
    */
-  searchParcelle(commune, prefix, section, numero, success /*, error */) {
+  searchParcelle(commune, district, prefix, section, numero, success /*, error */) {
     // Search url
     var url = this.get('url').replace('ols/apis/completion', 'geoportail/ols').replace('completion', 'search');
     // v2 ?
@@ -242,6 +274,7 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
         + '&departmentcode=' + commune.substr(0,2)
         + '&municipalitycode=' + commune.substr(-3)
         + (prefix ? '&oldmunicipalitycode=' + prefix.replace(/_/g, '0') : '')
+        + (district ? '&districtcode=' + district : '')
         + (section ? '&section=' + section.toUpperCase() : '')
         + (numero ? '&number=' + numero : '')
         + '&limit=20',
@@ -257,6 +290,7 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
                 Commune: prop.municipalitycode, 
                 Departement: prop.departmentcode, 
                 CommuneAbsorbee: prop.oldmunicipalitycode, 
+                Arrondissement: prop.districtcode, 
                 Section: prop.section,
                 Numero: prop.number,
                 Municipality: prop.city,
@@ -310,13 +344,14 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     for (var i = 0, r; r = resp[i]; i++) {
       var li = document.createElement("LI");
       li.setAttribute("data-search", i);
-      if (n > 0)
+      if (n > 0) {
         li.classList.add("ol-list-" + Math.floor(i / n));
+      }
       this._listParc.push(r);
       li.addEventListener("click", function (e) {
         self._handleParcelle(self._listParc[e.currentTarget.getAttribute("data-search")]);
       });
-      li.innerHTML = r.INSEE + r.CommuneAbsorbee + r.Section + r.Numero;
+      li.innerHTML = r.INSEE + '-' + r.CommuneAbsorbee + '-' + r.Arrondissement + '-' + r.Section + r.Numero;
       ul.appendChild(li);
       //
       if (n > 0 && !(i % n)) {
