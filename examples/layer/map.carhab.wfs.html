@@ -354,6 +354,7 @@ function getSource(type) {
   }
   var source = new ol.source.TileWFS({
     url: 'https://wxs.ign.fr/qvo9gdluu6vvf98hplg8iz5n/geoportail/wfs',
+    // url: 'https://data.geopf.fr/wfs/ows',
     typeName: type,
     tileZoom: 14,
     featureLimit: 20000

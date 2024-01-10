@@ -90,30 +90,10 @@
       })
     ]
   });
-  var clc = new ol.layer.Tile ({
-    title: 'CORINE Land Cover - France métropolitaine - 2018',
-    className: 'CLC',
-    extent: [
-      -1099999.9999649636,
-      4949999.999934867,
-      1300000.000049673,
-      6699999.999949973
-    ],
-    queryable: true,
-    abstract: "Inventaire biophysique de l'occupation des sols en 2018 en 44 postes.",
-    minResolution: 0.09449404761899723,
-    maxResolution: 197231.79878968254,
-    source: new ol.source.TileWMS({
-      url: 'https://wxs.ign.fr/clc/geoportail/r/wms',
-      projection: 'EPSG:3857',
-      attributions: [],
-      crossOrigin: 'anonymous',
-      params: {
-        LAYERS: 'LANDCOVER.CLC18_FR',
-        FORMAT: 'image/png',
-        VERSION: '1.3.0'
-      }
-    })
+  ol.layer.Geoportail.register("LANDCOVER.CLC18", {"bbox":[-63.3725,-21.4756,55.9259,51.4428],"desc":"Inventaire biophysique de l'occupation des sols en 2018 en 50 postes pour les DOM et 44 postes pour la Métropole. CORINE Land Cover est une base de données d’occupation des sols produite dans le cadre du programme européen d’observation de la Terre Copernicus. Cet inventaire biophysique de l’occupation des terres fournit une information géographique de référence pour 39 États européens. La continuité du programme et la diffusion des données CORINE Land Cover sont pilotées par l'Agence européenne pour l'environnement. Le producteur pour la France est le Service de la donnée et des études statistiques du ministère chargé de l’écologie. L'utilisation de cette base de données permet des applications variées adaptées aux problématiques de l'environnement et à celles de l'aménagement du territoire : production cartographique, exploitation à des fins statistiques ou bien encore analyses géographiques en combinaison avec d'autres bases de données. Outil de connaissance et d'analyse, CORINE Land Cover apporte également une aide à la décision comme instrument de suivi, de surveillance et de gestion de l'environnement, des milieux naturels et de l'aménagement de l'espace. La base de données CORINE Land Cover 2018 a été réalisée à partir de CORINE Land Cover 2012 révisée et de la base des changements 2012-2018.","format":"image/png","key":"gpf","layer":"LANDCOVER.CLC18","theme":"clc","minZoom":0,"maxZoom":16,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"server":"https://data.geopf.fr/wmts","style":"CORINE Land Cover","tilematrix":"PM","title":"CORINE Land Cover - 2018"});
+  var clc = new ol.layer.Geoportail({ 
+    layer: 'LANDCOVER.CLC18', 
+    //className: 'clc' 
   });
   // The Map
   var map = new ol.Map({
@@ -160,7 +140,7 @@
       'BRGM': 'https://geoservices.brgm.fr/geologie',
       'OSM': 'https://wms.openstreetmap.fr/wms',
       'OSM-Mundialis': 'https://ows.mundialis.de/services/service',
-      'CorineLandCover': 'https://wxs.ign.fr/corinelandcover/geoportail/r/wms'
+      'IGN-Géoservices': 'https://data.geopf.fr/wms-r/wms'
     },
     onselect: function(layer) {
       var index = map.getLayers().getArray().indexOf(ctrl.getSelection());

@@ -62,6 +62,15 @@
     .result li:hover {
       background-color: rgb(51, 102, 153, .3);
     }
+    select optgroup {
+      color: #fff; 
+      background-color: #369
+    }
+    select option {
+      color: #333;
+      background: #fff;
+    }
+
   </style>
 </head>
 <body >
@@ -130,23 +139,26 @@
         style="width: calc(100% - 1.5em); box-sizing: border-box;" 
       /><select id="keys" style="width: 1.5em;" onchange="$('#key').val(this.value); loadCapabilities()">
         <option value="" style="font-style: italic; color: #fff; background-color: #369;">choisir une couche</option>
-        <option value="gpf">New geoservices Geoplateforme</option>
-        <option value="cartes">cartes</option>
-        <option value="ortho">ortho</option>
-        <option value="orthohisto">orthohisto</option>
-        <option value="satellite">satellite</option>
-        <option value="cartovecto">cartovecto</option>
-        <option value="topographie">topographie</option>
-        <option value="economie">economie</option>
-        <option value="environnement">environnement</option>
-        <option value="sol">sol</option>
-        <option value="parcellaire">parcellaire</option>
-        <option value="transports">transports</option>
-        <option value="administratif">administratif</option>
-        <option value="altimetrie">altimetrie</option>
-        <option value="agriculture">agriculture</option>
-        <option value="clc">clc</option>
-        <option value="all">Toutes les couches...</option>
+        <optgroup label="NEW services">
+          <option value="gpf">Free Géoplateforme</option>
+        </optgroup>
+        <optgroup label="OLD services (deprecated)">
+          <option value="cartes">cartes</option>
+          <option value="ortho">ortho</option>
+          <option value="orthohisto">orthohisto</option>
+          <option value="satellite">satellite</option>
+          <option value="cartovecto">cartovecto</option>
+          <option value="topographie">topographie</option>
+          <option value="economie">economie</option>
+          <option value="environnement">environnement</option>
+          <option value="sol">sol</option>
+          <option value="parcellaire">parcellaire</option>
+          <option value="transports">transports</option>
+          <option value="administratif">administratif</option>
+          <option value="altimetrie">altimetrie</option>
+          <option value="agriculture">agriculture</option>
+          <option value="clc">clc</option>
+        </optgroup>
       </select>
     </form>
     <div id="result" style="display: none;">
@@ -164,14 +176,11 @@
 	
   <script type="text/javascript">
   // Key Capabilities
-  if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };
-  window.geoportailConfig.capabilities['default'] = {
-    "INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET": { "key":"economie", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET","title":"Niveau de vie winsorisé des individus (secret signalé)","format":"image/png","style":"CARROYAGE INSEE NIVEAU DE VIE SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Niveau de vie des individus, retraité des valeurs extrêmes (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET": { "key":"economie", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET","title":"% des 0-17 ans  (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART ENFANTS 0 A 17 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de 0 à 17 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET": { "key":"economie", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET","title":"% des plus de 65 ans (secret signalé)","format":"image/png","style":"CARROYAGE INSEE PART PLUS 65 ANS SECRET","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d’individus âgés de plus de 65 ans dans la population (les cases hachurées correspondent aux données secrétisées)","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "INSEE.FILOSOFI.POPULATION": { "key":"economie", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"INSEE.FILOSOFI.POPULATION","title":"Densité de population","format":"image/png","style":"CARROYAGE INSEE POPULATION","queryable":true,"tilematrix":"PM","minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212],"desc":"Nombre d'individus par km²","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":16,"constraint":[{"minZoom":6,"maxZoom":16,"bbox":[-63.37252,-21.475586,55.925865,51.31212]}]}}},
-    "Aire-Parcellaire": { "key":"parcellaire", "server":"https://wxs.ign.fr/geoportail/wmts","layer":"Aire-Parcellaire","title":"Délimitation parcellaire AOC viticole","format":"image/png","style":"normal","queryable":true,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052],"desc":"<![CDATA[Selon les règlements européens n°110/2008 du 15 janvier 2008, n°1151/2012 du 21 novembre 2012 et n°1308/2013 de l’OCM , le cahier des charges des appellations définit l’aire géographique. Le terme de « délimitation parcellaire » désigne une aire qui repose sur les limites administratives du cadastre (les parcelles) et dont le maillage suffisamment fin permet de tenir compte de variations très localisées des éléments du milieu physique. Elle correspond à l'aire de production de la matière première. Elle est incluse dans l'aire géographique.\n\nDonnées produites par l'Institut National des Origines et la Qualité (INAO)]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-5.1504726,41.32521,9.570543,51.099052]}]}}},
-  };
+  ol.layer.Geoportail.register("INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET", {"layer":"INSEE.FILOSOFI.NIVEAU.DE.VIE.SECRET","theme":"economie","desc":"Niveau de vie des individus, retraité des valeurs extrêmes (les cases hachurées correspondent aux données secrétisées)","server":"https://data.geopf.fr/wmts","bbox":[-63.3725,-21.4756,55.9259,51.3121],"format":"image/png","minZoom":6,"maxZoom":16,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":true,"style":"INSEE","tilematrix":"PM","title":"Niveau de vie winsorisé des individus (secret signalé)"});
+  ol.layer.Geoportail.register("INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET", {"layer":"INSEE.FILOSOFI.ENFANTS.0.17.ANS.SECRET","theme":"economie","desc":"Nombre d’individus âgés de 0 à 17 ans dans la population (les cases hachurées correspondent aux données secrétisées)","server":"https://data.geopf.fr/wmts","bbox":[-63.3725,-21.4756,55.9259,51.3121],"format":"image/png","minZoom":6,"maxZoom":16,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":true,"style":"INSEE","tilematrix":"PM","title":"% des 0-17 ans (secret signalé)"});
+  ol.layer.Geoportail.register("INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET", {"layer":"INSEE.FILOSOFI.PART.PLUS.65.ANS.SECRET","theme":"economie","desc":"Nombre d’individus âgés de plus de 65 ans dans la population (les cases hachurées correspondent aux données secrétisées)","server":"https://data.geopf.fr/wmts","bbox":[-63.3725,-21.4756,55.9259,51.3121],"format":"image/png","minZoom":6,"maxZoom":16,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":true,"style":"INSEE","tilematrix":"PM","title":"% des plus de 65 ans (secret signalé)"});
+  ol.layer.Geoportail.register("INSEE.FILOSOFI.POPULATION", {"layer":"INSEE.FILOSOFI.POPULATION","theme":"economie","desc":"Nombre d'individus par km²","server":"https://data.geopf.fr/wmts","bbox":[-63.3725,-21.4756,55.9259,51.3121],"format":"image/png","minZoom":6,"maxZoom":16,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":true,"style":"INSEE","tilematrix":"PM","title":"Densité de population"});
+  ol.layer.Geoportail.register("Aire-Parcellaire", {"layer":"Aire-Parcellaire","theme":"parcellaire","desc":"Selon les règlements européens n°110/2008 du 15 janvier 2008, n°1151/2012 du 21 novembre 2012 et n°1308/2013 de l’OCM , le cahier des charges des appellations définit l’aire géographique. Le terme de « délimitation parcellaire » désigne une aire qui repose sur les limites administratives du cadastre (les parcelles) et dont le maillage suffisamment fin permet de tenir compte de variations très localisées des éléments du milieu physique. Elle correspond à l'aire de production de la matière première. Elle est incluse dans l'aire géographique. Données produites par l'Institut National des Origines et la Qualité (INAO)","server":"https://data.geopf.fr/wmts","bbox":[-5.15047,41.3252,9.57054,51.0991],"format":"image/png","minZoom":0,"maxZoom":18,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":true,"style":"normal","tilematrix":"PM","title":"Délimitation parcellaire AOC viticole"});
 	// The map
 	var map = new ol.Map ({
     target: 'map',
@@ -196,7 +205,8 @@
   
   map.addLayer (new ol.layer.Geoportail({
     layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS',
-    key: 'ign_scan_ws'
+    key: 'ign_scan_ws',
+    visible: false
   }))
 
   map.addLayer (new ol.layer.Geoportail({
@@ -295,7 +305,7 @@
     var js = '// Define global\n'
       + 'if (!window.geoportailConfig) window.geoportailConfig = { capabilities: {} };\n'
       + 'window.geoportailConfig.capabilities[\'default\'] = '
-      + ((k && k!=='all') ? 'window.geoportailConfig.capabilities[\''+k+'\'] = ' : '')
+      + (k ? 'window.geoportailConfig.capabilities[\''+k+'\'] = ' : '')
       + '{';
     for (var c in currentCap) {
       if (k !== currentCap[c].key) {
@@ -317,16 +327,9 @@
     $('#code').text('');
     $('#result label span').text('');
     if (!k) k = $('#key').val();
-    if (k==='all') {
-      $('.options ul').html('');
-      currentCap = [];
-      $('#keys option').each(function() {
-        if (this.value && this.value !== 'all') {
-          loadCapabilities(this.value, true);
-        } 
-      });
-    } else if (k) {
-      ol.layer.Geoportail.getCapabilities(k).then(function(cap) {
+    $('#keys').val('')
+    if (k) {
+      ol.layer.Geoportail.getCapabilities(k, k!=='gpf').then(function(cap) {
         $('#result').show();
         var ul = $('.options ul');
         if (!add) {

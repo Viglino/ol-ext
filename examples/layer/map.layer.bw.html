@@ -118,7 +118,7 @@ gpbw.getSource().setTileLoadFunction(ol.ext.imageLoader.grayscale());
 map.addLayer(gpbw);
 
 // new layer JPG + turns white pixels transparent
-ol.layer.Geoportail.register("ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX", {"key":"orthohisto","server":"https://wxs.ign.fr/geoportail/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX","title":"Orthophotographie d’urgence Alex","format":"image/jpeg","style":"normal","queryable":false,"tilematrix":"PM","minZoom":6,"maxZoom":20,"bbox":[7.079166,43.80946,7.6419926,44.19026],"desc":"Orthophotographie réalisée suite au passage de la tempête Alex dans les Alpes Maritimes","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":20,"constraint":[{"minZoom":6,"maxZoom":20,"bbox":[7.079166,43.80946,7.6419926,44.19026]}]}}});
+ol.layer.Geoportail.register("ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX", {"bbox":[7.07917,43.8095,7.64199,44.1903],"desc":"Orthophotographie réalisée suite au passage de la tempête Alex dans les Alpes Maritimes","format":"image/jpeg","key":"gpf","layer":"ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX","theme":"ortho","minZoom":6,"maxZoom":20,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"server":"https://data.geopf.fr/wmts","style":"normal","tilematrix":"PM","title":"Orthophotographie d’urgence Alex"});
 var layer = new ol.layer.Geoportail({ 
   title: 'JPEG layer + transparent',
   layer: 'ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX' 

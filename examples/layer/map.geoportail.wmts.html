@@ -187,11 +187,13 @@ var services = [
 
 var ul = $('#geoportail')
 ol.layer.Geoportail.getCapabilities('gpf').then(function(caps, themes) {
+  // Sort but "autre"
   function sort(a, b) {
     if (a === 'autre') return 1;
     if (b === 'autre') return -1;
     return a<b ? -1 : a>b ? 1 : 0
   }
+  // Sort by theme
   Object.keys(themes).sort(sort).forEach(function(k) {
     var li = $('<li>').append($('<p>').text(k)).appendTo(ul);
     var ul2 = $('<ul>').appendTo(li);
