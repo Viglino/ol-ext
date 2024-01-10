@@ -46,8 +46,8 @@ var ol_source_Geoportail = class olsourceGeoportail extends ol_source_WMTS {
     tg.minZoom = (options.minZoom ? options.minZoom : 0)
     var attr = [ ol_source_Geoportail.defaultAttribution ]
     if (options.attributions) attr = options.attributions
-    var server = options.server || 'https://wxs.ign.fr/geoportail/wmts'
-    var gppKey = options.gppKey || options.key || 'choisirgeoportail'
+    var server = options.server || 'https://data.geopf.fr/wmts' // 'https://wxs.ign.fr/geoportail/wmts'
+    var gppKey = options.gppKey || options.key || ''
 
     var wmts_options = {
       url: ol_source_Geoportail.getServiceURL(server, gppKey),
@@ -196,21 +196,22 @@ ol_source_Geoportail.defaultAttribution = '<a href="https://geoservices.ign.fr/"
 /** Get service URL according to server url or standard url
  */
 ol_source_Geoportail.getServiceURL = function(server, gppKey) {
-  if (server) {
-    if (gppKey === 'gpf') {
-      return 'https://data.geopf.fr/wmts';
-    } else if (/geopf/.test(server)) {
-      if (gppKey) {
-        return server + '?apikey=' + gppKey;
-      } else {
-        return server;
-      }
+  if (!server) server = 'https://data.geopf.fr/wmts';
+  if (gppKey === 'gpf') {
+    // Default no apikey
+    return 'https://data.geopf.fr/wmts';
+  } else if (/geopf/.test(server)) {
+    if (gppKey) {
+      return server + '?apikey=' + gppKey;
     } else {
-      return server.replace(/^(https?:\/\/[^/]*)(.*)$/, "$1/" + gppKey + "$2")
+      return server;
     }
   } else {
-    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") + gppKey + "/geoportail/wmts"
+    return server.replace(/^(https?:\/\/[^/]*)(.*)$/, "$1/" + gppKey + "$2")
   }
+  /*
+    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") + gppKey + "/geoportail/wmts"
+  */
 }
 
 export default ol_source_Geoportail
