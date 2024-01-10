@@ -201,7 +201,7 @@ ol_source_Geoportail.getServiceURL = function(server, gppKey) {
       return 'https://data.geopf.fr/wmts';
     } else if (/geopf/.test(server)) {
       if (gppKey) {
-        return server + '?apiKey=' + gppKey;
+        return server + '?apikey=' + gppKey;
       } else {
         return server;
       }

@@ -80,6 +80,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
         if (!caps.Capability.Layer.Layer) {
           this.showError({ type: 'noLayer' })
         } else {
+          caps.url = evt.options.url
           this.showCapabilities(caps)
         }
       }
@@ -484,7 +485,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
     }
 
     // Fill form
-    this._elements.input.value = (url || '') + (opt ? '?' + opt.join('&') : '')
+    var uri = this._elements.input.value = (url || '') + (opt ? '?' + opt.join('&') : '')
     this.clearForm()
 
     // Sen drequest
@@ -495,12 +496,14 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
       this._ajax.send(this._proxy, {
         url: q
       }, {
+        url: uri,
         timeout: options.timeout || 10000,
         callback: options.onload,
         abort: false
       })
     } else {
       this._ajax.send(url, request, {
+        url: uri,
         timeout: options.timeout || 10000,
         callback: options.onload,
         abort: false
@@ -542,10 +545,8 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
     var addLayers = function (parent, level) {
       level = level || 0
       parent.Layer.forEach(function (l) {
-        if (!l.Attribution)
-          l.Attribution = parent.Attribution
-        if (!l.EX_GeographicBoundingBox)
-          l.EX_GeographicBoundingBox = parent.EX_GeographicBoundingBox
+        if (!l.Attribution) l.Attribution = parent.Attribution
+        if (!l.EX_GeographicBoundingBox) l.EX_GeographicBoundingBox = parent.EX_GeographicBoundingBox
         var li = ol_ext_element.create('DIV', {
           className: (l.Layer ? 'ol-title ' : '') + 'level-' + level,
           html: l.Name || l.Title,

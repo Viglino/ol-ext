@@ -108,8 +108,12 @@
     // target: $('.options').get(0),
     target: document.body,
     // srs: ['EPSG:2154'],
+    // Set optional apikey (for use with IGN's Geoservices)
+    optional: 'apikey,key',
     cors: true,
     services: {
+      'Géoplateforme' : 'https://data.geopf.fr/wmts',
+      'Géoplateforme + apikey' : 'https://data.geopf.fr/private/wmts?apikey=ign_scan_ws',
       'Géoportail-cartes' : 'https://wxs.ign.fr/cartes/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
       'Géoportail-ortho' : 'https://wxs.ign.fr/ortho/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
       'Géoportail-orthohisto' : 'https://wxs.ign.fr/orthohisto/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',

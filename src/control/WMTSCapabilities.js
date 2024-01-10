@@ -160,7 +160,7 @@ var ol_control_WMTSCapabilities = class olcontrolWMTSCapabilities extends ol_con
     };
 
     var source_opt = {
-      url: parent.OperationsMetadata.GetTile.DCP.HTTP.Get[0].href,
+      url: parent.url,
       layer: caps.Identifier,
       matrixSet: caps.TileMatrixSet,
       format: caps.Format[0] || 'image/jpeg',
