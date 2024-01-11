@@ -42071,7 +42071,7 @@ ol.style.Image.prototype.getImagePNG = function(ratio) {
  *  @param { default | square | circle | anchored | folio } options.kind
  *  @param {boolean} options.crop crop within square, default is false
  *  @param {Number} options.radius symbol size
- *  @param {boolean} options.shadow drop a shadow
+ *  @param {Number} [options.shadow=0] drop a shadow (the shadow width in pixel)
  *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *  @param {ol.style.Stroke} options.stroke
  *  @param {String} options.src image src
