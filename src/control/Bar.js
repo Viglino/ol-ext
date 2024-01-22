@@ -171,7 +171,8 @@ var ol_control_Bar = class olcontrolBar extends ol_control_Control {
     }
   }
   /** Post-process an activated/deactivated control
-   *	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
+   * @param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
+   * @private
    */
   onActivateControl_(e, ctrl) {
     if (this.get('toggleOne')) {

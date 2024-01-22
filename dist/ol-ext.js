@@ -7007,7 +7007,8 @@ ol.control.Bar = class olcontrolBar extends ol.control.Control {
     }
   }
   /** Post-process an activated/deactivated control
-   *	@param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
+   * @param {ol.event} e :an object with a target {_ol_control_} and active flag {bool}
+   * @private
    */
   onActivateControl_(e, ctrl) {
     if (this.get('toggleOne')) {
@@ -8609,7 +8610,7 @@ ol.control.EditBar = class olcontrolEditBar extends ol.control.Bar {
  *  @param {Element} [options.target] to display the control outside the map
  *  @param {string} [options.className] use `ol-bottom` to scroll at bottom (default top)
  *  @param {boolean} [options.collapsed=true] collapse the list on start, default true
- *  @param {Array<ol.Feature>[ol.Collection<ol.Feature>|ol.source.Vector]} [features] a set of feature to display. If provided as Source or Collection the features will stay in sync.
+ *  @param {Array<ol.Feature>|ol.Collection<ol.Feature>|ol.source.Vector} [features] a set of feature to display. If provided as Source or Collection the features will stay in sync.
  *  @param {number} [options.pageLength=100] number of row to display in the table (page optimzation)
  */
 ol.control.FeatureList = class olcontrolFeatureList extends ol.control.Control {

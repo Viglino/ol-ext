@@ -15,7 +15,7 @@ import ol_ext_element from '../util/element';
  *  @param {Element} [options.target] to display the control outside the map
  *  @param {string} [options.className] use `ol-bottom` to scroll at bottom (default top)
  *  @param {boolean} [options.collapsed=true] collapse the list on start, default true
- *  @param {Array<ol_Feature>[ol_Collection<ol_Feature>|ol_source_Vector]} [features] a set of feature to display. If provided as Source or Collection the features will stay in sync.
+ *  @param {Array<ol_Feature>|ol_Collection<ol_Feature>|ol_source_Vector} [features] a set of feature to display. If provided as Source or Collection the features will stay in sync.
  *  @param {number} [options.pageLength=100] number of row to display in the table (page optimzation)
  */
 var ol_control_FeatureList = class olcontrolFeatureList extends ol_control_Control {
