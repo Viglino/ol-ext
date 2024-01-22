@@ -143,21 +143,21 @@
           <option value="gpf">Free Géoplateforme</option>
         </optgroup>
         <optgroup label="OLD services (deprecated)">
-          <option value="cartes">cartes</option>
-          <option value="ortho">ortho</option>
-          <option value="orthohisto">orthohisto</option>
-          <option value="satellite">satellite</option>
-          <option value="cartovecto">cartovecto</option>
-          <option value="topographie">topographie</option>
-          <option value="economie">economie</option>
-          <option value="environnement">environnement</option>
-          <option value="sol">sol</option>
-          <option value="parcellaire">parcellaire</option>
-          <option value="transports">transports</option>
-          <option value="administratif">administratif</option>
-          <option value="altimetrie">altimetrie</option>
-          <option value="agriculture">agriculture</option>
-          <option value="clc">clc</option>
+          <option value="old:cartes">cartes</option>
+          <option value="old:ortho">ortho</option>
+          <option value="old:orthohisto">orthohisto</option>
+          <option value="old:satellite">satellite</option>
+          <option value="old:cartovecto">cartovecto</option>
+          <option value="old:topographie">topographie</option>
+          <option value="old:economie">economie</option>
+          <option value="old:environnement">environnement</option>
+          <option value="old:sol">sol</option>
+          <option value="old:parcellaire">parcellaire</option>
+          <option value="old:transports">transports</option>
+          <option value="old:administratif">administratif</option>
+          <option value="old:altimetrie">altimetrie</option>
+          <option value="old:agriculture">agriculture</option>
+          <option value="old:clc">clc</option>
         </optgroup>
       </select>
     </form>
@@ -198,7 +198,7 @@
 
   map.addLayer (new ol.layer.Geoportail({
     layer: 'ORTHOIMAGERY.ORTHOPHOTOS',
-    key: 'gpf', // Use new geoservice
+    // key: 'gpf', // Use new geoservice
     permalink: 'ortho',
     className: 'photo',
   }));
@@ -211,7 +211,7 @@
 
   map.addLayer (new ol.layer.Geoportail({
     layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
-    key: 'gpf', // Use new geoservice
+    // key: 'gpf', // Use new geoservice
     permalink: 'plan',
     className: 'plan',
     visible: true,
@@ -329,7 +329,10 @@
     if (!k) k = $('#key').val();
     $('#keys').val('')
     if (k) {
-      ol.layer.Geoportail.getCapabilities(k, k!=='gpf').then(function(cap) {
+      var old = /^old:/.test(k)
+      k = k.replace(/^old:|gpf/, '')
+      console.log(k)
+      ol.layer.Geoportail.getCapabilities(k, old).then(function(cap) {
         $('#result').show();
         var ul = $('.options ul');
         if (!add) {

@@ -149,7 +149,7 @@ elev.on('change', function() {
   switcher.drawPanel();
 })
 
-ol.layer.Geoportail.register("ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW", {"bbox":[-63.187,-21.4069,55.8884,50.9218],"desc":"Couche d'ombrage calculée à partir des données altimétriques de l'IGN permettant de mieux appréhender le relief. L'estompage proposé est réalisé à partir des données MNT BDAlti au pas de 25m avec deux soleils : un au nord-est de hauteur 45°, l'autre zénithal.","format":"image/png","key":"gpf","layer":"ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW","theme":"altimetrie","minZoom":0,"maxZoom":15,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"server":"https://data.geopf.fr/wmts","style":"estompage_grayscale","tilematrix":"PM","title":"Estompage"});
+ol.layer.Geoportail.register("ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW", {"layer":"ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW","theme":"altimetrie","desc":"Couche d'ombrage calculée à partir des données altimétriques de l'IGN permettant de mieux appréhender le relief. L'estompage proposé est réalisé à partir des données MNT BDAlti au pas de 25m avec deux soleils : un au nord-est de hauteur 45°, l'autre zénithal.","server":"https://data.geopf.fr/wmts","bbox":[-63.187,-21.4069,55.8884,50.9218],"format":"image/png","minZoom":0,"maxZoom":15,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"style":"estompage_grayscale","tilematrix":"PM","title":"Estompage"});
 var shadow = new ol.layer.Geoportail({
   title: 'Estompage - by IGN-France',
   className: 'blend',

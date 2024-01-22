@@ -186,7 +186,7 @@ var services = [
 */
 
 var ul = $('#geoportail')
-ol.layer.Geoportail.getCapabilities('gpf').then(function(caps, themes) {
+ol.layer.Geoportail.getCapabilities().then(function(caps, themes) {
   // Sort but "autre"
   function sort(a, b) {
     if (a === 'autre') return 1;

@@ -5570,7 +5570,7 @@ ol.control.SearchPhoton = class olcontrolSearchPhoton extends ol.control.SearchJ
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
- *	@param {string | undefined} [options.version] API version 1 or 2 or gpf, default 2
+ *	@param {string | undefined} [options.version] API version 1 or 2 or geoplateforme (latest), default latest
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -5593,14 +5593,16 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
     options = options || {};
     options.className = options.className || 'IGNF';
     options.typing = options.typing || 500;
-    if (options.version == 'gpf') {
-      options.url = 'https://data.geopf.fr/geocodage/completion';
-    } else if (options.version == 1) {
+    if (options.version == 1) {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
-    } else {
+      options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
+    } else if (options.version == 2) {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/geoportail/geocodage/rest/0.1/completion';
+      options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
+    } else {
+      options.url = 'https://data.geopf.fr/geocodage/completion';
+      options.copy = '<a href="https://geoservices.ign.fr/" target="new">&copy; IGN-Géoplateforme</a>';
     }
-    options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
     super(options);
     this.set('position', options.position);
     this.set('useExtent', options.useExtent);
@@ -14605,7 +14607,8 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
         element.classList.toggle('ol-collapsed');
       });
     }
-    this.set('url', 'https://wxs.ign.fr/calcul/geoportail/' + options.apiKey + '/rest/1.0.0/route');
+    // this.set('url', 'https://wxs.ign.fr/calcul/geoportail/' + options.apiKey + '/rest/1.0.0/route');
+    this.set('url', 'https://data.geopf.fr/navigation/itineraire')
     var content = ol.ext.element.create('DIV', { className: 'content', parent: element });
     var listElt = ol.ext.element.create('DIV', { className: 'search-input', parent: content });
     this._search = [];
@@ -14805,12 +14808,12 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
     var end = steps[steps.length - 1];
     var waypoints = '';
     for (var i = 1; i < steps.length - 1; i++) {
-      waypoints += (waypoints ? ';' : '') + steps[i].x + ',' + steps[i].y;
+      waypoints += (waypoints ? '|' : '') + steps[i].x + ',' + steps[i].y;
     }
     return {
       resource: 'bdtopo-osrm',
       profile: this.get('mode') === 'pedestrian' ? 'pedestrian' : 'car',
-      optimization: this.get('method') || 'fastest',
+      optimization: this.get('mode') === 'pedestrian' ? '' : this.get('method') || 'fastest',
       start: start.x + ',' + start.y,
       end: end.x + ',' + end.y,
       intermediates: waypoints,
@@ -32334,7 +32337,7 @@ ol.source.GeoRSS = class olsourceGeoRSS extends ol.source.Vector {
  *  @param {number} options.minZoom
  *  @param {number} options.maxZoom
  *  @param {string} options.server
- *  @param {string} options.gppKey api key or 'gpf' for new Geoplatform services, default 'choisirgeoportail'
+ *  @param {string} [options.gppKey] api key, default none
  *  @param {string} options.authentication basic authentication associated with the gppKey as btoa("login:pwd")
  *  @param {string} options.format image format, default 'image/jpeg'
  *  @param {string} options.style layer style, default 'normal'
@@ -32363,7 +32366,7 @@ ol.source.Geoportail = class olsourceGeoportail extends ol.source.WMTS {
     tg.minZoom = (options.minZoom ? options.minZoom : 0)
     var attr = [ ol.source.Geoportail.defaultAttribution ]
     if (options.attributions) attr = options.attributions
-    var server = options.server || 'https://data.geopf.fr/wmts' // 'https://wxs.ign.fr/geoportail/wmts'
+    var server = options.server || 'https://data.geopf.fr/wmts' // 'https://wxs.ign.fr/geoportail/wmts' old version
     var gppKey = options.gppKey || options.key || ''
     var wmts_options = {
       url: ol.source.Geoportail.getServiceURL(server, gppKey),
@@ -32507,11 +32510,18 @@ ol.source.Geoportail.defaultAttribution = '<a href="https://geoservices.ign.fr/"
 /** Get service URL according to server url or standard url
  */
 ol.source.Geoportail.getServiceURL = function(server, gppKey) {
-  if (!server) server = 'https://data.geopf.fr/wmts';
-  if (gppKey === 'gpf') {
-    // Default no apikey
-    return 'https://data.geopf.fr/wmts';
-  } else if (/geopf/.test(server)) {
+  // Old gppkey
+  if (gppKey === 'gpf') gppKey = '';
+  // Check server
+  if (!server) {
+    if (gppKey) {
+      server = 'https://data.geopf.fr/private/wmts';
+    } else {
+      server = 'https://data.geopf.fr/wmts';
+    }
+  } 
+  // Add api key
+  if (/geopf/.test(server)) {
     if (gppKey) {
       return server + '?apikey=' + gppKey;
     } else {
@@ -34317,7 +34327,6 @@ ol.layer.GeoImage = class ollayerGeoImage extends ol.layer.Image {
 if (!old) {
     // Old default apikey
     if (gppKey === 'gpf') gppKey = undefined;
-    // TODO [END]
     var server = gppKey ? 'https://data.geopf.fr/private/wmts' : 'https://data.geopf.fr/wmts';
     var url = server + "?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities";
     if (gppKey) {

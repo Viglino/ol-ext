@@ -16,7 +16,7 @@ import ol_control_SearchJSON from './SearchJSON.js'
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
- *	@param {string | undefined} [options.version] API version 1 or 2 or gpf, default 2
+ *	@param {string | undefined} [options.version] API version 1 or 2 or geoplateforme (latest), default latest
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -39,14 +39,16 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
     options = options || {};
     options.className = options.className || 'IGNF';
     options.typing = options.typing || 500;
-    if (options.version == 'gpf') {
-      options.url = 'https://data.geopf.fr/geocodage/completion';
-    } else if (options.version == 1) {
+    if (options.version == 1) {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
-    } else {
+      options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
+    } else if (options.version == 2) {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/geoportail/geocodage/rest/0.1/completion';
+      options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
+    } else {
+      options.url = 'https://data.geopf.fr/geocodage/completion';
+      options.copy = '<a href="https://geoservices.ign.fr/" target="new">&copy; IGN-Géoplateforme</a>';
     }
-    options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
     super(options);
     this.set('position', options.position);
     this.set('useExtent', options.useExtent);

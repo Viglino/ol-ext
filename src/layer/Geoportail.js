@@ -241,7 +241,6 @@ import ol_source_Geoportail from '../source/Geoportail.js'
 if (!old) {
     // Old default apikey
     if (gppKey === 'gpf') gppKey = undefined;
-    // TODO [END]
     var server = gppKey ? 'https://data.geopf.fr/private/wmts' : 'https://data.geopf.fr/wmts';
     var url = server + "?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities";
     if (gppKey) {
