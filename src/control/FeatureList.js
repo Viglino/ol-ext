@@ -95,6 +95,7 @@ var ol_control_FeatureList = class olcontrolFeatureList extends ol_control_Contr
       className: 'ol-list',
       parent: ol_ext_element.create('DIV', {
         className: 'ol-scroll-container',
+        tabindex: -1,
         parent: content
       })
     });
@@ -297,18 +298,26 @@ ol_control_FeatureList.prototype._drawList = function(delay) {
     var tr = ol_ext_element.create('TR', {
       on: {
         click: function (e) {
+          var td = e.target.closest('TD');
           this.dispatchEvent({
             type: 'select',
-            property: e.target.dataset.prop,
-            feature: f
+            property: td.dataset.prop,
+            feature: f,
+            row: e.target.closest('TR'),
+            col: td,
+            originalEvent: e
           })
           this.select(f, true)
         }.bind(this),
         dblclick: function(e) {
+          var td = e.target.closest('TD');
           this.dispatchEvent({
             type: 'dblclick',
-            property: e.target.dataset.prop,
-            feature: f
+            property: td.dataset.prop,
+            feature: f,
+            row: e.target.closest('TR'),
+            col: td,
+            originalEvent: e
           })
         }.bind(this)
       }
@@ -459,6 +468,8 @@ ol_control_FeatureList.prototype._drawPage = function() {
       height: Math.max(0, (this._listFeatures.length - nmax) * h) + 'px'
     }
   }))
+  // force focus on list
+  if (this.get('focus') !== false) this._listbody.focus();
 }
 
 

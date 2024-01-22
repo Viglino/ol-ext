@@ -137,6 +137,9 @@
   height: 10em;
   min-height: 3em;
 }
+.ol-feature-list .ol-scroll-container:focus {
+  outline: unset;
+}
 
 .ol-feature-list table {
   background-color: #fff;
@@ -177,7 +180,10 @@
   text-align: center;
   background-color: #fafafa;
 }
-
+.ol-feature-list table tr:hover td,
+.ol-feature-list table .ol-selected td {
+  background-color: transparent;
+}
 .ol-feature-list thead td {
   position: relative;
 }

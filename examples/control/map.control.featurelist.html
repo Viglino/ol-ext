@@ -138,7 +138,7 @@
     features: vectorSource,
     // target: document.body
   });
-  listCtrl.enableSort('nom', 'region')
+  listCtrl.enableSort('nom', 'region', 'mag')
   map.addControl (listCtrl);
   listCtrl.on('select', function(e) {
     selecti.getFeatures().clear();
