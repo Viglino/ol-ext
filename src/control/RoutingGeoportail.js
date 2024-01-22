@@ -25,6 +25,7 @@ import ol_format_GeoJSON from 'ol/format/GeoJSON.js'
  * @fires abort
  * @param {Object=} options
  *	@param {string} options.className control class name
+ *	@param {string} [options.leng=en] control language
  *	@param {string | undefined} [options.apiKey] the service api key.
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
@@ -59,6 +60,7 @@ var ol_control_RoutingGeoportail = class olcontrolRoutingGeoportail extends ol_c
     this._classname = options.className || 'search';
 
     this._source = new ol_source_Vector();
+    this.set('lang', options.lang || 'en')
 
     // Authentication
     this._auth = options.authentication;
@@ -75,7 +77,8 @@ var ol_control_RoutingGeoportail = class olcontrolRoutingGeoportail extends ol_c
       });
     }
 
-    this.set('url', 'https://wxs.ign.fr/calcul/geoportail/' + options.apiKey + '/rest/1.0.0/route');
+    // this.set('url', 'https://wxs.ign.fr/calcul/geoportail/' + options.apiKey + '/rest/1.0.0/route');
+    this.set('url', 'https://data.geopf.fr/navigation/itineraire')
 
     var content = ol_ext_element.create('DIV', { className: 'content', parent: element });
 
@@ -185,7 +188,7 @@ var ol_control_RoutingGeoportail = class olcontrolRoutingGeoportail extends ol_c
     else
       element.appendChild(div);
 
-    ol_ext_element.create('BUTTON', { title: options.startlabel || "add/remove", parent: div })
+    ol_ext_element.create('BUTTON', { title: options.startlabel || 'use shift to add / ctrl to remove', parent: div })
       .addEventListener('click', function (e) {
         if (e.ctrlKey) {
           if (this._search.length > 2)
@@ -285,12 +288,12 @@ var ol_control_RoutingGeoportail = class olcontrolRoutingGeoportail extends ol_c
     var end = steps[steps.length - 1];
     var waypoints = '';
     for (var i = 1; i < steps.length - 1; i++) {
-      waypoints += (waypoints ? ';' : '') + steps[i].x + ',' + steps[i].y;
+      waypoints += (waypoints ? '|' : '') + steps[i].x + ',' + steps[i].y;
     }
     return {
       resource: 'bdtopo-osrm',
       profile: this.get('mode') === 'pedestrian' ? 'pedestrian' : 'car',
-      optimization: this.get('method') || 'fastest',
+      optimization: this.get('mode') === 'pedestrian' ? '' : this.get('method') || 'fastest',
       start: start.x + ',' + start.y,
       end: end.x + ',' + end.y,
       intermediates: waypoints,
@@ -328,21 +331,26 @@ var ol_control_RoutingGeoportail = class olcontrolRoutingGeoportail extends ol_c
     var ul = document.createElement('ul');
     this.resultElement.appendChild(ul);
 
-    var info = {
-      'none': 'Prendre sur ',
-      'R': 'Tourner à droite sur ',
-      'FR': 'Tourner légèrement à droite sur ',
-      'L': 'Tourner à gauche sur ',
-      'FL': 'Tourner légèrement à gauche sur ',
-      'F': 'Continuer tout droit sur ',
-    };
+    var infoType = ol_control_RoutingGeoportail.prototype.instructions[this.get('lang') || 'en']
+    var infoClassName = {
+      'straight': '',
+      'left': 'L',
+      'right': 'R',
+      'slight left': 'FL',
+      'slight right': 'FR',
+    }
 
     routing.features.forEach(function (f, i) {
       var d = this.getDistanceString(f.get('distance'));
       t = this.getTimeString(f.get('durationT'));
+      // Decode instructions
+      var instruction = infoType[f.get('instruction_type')] || infoType['none'];
+      instruction += ' ' + (infoType[f.get('instruction_modifier')] || infoType.straight) + ' ';
+      // console.log(f.get('instruction_type'), '-',f.get('instruction_modifier'))
+      // Show info
       ol_ext_element.create('LI', {
-        className: f.get('instruction'),
-        html: (info[f.get('instruction') || 'none'] || '#')
+        className: infoClassName[f.get('instruction_modifier')] || '',
+        html: (instruction || '#')
           + ' ' + f.get('name')
           + '<i>' + d + (t ? ' - ' + t : '') + '</i>',
         on: {
@@ -382,21 +390,6 @@ var ol_control_RoutingGeoportail = class olcontrolRoutingGeoportail extends ol_c
     var lastPt;
     for (var i = 0, l; l = data.portions[i]; i++) {
       for (var j = 0, s; s = l.steps[j]; j++) {
-        /*
-        var options = {
-          geometry: geom.transform('EPSG:4326',this.getMap().getView().getProjection()),
-          name: s.name,
-          instruction: s.navInstruction,
-          distance: parseFloat(s.distanceMeters),
-          duration: parseFloat(s.durationSeconds)
-        }
-        //console.log(duration, options.duration, s)
-        distance += options.distance;
-        duration += options.duration;
-        options.distanceT = distance;
-        options.durationT = duration;
-        f = new ol_Feature(options);
-        */
         s.type = 'Feature';
         s.properties = s.attributes.name || s.attributes;
         s.properties.distance = s.distance;
@@ -560,5 +553,41 @@ var ol_control_RoutingGeoportail = class olcontrolRoutingGeoportail extends ol_c
     ajax.send();
   }
 }
+
+/** Instructions labels  */
+ol_control_RoutingGeoportail.prototype.instructions = {
+  'en': {
+    // Instruction type
+    'none': 'Go ',
+    'continue': 'Continue ',
+    'new name': 'Continue ',
+    'depart': 'Start',
+    'arrive': 'Arrival',
+    'turn': 'Turn',
+    'fork': 'Fork',
+    // Instruction modifier
+    'straight': 'on',
+    'left': 'left on',
+    'right': 'right on',
+    'slight left': 'slight left on',
+    'slight right': 'slight right on',
+  },
+  'fr': {
+    // Instruction type
+    'none': 'Continuer ',
+    'continue': 'Continuer ',
+    'new name': 'Continuer ',
+    'depart': 'Départ',
+    'arrive': 'Arrivée',
+    'turn': 'Tourner',
+    'fork': 'Prendre',
+    // Instruction modifier
+    'straight': 'sur',
+    'left': 'à gauche sur',
+    'right': 'à droite sur',
+    'slight left': 'légèrement à gauche sur',
+    'slight right': 'légèrement à droite sur',
+  }
+};
 
 export default ol_control_RoutingGeoportail

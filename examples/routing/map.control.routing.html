@@ -142,6 +142,10 @@
 
   <div class="options">
     <i>Use the search control to start a new search.</i>
+    <label>Lang:</label> <select id="lang" onchange="search.set('lang', $('#lang').val())">
+      <option value="en">English</option>
+      <option value="fr">French</option>
+    </select>
     <ul>
       <li>
         <label><input type="checkbox" class="merge">merge</label>
