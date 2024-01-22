@@ -10800,10 +10800,8 @@ ol.control.Imageline = class olcontrolImageline extends ol.control.Control {
  */
 ol.control.IsochroneGeoportail = class olcontrolIsochroneGeoportail extends ol.control.Control {
   constructor(options) {
-    if (!options)
-      options = {};
-    if (options.typing == undefined)
-      options.typing = 300;
+    if (!options) options = {};
+    if (options.typing == undefined) options.typing = 300;
     var classNames = (options.className ? options.className : '') + ' ol-isochrone ol-routing';
     if (!options.target) classNames += ' ol-unselectable ol-control';
     var element = ol.ext.element.create('DIV', { className: classNames });
@@ -10894,7 +10892,11 @@ ol.control.IsochroneGeoportail = class olcontrolIsochroneGeoportail extends ol.c
           this.search(this.get('coordinate'), val);
         }
       }.bind(this));
+    /* TODO  */
     this.set('url', 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/isochrone/isochrone.json');
+    /*/
+    this.set('url', 'https://data.geopf.fr/navigation/isochrone')
+    /**/
     this._ajax = new ol.ext.Ajax({
       dataType: 'JSON',
       auth: options.auth
@@ -10941,7 +10943,6 @@ ol.control.IsochroneGeoportail = class olcontrolIsochroneGeoportail extends ol.c
    * @param [string] method The method (time or distance)
    */
   setMethod(method) {
-    7;
     method = (/distance/.test(method) ? 'distance' : 'time');
     this.element.querySelector(".ol-method-time").classList.remove("selected");
     this.element.querySelector(".ol-method-distance").classList.remove("selected");
@@ -11005,6 +11006,7 @@ ol.control.IsochroneGeoportail = class olcontrolIsochroneGeoportail extends ol.c
     var dt = Math.round(option * (this.get('iter') - (iter || 0)) / this.get('iter'));
     if (typeof option === 'number') {
       // Send data
+      /* TODO remove old version */
       var data = {
         'gp-access-lib': '2.1.0',
         location: ol.proj.toLonLat(coord, proj),
@@ -11017,6 +11019,16 @@ ol.control.IsochroneGeoportail = class olcontrolIsochroneGeoportail extends ol.c
         smoothing: this.get('smoothing') || true,
         holes: this.get('holes') || false
       };
+      /*/
+      // Capabilities: https://data.geopf.fr/navigation/getcapabilities
+      var data = {
+        resource: 'bdtopo-osrm', // "jmk_valhalla_cost_type_test", //
+        point: ol.proj.toLonLat(coord, proj),
+        profile: this.get('mode') === 'pedestrian' ? 'pedestrian' : 'car',
+        costType: method,
+        costValue: dt,
+      };
+      /**/
       this._ajax.send(this.get('url'), data, {
         coord: coord,
         option: option,
@@ -11029,18 +11041,28 @@ ol.control.IsochroneGeoportail = class olcontrolIsochroneGeoportail extends ol.c
    * @private
    */
   _success(e) {
+    console.log(e)
     var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
     // Convert to features
-    var format = new ol.format.WKT();
     var evt = e.response;
-    evt.feature = format.readFeature(evt.wktGeometry, {
-      dataProjection: 'EPSG:4326',
-      featureProjection: proj
-    });
+    if (evt.wktGeometry) {
+      var format = new ol.format.WKT();
+      evt.feature = format.readFeature(evt.wktGeometry, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: proj
+      });
+      delete evt.wktGeometry;
+    } else {
+      var format = new ol.format.GeoJSON();
+      evt.feature = format.readFeature(evt.geometry, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: proj
+      });
+      delete evt.geometry;
+    }
     evt.feature.set('iteration', e.options.iteration);
     evt.feature.set('method', e.options.data.method);
     evt.feature.set(e.options.data.method, e.options.data[e.options.data.method]);
-    delete evt.wktGeometry;
     evt.type = 'isochrone';
     evt.iteration = e.options.iteration - 1;
     this.dispatchEvent(evt);
@@ -14563,6 +14585,7 @@ ol.control.ProgressBar = class olcontrolProgressBar extends ol.control.Control {
  * @fires abort
  * @param {Object=} options
  *	@param {string} options.className control class name
+ *	@param {string} [options.leng=en] control language
  *	@param {string | undefined} [options.apiKey] the service api key.
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
@@ -14594,6 +14617,7 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
     // Class name for history
     this._classname = options.className || 'search';
     this._source = new ol.source.Vector();
+    this.set('lang', options.lang || 'en')
     // Authentication
     this._auth = options.authentication;
     var classNames = (options.className || "") + " ol-routing";
@@ -14711,7 +14735,7 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
       element.insertBefore(div, after.nextSibling);
     else
       element.appendChild(div);
-    ol.ext.element.create('BUTTON', { title: options.startlabel || "add/remove", parent: div })
+    ol.ext.element.create('BUTTON', { title: options.startlabel || 'use shift to add / ctrl to remove', parent: div })
       .addEventListener('click', function (e) {
         if (e.ctrlKey) {
           if (this._search.length > 2)
@@ -14849,20 +14873,25 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
     this.resultElement.appendChild(iElement);
     var ul = document.createElement('ul');
     this.resultElement.appendChild(ul);
-    var info = {
-      'none': 'Prendre sur ',
-      'R': 'Tourner à droite sur ',
-      'FR': 'Tourner légèrement à droite sur ',
-      'L': 'Tourner à gauche sur ',
-      'FL': 'Tourner légèrement à gauche sur ',
-      'F': 'Continuer tout droit sur ',
-    };
+    var infoType = ol.control.RoutingGeoportail.prototype.instructions[this.get('lang') || 'en']
+    var infoClassName = {
+      'straight': '',
+      'left': 'L',
+      'right': 'R',
+      'slight left': 'FL',
+      'slight right': 'FR',
+    }
     routing.features.forEach(function (f, i) {
       var d = this.getDistanceString(f.get('distance'));
       t = this.getTimeString(f.get('durationT'));
+      // Decode instructions
+      var instruction = infoType[f.get('instruction_type')] || infoType['none'];
+      instruction += ' ' + (infoType[f.get('instruction_modifier')] || infoType.straight) + ' ';
+      // console.log(f.get('instruction_type'), '-',f.get('instruction_modifier'))
+      // Show info
       ol.ext.element.create('LI', {
-        className: f.get('instruction'),
-        html: (info[f.get('instruction') || 'none'] || '#')
+        className: infoClassName[f.get('instruction_modifier')] || '',
+        html: (instruction || '#')
           + ' ' + f.get('name')
           + '<i>' + d + (t ? ' - ' + t : '') + '</i>',
         on: {
@@ -14902,21 +14931,6 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
     var lastPt;
     for (var i = 0, l; l = data.portions[i]; i++) {
       for (var j = 0, s; s = l.steps[j]; j++) {
-        /*
-        var options = {
-          geometry: geom.transform('EPSG:4326',this.getMap().getView().getProjection()),
-          name: s.name,
-          instruction: s.navInstruction,
-          distance: parseFloat(s.distanceMeters),
-          duration: parseFloat(s.durationSeconds)
-        }
-        //console.log(duration, options.duration, s)
-        distance += options.distance;
-        duration += options.duration;
-        options.distanceT = distance;
-        options.durationT = duration;
-        f = new ol.Feature(options);
-        */
         s.type = 'Feature';
         s.properties = s.attributes.name || s.attributes;
         s.properties.distance = s.distance;
@@ -15065,6 +15079,41 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
     ajax.send();
   }
 }
+/** Instructions labels  */
+ol.control.RoutingGeoportail.prototype.instructions = {
+  'en': {
+    // Instruction type
+    'none': 'Go ',
+    'continue': 'Continue ',
+    'new name': 'Continue ',
+    'depart': 'Start',
+    'arrive': 'Arrival',
+    'turn': 'Turn',
+    'fork': 'Fork',
+    // Instruction modifier
+    'straight': 'on',
+    'left': 'left on',
+    'right': 'right on',
+    'slight left': 'slight left on',
+    'slight right': 'slight right on',
+  },
+  'fr': {
+    // Instruction type
+    'none': 'Continuer ',
+    'continue': 'Continuer ',
+    'new name': 'Continuer ',
+    'depart': 'Départ',
+    'arrive': 'Arrivée',
+    'turn': 'Tourner',
+    'fork': 'Prendre',
+    // Instruction modifier
+    'straight': 'sur',
+    'left': 'à gauche sur',
+    'right': 'à droite sur',
+    'slight left': 'légèrement à gauche sur',
+    'slight right': 'légèrement à droite sur',
+  }
+};
 
 /*	Copyright (c) 2017 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)

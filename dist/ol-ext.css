@@ -3674,11 +3674,12 @@ ul.ol-legend li div {
 .ol-routing .ol-result li:after {
   content: "";
   position: absolute;
-  width: 0.3em;
+  width: 0.25em;
   height: .6em;
   left: -1.5em;
   background: #369;
   top: .6em;
+  border-radius: 0.1em;
 }
 .ol-routing .ol-result li.R:before {
   -webkit-transform: rotate(90deg);
