@@ -45,6 +45,14 @@ ol-ext exists as ES6 modules ([ol-ext](https://www.npmjs.com/package/ol-ext)) an
 npm install ol-ext
 ````
 
+Then in your js file you can import the classes as follow:
+```javascript
+import "ol/ol.css"
+import "ol-ext/dist/ol-ext.css"
+
+import LayerSwitcher from "ol-ext/control/LayerSwitcher"
+```
+
 See the following examples for more detail on bundling ol-ext with your application:
 
 * Using [webpack](https://github.com/darkscript/ol-ol-ext-webpack-example)
