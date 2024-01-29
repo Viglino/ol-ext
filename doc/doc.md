@@ -3,7 +3,7 @@
 
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions to use with Openlayers.    
 
-## Getting start
+## Quick start
 
 ### Install ol-ext
 
@@ -14,8 +14,7 @@ npm install ol-ext
 
 See [Openlayers quickstart](https://openlayers.org/doc/quickstart.html) to create an Openlayers project.
 
-In the `main.js` file add ol-ext classes
-
+In the `main.js` file add ol-ext classes:
 ```javascript
 // Import the layer switcher control
 import LayerSwitcher from "ol-ext/control/LayerSwitcher"
@@ -26,8 +25,7 @@ map.addControl(switcher)
 ```
 
 Remember to import the style in your `style.css`:
-
-```CSS
+```css
 @import "node_modules/ol/ol.css";
 @import "node_modules/ol-ext/dist/ol-ext.css";
 
