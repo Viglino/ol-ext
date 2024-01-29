@@ -104,13 +104,13 @@
         <article><h1><img src="https://openlayers.org/theme/img/logo-light.svg" alt="Openlayers"> ol-ext</h1>
 <p><em>Cool extensions for <a href="https://github.com/openlayers/openlayers">OpenLayers</a> (ol &gt; 5.3)</em>.</p>
 <p><a href="https://github.com/Viglino/ol-ext">ol-ext</a> is a set of extensions, controls, interactions to use with Openlayers.</p>
-<h2>Getting start</h2>
+<h2>Quick start</h2>
 <h3>Install ol-ext</h3>
 <p>Install the npm ol-ext package and link to the node_modules directory:</p>
 <pre class="prettyprint source"><code>npm install ol-ext
 </code></pre>
 <p>See <a href="https://openlayers.org/doc/quickstart.html">Openlayers quickstart</a> to create an Openlayers project.</p>
-<p>In the <code>main.js</code> file add ol-ext classes</p>
+<p>In the <code>main.js</code> file add ol-ext classes:</p>
 <pre class="prettyprint source lang-javascript"><code>// Import the layer switcher control
 import LayerSwitcher from &quot;ol-ext/control/LayerSwitcher&quot;
 
@@ -119,7 +119,7 @@ const switcher = new LayerSwitcher;
 map.addControl(switcher)
 </code></pre>
 <p>Remember to import the style in your <code>style.css</code>:</p>
-<pre class="prettyprint source lang-CSS"><code>@import &quot;node_modules/ol/ol.css&quot;;
+<pre class="prettyprint source lang-css"><code>@import &quot;node_modules/ol/ol.css&quot;;
 @import &quot;node_modules/ol-ext/dist/ol-ext.css&quot;;
 
 html,
