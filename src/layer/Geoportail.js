@@ -3,6 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_layer_Tile from 'ol/layer/Tile.js'
+import ol_format_WMTSCapabilities from 'ol/format/WMTSCapabilities.js'
 import ol_ext_Ajax from '../util/Ajax.js'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj.js'
 // import {intersects as ol_extent_intersects} from 'ol/extent'
@@ -295,14 +296,14 @@ if (!old) {
 // TODO remove old version
     var geopresolutions = [156543.03390625, 78271.516953125, 39135.7584765625, 19567.87923828125, 9783.939619140625, 4891.9698095703125, 2445.9849047851562, 1222.9924523925781, 611.4962261962891, 305.74811309814453, 152.87405654907226, 76.43702827453613, 38.218514137268066, 19.109257068634033, 9.554628534317017, 4.777314267158508, 2.388657133579254, 1.194328566789627, 0.5971642833948135, 0.29858214169740677, 0.14929107084870338]
     // Transform resolution to zoom
-    function getZoom(res) {
+    var getZoom = function(res) {
       res = Number(res) * 0.000281
       for (var r = 0; r < geopresolutions.length; r++)
         if (res > geopresolutions[r])
           return r
     }
     // Merge constraints 
-    function mergeConstraints(ori) {
+    var mergeConstraints = function(ori) {
       for (var i = ori.constraint.length - 1; i > 0; i--) {
         for (var j = 0; j < i; j++) {
           var bok = true

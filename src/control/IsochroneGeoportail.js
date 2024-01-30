@@ -296,15 +296,16 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
     var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
     // Convert to features
     var evt = e.response;
+    var format;
     if (evt.wktGeometry) {
-      var format = new ol_format_WKT();
+      format = new ol_format_WKT();
       evt.feature = format.readFeature(evt.wktGeometry, {
         dataProjection: 'EPSG:4326',
         featureProjection: proj
       });
       delete evt.wktGeometry;
     } else {
-      var format = new ol_format_GeoJSON();
+      format = new ol_format_GeoJSON();
       evt.feature = format.readFeature(evt.geometry, {
         dataProjection: 'EPSG:4326',
         featureProjection: proj

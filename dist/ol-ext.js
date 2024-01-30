@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.14
+ * @version v4.0.15
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -11057,15 +11057,16 @@ ol.control.IsochroneGeoportail = class olcontrolIsochroneGeoportail extends ol.c
     var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
     // Convert to features
     var evt = e.response;
+    var format;
     if (evt.wktGeometry) {
-      var format = new ol.format.WKT();
+      format = new ol.format.WKT();
       evt.feature = format.readFeature(evt.wktGeometry, {
         dataProjection: 'EPSG:4326',
         featureProjection: proj
       });
       delete evt.wktGeometry;
     } else {
-      var format = new ol.format.GeoJSON();
+      format = new ol.format.GeoJSON();
       evt.feature = format.readFeature(evt.geometry, {
         dataProjection: 'EPSG:4326',
         featureProjection: proj
@@ -34442,14 +34443,14 @@ if (!old) {
 // TODO remove old version
     var geopresolutions = [156543.03390625, 78271.516953125, 39135.7584765625, 19567.87923828125, 9783.939619140625, 4891.9698095703125, 2445.9849047851562, 1222.9924523925781, 611.4962261962891, 305.74811309814453, 152.87405654907226, 76.43702827453613, 38.218514137268066, 19.109257068634033, 9.554628534317017, 4.777314267158508, 2.388657133579254, 1.194328566789627, 0.5971642833948135, 0.29858214169740677, 0.14929107084870338]
     // Transform resolution to zoom
-    function getZoom(res) {
+    var getZoom = function(res) {
       res = Number(res) * 0.000281
       for (var r = 0; r < geopresolutions.length; r++)
         if (res > geopresolutions[r])
           return r
     }
     // Merge constraints 
-    function mergeConstraints(ori) {
+    var mergeConstraints = function(ori) {
       for (var i = ori.constraint.length - 1; i > 0; i--) {
         for (var j = 0; j < i; j++) {
           var bok = true
