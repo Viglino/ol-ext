@@ -264,11 +264,21 @@ if (!old) {
         var layers = resp.Contents.Layer;
         var capabilities = {};
         var themes = {};
+    
         for (var i=0; i<layers.length; i++) {
           var l = layers[i];
           var zoom = getMinMaxZoom(l.TileMatrixSetLink[0].TileMatrixSetLimits)
           var theme = getTheme(l.Identifier)
           if (!themes[theme]) themes[theme] = {};
+          // Legend
+          var legend = []
+          if (l.Style) {
+            l.Style.forEach(function (s) {
+              if (s.LegendURL) {
+                legend.push(s.LegendURL[0].href)
+              }
+            })
+          }
           themes[theme][l.Identifier] = capabilities[l.Identifier] = {
             layer: l.Identifier,
             key: gppKey,
@@ -283,7 +293,8 @@ if (!old) {
             queryable: layersInfo[i].getElementsByTagName('InfoFormat').length > 0,
             style: (l.Style && l.Style.length ? l.Style[0].Identifier : 'normal'),
             tilematrix: 'PM',
-            title: l.Title
+            title: l.Title,
+            legend: legend
           }
         }
         // Return capabilities
