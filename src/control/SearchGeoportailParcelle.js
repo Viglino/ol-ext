@@ -50,22 +50,26 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
       parent: element
     });
 
+    options.arrondLabel = options.arrondLabel || 'Arrond.'
+    options.prefixLabel = options.prefixLabel || 'Préfixe'
+    options.sectionLabel = options.sectionLabel || 'Section'
+    options.numberLabel = options.numberLabel || 'Numéro'
     // Labels
     ol_ext_element.create('LABEL', {
-      text: 'Arrond.',
+      text: options.arrondLabel,
       className: 'district',
       parent: div
     });
     ol_ext_element.create('LABEL', {
-      text: 'Préfixe',
+      text: options.prefixLabel,
       parent: div
     });
     ol_ext_element.create('LABEL', {
-      text: 'Section',
+      text: options.sectionLabel,
       parent: div
     });
     ol_ext_element.create('LABEL', {
-      text: 'Numéro',
+      text: options.numberLabel,
       parent: div
     });
     ol_ext_element.create('BR', {
@@ -80,13 +84,13 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     };
 
     this._inputParcelle.arrond.setAttribute('maxlength', 2);
-    this._inputParcelle.arrond.setAttribute('placeholder', options.arrondLabel || 'Arrond');
+    this._inputParcelle.arrond.setAttribute('placeholder', options.arrondLabel);
     this._inputParcelle.prefix.setAttribute('maxlength', 3);
-    this._inputParcelle.prefix.setAttribute('placeholder', options.prefixLabel || 'Préfixe');
+    this._inputParcelle.prefix.setAttribute('placeholder', options.prefixLabel);
     this._inputParcelle.section.setAttribute('maxlength', 2);
-    this._inputParcelle.section.setAttribute('placeholder', options.sectionLabel || 'Section');
+    this._inputParcelle.section.setAttribute('placeholder', options.sectionLabel);
     this._inputParcelle.numero.setAttribute('maxlength', 4);
-    this._inputParcelle.numero.setAttribute('placeholder', options.numberLabel || 'Numéro');
+    this._inputParcelle.numero.setAttribute('placeholder', options.numberLabel);
 
     // Delay search
     var tout;
