@@ -18,7 +18,11 @@ import ol_ext_element from "../util/element.js";
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {string | undefined} options.placeholder placeholder for city input, default "Choisissez une commune..."
+ *	@param {string | undefined} options.prefixPlaceholder placeholder for prefix input, default "Préfixe"
+ *	@param {string | undefined} options.sectionPlaceholder placeholder for section input, default "Section"
+ *	@param {string | undefined} options.numberPlaceholder placeholder for number input, default "Numéro"
+ *	@param {string | undefined} options.arrondPlaceholder placeholder for arrondissement, default "Arrond."
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
@@ -33,6 +37,10 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     options.inputLabel = 'Commune';
     options.noCollapse = true;
     options.placeholder = options.placeholder || "Choisissez une commune...";
+    options.prefixPlaceholder = options.prefixPlaceholder || 'Préfixe';
+    options.sectionPlaceholder = options.sectionPlaceholder || 'Section';
+    options.numberPlaceholder = options.numberPlaceholder || 'Numéro';
+    options.arrondPlaceholder = options.arrondPlaceholder || 'Arrond.'
     super(options);
 
     this.set('copy', null);
@@ -74,9 +82,13 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
       numero: document.createElement('INPUT')
     };
     this._inputParcelle.arrond.setAttribute('maxlength', 2);
+    this._inputParcelle.arrond.setAttribute('placeholder', options.arrondPlaceholder);
     this._inputParcelle.prefix.setAttribute('maxlength', 3);
+    this._inputParcelle.prefix.setAttribute('placeholder', options.prefixPlaceholder);
     this._inputParcelle.section.setAttribute('maxlength', 2);
+    this._inputParcelle.section.setAttribute('placeholder', options.sectionPlaceholder);
     this._inputParcelle.numero.setAttribute('maxlength', 4);
+    this._inputParcelle.numero.setAttribute('placeholder', options.numberPlaceholder);
 
     // Delay search
     var tout;
