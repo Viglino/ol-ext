@@ -11,7 +11,8 @@ import ol_ext_element from "../util/element.js";
  *
  * @constructor
  * @extends {ol.control.SearchJSON}
- * @fires select
+ * @fires commune
+ * @fires parcelle
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
  *	@param {boolean | undefined} [options.apiKey] the service api key.
@@ -19,10 +20,10 @@ import ol_ext_element from "../util/element.js";
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
  *	@param {string | undefined} options.placeholder placeholder for city input, default "Choisissez une commune..."
- *	@param {string | undefined} options.prefixPlaceholder placeholder for prefix input, default "Préfixe"
- *	@param {string | undefined} options.sectionPlaceholder placeholder for section input, default "Section"
- *	@param {string | undefined} options.numberPlaceholder placeholder for number input, default "Numéro"
- *	@param {string | undefined} options.arrondPlaceholder placeholder for arrondissement, default "Arrond."
+ *	@param {string | undefined} options.prefixlabel label for prefix input, default "Préfixe"
+ *	@param {string | undefined} options.sectionLabel label for section input, default "Section"
+ *	@param {string | undefined} options.numberLabel label for number input, default "Numéro"
+ *	@param {string | undefined} options.arrondLabel label for arrondissement, default "Arrond."
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
@@ -37,10 +38,6 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     options.inputLabel = 'Commune';
     options.noCollapse = true;
     options.placeholder = options.placeholder || "Choisissez une commune...";
-    options.prefixPlaceholder = options.prefixPlaceholder || 'Préfixe';
-    options.sectionPlaceholder = options.sectionPlaceholder || 'Section';
-    options.numberPlaceholder = options.numberPlaceholder || 'Numéro';
-    options.arrondPlaceholder = options.arrondPlaceholder || 'Arrond.'
     super(options);
 
     this.set('copy', null);
@@ -81,14 +78,15 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
       section: document.createElement('INPUT'),
       numero: document.createElement('INPUT')
     };
+
     this._inputParcelle.arrond.setAttribute('maxlength', 2);
-    this._inputParcelle.arrond.setAttribute('placeholder', options.arrondPlaceholder);
+    this._inputParcelle.arrond.setAttribute('placeholder', options.arrondLabel || 'Arrond');
     this._inputParcelle.prefix.setAttribute('maxlength', 3);
-    this._inputParcelle.prefix.setAttribute('placeholder', options.prefixPlaceholder);
+    this._inputParcelle.prefix.setAttribute('placeholder', options.prefixLabel || 'Préfixe');
     this._inputParcelle.section.setAttribute('maxlength', 2);
-    this._inputParcelle.section.setAttribute('placeholder', options.sectionPlaceholder);
+    this._inputParcelle.section.setAttribute('placeholder', options.sectionLabel || 'Section');
     this._inputParcelle.numero.setAttribute('maxlength', 4);
-    this._inputParcelle.numero.setAttribute('placeholder', options.numberPlaceholder);
+    this._inputParcelle.numero.setAttribute('placeholder', options.numberLabel || 'Numéro');
 
     // Delay search
     var tout;
@@ -139,7 +137,11 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
       self.activateParcelle(false);
     });
 
-    this.on('select', this.selectCommune.bind(this));
+    this.on('select', function(e) {
+      this.selectCommune(e);
+      e.type = 'commune';
+      this.dispatchEvent(e);
+    }.bind(this));
     this.set('pageSize', options.pageSize || 5);
   }
   /** Select a commune => start searching parcelle
@@ -163,6 +165,14 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     this.activateParcelle(true);
     this._inputParcelle.numero.focus();
     this.autocompleteParcelle();
+  }
+  /** Get the input field
+   * @param {string} what the search input id commune|arrond|prefix|section|numero, default commune 
+   * @return {Element}
+   * @api
+   */
+  getInputField(what) {
+    return this._inputParcelle[what] || this._input;
   }
   /** Set the input parcelle
    * @param {*} p parcel
@@ -192,6 +202,11 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     } else {
       this._inputParcelle.section.parentElement.classList.remove('ol-active');
     }
+  }
+  /** Clear the parcel list
+   */
+  clearParcelList() {
+    this._listParcelle([])
   }
   /** Send search request for the parcelle
    * @private

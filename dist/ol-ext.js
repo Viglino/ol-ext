@@ -15662,14 +15662,19 @@ ol.control.SearchGPS = class olcontrolSearchGPS extends ol.control.Search {
  *
  * @constructor
  * @extends {ol.control.SearchJSON}
- * @fires select
+ * @fires commune
+ * @fires parcelle
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
  *	@param {boolean | undefined} [options.apiKey] the service api key.
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
- *	@param {string | undefined} options.placeholder placeholder, default "Search..."
+ *	@param {string | undefined} options.placeholder placeholder for city input, default "Choisissez une commune..."
+ *	@param {string | undefined} options.prefixlabel label for prefix input, default "Préfixe"
+ *	@param {string | undefined} options.sectionLabel label for section input, default "Section"
+ *	@param {string | undefined} options.numberLabel label for number input, default "Numéro"
+ *	@param {string | undefined} options.arrondLabel label for arrondissement, default "Arrond."
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
@@ -15721,9 +15726,13 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
       numero: document.createElement('INPUT')
     };
     this._inputParcelle.arrond.setAttribute('maxlength', 2);
+    this._inputParcelle.arrond.setAttribute('placeholder', options.arrondLabel || 'Arrond');
     this._inputParcelle.prefix.setAttribute('maxlength', 3);
+    this._inputParcelle.prefix.setAttribute('placeholder', options.prefixLabel || 'Préfixe');
     this._inputParcelle.section.setAttribute('maxlength', 2);
+    this._inputParcelle.section.setAttribute('placeholder', options.sectionLabel || 'Section');
     this._inputParcelle.numero.setAttribute('maxlength', 4);
+    this._inputParcelle.numero.setAttribute('placeholder', options.numberLabel || 'Numéro');
     // Delay search
     var tout;
     var doSearch = function () {
@@ -15769,7 +15778,11 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
       }
       self.activateParcelle(false);
     });
-    this.on('select', this.selectCommune.bind(this));
+    this.on('select', function(e) {
+      this.selectCommune(e);
+      e.type = 'commune';
+      this.dispatchEvent(e);
+    }.bind(this));
     this.set('pageSize', options.pageSize || 5);
   }
   /** Select a commune => start searching parcelle
@@ -15793,6 +15806,14 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
     this.activateParcelle(true);
     this._inputParcelle.numero.focus();
     this.autocompleteParcelle();
+  }
+  /** Get the input field
+   * @param {string} what the search input id commune|arrond|prefix|section|numero, default commune 
+   * @return {Element}
+   * @api
+   */
+  getInputField(what) {
+    return this._inputParcelle[what] || this._input;
   }
   /** Set the input parcelle
    * @param {*} p parcel
@@ -15822,6 +15843,11 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
     } else {
       this._inputParcelle.section.parentElement.classList.remove('ol-active');
     }
+  }
+  /** Clear the parcel list
+   */
+  clearParcelList() {
+    this._listParcelle([])
   }
   /** Send search request for the parcelle
    * @private
@@ -34416,6 +34442,15 @@ if (!old) {
           var zoom = getMinMaxZoom(l.TileMatrixSetLink[0].TileMatrixSetLimits)
           var theme = getTheme(l.Identifier)
           if (!themes[theme]) themes[theme] = {};
+          // Legend
+          var legend = []
+          if (l.Style) {
+            l.Style.forEach(function (s) {
+              if (s.LegendURL) {
+                legend.push(s.LegendURL[0].href)
+              }
+            })
+          }
           themes[theme][l.Identifier] = capabilities[l.Identifier] = {
             layer: l.Identifier,
             key: gppKey,
@@ -34430,7 +34465,8 @@ if (!old) {
             queryable: layersInfo[i].getElementsByTagName('InfoFormat').length > 0,
             style: (l.Style && l.Style.length ? l.Style[0].Identifier : 'normal'),
             tilematrix: 'PM',
-            title: l.Title
+            title: l.Title,
+            legend: legend
           }
         }
         // Return capabilities
