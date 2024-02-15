@@ -19863,11 +19863,7 @@ ol.control.WMTSCapabilities = class olcontrolWMTSCapabilities extends ol.control
    * @returns {boolean}
    */
   isSupportedSet(tm) {
-    return tm.TileMatrixSet === 'PM' 
-    || tm.TileMatrixSet === '3857' 
-    || tm.TileMatrixSet === 'EPSG:3857' 
-    || tm.TileMatrixSet === 'webmercator'
-    || tm.TileMatrixSet === 'GoogleMapsCompatible'
+    return this.supportedSets.indexOf(tm.TileMatrixSet) >= 0;
   }
   /** Return a WMTS options for the given capabilities
    * @param {*} caps layer capabilities (read from the capabilities)
@@ -20049,6 +20045,16 @@ ol.control.WMTSCapabilities = class olcontrolWMTSCapabilities extends ol.control
     return layer;
   }
 }
+/** An array of supported sets (basically EPSG:3857)
+ */
+ol.control.WMSCapabilities.prototype.supportedSets = [
+  'PM',
+  '3857',
+  'EPSG:3857',
+  'EPSG:900913',
+  'webmercator',
+  'GoogleMapsCompatible'
+]
 
 /*
   Copyright (c) 2016 Jean-Marc VIGLINO, 

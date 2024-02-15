@@ -110,11 +110,7 @@ var ol_control_WMTSCapabilities = class olcontrolWMTSCapabilities extends ol_con
    * @returns {boolean}
    */
   isSupportedSet(tm) {
-    return tm.TileMatrixSet === 'PM' 
-    || tm.TileMatrixSet === '3857' 
-    || tm.TileMatrixSet === 'EPSG:3857' 
-    || tm.TileMatrixSet === 'webmercator'
-    || tm.TileMatrixSet === 'GoogleMapsCompatible'
+    return this.supportedSets.indexOf(tm.TileMatrixSet) >= 0;
   }
   /** Return a WMTS options for the given capabilities
    * @param {*} caps layer capabilities (read from the capabilities)
@@ -305,5 +301,17 @@ var ol_control_WMTSCapabilities = class olcontrolWMTSCapabilities extends ol_con
     return layer;
   }
 }
+
+/** An array of supported sets (basically EPSG:3857)
+ * @api
+ */
+ol_control_WMSCapabilities.prototype.supportedSets = [
+  'PM',
+  '3857',
+  'EPSG:3857',
+  'EPSG:900913',
+  'webmercator',
+  'GoogleMapsCompatible'
+]
 
 export default ol_control_WMTSCapabilities
