@@ -78,6 +78,9 @@
       padding: 0;
       list-style-type: none;
     }
+    ul.collapsed {
+      display: none;
+    }
     #geoportail {
       margin-top: 11em;
     }
@@ -88,6 +91,11 @@
       text-transform: capitalize;
       font-size: 1.1em;
       font-weight: bold;
+      cursor: pointer;
+      opacity: .9;
+    }
+    #geoportail > li > p:hover {
+      opacity: 1;
     }
     #geoportail p {
       margin: 0;
@@ -195,7 +203,12 @@ ol.layer.Geoportail.getCapabilities().then(function(caps, themes) {
   }
   // Sort by theme
   Object.keys(themes).sort(sort).forEach(function(k) {
-    var li = $('<li>').append($('<p>').text(k)).appendTo(ul);
+    var li = $('<li>').appendTo(ul);
+    $('<p>').text(k)
+      .click(function(e) {
+        e.target.nextSibling.classList.toggle('collapsed')
+      })
+      .appendTo(li)
     var ul2 = $('<ul>').appendTo(li);
     Object.keys(themes[k]).forEach(function(c) {
       var cap = themes[k][c]
