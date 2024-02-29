@@ -60,7 +60,9 @@
   var map = new ol.Map({
     target: 'map',
     view: new ol.View ({ zoom: 13, center: [649083, 5408224] }),
-    layers: [new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2')]
+    layers: [new ol.layer.Tile({
+      source: new ol.source.OSM()
+    })]
   });
 
   var bm = new ol.control.GeoBookmark({	

@@ -9309,7 +9309,6 @@ ol.control.GeoBookmark = class olcontrolGeoBookmark extends ol.control.Control {
       element: element,
       target: options.target
     });
-    var self = this;
     if (options.target) {
       element.className = options.className || "ol-bookmark";
     } else {
@@ -9317,18 +9316,19 @@ ol.control.GeoBookmark = class olcontrolGeoBookmark extends ol.control.Control {
         " ol-unselectable ol-control ol-collapsed";
       element.addEventListener("mouseleave", function () {
         if (input !== document.activeElement) {
-          menu.style.display = 'none';
+          this.element.classList.add('ol-collapsed')
         }
-      });
+      }.bind(this));
       // Show bookmarks on click
       this.button = ol.ext.element.create('BUTTON', {
         type: 'button',
         title: options.title || 'Geobookmarks',
         click: function () {
-          var show = (menu.style.display === '' || menu.style.display === 'none');
-          menu.style.display = (show ? 'block' : 'none');
-          if (show)
+          var show = !this.element.classList.contains('ol-collapsed');
+          this.element.classList.toggle('ol-collapsed')
+          if (show) {
             this.setBookmarks();
+          }
         }.bind(this)
       });
       element.appendChild(this.button);
@@ -9339,26 +9339,26 @@ ol.control.GeoBookmark = class olcontrolGeoBookmark extends ol.control.Control {
     var ul = document.createElement('ul');
     menu.appendChild(ul);
     var input = document.createElement('input');
-    input.setAttribute("placeholder", options.placeholder || "Add a new geomark...");
-    input.addEventListener("keydown", function (e) {
+    input.setAttribute('placeholder', options.placeholder || "Add a new geomark...");
+    input.addEventListener('keydown', function (e) {
       e.stopPropagation();
       if (e.keyCode === 13) {
         e.preventDefault();
-        var title = this.value;
+        var title = input.value;
         if (title) {
-          self.addBookmark(title);
-          this.value = '';
-          self.dispatchEvent({
+          this.addBookmark(title);
+          input.value = '';
+          this.dispatchEvent({
             type: "add",
             name: title
           });
         }
-        menu.style.display = 'none';
+        this.element.classList.add('ol-collapsed')
       }
-    });
-    input.addEventListener("blur", function () {
-      menu.style.display = 'none';
-    });
+    }.bind(this));
+    input.addEventListener('blur', function () {
+      this.element.classList.add('ol-collapsed')
+    }.bind(this));
     menu.appendChild(input);
     this.on("propertychange", function (e) {
       if (e.key === 'editable') {
@@ -9403,7 +9403,6 @@ ol.control.GeoBookmark = class olcontrolGeoBookmark extends ol.control.Control {
     }
     var modify = this.get("editable");
     var ul = this.element.querySelector("ul");
-    var menu = this.element.querySelector("div");
     var self = this;
     ul.innerHTML = '';
     for (var b in bmark) {
@@ -9411,14 +9410,14 @@ ol.control.GeoBookmark = class olcontrolGeoBookmark extends ol.control.Control {
       li.textContent = b;
       li.setAttribute('data-bookmark', JSON.stringify(bmark[b]));
       li.setAttribute('data-name', b);
-      li.addEventListener('click', function () {
-        var bm = JSON.parse(this.getAttribute("data-bookmark"));
-        self.getMap().getView().setCenter(bm.pos);
-        self.getMap().getView().setZoom(bm.zoom);
-        self.getMap().getView().setRotation(bm.rot || 0);
-        menu.style.display = 'none';
-        self.dispatchEvent({ type: 'select', name: this.getAttribute("data-name"), bookmark: bm });
-      });
+      li.addEventListener('click', function (e) {
+        var bm = JSON.parse(e.target.getAttribute("data-bookmark"));
+        this.getMap().getView().setCenter(bm.pos);
+        this.getMap().getView().setZoom(bm.zoom);
+        this.getMap().getView().setRotation(bm.rot || 0);
+        this.element.classList.add('ol-collapsed')
+        this.dispatchEvent({ type: 'select', name: e.target.getAttribute("data-name"), bookmark: bm });
+      }.bind(this));
       ul.appendChild(li);
       if (modify && !bmark[b].permanent) {
         var button = document.createElement('button');
