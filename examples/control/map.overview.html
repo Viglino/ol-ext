@@ -79,7 +79,7 @@
     Layer: 
     <select onchange="setOVLayer(this)">
       <option value="0">OSM</option>
-      <option value="1" selected>Stamen</option>
+      <option value="1" selected>Photo</option>
     </select>
     <br />
     <input id="rotate" type="checkbox" /><label for="rotate"> Rotate overview map</label>
@@ -101,21 +101,17 @@
         zoom: 15,
         center: [270148, 6247782]
       }),
-      layers: [ new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }) ]
+      layers: [ new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2') ]
     });
 
     // Layers for the overview
     var layers = [
       new ol.layer.Tile({	source: new ol.source.OSM()	}),
-      new ol.layer.Tile({
-        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
-      })
+      new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS')
     ];
     var layers2 = [
       new ol.layer.Tile({	source: new ol.source.OSM()	}),
-      new ol.layer.Tile({
-        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
-      })
+      new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS')
     ];
 
     // New control on the map
@@ -159,6 +155,8 @@
     function setOVLayer (e) {
       ov.getOverviewMap().getLayers().getArray()[$(e).val()].setVisible(true);
       ov.getOverviewMap().getLayers().getArray()[1-$(e).val()].setVisible(false);
+      ov2.getOverviewMap().getLayers().getArray()[$(e).val()].setVisible(true);
+      ov2.getOverviewMap().getLayers().getArray()[1-$(e).val()].setVisible(false);
     }
     $("#rotate").on("change", function () {
       ov.rotation = ov2.rotation=$("#rotate").prop("checked");

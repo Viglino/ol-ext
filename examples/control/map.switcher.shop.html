@@ -68,22 +68,17 @@
     title: 'Base Layers',
     openInLayerSwitcher: true,
     layers: [
-      new ol.layer.Tile({
-        title: "Watercolor",
-        className: "Watercolor",
-        baseLayer: true,
-        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
-      }),
-      new ol.layer.Tile({
-        title: "Toner",
-        className: "Toner",
+    new ol.layer.Geoportail({
         baseLayer: true,
         visible: false,
-        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
+        layer: 'ORTHOIMAGERY.ORTHOPHOTOS'
+      }),
+      new ol.layer.Geoportail({
+        baseLayer: true,
+        layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
       }),
       new ol.layer.Tile({
         title: "OSM",
-        className: "OSM",
         baseLayer: true,
         source: new ol.source.OSM(),
         visible: false
@@ -118,10 +113,10 @@
         className: 'PARCELLAIRE_EXPRESS' 
       }),
       clc,
-      new ol.layer.Tile({
+      new ol.layer.Geoportail({
         title: 'Labels',
         className: 'Labels',
-        source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' })
+        layer: 'GEOGRAPHICALNAMES.NAMES'
       }) 
     ]
   });

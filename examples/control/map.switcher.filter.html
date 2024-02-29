@@ -57,14 +57,13 @@
 
   // list of layers
   var layers = [	
-    new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }), title:'watercolor' }),
-    new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_toner_background' }), title:'toner-background' }),
-    new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_background' }), title:'terrain-background' }),
-    new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_toner_lines' }), title:'toner-lines' }),
-    new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_lines' }), title:'terrain-lines' }),
+    new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'),
+    new ol.layer.Geoportail({layer: 'ELEVATION.SLOPES', visible: false }),
+    new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS'),
+    new ol.layer.Geoportail('TRANSPORTNETWORKS.ROADS'),
     new ol.layer.Group({ title: 'labels', openInLayerSwitcher: true, layers: [
-      new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_toner_labels' }), title:'toner-labels' }),
-      new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' }), title:'terrain-labels' }),
+      new ol.layer.Geoportail('GEOGRAPHICALNAMES.NAMES'),
+      new ol.layer.Tile({ visible: false, source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' }), title:'terrain-labels' }),
     ]})
   ];
   // The Map

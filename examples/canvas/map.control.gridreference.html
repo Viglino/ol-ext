@@ -95,10 +95,7 @@
   <script type="text/javascript">
   // Layers
   var layers = [
-    new ol.layer.Tile({
-      title:'terrain-background',
-      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
-    })
+    new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS')
   ]
 
   // The map

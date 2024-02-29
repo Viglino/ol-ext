@@ -51,13 +51,6 @@
 
   <script type="text/javascript">
 
-  // Two base layers
-  var stamen = new ol.layer.Tile({
-    title: "Watercolor",
-    baseLayer: true,
-    source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
-  });
-
   // The map
   var map = new ol.Map({
     target: 'map',
@@ -65,7 +58,7 @@
       zoom: 4,
       center: [205461, 5867916]
     }),
-    layers: [stamen]
+    layers: [new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' })]
   });
 
   // Add over interaction that draw hull in a layer

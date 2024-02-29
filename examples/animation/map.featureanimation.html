@@ -88,10 +88,7 @@
   
   <script type="text/javascript">
   // Layers
-  var layer = new ol.layer.Tile({
-        title:'terrain-background',
-        source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
-  });
+  var layer = new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS')
 
   // The map
   var map = new ol.Map({

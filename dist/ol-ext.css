@@ -979,6 +979,8 @@ body > .ol-ext-dialog > form {
   left: 50%;
   -webkit-transform: translateX(-50%);
   transform: translateX(-50%);
+  background-color: rgba(255,255,255,.5);
+  padding: 0.1em 0.5em;
 }
 
 .ol-gauge > * {
@@ -986,7 +988,7 @@ body > .ol-ext-dialog > form {
   vertical-align: middle;
 }
 .ol-gauge > span {
-  margin: 0 0.5em;
+  margin: 0 0.5em 0 0;
 }
 .ol-gauge > div {
   display: inline-block;

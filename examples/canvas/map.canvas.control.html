@@ -119,8 +119,8 @@
       }),
       controls: ol.control.defaults.defaults({ "attribution": false }),
       layers: [
-        new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }),
-        new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_toner_labels' }) })
+        new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS'),
+        new ol.layer.Geoportail('GEOGRAPHICALNAMES.NAMES')
       ]
     });
 

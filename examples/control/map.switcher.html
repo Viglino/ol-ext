@@ -116,7 +116,7 @@
   <div class="options">
     <h2>Options:</h2>
     <input id="dils" type="checkbox" checked="checked" onchange="displayInLayerSwitcher(this.checked);"/>
-    <label for="dils">display "Pirate Map" in LayerSwitcher (zoom out to make it visible).</label>
+    <label for="dils">display "Natural Earth" in LayerSwitcher (zoom out to make it visible).</label>
     <br/>
     <input id="opb" type="checkbox" onchange="$('body').toggleClass('hideOpacity');" />
     <label for="opb">hide opacity bar</label>
@@ -132,16 +132,14 @@
     title: 'Base Layers',
     openInLayerSwitcher: true,
     layers: [
-      new ol.layer.Tile({
-        title: "Watercolor",
-        baseLayer: true,
-        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
-      }),
-      new ol.layer.Tile({
-        title: "Toner",
+      new ol.layer.Geoportail({
         baseLayer: true,
         visible: false,
-        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
+        layer: 'ORTHOIMAGERY.ORTHOPHOTOS'
+      }),
+      new ol.layer.Geoportail({
+        baseLayer: true,
+        layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
       }),
       new ol.layer.Tile({
         title: "OSM",
@@ -152,25 +150,12 @@
     ]
   });
   // A layer with minResolution (hidden on hight zoom level)
-  var mapbox = new ol.layer.Tile({
-    title: "Pirate Map", 
-    displayInLayerSwitcher: false,
-    minResolution: 1223,
-    source: new ol.source.XYZ({	
-      attributions: [
-        '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ',
-        ol.source.OSM.ATTRIBUTION
-      ],
-      url: 'https://{a-d}.tiles.mapbox.com/v3/aj.Sketchy2/{z}/{x}/{y}.png'
-    })
-  });
+  var nearth = new ol.layer.Geoportail({
+    layer: 'CARTES.NATURALEARTH',
+    maxZoom: 6
+  })
   // An overlay that stay on top
-  var labels = new ol.layer.Tile({
-    title: "Labels (on top)",
-    allwaysOnTop: true,			// Stay on top of layer switcher
-    noSwitcherDelete: true,		// Prevent deleting from layer switcher
-    source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' })
-  });
+  var labels = new ol.layer.Geoportail('GEOGRAPHICALNAMES.NAMES');
   // WMS with bbox
   var brgm = new ol.layer.Tile ({
     "title": "GEOLOGIE",
@@ -203,7 +188,7 @@
       zoom: 11,
       center: [260497, 6249720]
     }),
-    layers: [ baseLayers, mapbox, brgm, labels ]
+    layers: [ baseLayers, nearth, brgm, labels ]
   });
   // Add control inside the map
   var ctrl = new ol.control.LayerSwitcher({
@@ -248,9 +233,9 @@
   switcher.setHeader($('<div>').append(button).get(0))
 
   map.addControl(switcher);
-  // Insert mapbox layer in layer switcher
+  // Insert nearth layer in layer switcher
   function displayInLayerSwitcher(b) {
-    mapbox.set('displayInLayerSwitcher', b);
+    nearth.set('displayInLayerSwitcher', b);
   }
   
   // Get options values

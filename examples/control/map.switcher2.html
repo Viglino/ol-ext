@@ -58,16 +58,14 @@
     title: 'Base Layers',
     openInLayerSwitcher: true,
     layers: [
-      new ol.layer.Tile({
-        title: "Watercolor",
-        baseLayer: true,
-        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
-      }),
-      new ol.layer.Tile({
-        title: "Toner",
+    new ol.layer.Geoportail({
         baseLayer: true,
         visible: false,
-        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
+        layer: 'ORTHOIMAGERY.ORTHOPHOTOS'
+      }),
+      new ol.layer.Geoportail({
+        baseLayer: true,
+        layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
       }),
       new ol.layer.Tile({
         title: "OSM",
@@ -79,12 +77,7 @@
   });
 
   // An overlay that stay on top
-  var labels = new ol.layer.Tile({
-    title: "Labels (on top)",
-    allwaysOnTop: true,			// Stay on top of layer switcher
-    noSwitcherDelete: true,		// Prevent deleting from layer switcher
-    source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' })
-  });
+  var labels = new ol.layer.Geoportail('GEOGRAPHICALNAMES.NAMES');
   // WMS with bbox
   var brgm = new ol.layer.Tile ({
     "title": "GEOLOGIE",

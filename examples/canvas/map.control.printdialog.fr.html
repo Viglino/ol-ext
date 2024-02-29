@@ -102,9 +102,9 @@
       }),
       controls: ol.control.defaults.defaults({ "attribution": false }),
       layers: [
-        new ol.layer.Tile({ title:'Waterolor', visible: false, source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }),
-        new ol.layer.Tile({ title:'Labels', visible: false, source: new ol.source.StadiaMaps({ layer: 'stamen_toner_labels' }) }),
-        new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' })
+        new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' }),
+        new ol.layer.Geoportail({layer: 'ORTHOIMAGERY.ORTHOPHOTOS', visible: false }),
+        new ol.layer.Geoportail({layer: 'GEOGRAPHICALNAMES.NAMES', visible: false }),
       ]
     });
     map.addControl(new ol.control.LayerSwitcher());

@@ -80,7 +80,7 @@
         showFullExtent: true
       }),
       layers:[
-        new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }),
+        new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS'),
         osm
       ]
     });
