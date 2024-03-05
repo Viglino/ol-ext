@@ -34635,6 +34635,7 @@ ol.layer.Geoportail.capabilities = {
   "TRANSPORTNETWORKS.ROADS": {"layer":"TRANSPORTNETWORKS.ROADS","theme":"topographie","desc":"Affichage du réseau routier français et européen.","server":"https://data.geopf.fr/wmts","bbox":[-63.9692,-21.4969,55.9644,71.5841],"format":"image/png","minZoom":6,"maxZoom":18,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"style":"normal","tilematrix":"PM","title":"Routes"},
   "GEOGRAPHICALNAMES.NAMES": {"layer":"GEOGRAPHICALNAMES.NAMES","theme":"topographie","desc":"Affichage des noms des villes, villages, lieux-dits ...","server":"https://data.geopf.fr/wmts","bbox":[-63.9692,-21.4969,55.9644,71.5841],"format":"image/png","minZoom":6,"maxZoom":18,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"style":"normal","tilematrix":"PM","title":"Dénominations géographiques","legend":["https://data.geopf.fr/annexes/ressources/legendes/LEGEND.jpg"]},
   "CARTES.NATURALEARTH": {"layer":"CARTES.NATURALEARTH","theme":"cartes","desc":"Carte générale du monde politique avec les frontières et capitales d'Etat, les entités administratives secondaires, villes principales, fleuves, lacs et océans. Edition : 1.4.0","server":"https://data.geopf.fr/wmts","bbox":[-179.5,-75,179.5,75],"format":"image/jpeg","minZoom":1,"maxZoom":9,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"style":"normal","tilematrix":"PM","title":"Monde Natural Earth","legend":["https://data.geopf.fr/annexes/ressources/legendes/LEGEND.jpg"]},
+  "GEOGRAPHICALGRIDSYSTEMS.MAPS.OVERVIEW": {"layer":"GEOGRAPHICALGRIDSYSTEMS.MAPS.OVERVIEW","key":"","theme":"cartes","desc":"Carte Mondiale pour la mini-vue","server":"https://data.geopf.fr/wmts","bbox":[-179.5,-75,179.5,75],"format":"image/jpeg","minZoom":1,"maxZoom":8,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"style":"normal","tilematrix":"PM","title":"Carte Mondiale pour la mini-vue","legend":["https://data.geopf.fr/annexes/ressources/legendes/LEGEND.jpg"]},
 };
 /** List of theme with a regexp to filter layers by theme (with getcapabilities)
  * @API
@@ -38316,7 +38317,6 @@ ol.graph.Dijskra = ol.graph.Dijkstra
  * @param {ol.geom.Geometry} geom
  * @param {Object} options
  *  @param {ol/proj~ProjectionLike} [options.projection='EPSG:3857'] geometry projection, default 'EPSG:3857'
- *  @param {string} [options.apiKey='essentiels'] Geoportail API key
  *  @param {number} [options.sampling=0] number of resulting point, max 5000, if none keep input points or use samplingDist
  *  @param {number} [options.samplingDist=0] distance for sampling the line or use sampling if lesser
  *  @param {number} [options.minZ=-99] min altitude (for undefined measures)
@@ -38362,8 +38362,7 @@ ol.geom.GPAltiCode = function(geom, options) {
   param += '&resource=ign_rge_alti_wld'
   if (sampling) param += '&sampling='+sampling;
   ol.ext.Ajax.get({
-    url: 'https://wxs.ign.fr/'+(options.apiKey || 'essentiels')+'/alti/rest/'+(lon.length>1 ? 'elevationLine' : 'elevation')+'.json?'+param,
-    // url: 'https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/'+(lon.length>1 ? 'elevationLine' : 'elevation')+'.json?'+param,
+    url: 'https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/'+(lon.length>1 ? 'elevationLine' : 'elevation')+'.json?'+param,
     success: function(res) {
       var pts = [];
       res.elevations.forEach(function(e, i) {
@@ -38387,7 +38386,6 @@ ol.geom.GPAltiCode = function(geom, options) {
  * @param {ol.coordinate|Array<ol.coordinate>} coord coordinate or an array of coordinates
  * @param {Object} options
  *  @param {ol/proj~ProjectionLike} [options.projection='EPSG:3857'] geometry projection, default 'EPSG:3857'
- *  @param {string} [options.apiKey='essentiels'] Geoportail API key
  *  @param {number} [options.sampling=0] number of resulting point, max 5000, if none keep input points or use samplingDist
  *  @param {number} [options.samplingDist=0] distance for sampling the line or use sampling if lesser
  *  @param {string} options.success a function that takes the resulting XYZ coordinates
@@ -38399,7 +38397,6 @@ ol.coordinate.GPAltiCode = function(coord, options) {
   var g = unique ? new ol.geom.Point(coord) : new ol.geom.LineString(coord);
   ol.geom.GPAltiCode(g, {
     projection: options.projection,
-    apiKey: options.apiKey,
     sampling: options.sampling,
     samplingDist: options.samplingDist,
     success: function(g) {
