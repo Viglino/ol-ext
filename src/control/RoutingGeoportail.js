@@ -77,7 +77,6 @@ var ol_control_RoutingGeoportail = class olcontrolRoutingGeoportail extends ol_c
       });
     }
 
-    // this.set('url', 'https://wxs.ign.fr/calcul/geoportail/' + options.apiKey + '/rest/1.0.0/route');
     this.set('url', 'https://data.geopf.fr/navigation/itineraire')
 
     var content = ol_ext_element.create('DIV', { className: 'content', parent: element });

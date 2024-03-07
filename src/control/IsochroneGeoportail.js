@@ -140,11 +140,7 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
         }
       }.bind(this));
 
-    /* TODO  */
-    this.set('url', 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/isochrone/isochrone.json');
-    /*/
     this.set('url', 'https://data.geopf.fr/navigation/isochrone')
-    /**/
     this._ajax = new ol_ext_Ajax({
       dataType: 'JSON',
       auth: options.auth
@@ -256,30 +252,18 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
     }
     var dt = Math.round(option * (this.get('iter') - (iter || 0)) / this.get('iter'));
     if (typeof option === 'number') {
-      // Send data
-      /* TODO remove old version */
+      // Send data => Capabilities: https://data.geopf.fr/navigation/getcapabilities
       var data = {
-        'gp-access-lib': '2.1.0',
-        location: ol_proj_toLonLat(coord, proj),
-        graphName: (this.get('mode') === 'pedestrian' ? 'Pieton' : 'Voiture'),
-        exclusions: this.get('exclusions') || undefined,
-        method: method,
-        time: method === 'time' ? dt : undefined,
-        distance: method === 'distance' ? dt : undefined,
-        reverse: (this.get('direction') === 'reverse'),
-        smoothing: this.get('smoothing') || true,
-        holes: this.get('holes') || false
-      };
-      /*/
-      // Capabilities: https://data.geopf.fr/navigation/getcapabilities
-      var data = {
-        resource: 'bdtopo-osrm', // "jmk_valhalla_cost_type_test", //
+        // resource: 'jmk_valhalla_cost_type_test', 
+        resource: 'bdtopo-valhalla',
         point: ol_proj_toLonLat(coord, proj),
         profile: this.get('mode') === 'pedestrian' ? 'pedestrian' : 'car',
         costType: method,
         costValue: dt,
+        geometryFormat: 'geojson',
+        direction: (this.get('direction') === 'reverse') ? 'arrival' : 'departure',
+        // crs: 'EPSG:4326'
       };
-      /**/
       this._ajax.send(this.get('url'), data, {
         coord: coord,
         option: option,

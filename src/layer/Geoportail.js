@@ -211,8 +211,10 @@ import ol_source_Geoportail from '../source/Geoportail.js'
    * @param {string} gppKey the API key to get capabilities for
    * @return {*} Promise-like response, use then, catch and finally to get the response
    */
-  static getCapabilities(gppKey, old) {
-    var capabilities = {}
+  static getCapabilities(gppKey) {
+    // Generic API key (for compatibility)
+    if (gppKey === 'gpf') gppKey = undefined;
+
     var onSuccess = function () { }
     var onError = function () { }
     var onFinally = function () { }
@@ -237,11 +239,7 @@ import ol_source_Geoportail from '../source/Geoportail.js'
       return 'autre';
     }
 
-// Next version Geoplateforme with getcapabilities
-// TODO remove test
-if (!old) {
-    // Old default apikey
-    if (gppKey === 'gpf') gppKey = undefined;
+    // Next version Geoplateforme with getcapabilities
     var server = gppKey ? 'https://data.geopf.fr/private/wmts' : 'https://data.geopf.fr/wmts';
     var url = server + "?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities";
     if (gppKey) {
@@ -302,118 +300,6 @@ if (!old) {
         onFinally(capabilities, themes)
       }
     })
-} else {
-// Old version
-// TODO remove old version
-    var geopresolutions = [156543.03390625, 78271.516953125, 39135.7584765625, 19567.87923828125, 9783.939619140625, 4891.9698095703125, 2445.9849047851562, 1222.9924523925781, 611.4962261962891, 305.74811309814453, 152.87405654907226, 76.43702827453613, 38.218514137268066, 19.109257068634033, 9.554628534317017, 4.777314267158508, 2.388657133579254, 1.194328566789627, 0.5971642833948135, 0.29858214169740677, 0.14929107084870338]
-    // Transform resolution to zoom
-    var getZoom = function(res) {
-      res = Number(res) * 0.000281
-      for (var r = 0; r < geopresolutions.length; r++)
-        if (res > geopresolutions[r])
-          return r
-    }
-    // Merge constraints 
-    var mergeConstraints = function(ori) {
-      for (var i = ori.constraint.length - 1; i > 0; i--) {
-        for (var j = 0; j < i; j++) {
-          var bok = true
-          for (var k = 0; k < 4; k++) {
-            if (ori.constraint[i].bbox[k] != ori.constraint[j].bbox[k]) {
-              bok = false
-              break
-            }
-          }
-          if (!bok)
-            continue
-          if (ori.constraint[i].maxZoom == ori.constraint[j].minZoom
-            || ori.constraint[j].maxZoom == ori.constraint[i].minZoom
-            || ori.constraint[i].maxZoom + 1 == ori.constraint[j].minZoom
-            || ori.constraint[j].maxZoom + 1 == ori.constraint[i].minZoom
-            || ori.constraint[i].minZoom - 1 == ori.constraint[j].maxZoom
-            || ori.constraint[j].minZoom - 1 == ori.constraint[i].maxZoom) {
-            ori.constraint[j].maxZoom = Math.max(ori.constraint[i].maxZoom, ori.constraint[j].maxZoom)
-            ori.constraint[j].minZoom = Math.min(ori.constraint[i].minZoom, ori.constraint[j].minZoom)
-            ori.constraint.splice(i, 1)
-            break
-          }
-        }
-      }
-    }
-
-    // Get capabilities
-    ol_ext_Ajax.get({
-      url: 'https://wxs.ign.fr/' + gppKey + '/autoconf/',
-      dataType: 'TEXT',
-      error: function (e) {
-        onError(e)
-        onFinally({})
-      },
-      success: function (resp) {
-        var parser = new DOMParser()
-        var config = parser.parseFromString(resp, "text/xml")
-        var layers = config.getElementsByTagName('Layer')
-        for (var i = 0, l; l = layers[i]; i++) {
-          // WMTS ?
-          if (!/WMTS/.test(l.getElementsByTagName('Server')[0].attributes['service'].value))
-            continue
-          //        if (!all && !/geoportail\/wmts/.test(l.find("OnlineResource").attr("href"))) continue;
-          var service = {
-            key: gppKey,
-            server: l.getElementsByTagName('gpp:Key')[0].innerHTML.replace(gppKey + "/", ""),
-            layer: l.getElementsByTagName('Name')[0].innerHTML,
-            title: l.getElementsByTagName('Title')[0].innerHTML,
-            format: l.getElementsByTagName('Format')[0] ? l.getElementsByTagName('Format')[0].innerHTML : 'image.jpeg',
-            style: l.getElementsByTagName('Style')[0].getElementsByTagName('Name')[0].innerHTML,
-            queryable: (l.attributes.queryable.value === '1'),
-            tilematrix: 'PM',
-            minZoom: getZoom(l.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML),
-            maxZoom: getZoom(l.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML),
-            bbox: JSON.parse('[' + l.getElementsByTagName('gpp:BoundingBox')[0].innerHTML + ']'),
-            desc: l.getElementsByTagName('Abstract')[0].innerHTML.replace(/^<!\[CDATA\[(.*)\]\]>$/, '$1')
-          }
-          service.originators = {}
-          var origin = l.getElementsByTagName('gpp:Originator')
-          for (var k = 0, o; o = origin[k]; k++) {
-            var ori = service.originators[o.attributes['name'].value] = {
-              href: o.getElementsByTagName('gpp:URL')[0].innerHTML,
-              attribution: o.getElementsByTagName('gpp:Attribution')[0].innerHTML,
-              logo: o.getElementsByTagName('gpp:Logo')[0].innerHTML,
-              minZoom: 20,
-              maxZoom: 0,
-              constraint: []
-            }
-            // Scale contraints
-            var constraint = o.getElementsByTagName('gpp:Constraint')
-            for (var j = 0, c; c = constraint[j]; j++) {
-              var zmax = getZoom(c.getElementsByTagName('sld:MinScaleDenominator')[0].innerHTML)
-              var zmin = getZoom(c.getElementsByTagName('sld:MaxScaleDenominator')[0].innerHTML)
-              if (zmin > ori.maxZoom)
-                ori.maxZoom = zmin
-              if (zmin < ori.minZoom)
-                ori.minZoom = zmin
-              if (zmax > ori.maxZoom)
-                ori.maxZoom = zmax
-              if (zmax < ori.minZoom)
-                ori.minZoom = zmax
-
-              ori.constraint.push({
-                minZoom: zmin,
-                maxZoom: zmax,
-                bbox: JSON.parse('[' + c.getElementsByTagName('gpp:BoundingBox')[0].innerHTML + ']')
-              })
-            }
-            // Merge constraints
-            mergeConstraints(ori)
-          }
-          capabilities[service.layer] = service
-        }
-        onSuccess(capabilities, {})
-        onFinally(capabilities, {})
-      }
-    })
-}
-// TODO END
 
     // Promise like response
     var response = {
