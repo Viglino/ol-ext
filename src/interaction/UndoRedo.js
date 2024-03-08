@@ -1,6 +1,6 @@
 import ol_Collection from 'ol/Collection.js'
 import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
-import ol_layer_Vector from 'ol/layer/Vector.js'
+import ol_source_Vector from 'ol/source/Vector.js'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
 import '../source/Vector.js'
 
@@ -231,7 +231,7 @@ var ol_interaction_UndoRedo = class olinteractionUndoRedo extends ol_interaction
       if (!init)
         init = []
       layers.forEach(function (l) {
-        if (l instanceof ol_layer_Vector) {
+        if (l.getSource() instanceof ol_source_Vector) {
           if (!self._layers || self._layers.indexOf(l) >= 0) {
             init.push(l)
           }
@@ -247,6 +247,7 @@ var ol_interaction_UndoRedo = class olinteractionUndoRedo extends ol_interaction
       var vectors = getVectorLayers(map.getLayers())
       vectors.forEach((function (l) {
         var s = l.getSource()
+        console.log('SOURCE', s)
         this._sourceListener.push(s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)))
         this._sourceListener.push(s.on('clearstart', function () {
           this.blockStart('clear')
@@ -288,6 +289,7 @@ var ol_interaction_UndoRedo = class olinteractionUndoRedo extends ol_interaction
   /** A feature is added / removed
    */
   _onAddRemove(e) {
+    console.log('undore')
     if (this._record) {
       this._redoStack.clear()
       this._redo.length = 0
