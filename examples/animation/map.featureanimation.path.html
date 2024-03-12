@@ -76,19 +76,6 @@
 
   var style = [
     new ol.style.Style({
-      image: new ol.style.Shadow({
-        radius: 15,
-      }),
-      stroke: new ol.style.Stroke({
-        color: [0,0,0,0.3],
-        width: 2
-      }),
-      fill: new ol.style.Fill({
-        color: [0,0,0,0.3]
-      }),
-      zIndex: -1
-    }),
-    new ol.style.Style({
       image: new ol.style.RegularShape({
         radius: 10,
         radius2: 5,
@@ -104,8 +91,18 @@
       })
     })
   ];
-  // Offset image
-  style[1].getImage().getAnchor()[1] += 10
+
+  // Red style
+  var redStyle = [
+  new ol.style.Style({
+      image: new ol.style.RegularShape({
+        radius: 10,
+        radius2: 5,
+        points: 5,
+        fill: new ol.style.Fill({ color: 'red' })
+      })
+    })
+  ]
 
   // Triangle style
   var triangle = new ol.style.RegularShape({
@@ -169,6 +166,11 @@
         speed: Number($("#speed").val()),
         revers: $("#revers").prop('checked')
       });
+      if (!$("#rotation").prop('checked')) {
+        anim.on('drawing', function(e) {
+          if (e.time > 5000) e.style = redStyle;
+        })
+      }
       /** / 
       source.addFeature(f);
       anim.on('animationend', function(e)

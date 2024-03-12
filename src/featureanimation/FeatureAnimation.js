@@ -62,7 +62,7 @@ var ol_featureAnimation = class olfeatureAnimation extends ol_Object {
   */
   drawGeom_(e, geom, shadow) {
     // Drawing event
-    this.dispatchEvent({
+    var drawingEvt = {
       type: 'drawing',
       time: e.time,
       feature: e.feature,
@@ -71,12 +71,13 @@ var ol_featureAnimation = class olfeatureAnimation extends ol_Object {
       style: e.rotation,
       style: e.style,
       extra: e.extra
-    })
+    }
+    this.dispatchEvent(drawingEvt)
+    var style = (drawingEvt.style instanceof Array) ? drawingEvt.style : [drawingEvt.style];
     // Draw
     if (this.fade_) {
       e.context.globalAlpha = this.fade_(1 - e.elapsed)
     }
-    var style = (e.style instanceof Array) ? e.style : [e.style];
     for (var i = 0; i < style.length; i++) {
       // Prevent crach if the style is not ready (image not loaded)
       try {
