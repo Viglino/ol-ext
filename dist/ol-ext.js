@@ -8985,7 +8985,8 @@ ol.control.FeatureList.prototype.sort = function() {
   // Refresh list
   this.refresh(true)
 }
-/** Refresh the list
+/** Refresh the list draw + resize use update if features have changed
+ * @param {boolean} [force]
  */
 ol.control.FeatureList.prototype.refresh = function(force) {
   if (force) this._curPage = -1;
@@ -8995,6 +8996,12 @@ ol.control.FeatureList.prototype.refresh = function(force) {
   this._drawPage()
   // resize
   this.resize();
+}
+/** Update the list (when features have changed without dispatching event).
+ */
+ol.control.FeatureList.prototype.update = function() {
+  this._drawList();
+  this.select(this._curSelection.feature, true)
 }
 /** Get height of a row
  * @return {number}
@@ -9090,6 +9097,7 @@ ol.control.FeatureList.prototype.getColumns = function(features) {
 ol.control.FeatureList.prototype.setColumns = function(columns) {
   this.columns = columns || [];
   this._drawList();
+  this.select(this._curSelection.feature, true)
 }
 /** Dragging sizer
  * @private
