@@ -20090,7 +20090,7 @@ ol.featureAnimation = class olfeatureAnimation extends ol.Object {
       feature: e.feature,
       start: e.start,
       stop: e.stop,
-      style: e.rotation,
+      rotation: e.rotation,
       style: e.style,
       extra: e.extra
     }
