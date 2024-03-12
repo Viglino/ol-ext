@@ -20050,6 +20050,7 @@ ol.control.WMSCapabilities.prototype.supportedSets = [
 * @fires animationstart
 * @fires animating
 * @fires animationend
+* @fires drawing
 * @param {ol.featureAnimationOptions} options
 *	@param {Number} options.duration duration of the animation in ms, default 1000
 *	@param {bool} options.revers revers the animation direction
@@ -20082,21 +20083,34 @@ ol.featureAnimation = class olfeatureAnimation extends ol.Object {
   * @private
   */
   drawGeom_(e, geom, shadow) {
+    // Drawing event
+    this.dispatchEvent({
+      type: 'drawing',
+      time: e.time,
+      feature: e.feature,
+      start: e.start,
+      stop: e.stop,
+      style: e.rotation,
+      style: e.style,
+      extra: e.extra
+    })
+    // Draw
     if (this.fade_) {
       e.context.globalAlpha = this.fade_(1 - e.elapsed)
     }
-    var style = e.style
+    var style = (e.style instanceof Array) ? e.style : [e.style];
     for (var i = 0; i < style.length; i++) {
       // Prevent crach if the style is not ready (image not loaded)
       try {
         var vectorContext = e.vectorContext || ol.render.getVectorContext(e)
         var s = ol.ext.getVectorContextStyle(e, style[i])
         vectorContext.setStyle(s)
-        if (s.getZIndex() < 0)
+        if (s.getZIndex() < 0) {
           vectorContext.drawGeometry(shadow || geom)
-        else
+        } else {
           vectorContext.drawGeometry(geom)
-      } catch (e) { /* ok */ }
+        }
+      } catch (error) { /* ok */ }
     }
   }
   /** Function to perform manipulations onpostcompose.
@@ -20213,6 +20227,24 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
     if (this.getOpacity) {
       e.context.globalAlpha = this.getOpacity();
     }
+    // Before anim
+    /*
+    var beforeEvent = { 
+      type: 'beforeanim', 
+      step: step,
+      start: event.start,
+      time: event.time,
+      elapsed: event.elapsed,
+      rotation: event.rotation||0,
+      geom: event.geom,
+      coordinate: event.coord,
+      feature: feature,
+      extra: event.extra || {}, 
+      style: flashStyle
+    };
+    fanim[step].dispatchEvent(beforeEvent);
+    self.dispatchEvent(beforeEvent);
+    */
     // Stop animation?
     if (!fanim[step].animate(event)) {
       nb++;
@@ -20240,7 +20272,8 @@ ol.layer.Base.prototype.animateFeature = function(feature, fanim, useFilter) {
         geom: event.geom,
         coordinate: event.coord,
         feature: feature,
-        extra: event.extra || {}
+        extra: event.extra || {}, 
+        style: flashStyle
       };
       fanim[step].dispatchEvent(animEvent);
       self.dispatchEvent(animEvent);
