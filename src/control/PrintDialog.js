@@ -76,10 +76,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     options.target = options.target || ol_ext_element.create('DIV')
     var printCtrl = this._printCtrl = new ol_control_Print(options)
     printCtrl.on(['print', 'error', 'printing'], function (e) {
-      content.setAttribute('data-status', e.type)
-      if (!e.clipboard) {
-        this.dispatchEvent(e)
-      }
+      this._printing(e)
     }.bind(this))
 
     // North arrow
@@ -351,6 +348,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
               orient: this.getOrientation(),
               margin: this.getMargin(),
             }, this.formats[save.value])
+            console.log('4OPTIONS',opt)
             printCtrl.print(opt)
           }
           save.value = ''
@@ -513,14 +511,14 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
       document.body.classList.add('ol-print-document')
       originalTarget = map.getTargetElement()
       originalSize = map.getSize()
-      if (typeof (this.getSize()) === 'string')
+      if (typeof (this.getSize()) === 'string') {
         this.setSize(this.getSize())
-      else
+      } else {
         this.setSize(originalSize)
+      }
       map.setTarget(printMap)
       // Refresh on move end
-      if (scalelistener)
-        ol_Observable_unByKey(scalelistener)
+      if (scalelistener) ol_Observable_unByKey(scalelistener)
       scalelistener = map.on('moveend', function () {
         this.setScale(ol_sphere_getMapScale(map))
       }.bind(this))
@@ -573,12 +571,10 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     printDialog.on('hide', function () {
       // No print
       document.body.classList.remove('ol-print-document')
-      if (!originalTarget)
-        return
+      if (!originalTarget) return
       this.getMap().setTarget(originalTarget)
       originalTarget = null
-      if (scalelistener)
-        ol_Observable_unByKey(scalelistener)
+      if (scalelistener) ol_Observable_unByKey(scalelistener)
       // restore
       if (extraCtrl.title) {
         extraCtrl.title.control.setVisible(extraCtrl.title.isVisible)
@@ -658,6 +654,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
    */
   setOrientation(ori) {
     this._orientation = (ori === 'landscape' ? 'landscape' : 'portrait')
+    this._printDialog.element.dataset.orientation = this._orientation
     this._input.orientation[this._orientation].checked = true
     this.setSize()
   }
@@ -686,14 +683,14 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
    */
   setSize(size) {
     // reset status
-    this._printDialog.getContentElement().setAttribute('data-status', '')
+    this._printDialog.getContentElement().dataset.status = ''
 
-    if (size)
+    if (size) {
       this._size = size
-    else
+    } else {
       size = this._size
-    if (!size)
-      return
+    }
+    if (!size) return
 
     if (typeof (size) === 'string') {
       // Test uppercase
@@ -738,6 +735,15 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     }
 
     this.dispatchEvent({ type: 'dialog:refresh' })
+  }
+  /** Dispatch print events
+   * @private
+   */
+  _printing(e) {
+    this._printDialog.getContentElement().dataset.status = e.type
+    if (!e.clipboard) {
+      this.dispatchEvent(e)
+    }
   }
   /** Get dialog content element
    * @return {Element}
@@ -799,20 +805,16 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
    */
   print(options) {
     options = options || {}
-    if (options.size)
-      this.setSize(options.size)
-    if (options.scale)
-      this.setScale(options.scale)
-    if (options.orientation)
-      this.setOrientation(options.orientation)
-    if (options.margin)
-      this.setMargin(options.margin)
+    if (options.size) this.setSize(options.size)
+    if (options.scale) this.setScale(options.scale)
+    if (options.orientation) this.setOrientation(options.orientation)
+    if (options.margin) this.setMargin(options.margin)
     this._printDialog.show()
   }
   /** Get print control
    * @returns {ol_control_Print}
    */
-  getrintControl() {
+  getPrintControl() {
     return this._printCtrl
   }
 }

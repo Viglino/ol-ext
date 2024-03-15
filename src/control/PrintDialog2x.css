@@ -1,0 +1,11 @@
+.ol-ext-print-dialog2x .ol-map,
+.ol-ext-print-dialog2x .ol-map2 {
+  width: 100%;
+  height: 50%;
+}
+.ol-ext-print-dialog2x[data-orientation="landscape"] .ol-map,
+.ol-ext-print-dialog2x[data-orientation="landscape"] .ol-map2 {
+  display: inline-block;
+  width: 50%;
+  height: 100%;
+}
