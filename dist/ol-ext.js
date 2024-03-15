@@ -12863,10 +12863,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
     options.target = options.target || ol.ext.element.create('DIV')
     var printCtrl = this._printCtrl = new ol.control.Print(options)
     printCtrl.on(['print', 'error', 'printing'], function (e) {
-      content.setAttribute('data-status', e.type)
-      if (!e.clipboard) {
-        this.dispatchEvent(e)
-      }
+      this._printing(e)
     }.bind(this))
     // North arrow
     this._compass = new ol.control.Compass({
@@ -13125,6 +13122,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
               orient: this.getOrientation(),
               margin: this.getMargin(),
             }, this.formats[save.value])
+            console.log('4OPTIONS',opt)
             printCtrl.print(opt)
           }
           save.value = ''
@@ -13283,14 +13281,14 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
       document.body.classList.add('ol-print-document')
       originalTarget = map.getTargetElement()
       originalSize = map.getSize()
-      if (typeof (this.getSize()) === 'string')
+      if (typeof (this.getSize()) === 'string') {
         this.setSize(this.getSize())
-      else
+      } else {
         this.setSize(originalSize)
+      }
       map.setTarget(printMap)
       // Refresh on move end
-      if (scalelistener)
-        ol.Observable.unByKey(scalelistener)
+      if (scalelistener) ol.Observable.unByKey(scalelistener)
       scalelistener = map.on('moveend', function () {
         this.setScale(ol.sphere.getMapScale(map))
       }.bind(this))
@@ -13342,12 +13340,10 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
     printDialog.on('hide', function () {
       // No print
       document.body.classList.remove('ol-print-document')
-      if (!originalTarget)
-        return
+      if (!originalTarget) return
       this.getMap().setTarget(originalTarget)
       originalTarget = null
-      if (scalelistener)
-        ol.Observable.unByKey(scalelistener)
+      if (scalelistener) ol.Observable.unByKey(scalelistener)
       // restore
       if (extraCtrl.title) {
         extraCtrl.title.control.setVisible(extraCtrl.title.isVisible)
@@ -13425,6 +13421,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
    */
   setOrientation(ori) {
     this._orientation = (ori === 'landscape' ? 'landscape' : 'portrait')
+    this._printDialog.element.dataset.orientation = this._orientation
     this._input.orientation[this._orientation].checked = true
     this.setSize()
   }
@@ -13453,13 +13450,13 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
    */
   setSize(size) {
     // reset status
-    this._printDialog.getContentElement().setAttribute('data-status', '')
-    if (size)
+    this._printDialog.getContentElement().dataset.status = ''
+    if (size) {
       this._size = size
-    else
+    } else {
       size = this._size
-    if (!size)
-      return
+    }
+    if (!size) return
     if (typeof (size) === 'string') {
       // Test uppercase
       for (var k in this.paperSize) {
@@ -13500,6 +13497,15 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
       this.getMap().updateSize()
     }
     this.dispatchEvent({ type: 'dialog:refresh' })
+  }
+  /** Dispatch print events
+   * @private
+   */
+  _printing(e) {
+    this._printDialog.getContentElement().dataset.status = e.type
+    if (!e.clipboard) {
+      this.dispatchEvent(e)
+    }
   }
   /** Get dialog content element
    * @return {Element}
@@ -13561,20 +13567,16 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
    */
   print(options) {
     options = options || {}
-    if (options.size)
-      this.setSize(options.size)
-    if (options.scale)
-      this.setScale(options.scale)
-    if (options.orientation)
-      this.setOrientation(options.orientation)
-    if (options.margin)
-      this.setMargin(options.margin)
+    if (options.size) this.setSize(options.size)
+    if (options.scale) this.setScale(options.scale)
+    if (options.orientation) this.setOrientation(options.orientation)
+    if (options.margin) this.setMargin(options.margin)
     this._printDialog.show()
   }
   /** Get print control
    * @returns {ol.control.Print}
    */
-  getrintControl() {
+  getPrintControl() {
     return this._printCtrl
   }
 }
@@ -13731,6 +13733,130 @@ ol.control.PrintDialog.prototype.scales = {
   ' 250000': '1/250.000',
   ' 1000000': '1/1.000.000'
 };
+
+/** Print control to get an image of the map
+ * @constructor
+ * @fire show
+ * @fire print
+ * @fire error
+ * @fire printing
+ * @extends {ol.control.PrintDialog}
+ */
+ol.control.PrintDialog2x = class olcontrolPrintDialog2x extends ol.control.PrintDialog {
+  constructor(options) {
+    options = options || {}
+    super(options);
+    this._printDialog.element.classList.add('ol-ext-print-dialog2x')
+    // Add printmap
+    var printMap = ol.ext.element.create('DIV', {
+      className: 'ol-map2',
+      parent: this._pages[0]
+    })
+    // Print control
+    var printCtrl2 = this._printCtrl2 = new ol.control.Print(options)
+    printCtrl2.on(['print', 'error', 'printing'], function (e) {
+      console.log(e)
+      if (e.type === 'print') {
+        var canvas = document.createElement('canvas');
+        if (this.getOrientation() === 'landscape') {
+          canvas.width = this._canvas1.width + e.canvas.width;
+          canvas.height = this._canvas1.height;
+        } else {
+          canvas.width = this._canvas1.width;
+          canvas.height = this._canvas1.height + e.canvas.height;
+        }
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(this._canvas1, 0, 0);
+        ctx.drawImage(e.canvas, 
+          (this.getOrientation() === 'landscape' ? this._canvas1.width : 0), 
+          (this.getOrientation() !== 'landscape' ? this._canvas1.height : 0), 
+        );
+        e.canvas = canvas;
+      }
+      if (this._clipboard) {
+        try {
+          e.canvas.toBlob(function (blob) {
+            try {
+              navigator.clipboard.write([
+                new window.ClipboardItem(
+                  Object.defineProperty({}, blob.type, {
+                    value: blob,
+                    enumerable: true
+                  })
+                )
+              ]);
+              this.dispatchEvent(e)
+            } catch (err) {
+              // this.dispatchEvent(e)
+            }
+          });
+        } catch (err) {
+          // this.dispatchEvent(e)
+        }
+      } else {
+        this.dispatchEvent(e)
+      }
+    }.bind(this))
+    // Show map 2
+    var originalTarget
+    this._printDialog.on('show', function() {
+      if (this.getMap2()) {
+        originalTarget = this.getMap2().getTargetElement()
+        this.getMap2().setTarget(printMap)
+      }
+    }.bind(this))
+    this._printDialog.on('hide', function () {
+      if (!originalTarget) return
+      if (this.getMap2()) {
+        this.getMap2().setTarget(originalTarget)
+      }
+      originalTarget = null
+    }.bind(this))
+  }
+  /** Set the second map to print
+   * @param {ol.Map} map
+   * @API
+   */
+  setMap2(map) {
+    if (this.getMap2()) {
+      this.getMap2().removeControl(this._printCtrl2)
+    }
+    this._map2 = map;
+    if (map) {
+      this.getMap2().addControl(this._printCtrl2)
+    }
+  }
+  /** Set the second map to print
+   * @returns {ol.Map}
+   * @API
+   */
+  getMap2() {
+    return this._map2;
+  }
+  /** First map printing
+   * @private
+   */
+  _printing(e) {
+    this._printDialog.getContentElement().dataset.status = e.type
+    if (e.type === 'print') {
+      this._canvas1 = e.canvas
+      this._clipboard = e.clipboard
+      console.log(e)
+      this._printCtrl2.print({
+        format: e.print.format,
+        imageType: e.imageType,
+        margin: e.margin,
+        pdf: e.pdf,
+        orient: e.print.orientation,
+        quality: e.quality,
+        size: e.print.size,
+        title: e.title
+      })
+    } else if (!e.clipboard) {
+      this.dispatchEvent(e)
+    }
+  }
+}
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO, 
   released under the CeCILL-B license (French BSD license)
