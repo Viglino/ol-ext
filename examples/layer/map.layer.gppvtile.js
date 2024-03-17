@@ -55,7 +55,8 @@ var vlayer = new ol.layer.VectorTile({
     projection: new ol.proj.Projection({code:"EPSG:3857"}),
     //url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
     //url : "https://wxs.ign.fr/choisirgeoportail/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
-    url : "https://wxs.ign.fr/essentiels/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
+    url : "https://data.geopf.fr/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
+    // url : "https://wxs.ign.fr/essentiels/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
     // url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
     attributions: '<a href="https://geoservices.ign.fr/blog/2018/07/08/nouveautes_vecteur.html">&copy; IGN-Géoportail</a>',
   }),
@@ -71,7 +72,7 @@ var baseStyles = {};
 
 ol.ext.Ajax.get({
   //url: './styles/planign.json',
-  url: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/standard.json',
+  url: 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json',
   // url: 'https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/static/vectorTiles/styles/PLAN.IGN/classique.json',
   // url: 'https://vectortiles.ign.fr/demonstrateur/styles/planign.json',
   //url: 'http://calac-4.ign.fr/pyramide_ecran/style_mapbox.json',
@@ -98,7 +99,7 @@ ol.ext.Ajax.get({
   })
   ol.ext.Ajax.get({
     //url: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
-    url: 'https://wxs.ign.fr/essentiels/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
+    url: 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/'+s+'.json',
     success: function(style) {
       baseStyles[s] = style;
     }
