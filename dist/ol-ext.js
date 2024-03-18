@@ -13105,27 +13105,22 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
     var save = ol.ext.element.create('SELECT', {
       on: {
         change: function () {
-          // Copy to clipboard
-          if (this.formats[save.value].clipboard) {
-            printCtrl.copyMap(this.formats[save.value], function (isok) {
-              if (isok) {
-                copied.classList.add('visible')
-                setTimeout(function () { copied.classList.remove('visible') }, 1000)
-              }
-            })
-          } else {
-            // Print to file
-            var format = (typeof (this.getSize()) === 'string' ? this.getSize() : null)
-            var opt = Object.assign({
-              format: format,
-              size: format ? this.paperSize[format] : null,
-              orient: this.getOrientation(),
-              margin: this.getMargin(),
-            }, this.formats[save.value])
-            console.log('4OPTIONS',opt)
-            printCtrl.print(opt)
-          }
+          var saveas = save.value;
           save.value = ''
+          // Copy to clipboard
+          if (this.formats[saveas].clipboard) {
+            if (this._copyMap(saveas)) return;
+          } 
+          // Print to file
+          var format = (typeof (this.getSize()) === 'string' ? this.getSize() : null)
+          var opt = Object.assign({
+            format: format,
+            size: format ? this.paperSize[format] : null,
+            orient: this.getOrientation(),
+            margin: this.getMargin(),
+          }, this.formats[saveas])
+          // console.log('OPTIONS',opt)
+          printCtrl.print(opt)
         }.bind(this)
       },
       parent: li
@@ -13507,6 +13502,21 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
       this.dispatchEvent(e)
     }
   }
+  /** Copy map to clipboard
+   * @param {string} format
+   * @return {boolean} if copy
+   * @private
+   */
+  _copyMap(format) {
+    var copied = this._printDialog.element.querySelector('.ol-clipboard-copy')
+    this._printCtrl.copyMap(this.formats[format], function (isok) {
+      if (isok) {
+        copied.classList.add('visible')
+        setTimeout(function () { copied.classList.remove('visible') }, 1000)
+      }
+    })
+    return true
+  }
   /** Get dialog content element
    * @return {Element}
    */
@@ -13755,7 +13765,6 @@ ol.control.PrintDialog2x = class olcontrolPrintDialog2x extends ol.control.Print
     // Print control
     var printCtrl2 = this._printCtrl2 = new ol.control.Print(options)
     printCtrl2.on(['print', 'error', 'printing'], function (e) {
-      console.log(e)
       if (e.type === 'print') {
         var canvas = document.createElement('canvas');
         if (this.getOrientation() === 'landscape') {
@@ -13772,6 +13781,17 @@ ol.control.PrintDialog2x = class olcontrolPrintDialog2x extends ol.control.Print
           (this.getOrientation() !== 'landscape' ? this._canvas1.height : 0), 
         );
         e.canvas = canvas;
+        e.image = canvas.toDataURL(e.imageType, e.quality);
+        var w = canvas.width / 96 * 25.4
+        var h = canvas.height / 96 * 25.4
+        var size = e.print.size
+        if (this.getOrientation() === 'landscape') size = [size[1], size[0]]
+        e.print.position = [
+          (size[0] - w) / 2,
+          (size[1] - h) / 2
+        ]
+        e.print.imageWidth = w;
+        e.print.imageHeight = h;
       }
       if (this._clipboard) {
         try {
@@ -13785,11 +13805,16 @@ ol.control.PrintDialog2x = class olcontrolPrintDialog2x extends ol.control.Print
                   })
                 )
               ]);
-              this.dispatchEvent(e)
+              //this.dispatchEvent(e)
+              // Show copy
+              var copied = this._printDialog.element.querySelector('.ol-clipboard-copy')
+              copied.classList.add('visible')
+              setTimeout(function () { copied.classList.remove('visible') }, 1000)
+              // OK
             } catch (err) {
               // this.dispatchEvent(e)
             }
-          });
+          }.bind(this));
         } catch (err) {
           // this.dispatchEvent(e)
         }
@@ -13841,7 +13866,6 @@ ol.control.PrintDialog2x = class olcontrolPrintDialog2x extends ol.control.Print
     if (e.type === 'print') {
       this._canvas1 = e.canvas
       this._clipboard = e.clipboard
-      console.log(e)
       this._printCtrl2.print({
         format: e.print.format,
         imageType: e.imageType,
@@ -13855,6 +13879,13 @@ ol.control.PrintDialog2x = class olcontrolPrintDialog2x extends ol.control.Print
     } else if (!e.clipboard) {
       this.dispatchEvent(e)
     }
+  }
+  /** Prevent first copy
+   * @private
+   */
+  _copyMap(format) { 
+    /* prevent first copy */ 
+    return false
   }
 }
 
