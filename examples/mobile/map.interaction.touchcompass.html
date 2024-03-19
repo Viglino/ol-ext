@@ -53,11 +53,7 @@
   <script type="text/javascript">
 
   // Two base layers
-  var stamen = new ol.layer.Tile({
-    title: "Watercolor",
-    baseLayer: true,
-    source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
-  });
+  var layer = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
 
   // GeoJSON layer with a preview attribute
   var vectorSource = new ol.source.Vector({
@@ -81,7 +77,7 @@
       zoom: 6,
       center: [173664, 6166327]
     }),
-    layers: [stamen, vector]
+    layers: [layer, vector]
   });
 
   // Select interaction

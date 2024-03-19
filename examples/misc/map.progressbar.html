@@ -64,18 +64,9 @@
   <script type="text/javascript">
   // Layers
   var layers = [
-  new ol.layer.Tile({
-      title:'terrain',
-      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_background' })
-    }),
-    new ol.layer.Tile({
-      title:'line',
-      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_lines' })
-    }),
-    new ol.layer.Tile({
-      title: 'label',
-      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' })
-    })
+    new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }),
+    new ol.layer.Geoportail({ layer: 'TRANSPORTNETWORKS.ROADS' }),
+    new ol.layer.Geoportail({ layer: 'GEOGRAPHICALNAMES.NAMES' }),
   ];
 
   // The map

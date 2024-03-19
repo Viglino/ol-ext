@@ -162,12 +162,7 @@
   
   <script type="text/javascript">
   // Layers
-  var layers = [
-    new ol.layer.Tile({
-      title:'terrain-background',
-      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
-    })
-  ];
+  var layers = [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }) ]
 
   // Popup overlay
   var popup = new ol.Overlay.Popup ({

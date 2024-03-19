@@ -49,7 +49,7 @@
   var map = new ol.Map({
     target: 'map',
     view: new ol.View({ zoom: 5, center: [166326, 5992663] }),
-    layers: [	new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }) ]
+    layers: [	new ol.layer.Tile({ source: new ol.source.OSM() }) ]
   });
 
   // Set FontAwesome package here

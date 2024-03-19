@@ -47,7 +47,7 @@
   
   <script type="text/javascript">
   // Layers
-  var layer = new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) });
+  var layer = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
     
   // The map
   var map = new ol.Map({
@@ -82,11 +82,12 @@
             color: "#fff",
             width: 2
           }),
-        })
+        }),
+        zIndex: sel ? 1 : 0
       })];
 
       // Show values on select
-      if (sel){
+      if (sel) {
         var sum = feature.get("sum");
       
         var s = 0;
