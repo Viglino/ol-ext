@@ -3362,6 +3362,19 @@ ul.ol-legend li div {
   height: 100%;
 }
 
+.ol-ext-print-dialog2x[data-clip-map] .ol-map,
+.ol-ext-print-dialog2x[data-swipe-orientation] .ol-map {
+  width: 100%!important;
+  height: 100%!important;
+}
+.ol-ext-print-dialog2x[data-clip-map] .ol-map2,
+.ol-ext-print-dialog2x[data-swipe-orientation] .ol-map2 {
+  width: 100%!important;
+  height: 100%!important;
+  position: relative!important;
+  left: 0;
+  top: -100%;
+}
 .ol-profil {
   position: relative;
   -webkit-user-select: none;

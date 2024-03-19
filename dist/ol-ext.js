@@ -12824,7 +12824,7 @@ ol.control.Print = class olcontrolPrint extends ol.control.Control {
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
  *	@param {boolean} options.immediate force print even if render is not complete,  default false
  *	@param {boolean} [options.openWindow=false] open the file in a new window on print
- *	@param {boolean} [options.copy=true] add a copy select option
+ *	@param {boolean} [options.copy=true] add a copy to clipboard select option
  *	@param {boolean} [options.save=true] add a save select option
  *	@param {boolean} [options.pdf=true] add a pdf select option
  *	@param {function} [options.saveAs] a function to save the image as blob
@@ -12860,7 +12860,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
       })
     }
     // Print control
-    options.target = options.target || ol.ext.element.create('DIV')
+    options.target = ol.ext.element.create('DIV')
     var printCtrl = this._printCtrl = new ol.control.Print(options)
     printCtrl.on(['print', 'error', 'printing'], function (e) {
       this._printing(e)
@@ -13097,7 +13097,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
       className: 'ol-saveas',
       parent: ul
     })
-    var copied = ol.ext.element.create('DIV', {
+    ol.ext.element.create('DIV', {
       html: this.i18n('copied'),
       className: 'ol-clipboard-copy',
       parent: li
@@ -13126,7 +13126,6 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
       parent: li
     })
     ol.ext.element.create('OPTION', {
-      html: this.i18n('saveas'),
       style: { display: 'none' },
       value: '',
       parent: save
@@ -13145,6 +13144,10 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
         parent: save
       })
     }.bind(this))
+    // No options
+    if (save.querySelectorAll('option').length === 1) {
+      save.style.display = 'none';
+    }
     // Save Legend
     li = ol.ext.element.create('LI', {
       className: 'ol-savelegend',
@@ -13828,15 +13831,25 @@ ol.control.PrintDialog2x = class olcontrolPrintDialog2x extends ol.control.Print
       if (this.getMap2()) {
         originalTarget = this.getMap2().getTargetElement()
         this.getMap2().setTarget(printMap)
+        if (originalTarget.dataset.swipeOrientation) {
+          this._printDialog.element.dataset.swipeOrientation = originalTarget.dataset.swipeOrientation
+        }
+        if (originalTarget.dataset.clipMap) {
+          this._printDialog.element.dataset.clipMap = originalTarget.dataset.clipMap
+        }
       }
     }.bind(this))
     this._printDialog.on('hide', function () {
+      delete this._printDialog.element.dataset.swipeOrientation
+      delete this._printDialog.element.dataset.clipMap
       if (!originalTarget) return
       if (this.getMap2()) {
         this.getMap2().setTarget(originalTarget)
       }
       originalTarget = null
     }.bind(this))
+    // Add second map
+    if (options.map2) this.setMap2(options.map2)
   }
   /** Set the second map to print
    * @param {ol.Map} map
@@ -17923,6 +17936,9 @@ ol.control.SwipeMap = class olcontrolSwipeMap extends ol.control.Control {
       if (e.key === 'orientation') {
         this.element.classList.remove("horizontal", "vertical");
         this.element.classList.add(this.get('orientation'));
+        if (this.getMap()) {
+          this.getMap().getTargetElement().dataset.swipeOrientation = this.get('orientation')
+        }
       }
       this._clip();
     }.bind(this));
@@ -17936,14 +17952,15 @@ ol.control.SwipeMap = class olcontrolSwipeMap extends ol.control.Control {
    */
   setMap(map) {
     if (this.getMap()) {
-      if (this._listener)
-        ol.Observable.unByKey(this._listener);
+      if (this._listener) ol.Observable.unByKey(this._listener);
       var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
       layerDiv.style.clip = '';
-    }
+      delete this.getMap().getTargetElement().dataset.swipeOrientation
+    } 
     super.setMap(map);
     if (map) {
       this._listener = map.on('change:size', this._clip.bind(this));
+      this._clip();
     }
   }
   /** Clip
@@ -17953,12 +17970,16 @@ ol.control.SwipeMap = class olcontrolSwipeMap extends ol.control.Control {
     if (this.getMap()) {
       var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
       var rect = this.getRectangle();
-      layerDiv.style.clip = 'rect('
+      if (rect) {
+        layerDiv.style.clip = 'rect('
         + rect[1] + 'px,' // top
         + rect[2] + 'px,' // right
         + rect[3] + 'px,' // bottom
         + rect[0] + 'px' //left
         + ')';
+      }
+      // Orientation
+      this.getMap().getTargetElement().dataset.swipeOrientation = this.get('orientation')
     }
   }
   /** Get visible rectangle
@@ -17966,6 +17987,7 @@ ol.control.SwipeMap = class olcontrolSwipeMap extends ol.control.Control {
    */
   getRectangle() {
     var s = this.getMap().getSize();
+    if (!s) return;
     if (this.get('orientation') === 'vertical') {
       if (this.get('right')) {
         return [s[0] * this.get('position'), 0, s[0], s[1]];
@@ -23782,10 +23804,10 @@ ol.interaction.ClipMap = class olinteractionClipMap extends ol.interaction.Point
   */
   setMap(map) {
     if (this.getMap()) {
-      if (this._listener)
-        ol.Observable.unByKey(this._listener);
+      if (this._listener) ol.Observable.unByKey(this._listener);
       var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
       layerDiv.style.clipPath = '';
+      delete this.getMap().getTargetElement().dataset.clipMap
     }
     super.setMap(map);
     if (map) {
@@ -23818,8 +23840,9 @@ ol.interaction.ClipMap = class olinteractionClipMap extends ol.interaction.Point
    * @returns {ol.coordinate}
    */
   getPosition() {
-    if (this.pos)
+    if (this.pos) {
       return this.getMap().getCoordinateFromPixel(this.pos);
+    }
     return null;
   }
   /** Set position of the clip
@@ -23853,7 +23876,7 @@ ol.interaction.ClipMap = class olinteractionClipMap extends ol.interaction.Point
    * @private
    */
   _clip(e) {
-    if (e && e.pixel) {
+    if (e && e.pixel && (e.type==='pointerdown' || !this.get('freeze'))) {
       this.pos = e.pixel;
     }
     if (this.pos && this.getMap()) {
@@ -23863,6 +23886,7 @@ ol.interaction.ClipMap = class olinteractionClipMap extends ol.interaction.Point
         + ' at '
         + this.pos[0] + 'px '
         + this.pos[1] + 'px)';
+      this.getMap().getTargetElement().dataset.clipMap = '1'
     }
   }
 }
