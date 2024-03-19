@@ -54,13 +54,8 @@
   
 <script type="text/javascript">
   // Layers
-  var mapbox = new ol.layer.Tile({
-    title:'terrain-background',
-    source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
-  });
-  var stamen = new ol.layer.Tile({
-    source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) 
-  });
+  var carto = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
+  var ortho = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' });
   var vector = new ol.layer.Vector({
     name: '1914-18',
     className: 'vector',
@@ -79,11 +74,11 @@
       zoom: 5,
       center: [166326, 5992663]
     }),
-    layers: [mapbox, stamen, vector]
+    layers: [ortho, carto, vector]
   });
 
   // Clip interaction
-  var clip = new ol.interaction.Clip({ radius: Number($("#radius").val()), layers:[ stamen, vector ] });
+  var clip = new ol.interaction.Clip({ radius: Number($("#radius").val()), layers:[ carto, vector ] });
   map.addInteraction(clip);
 
 </script>

@@ -83,17 +83,14 @@
     Move the overlays on the map...
     <br/>
     <button onclick="placemark[0].show(map.getView().getCenter())">
-      Show Popup
+      Reset Popup
     </button>
 	</div>
 	
 	<script type="text/javascript">
   // Layers
   var layers = [
-  new ol.layer.Tile({
-			title:'terrain-background',
-			source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
-		})
+    new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' })
   ];
 
 	// The map

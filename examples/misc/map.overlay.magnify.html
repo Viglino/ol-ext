@@ -66,7 +66,7 @@
     Layer: 
     <select onchange="setOVLayer(this.value)">
       <option value="0">OSM</option>
-      <option value="1" selected>Stamen</option>
+      <option value="1" selected>IGN</option>
     </select>
   </div>
 
@@ -78,7 +78,7 @@
         zoom: 15,
         center: [270148, 6247782]
       }),
-      layers: [ new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }) ]
+      layers: [ new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' }) ]
     });
 
     // Layers for the overview
@@ -86,20 +86,20 @@
       new ol.layer.Tile({	
         source: new ol.source.OSM(),
         // Use preload to have tile when moving 
-        preload: 2
+        preload: 12
       }),
-      new ol.layer.Tile({
-        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }),
+      new ol.layer.Geoportail({ 
+        layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
         // Use preload to have tile when moving 
-        preload: 2
+        preload: 12
       })
     ];
     var layersOV2 = [
       new ol.layer.Tile({	source: new ol.source.OSM()	}),
-      new ol.layer.Tile({
-        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }),
+      new ol.layer.Geoportail({ 
+        layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',
         // Use preload to have tile when moving 
-        preload: 2
+        preload: 12
       })
     ];
     setOVLayer($(".options select").val());
@@ -107,14 +107,14 @@
     // New control on the map
     var ov = new ol.Overlay.Magnify({
       layers: layersOV1,
-      zoomOffset: $("#zoom").val(),
+      zoomOffset: Number($("#zoom").val()),
     });
     map.addOverlay(ov);
 
     var ov2 = new ol.Overlay.Magnify({
       layers: layersOV2,
       target: $(".overview").get(0),
-      zoomOffset: $("#zoom").val(),
+      zoomOffset: Number($("#zoom").val()),
     });
     map.addOverlay(ov2);
 

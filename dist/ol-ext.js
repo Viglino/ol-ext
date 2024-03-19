@@ -37214,7 +37214,7 @@ ol.Overlay.Magnify = class olOverlayMagnify extends ol.Overlay {
     super.setMap(map)
     map.getViewport().addEventListener("mousemove", this.onMouseMove_.bind(this))
     this._listener = map.getView().on('propertychange', this.setView_.bind(this))
-    this.setView_()
+    this.refresh()
   }
   /** Get the magnifier map
   *	@return {_ol_Map_}
@@ -37232,7 +37232,9 @@ ol.Overlay.Magnify = class olOverlayMagnify extends ol.Overlay {
   *	@param {boolean} active
   */
   setActive(active) {
-    return this.set("active", active)
+    this.set("active", active)
+    this.refreh();
+    return this.getActive()
   }
   /** Mouse move
    * @private
@@ -37241,18 +37243,35 @@ ol.Overlay.Magnify = class olOverlayMagnify extends ol.Overlay {
     if (!this.get("active")) {
       this.setPosition()
     } else {
+      var isPosition = this.getPosition()
       var px = this.getMap().getEventCoordinate(e)
-      if (!this.external_) this.setPosition(px)
+      if (!this.external_) {
+        this.setPosition(px)
+      }
       this.mgview_.setCenter(px)
-      if (!this._elt.querySelector('canvas') || this._elt.querySelector('canvas').style.display == "none"){
+      /*
+      if (!this._elt.querySelector('canvas') || this._elt.querySelector('canvas').style.display === "none"){
         this.mgmap_.updateSize()
       }
+      */
+      if (!this.external_ && !isPosition) {
+        this.refresh()
+      }
     }
+  }
+  /** Refresh the view
+   */
+  refresh() {
+    this.mgmap_.updateSize()
+    this.setView_();
   }
   /** View has changed
    * @private
    */
   setView_(e) {
+    // No map
+    if (!this.getMap()) return
+    // Not active
     if (!this.get("active")) {
       this.setPosition()
       return
