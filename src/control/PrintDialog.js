@@ -34,7 +34,7 @@ import ol_control_Compass from './Compass.js';
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
  *	@param {boolean} options.immediate force print even if render is not complete,  default false
  *	@param {boolean} [options.openWindow=false] open the file in a new window on print
- *	@param {boolean} [options.copy=true] add a copy select option
+ *	@param {boolean} [options.copy=true] add a copy to clipboard select option
  *	@param {boolean} [options.save=true] add a save select option
  *	@param {boolean} [options.pdf=true] add a pdf select option
  *	@param {function} [options.saveAs] a function to save the image as blob
@@ -73,7 +73,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     }
 
     // Print control
-    options.target = options.target || ol_ext_element.create('DIV')
+    options.target = ol_ext_element.create('DIV')
     var printCtrl = this._printCtrl = new ol_control_Print(options)
     printCtrl.on(['print', 'error', 'printing'], function (e) {
       this._printing(e)
@@ -323,7 +323,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
       className: 'ol-saveas',
       parent: ul
     })
-    var copied = ol_ext_element.create('DIV', {
+    ol_ext_element.create('DIV', {
       html: this.i18n('copied'),
       className: 'ol-clipboard-copy',
       parent: li
@@ -352,7 +352,6 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
       parent: li
     })
     ol_ext_element.create('OPTION', {
-      html: this.i18n('saveas'),
       style: { display: 'none' },
       value: '',
       parent: save
@@ -371,6 +370,10 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
         parent: save
       })
     }.bind(this))
+    // No options
+    if (save.querySelectorAll('option').length === 1) {
+      save.style.display = 'none';
+    }
 
     // Save Legend
     li = ol_ext_element.create('LI', {

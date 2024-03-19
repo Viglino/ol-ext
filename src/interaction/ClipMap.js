@@ -26,10 +26,10 @@ var ol_interaction_ClipMap = class olinteractionClipMap extends ol_interaction_P
   */
   setMap(map) {
     if (this.getMap()) {
-      if (this._listener)
-        ol_Observable_unByKey(this._listener);
+      if (this._listener) ol_Observable_unByKey(this._listener);
       var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
       layerDiv.style.clipPath = '';
+      delete this.getMap().getTargetElement().dataset.clipMap
     }
 
     super.setMap(map);
@@ -64,8 +64,9 @@ var ol_interaction_ClipMap = class olinteractionClipMap extends ol_interaction_P
    * @returns {ol.coordinate}
    */
   getPosition() {
-    if (this.pos)
+    if (this.pos) {
       return this.getMap().getCoordinateFromPixel(this.pos);
+    }
     return null;
   }
   /** Set position of the clip
@@ -99,7 +100,7 @@ var ol_interaction_ClipMap = class olinteractionClipMap extends ol_interaction_P
    * @private
    */
   _clip(e) {
-    if (e && e.pixel) {
+    if (e && e.pixel && (e.type==='pointerdown' || !this.get('freeze'))) {
       this.pos = e.pixel;
     }
 
@@ -110,6 +111,7 @@ var ol_interaction_ClipMap = class olinteractionClipMap extends ol_interaction_P
         + ' at '
         + this.pos[0] + 'px '
         + this.pos[1] + 'px)';
+      this.getMap().getTargetElement().dataset.clipMap = '1'
     }
   }
 }

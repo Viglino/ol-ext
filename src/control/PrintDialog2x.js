@@ -90,15 +90,27 @@ var ol_control_PrintDialog2x = class olcontrolPrintDialog2x extends ol_control_P
       if (this.getMap2()) {
         originalTarget = this.getMap2().getTargetElement()
         this.getMap2().setTarget(printMap)
+        if (originalTarget.dataset.swipeOrientation) {
+          this._printDialog.element.dataset.swipeOrientation = originalTarget.dataset.swipeOrientation
+        }
+        if (originalTarget.dataset.clipMap) {
+          this._printDialog.element.dataset.clipMap = originalTarget.dataset.clipMap
+        }
       }
     }.bind(this))
     this._printDialog.on('hide', function () {
+      delete this._printDialog.element.dataset.swipeOrientation
+      delete this._printDialog.element.dataset.clipMap
       if (!originalTarget) return
       if (this.getMap2()) {
         this.getMap2().setTarget(originalTarget)
+
       }
       originalTarget = null
     }.bind(this))
+
+    // Add second map
+    if (options.map2) this.setMap2(options.map2)
   }
   /** Set the second map to print
    * @param {ol.Map} map

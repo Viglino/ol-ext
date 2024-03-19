@@ -145,16 +145,8 @@
 
   <script type="text/javascript">
   // Layers
-  var mapbox = new ol.layer.Tile({
-    minResolution: 306,
-    source: new ol.source.XYZ({
-      url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
-      attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
-    })
-  });
-  var stamen = new ol.layer.Tile({
-    source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) 
-  });
+  var carto = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' })
+  var ortho = new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS')
 
   // The map
   var map = new ol.Map ({
@@ -163,9 +155,7 @@
       zoom: 10,
       center: [262600, 6250704]
     }),
-    layers: [ new ol.layer.Tile({
-      source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) 
-    })]
+    layers: [ carto ]
   });
 
   var map2 = new ol.Map ({
@@ -174,10 +164,34 @@
       zoom: 5,
       center: [166326, 5992663]
     }),
-    layers: [ new ol.layer.Tile({
-      source: new ol.source.StadiaMaps({ layer: 'stamen_toner' }) 
-    })]
+    layers: [ ortho ]
   });
+
+  // Print dialog
+  var printDlg = new ol.control.PrintDialog2x({ 
+    target: document.body,
+    save: false,
+    copy: false,
+    pdf: false,
+    map2: map2 
+  })
+  printDlg.setSize('A4');
+  // Freeze clip on show
+  printDlg.on(['show', 'hide'], function(e) {
+    clip.set('freeze', e.type==='show')
+  })
+  map.addControl(printDlg)
+  ol.ext.element.create('BUTTON', { 
+    text: 'Print (Crl+P)',
+    click: function() { printDlg.print() },
+    parent: document.body
+  })
+  document.addEventListener('keydown', function(e) {
+    if (e.key==='p' && e.ctrlKey) {
+      e.preventDefault();
+      printDlg.print()
+    }
+  })
 
   function getLayer() {
     return new ol.layer.Vector({
@@ -191,6 +205,8 @@
       })
     });
   }
+
+  // Layer over map
   map.addLayer(getLayer());
   map2.addLayer(getLayer());
 
