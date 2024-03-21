@@ -352,6 +352,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
       parent: li
     })
     ol_ext_element.create('OPTION', {
+      html: this.i18n('saveas'),
       style: { display: 'none' },
       value: '',
       parent: save

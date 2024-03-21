@@ -28,7 +28,39 @@ var ol_control_PrintDialog2x = class olcontrolPrintDialog2x extends ol_control_P
     printCtrl2.on(['print', 'error', 'printing'], function (e) {
       if (e.type === 'print') {
         var canvas = document.createElement('canvas');
-        if (this.getOrientation() === 'landscape') {
+        // Get clipping (ol/control/SwipeMap or ol/control/ClipMap)
+        var clipDiv = printMap.querySelector('.ol-layers');
+        var clip = clipDiv.style.clipPath || clipDiv.style.clip
+        // Print in canvas
+        if (clip) {
+          var param = clip.replace(/^(.*)\((.*)\)/, '$2');
+          clip = {
+            type: clip.replace(/^(.*)\(.*/, '$1'),
+          }
+          switch(clip.type) {
+            case 'circle': {
+              var param = param.split(' ')
+              clip.radius = parseFloat(param[0]);
+              clip.x = parseFloat(param[2]);
+              clip.y = parseFloat(param[3]);
+              break;
+            }
+            case 'rect': {
+              var param = param.split(',')
+              clip.top = parseFloat(param[0]);
+              clip.right = parseFloat(param[1]);
+              clip.bottom = parseFloat(param[2]);
+              clip.left = parseFloat(param[3]);
+              break;
+            }
+            default: {
+              console.warn('no clip (' + clip.type + ')')
+              break;
+            }
+          }
+          canvas.width = this._canvas1.width;
+          canvas.height = this._canvas1.height;
+        } else if (this.getOrientation() === 'landscape') {
           canvas.width = this._canvas1.width + e.canvas.width;
           canvas.height = this._canvas1.height;
         } else {
@@ -37,10 +69,29 @@ var ol_control_PrintDialog2x = class olcontrolPrintDialog2x extends ol_control_P
         }
         var ctx = canvas.getContext('2d');
         ctx.drawImage(this._canvas1, 0, 0);
-        ctx.drawImage(e.canvas, 
-          (this.getOrientation() === 'landscape' ? this._canvas1.width : 0), 
-          (this.getOrientation() !== 'landscape' ? this._canvas1.height : 0), 
-        );
+        if (clip) {
+          ctx.save()
+          switch (clip.type) {
+            case 'rect': {
+              ctx.beginPath();
+              ctx.rect(clip.left, clip.top, clip.right - clip.left, clip.bottom - clip.top)
+              break;
+            }
+            case 'circle': {
+              ctx.beginPath();
+              ctx.arc(clip.x, clip.y, clip.radius, 0, Math.PI * 2);
+              break;
+            }
+          }
+          ctx.clip()
+          ctx.drawImage(e.canvas, 0, 0);
+          ctx.restore()
+        } else {
+          ctx.drawImage(e.canvas, 
+            (this.getOrientation() === 'landscape' ? this._canvas1.width : 0), 
+            (this.getOrientation() !== 'landscape' ? this._canvas1.height : 0), 
+          );
+        }
         e.canvas = canvas;
         e.image = canvas.toDataURL(e.imageType, e.quality);
         var w = canvas.width / 96 * 25.4
