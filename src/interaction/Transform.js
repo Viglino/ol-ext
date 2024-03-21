@@ -156,11 +156,11 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
     super.setActive(b)
   }
   /** Set default sketch style
-   * @param {Object|undefined} options
-   *  @param {ol_style_Stroke} stroke stroke style for selection rectangle
-   *  @param {ol_style_Fill} fill fill style for selection rectangle
-   *  @param {ol_style_Stroke} pointStroke stroke style for handles
-   *  @param {ol_style_Fill} pointFill fill style for handles
+   * @param {Object} [options]
+   *  @param {ol_style_Stroke} [stroke] stroke style for selection rectangle, default red dash
+   *  @param {ol_style_Fill} [fill] fill style for selection rectangle, default red
+   *  @param {ol_style_Stroke} [pointStroke] stroke style for handles, default red
+   *  @param {ol_style_Fill} [pointFill] fill style for handles, default white
    */
   setDefaultStyle(options) {
     options = options || {}

@@ -39,14 +39,14 @@ var ol_control_PrintDialog2x = class olcontrolPrintDialog2x extends ol_control_P
           }
           switch(clip.type) {
             case 'circle': {
-              var param = param.split(' ')
+              param = param.split(' ')
               clip.radius = parseFloat(param[0]);
               clip.x = parseFloat(param[2]);
               clip.y = parseFloat(param[3]);
               break;
             }
             case 'rect': {
-              var param = param.split(',')
+              param = param.split(',')
               clip.top = parseFloat(param[0]);
               clip.right = parseFloat(param[1]);
               clip.bottom = parseFloat(param[2]);
@@ -89,7 +89,7 @@ var ol_control_PrintDialog2x = class olcontrolPrintDialog2x extends ol_control_P
         } else {
           ctx.drawImage(e.canvas, 
             (this.getOrientation() === 'landscape' ? this._canvas1.width : 0), 
-            (this.getOrientation() !== 'landscape' ? this._canvas1.height : 0), 
+            (this.getOrientation() !== 'landscape' ? this._canvas1.height : 0)
           );
         }
         e.canvas = canvas;
@@ -208,7 +208,7 @@ var ol_control_PrintDialog2x = class olcontrolPrintDialog2x extends ol_control_P
   /** Prevent first copy
    * @private
    */
-  _copyMap(format) { 
+  _copyMap(/* format */) { 
     /* prevent first copy */ 
     return false
   }
