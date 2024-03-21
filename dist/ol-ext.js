@@ -29735,6 +29735,8 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
       style: function (feature) {
         return (self.style[(feature.get('handle') || 'default') + (feature.get('constraint') || '') + (feature.get('option') || '')])
       },
+      updateWhileAnimating: true,
+      updateWhileInteracting: true,
     })
     // Collection of feature to transform
     this.features_ = options.features
