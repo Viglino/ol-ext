@@ -8,7 +8,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <meta name="description" content="Use the French Geoportail service to get elevations on geometry." />
-  <meta name="keywords" content="openlayers, profil, 3D, Z, altitude, elevation" />
+  <meta name="keywords" content="openlayers, profile, 3D, Z, altitude, elevation" />
 
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
@@ -35,7 +35,7 @@
   <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
 
   <a href="../../index.html">
-    <h1>ol-ext: ol control profil</h1>
+    <h1>ol-ext: ol control profile</h1>
   </a>
   <div class="info">
     <i>ol/geom/GPAltiCode</i> use the French Geoportail service to get elevations on geometry (LineString or Point).
@@ -63,7 +63,7 @@
 
   <div class="options">
     <i>Draw a line on the map...</i>
-    <h2>Profil:</h2>
+    <h2>Profile:</h2>
   </div>
 
   <script type="text/javascript">
@@ -81,8 +81,8 @@
   });
   map.addControl(new ol.control.Permalink({ visible: false }));
 
-  // New profil outside the map
-  var profil = new ol.control.Profil({
+  // New profile outside the map
+  var profile = new ol.control.Profile({
     target: document.querySelector(".options"),
     // zoomable: true,
     style: new ol.style.Style({
@@ -90,7 +90,7 @@
     }),
     width:400, height:200
   });
-  map.addControl(profil);
+  map.addControl(profile);
 
   // Vector layer
   var source = new ol.source.Vector();
@@ -105,7 +105,7 @@
   pt.setStyle([]);
   source.addFeature(pt);
 
-  // Draw a point on the map when mouse fly over profil
+  // Draw a point on the map when mouse fly over profile
   function drawPoint(e) {
     if (!pt) return;
     if (e.type=="over"){
@@ -118,8 +118,8 @@
     }
   };
   // Show a popup on over
-  profil.on(["over","out"], function(e) {
-    if (e.type=="over") profil.popup(e.coord[2]+" m");
+  profile.on(["over","out"], function(e) {
+    if (e.type=="over") profile.popup(e.coord[2]+" m");
     drawPoint(e);
   });
 

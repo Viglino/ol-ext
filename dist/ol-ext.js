@@ -13995,9 +13995,9 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
     var self = this
     this.info = options.info || ol.control.Profil.prototype.info
     if (options.target) {
-      element.classList.add(options.className || 'ol-profil')
+      element.classList.add(options.className || 'ol-profile')
     } else {
-      element.className = ((options.className || 'ol-profil') + ' ol-unselectable ol-control ol-collapsed').trim()
+      element.className = ((options.className || 'ol-profile') + ' ol-unselectable ol-control ol-collapsed').trim()
       this.button = document.createElement('button')
       this.button.title = options.title || 'Profile';
       this.button.setAttribute('type', 'button')
@@ -14702,6 +14702,7 @@ ol.control.Profil.prototype.info = {
   "distanceUnitsM": "m",
   "distanceUnitsKM": "km",
 };
+ol.control.Profile = ol.control.Profil
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
