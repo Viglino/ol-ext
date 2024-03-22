@@ -13960,7 +13960,7 @@ ol.control.PrintDialog2x = class olcontrolPrintDialog2x extends ol.control.Print
 */
 /*eslint no-constant-condition: ["error", { "checkLoops": false }]*/
 /**
- * @classdesc OpenLayers 3 Profil Control.
+ * @classdesc OpenLayers 3 Profile Control.
  * Draw a profile of a feature (with a 3D geometry)
  *
  * @constructor
@@ -13975,16 +13975,16 @@ ol.control.PrintDialog2x = class olcontrolPrintDialog2x extends ol.control.Print
  * @param {Object=} options
  *  @param {string} options.className
  *	@param {String} options.title button title
- *  @param {ol.style.Style} [options.style] style to draw the profil, default darkblue
+ *  @param {ol.style.Style} [options.style] style to draw the profile, default darkblue
  *  @param {ol.style.Style} [options.selectStyle] style for selection, default darkblue fill
  *  @param {*} options.info keys/values for i19n
  *  @param {number} [options.width=300]
  *  @param {number} [options.height=150]
- *  @param {ol.Feature} [options.feature] the feature to draw profil
- *  @param {boolean} [options.selectable=false] enable selection on the profil, default false
- *  @param {boolean} [options.zoomable=false] can zoom in the profil
+ *  @param {ol.Feature} [options.feature] the feature to draw profile
+ *  @param {boolean} [options.selectable=false] enable selection on the profile, default false
+ *  @param {boolean} [options.zoomable=false] can zoom in the profile
  */
-ol.control.Profil = class olcontrolProfil extends ol.control.Control {
+ol.control.Profile = class olcontrolProfile extends ol.control.Control {
   constructor(options) {
     options = options || {}
     var element = document.createElement('div')
@@ -13993,7 +13993,7 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
       target: options.target
     })
     var self = this
-    this.info = options.info || ol.control.Profil.prototype.info
+    this.info = options.info || ol.control.Profile.prototype.info
     if (options.target) {
       element.classList.add(options.className || 'ol-profile')
     } else {
@@ -14070,15 +14070,15 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
       this.margin_.bottom -= 20 * ratio
     // Cursor
     this.bar_ = document.createElement("div")
-    this.bar_.classList.add("ol-profilbar")
+    this.bar_.classList.add("ol-profilebar")
     this.bar_.style.top = (this.margin_.top / ratio) + "px"
     this.bar_.style.height = (this.canvas_.height - this.margin_.top - this.margin_.bottom) / ratio + "px"
     div.appendChild(this.bar_)
     this.cursor_ = document.createElement("div")
-    this.cursor_.classList.add("ol-profilcursor")
+    this.cursor_.classList.add("ol-profilecursor")
     div.appendChild(this.cursor_)
     this.popup_ = document.createElement("div")
-    this.popup_.classList.add("ol-profilpopup")
+    this.popup_.classList.add("ol-profilepopup")
     this.cursor_.appendChild(this.popup_)
     // Track information
     var t = document.createElement("table")
@@ -14162,7 +14162,7 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
   popup(info) {
     this.popup_.innerHTML = info
   }
-  /** Show point on profil
+  /** Show point on profile
    * @param {*} p
    * @param {number} dx
    * @private
@@ -14189,7 +14189,7 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
       this.bar_.parentElement.classList.remove("over")
     }
   }
-  /** Show point at coordinate or a distance on the profil
+  /** Show point at coordinate or a distance on the profile
    * @param { ol.coordinates|number } where a coordinate or a distance from begining, if none it will hide the point
    * @return { ol.coordinates } current point
    */
@@ -14224,7 +14224,7 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
     }
     return null
   }
-  /** Show point at a time on the profil
+  /** Show point at a time on the profile
    * @param { Date|number } time a Date or a DateTime (in s) to show the profile on, if none it will hide the point
    * @param { booelan } delta true if time is a delta from the start, default false
    * @return { ol.coordinates } current point
@@ -14256,7 +14256,7 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
     }
     return null
   }
-  /** Get the point at a given time on the profil
+  /** Get the point at a given time on the profile
    * @param { number } time time at which to show the point
    * @return { ol.coordinates } current point
    */
@@ -14443,7 +14443,7 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
     }
   }
   /**
-   * Set the geometry to draw the profil.
+   * Set the geometry to draw the profile.
    * @param {ol.Feature|ol.geom.Geometry} f the feature.
    * @param {Object=} options
    *  @param {ol.ProjectionLike} [options.projection] feature projection, default projection of the map
@@ -14522,7 +14522,7 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
     this.dispatchEvent({ type: 'change:geometry', geometry: g })
     this.refresh()
   }
-  /** Refresh the profil
+  /** Refresh the profile
    */
   refresh() {
     var canvas = this.canvas_
@@ -14538,7 +14538,7 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
     var ti = t[t.length - 1][2]
     var i
     if (!d) {
-      console.error('[ol/control/Profil] no data...', t)
+      console.error('[ol/control/Profile] no data...', t)
       return
     }
     // Margin
@@ -14675,7 +14675,7 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
     ctx.restore()
     ctx.stroke()
   }
-  /** Get profil image
+  /** Get profile image
   * @param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
   * @param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
   * @return {string} requested data uri
@@ -14690,7 +14690,7 @@ ol.control.Profil = class olcontrolProfil extends ol.control.Control {
 /** Custom infos list
 * @api stable
 */
-ol.control.Profil.prototype.info = {
+ol.control.Profile.prototype.info = {
   "zmin": "Zmin",
   "zmax": "Zmax",
   "ytitle": "Altitude (m)",
@@ -14702,7 +14702,6 @@ ol.control.Profil.prototype.info = {
   "distanceUnitsM": "m",
   "distanceUnitsKM": "km",
 };
-ol.control.Profile = ol.control.Profil
 
 /*	Copyright (c) 2016 Jean-Marc VIGLINO,
   released under the CeCILL-B license (French BSD license)
