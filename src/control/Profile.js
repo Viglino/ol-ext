@@ -19,7 +19,7 @@ import {ol_coordinate_dist2d} from "../geom/GeomUtils.js";
 import ol_ext_element from '../util/element.js'
 
 /**
- * @classdesc OpenLayers 3 Profil Control.
+ * @classdesc OpenLayers 3 Profile Control.
  * Draw a profile of a feature (with a 3D geometry)
  *
  * @constructor
@@ -34,14 +34,14 @@ import ol_ext_element from '../util/element.js'
  * @param {Object=} options
  *  @param {string} options.className
  *	@param {String} options.title button title
- *  @param {ol.style.Style} [options.style] style to draw the profil, default darkblue
+ *  @param {ol.style.Style} [options.style] style to draw the profile, default darkblue
  *  @param {ol.style.Style} [options.selectStyle] style for selection, default darkblue fill
  *  @param {*} options.info keys/values for i19n
  *  @param {number} [options.width=300]
  *  @param {number} [options.height=150]
- *  @param {ol.Feature} [options.feature] the feature to draw profil
- *  @param {boolean} [options.selectable=false] enable selection on the profil, default false
- *  @param {boolean} [options.zoomable=false] can zoom in the profil
+ *  @param {ol.Feature} [options.feature] the feature to draw profile
+ *  @param {boolean} [options.selectable=false] enable selection on the profile, default false
+ *  @param {boolean} [options.zoomable=false] can zoom in the profile
  */
 var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
   constructor(options) {
@@ -57,9 +57,9 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     var self = this
     this.info = options.info || ol_control_Profil.prototype.info
     if (options.target) {
-      element.classList.add(options.className || 'ol-profil')
+      element.classList.add(options.className || 'ol-profile')
     } else {
-      element.className = ((options.className || 'ol-profil') + ' ol-unselectable ol-control ol-collapsed').trim()
+      element.className = ((options.className || 'ol-profile') + ' ol-unselectable ol-control ol-collapsed').trim()
       this.button = document.createElement('button')
       this.button.title = options.title || 'Profile';
       this.button.setAttribute('type', 'button')
@@ -241,7 +241,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
   popup(info) {
     this.popup_.innerHTML = info
   }
-  /** Show point on profil
+  /** Show point on profile
    * @param {*} p
    * @param {number} dx
    * @private
@@ -268,7 +268,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
       this.bar_.parentElement.classList.remove("over")
     }
   }
-  /** Show point at coordinate or a distance on the profil
+  /** Show point at coordinate or a distance on the profile
    * @param { ol.coordinates|number } where a coordinate or a distance from begining, if none it will hide the point
    * @return { ol.coordinates } current point
    */
@@ -303,7 +303,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     }
     return null
   }
-  /** Show point at a time on the profil
+  /** Show point at a time on the profile
    * @param { Date|number } time a Date or a DateTime (in s) to show the profile on, if none it will hide the point
    * @param { booelan } delta true if time is a delta from the start, default false
    * @return { ol.coordinates } current point
@@ -335,7 +335,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     }
     return null
   }
-  /** Get the point at a given time on the profil
+  /** Get the point at a given time on the profile
    * @param { number } time time at which to show the point
    * @return { ol.coordinates } current point
    */
@@ -525,7 +525,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     }
   }
   /**
-   * Set the geometry to draw the profil.
+   * Set the geometry to draw the profile.
    * @param {ol.Feature|ol.geom.Geometry} f the feature.
    * @param {Object=} options
    *  @param {ol.ProjectionLike} [options.projection] feature projection, default projection of the map
@@ -613,7 +613,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
 
     this.refresh()
   }
-  /** Refresh the profil
+  /** Refresh the profile
    */
   refresh() {
     var canvas = this.canvas_
@@ -632,7 +632,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     var i
 
     if (!d) {
-      console.error('[ol/control/Profil] no data...', t)
+      console.error('[ol/control/Profile] no data...', t)
       return
     }
 
@@ -778,7 +778,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
 
     ctx.stroke()
   }
-  /** Get profil image
+  /** Get profile image
   * @param {string|undefined} type image format or 'canvas' to get the canvas image, default image/png.
   * @param {Number|undefined} encoderOptions between 0 and 1 indicating image quality image/jpeg or image/webp, default 0.92.
   * @return {string} requested data uri
@@ -807,19 +807,5 @@ ol_control_Profil.prototype.info = {
   "distanceUnitsKM": "km",
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-export default ol_control_Profil
+var ol_control_Profile = ol_control_Profil
+export default ol_control_Profile
