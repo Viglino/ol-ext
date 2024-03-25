@@ -807,4 +807,8 @@ ol_control_Profile.prototype.info = {
   "distanceUnitsKM": "km",
 };
 
+// For backward compatibility
+// eslint-disable-next-line no-unused-vars
+var ol_control_Profil = ol_control_Profile;
+
 export default ol_control_Profile
