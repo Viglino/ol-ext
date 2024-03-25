@@ -43,7 +43,7 @@ import ol_ext_element from '../util/element.js'
  *  @param {boolean} [options.selectable=false] enable selection on the profile, default false
  *  @param {boolean} [options.zoomable=false] can zoom in the profile
  */
-var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
+var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
   constructor(options) {
     options = options || {}
 
@@ -55,7 +55,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
     })
     
     var self = this
-    this.info = options.info || ol_control_Profil.prototype.info
+    this.info = options.info || ol_control_Profile.prototype.info
     if (options.target) {
       element.classList.add(options.className || 'ol-profile')
     } else {
@@ -142,17 +142,17 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
 
     // Cursor
     this.bar_ = document.createElement("div")
-    this.bar_.classList.add("ol-profilbar")
+    this.bar_.classList.add("ol-profilebar")
     this.bar_.style.top = (this.margin_.top / ratio) + "px"
     this.bar_.style.height = (this.canvas_.height - this.margin_.top - this.margin_.bottom) / ratio + "px"
     div.appendChild(this.bar_)
 
     this.cursor_ = document.createElement("div")
-    this.cursor_.classList.add("ol-profilcursor")
+    this.cursor_.classList.add("ol-profilecursor")
     div.appendChild(this.cursor_)
 
     this.popup_ = document.createElement("div")
-    this.popup_.classList.add("ol-profilpopup")
+    this.popup_.classList.add("ol-profilepopup")
     this.cursor_.appendChild(this.popup_)
 
     // Track information
@@ -794,7 +794,7 @@ var ol_control_Profil = class olcontrolProfil extends ol_control_Control {
 /** Custom infos list
 * @api stable
 */
-ol_control_Profil.prototype.info = {
+ol_control_Profile.prototype.info = {
   "zmin": "Zmin",
   "zmax": "Zmax",
   "ytitle": "Altitude (m)",
@@ -807,5 +807,4 @@ ol_control_Profil.prototype.info = {
   "distanceUnitsKM": "km",
 };
 
-var ol_control_Profile = ol_control_Profil
 export default ol_control_Profile

@@ -3465,18 +3465,18 @@ ul.ol-legend li div {
   position: static;
 }
 
-.ol-profile .ol-profilbar,
-.ol-profile .ol-profilcursor {
+.ol-profile .ol-profilebar,
+.ol-profile .ol-profilecursor {
   position:absolute;
   pointer-events: none;
   width: 1px;
   display: none;
 }
-.ol-profile .ol-profilcursor {
+.ol-profile .ol-profilecursor {
   width: 0;
   height: 0;
 }
-.ol-profile .ol-profilcursor:before {
+.ol-profile .ol-profilecursor:before {
   content:"";
   pointer-events: none;
   display: block;
@@ -3484,8 +3484,8 @@ ul.ol-legend li div {
   width:5px;
   height:5px;
 }
-.ol-profile .ol-profilbar,
-.ol-profile .ol-profilcursor:before {
+.ol-profile .ol-profilebar,
+.ol-profile .ol-profilecursor:before {
   background: red;
 }
 
@@ -3498,7 +3498,7 @@ ul.ol-legend li div {
   display: block;
 }
 
-.ol-profilpopup {
+.ol-profilepopup {
   background-color: rgba(255, 255, 255, 0.5);
   margin: 0.5em;
   padding: 0 0.5em;
@@ -3506,7 +3506,7 @@ ul.ol-legend li div {
   top:-1em;
   white-space: nowrap;
 }
-.ol-profilpopup.ol-left {
+.ol-profilepopup.ol-left {
   right:0;
 }
 

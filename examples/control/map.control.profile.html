@@ -32,7 +32,7 @@
       display: none;
     }
     /* Customize cursor color */
-    .options .ol-profilbar, .options .ol-profilcursor::before {
+    .options .ol-profilebar, .options .ol-profilecursor::before {
       background-color: blue;
     }
   </style>
@@ -80,8 +80,8 @@
 
   <div class="options">
     <h2>Options:</h2>
-    <a target="_new" download="profile.png" class="btn" onclick="this.setAttribute('href',profil2.getImage());">Export PNG</a>
-    <a target="_new" download="profile.png" class="btn" onclick="profil.toggle();">Toggle profile (programatically)</a>
+    <a target="_new" download="profile.png" class="btn" onclick="this.setAttribute('href',profile2.getImage());">Export PNG</a>
+    <a target="_new" download="profile.png" class="btn" onclick="profile.toggle();">Toggle profile (programatically)</a>
   </div>
 
   <script type="text/javascript">
@@ -98,11 +98,11 @@
     layers: [layer]
   });
 
-  // New profil in the map
-  var profil = new ol.control.Profil();
-  map.addControl(profil);
-  // New profil outside the map
-  var profil2 = new ol.control.Profil({
+  // New profile in the map
+  var profile = new ol.control.Profile();
+  map.addControl(profile);
+  // New profile outside the map
+  var profile2 = new ol.control.Profile({
     target: document.querySelector(".options"),
     selectable: true,
     // zoomable: true,
@@ -111,7 +111,7 @@
     }),
     width:400, height:200
   });
-  map.addControl(profil2);
+  map.addControl(profile2);
 
   // Vector style
   var style = [	
@@ -156,8 +156,8 @@
   source.once('change',function(e) {
     if (source.getState() === 'ready') {
       feature = source.getFeatures()[0];
-      profil.setGeometry(feature);
-      profil2.setGeometry(feature, {
+      profile.setGeometry(feature);
+      profile2.setGeometry(feature, {
         graduation:250,
         amplitude:1000,
         zmin:0
@@ -168,7 +168,7 @@
     }
   });
 
-  // Draw a point on the map when mouse fly over profil
+  // Draw a point on the map when mouse fly over profile
   function drawPoint(e) {
     if (!pt) return;
     if (e.type=="over"){
@@ -181,27 +181,27 @@
     }
   };
   // Show a popup on over
-  profil.on(["over","out"], function(e) {
-    if (e.type=="over") profil.popup(e.coord[2]+" m");
+  profile.on(["over","out"], function(e) {
+    if (e.type=="over") profile.popup(e.coord[2]+" m");
     drawPoint(e);
   });
   // Just draw point
-  profil2.on(["over","out"], drawPoint);
+  profile2.on(["over","out"], drawPoint);
 
   // Show selection
   var start = 0;
   var selection;
-	profil2.on('click', function(e){
+	profile2.on('click', function(e){
     if (selection) {
       source.removeFeature(selection);
       selection = false;
     }
   });
-	profil2.on('dragstart', function(e){
+	profile2.on('dragstart', function(e){
     start = e.index;
   });
-	profil2.on(['dragend', 'dragging'], function(e){
-    var g = profil2.getSelection(start, e.index);
+	profile2.on(['dragend', 'dragging'], function(e){
+    var g = profile2.getSelection(start, e.index);
     if (selection) {
       selection.getGeometry().setCoordinates(g);
     } else {
@@ -210,7 +210,7 @@
       source.addFeature(selection);
     }
   });
-  profil2.on('zoom', function(e) {
+  profile2.on('zoom', function(e) {
     setTimeout(function() {
       if (selection) source.removeFeature(selection);
       if (e.geometry) {
@@ -230,15 +230,15 @@
     // Point on the line
     var c = feature.getGeometry().getClosestPoint(e.coordinate)
     drawPoint({ type: "over", coord: c });
-    // Show profil
-    var p = profil.showAt(e.coordinate);
-    profil.popup(p[2]+" m");
-    profil2.showAt(e.coordinate);
+    // Show profile
+    var p = profile.showAt(e.coordinate);
+    profile.popup(p[2]+" m");
+    profile2.showAt(e.coordinate);
   });
   hover.on("leave", function(e) {
-    profil.popup();
-    profil.showAt();
-    profil2.showAt();
+    profile.popup();
+    profile.showAt();
+    profile2.showAt();
     drawPoint({});
   });
   </script>
