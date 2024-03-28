@@ -33,11 +33,19 @@ var ol_layer_AnimatedCluster = class ollayerAnimatedCluster extends ol_layer_Vec
     this.set('animationDuration', typeof (options.animationDuration) == 'number' ? options.animationDuration : 700)
     this.set('animationMethod', options.animationMethod || ol_easing_easeOut)
 
-    // Save cluster before change
-    this.getSource().on('change', this.saveCluster.bind(this))
     // Animate the cluster
     this.on(['precompose', 'prerender'], this.animate.bind(this))
     this.on(['postcompose', 'postrender'], this.postanimate.bind(this))
+  }
+  /** Set the cluster source
+   * @param {ol_source_Vector} source
+   */
+  setSource(source) {
+    if (!this._saveClusterFn) this._saveClusterFn = this.saveCluster.bind(this)
+    // Save cluster before change
+    if (this.getSource()) this.getSource().un('change', this._saveClusterFn)
+    ol_layer_Vector.prototype.setSource.call(this, source)
+    if (this.getSource()) this.getSource().on('change', this._saveClusterFn)
   }
   /** save cluster features before change
    * @private
