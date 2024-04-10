@@ -6434,8 +6434,16 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
         var li
         if (!e.touches) {
           li = e.target
+          // Get the HTML node within web component on click drag
+          if(e.target.shadowRoot){
+            li = e.composedPath()[0]
+          }
         } else {
-          li = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY)
+          li = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+          //Get actual HTML node within web component on touch drag
+          while(li.shadowRoot){
+            li = li.shadowRoot.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY)
+          }
         }
         if (li.classList.contains("ol-switcherbottomdiv")) {
           self.overflow(-1)
