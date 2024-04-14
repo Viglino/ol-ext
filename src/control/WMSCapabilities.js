@@ -868,18 +868,32 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
     this.getCapabilities(url, {
       onload: function (cap) {
         if (cap) {
-          cap.Capability.Layer.Layer.forEach(function (l) {
-            if (l.Name === layerName || l.Identifier === layerName) {
-              var options = this.getOptionsFromCap(l, cap)
-              var layer = this.getLayerFromOptions(options)
-              this.dispatchEvent({ type: 'load', layer: layer, options: options })
-              if (typeof (onload) === 'function')
-                onload({ layer: layer, options: options })
+          // Find layer recursively
+          function findLayer(layers) {
+            for (var i=0; i<layers.length; i++) {
+              var l = layers[i];
+              if (l.Name === layerName || l.Identifier === layerName) {
+                return l;
+              } else if (l.Layer) {
+                // Sub layer
+                var l2 = findLayer(l.Layer)
+                if (l2) return l2
+              }
             }
-          }.bind(this))
-        } else {
-          this.dispatchEvent({ type: 'load', error: true })
+          }
+          var lcap = findLayer(cap.Capability.Layer.Layer)
+          // Find one
+          if (lcap) {
+            var options = this.getOptionsFromCap(lcap, cap)
+            var layer = this.getLayerFromOptions(options)
+            this.dispatchEvent({ type: 'load', layer: layer, options: options })
+            if (typeof (onload) === 'function') {
+              onload({ layer: layer, options: options })
+            }
+            return;
+          }
         }
+        this.dispatchEvent({ type: 'load', error: true })
       }.bind(this)
     })
   }
