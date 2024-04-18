@@ -304,32 +304,33 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
     var ctx = e.context;
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
-        // Clear
-        ctx.clearColor(0, 0, 0, 0);
-        ctx.clear(ctx.COLOR_BUFFER_BIT);
 
         // Clip
         ctx.enable(ctx.SCISSOR_TEST);
 
-        var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
+        const mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
 
 
         // get render coordinates and dimensions given CSS coordinates
-        var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
-        var topRight = this._transformPt(e, [mapSize[0], 0]);
+        const bottomLeft = this._transformPt(e, [0, mapSize[1]]);
+        const topRight = this._transformPt(e, [mapSize[0], 0]);
 
-        var fullWidth = topRight[0] - bottomLeft[0];
-        var fullHeight = topRight[1] - bottomLeft[1];
+        const fullWidth = topRight[0] - bottomLeft[0];
+        const fullHeight = topRight[1] - bottomLeft[1];
         var width, height;
         if (this.get('orientation') === "vertical") {
-          width = Math.round(fullWidth * this.get('position'));
           height = fullHeight;
+          width = Math.round(fullWidth * this.get('position'));
         } else {
           width = fullWidth;
           height = Math.round((fullHeight * this.get('position')));
           bottomLeft[1] += fullHeight - height;
         }
         ctx.scissor(bottomLeft[0], bottomLeft[1], width, height);
+
+        // Clear
+        ctx.clearColor(0, 0, 0, 0);
+        ctx.clear(ctx.COLOR_BUFFER_BIT);
       }
     } else {
       var size = e.frameState.size;
@@ -354,25 +355,21 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
   /** @private
   */
   precomposeRight(e) {
-    var ctx = e.context;
+    const ctx = e.context;
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
-        // Clear
-        ctx.clearColor(0, 0, 0, 0);
-        ctx.clear(ctx.COLOR_BUFFER_BIT);
-
         // Clip
         ctx.enable(ctx.SCISSOR_TEST);
 
-        var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
-
+        const mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
+        
 
         // get render coordinates and dimensions given CSS coordinates
-        var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
-        var topRight = this._transformPt(e, [mapSize[0], 0]);
+        const bottomLeft = this._transformPt(e, [0, mapSize[1]]);
+        const topRight = this._transformPt(e, [mapSize[0], 0]);
 
-        var fullWidth = topRight[0] - bottomLeft[0];
-        var fullHeight = topRight[1] - bottomLeft[1];
+        const fullWidth = topRight[0] - bottomLeft[0];
+        const fullHeight = topRight[1] - bottomLeft[1];
         var width, height;
         if (this.get('orientation') === "vertical") {
           height = fullHeight;
@@ -383,6 +380,10 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
           height = Math.round(fullHeight * (1 - this.get('position')));
         }
         ctx.scissor(bottomLeft[0], bottomLeft[1], width, height);
+        
+        // Clear
+        ctx.clearColor(0, 0, 0, 0);
+        ctx.clear(ctx.COLOR_BUFFER_BIT);
       }
     } else {
       var size = e.frameState.size;
