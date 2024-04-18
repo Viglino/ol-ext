@@ -17847,8 +17847,11 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
         // Clear
-        ctx.clearColor(0, 0, 0, 0);
-        ctx.clear(ctx.COLOR_BUFFER_BIT);
+        if (this._time != e.frameState.time) {
+          ctx.clearColor(0, 0, 0, 0);
+          ctx.clear(ctx.COLOR_BUFFER_BIT);
+          this._time = e.frameState.time
+        }
         // Clip
         ctx.enable(ctx.SCISSOR_TEST);
         var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
@@ -17867,6 +17870,8 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
           bottomLeft[1] += fullHeight - height;
         }
         ctx.scissor(bottomLeft[0], bottomLeft[1], width, height);
+        ctx.clearColor(0, 0, 0, 0);
+        ctx.clear(ctx.COLOR_BUFFER_BIT);
       }
     } else {
       var size = e.frameState.size;
@@ -17895,8 +17900,11 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
         // Clear
-        ctx.clearColor(0, 0, 0, 0);
-        ctx.clear(ctx.COLOR_BUFFER_BIT);
+        if (this._time != e.frameState.time) {
+          ctx.clearColor(0, 0, 0, 0);
+          ctx.clear(ctx.COLOR_BUFFER_BIT);
+          this._time = e.frameState.time
+        }
         // Clip
         ctx.enable(ctx.SCISSOR_TEST);
         var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
@@ -17915,6 +17923,8 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
           height = Math.round(fullHeight * (1 - this.get('position')));
         }
         ctx.scissor(bottomLeft[0], bottomLeft[1], width, height);
+        ctx.clearColor(0, 0, 0, 0);
+        ctx.clear(ctx.COLOR_BUFFER_BIT);
       }
     } else {
       var size = e.frameState.size;
