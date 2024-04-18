@@ -316,24 +316,30 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
 
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
+        // Clear
+        if (this._time != e.frameState.time) {
+          ctx.clearColor(0, 0, 0, 0);
+          ctx.clear(ctx.COLOR_BUFFER_BIT);
+          this._time = e.frameState.time
+        }
 
         // Clip
         ctx.clearColor(0, 0, 0, 0);
         ctx.enable(ctx.SCISSOR_TEST);
 
-        const mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
+        var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
 
 
         // get render coordinates and dimensions given CSS coordinates
-        const bottomLeft = this._transformPt(e, [0, mapSize[1]]);
-        const topRight = this._transformPt(e, [mapSize[0], 0]);
+        var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
+        var topRight = this._transformPt(e, [mapSize[0], 0]);
 
-        const fullWidth = topRight[0] - bottomLeft[0];
-        const fullHeight = topRight[1] - bottomLeft[1];
+        var fullWidth = topRight[0] - bottomLeft[0];
+        var fullHeight = topRight[1] - bottomLeft[1];
         var width, height;
         if (this.get('orientation') === "vertical") {
-          height = fullHeight;
           width = Math.round(fullWidth * this.get('position'));
+          height = fullHeight;
         } else {
           width = fullWidth;
           height = Math.round((fullHeight * this.get('position')));
@@ -372,19 +378,26 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
 
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
+        // Clear
+        if (this._time != e.frameState.time) {
+          ctx.clearColor(0, 0, 0, 0);
+          ctx.clear(ctx.COLOR_BUFFER_BIT);
+          this._time = e.frameState.time
+        }
+
         // Clip
         ctx.clearColor(0, 0, 0, 0);
         ctx.enable(ctx.SCISSOR_TEST);
 
-        const mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
-        
+        var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
+
 
         // get render coordinates and dimensions given CSS coordinates
-        const bottomLeft = this._transformPt(e, [0, mapSize[1]]);
-        const topRight = this._transformPt(e, [mapSize[0], 0]);
+        var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
+        var topRight = this._transformPt(e, [mapSize[0], 0]);
 
-        const fullWidth = topRight[0] - bottomLeft[0];
-        const fullHeight = topRight[1] - bottomLeft[1];
+        var fullWidth = topRight[0] - bottomLeft[0];
+        var fullHeight = topRight[1] - bottomLeft[1];
         var width, height;
         if (this.get('orientation') === "vertical") {
           height = fullHeight;
