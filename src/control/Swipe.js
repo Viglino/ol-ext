@@ -39,6 +39,8 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
     this.precomposeLeft_ = this.precomposeLeft.bind(this);
     this.postcompose_ = this.postcompose.bind(this);
 
+    this.webGlContexts = [];
+
     this.layers = [];
     if (options.layers)
       this.addLayer(options.layers, false);
@@ -108,6 +110,11 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
       }
       try { map.renderSync(); } catch (e) { /* ok */ }
     }
+
+    map.on(['precompose'], () => {
+      this.webGlContexts.forEach(ctx => ctx.clear(ctx.COLOR_BUFFER_BIT))
+    })
+
   }
   /** @private
   */
@@ -302,10 +309,16 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
   */
   precomposeLeft(e) {
     var ctx = e.context;
+
+    if(!(ctx in this.webGlContexts)){
+      this.webGlContexts.push(ctx)
+    }
+
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
 
         // Clip
+        ctx.clearColor(0, 0, 0, 0);
         ctx.enable(ctx.SCISSOR_TEST);
 
         const mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
@@ -327,10 +340,6 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
           bottomLeft[1] += fullHeight - height;
         }
         ctx.scissor(bottomLeft[0], bottomLeft[1], width, height);
-
-        // Clear
-        ctx.clearColor(0, 0, 0, 0);
-        ctx.clear(ctx.COLOR_BUFFER_BIT);
       }
     } else {
       var size = e.frameState.size;
@@ -356,9 +365,15 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
   */
   precomposeRight(e) {
     const ctx = e.context;
+
+    if(!(ctx in this.webGlContexts)){
+      this.webGlContexts.push(ctx)
+    }
+
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
         // Clip
+        ctx.clearColor(0, 0, 0, 0);
         ctx.enable(ctx.SCISSOR_TEST);
 
         const mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
@@ -380,10 +395,6 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
           height = Math.round(fullHeight * (1 - this.get('position')));
         }
         ctx.scissor(bottomLeft[0], bottomLeft[1], width, height);
-        
-        // Clear
-        ctx.clearColor(0, 0, 0, 0);
-        ctx.clear(ctx.COLOR_BUFFER_BIT);
       }
     } else {
       var size = e.frameState.size;
