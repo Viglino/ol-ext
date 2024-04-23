@@ -141,6 +141,8 @@
   });
   var vector = new ol.layer.Vector({
     source: source,
+    updateWhileAnimating: true,
+    updateWhileInteracting: true,
     style: style
   });
   map.addLayer(vector);
@@ -150,6 +152,7 @@
   source.once('change',function(e){
     if (source.getState() === 'ready') {
       path = source.getFeatures()[0];
+      source.removeFeature (path)
     }
   });
   // Add a feature on the map
