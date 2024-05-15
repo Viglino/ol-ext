@@ -869,7 +869,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
       onload: function (cap) {
         if (cap) {
           // Find layer recursively
-          function findLayer(layers) {
+          var findLayer = function(layers) {
             for (var i=0; i<layers.length; i++) {
               var l = layers[i];
               if (l.Name === layerName || l.Identifier === layerName) {
