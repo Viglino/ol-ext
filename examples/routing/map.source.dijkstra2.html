@@ -182,6 +182,15 @@
 	});
   map.addLayer(vector);
 
+  var stations = new ol.source.Vector({
+    url: '../data/station.geojson',
+    format: new ol.format.GeoJSON()
+  });
+  map.addLayer(new ol.layer.Vector({
+    title: 'Stations',
+    source: stations
+  }));
+
   // A layer to draw the result
   var result = new ol.source.Vector();
   map.addLayer ( new ol.layer.Vector({
@@ -228,6 +237,25 @@
       $("#result span").html(t);
     }
     result.addFeatures(e.route);
+    // Get stations
+    var visited = [];
+    e.route.forEach(function(p, i){
+      var f;
+      if (i===0) {
+        f = stations.getFeaturesAtCoordinate(p.getGeometry().getFirstCoordinate())
+        visited.push({
+          feature: f[0],
+          name: p.get('name')
+        })
+      }
+      f = stations.getFeaturesAtCoordinate(p.getGeometry().getLastCoordinate())
+      visited.push({
+          feature: f[0],
+          name: p.get('name')
+        })
+    })
+    visited.forEach(f => console.log(f.name, '-', f.feature.get('name')))
+    // Restart from here
     start = end;
     popStart.show(start);
     popEnd.hide();
