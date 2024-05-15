@@ -8637,7 +8637,7 @@ ol.control.FeatureList = class olcontrolFeatureList extends ol.control.Control {
       element: element,
       target: options.target
     });
-    // List of features / row
+    // List of features / sort
     this._listFeatures = [];
     // Current columns
     this._columns = [];
@@ -8736,22 +8736,22 @@ ol.control.FeatureList.prototype.setBottomScroll = function(b) {
  */
 ol.control.FeatureList.prototype.scrollTo = function(feature) {
   if (feature === 'select') {
-    var tr = this._listbody.querySelector('.ol-selected');
-    if (tr) {
-      this._scrollAt(tr);
-      return tr;
-    }
+    if (this._curSelection) return this.scrollTo(this._curSelection.feature);
+    else return false;
   } else {
     var i = this._findFeatureIndex(feature)
     if (i >= 0) {
       var scrollDiv = this._list.parentNode;
       scrollDiv.scrollTo(scrollDiv.scrollLeft, (i+1.5)*this.getRowHeight() - scrollDiv.getBoundingClientRect().height/2)
-      return this._listFeatures[i];
+      return {
+        feature: this._listFeatures[i],
+        tr: ol.ext.element.create('TR')
+      }
     }
   }
   return false;
 }
-/** Find a feature in the list
+/** Find the feature index in the list
  * @param {ol.Feature} feature
  * @returns {Object}
  * @private
@@ -8760,26 +8760,27 @@ ol.control.FeatureList.prototype._findFeatureIndex = function(feature) {
   var list = this._listFeatures;
   if (list) {
     for (var i=0; i<list.length; i++) {
-      if (list[i].feature === feature) {
+      if (list[i] === feature) {
         return i
       }
     }
   }
   return -1;
 }
-/** Find a row given a feature
+/** Find a feature in the current page
  * @param {ol.Feature} feature
+ * @returns {Object} 
  */
-ol.control.FeatureList.prototype._findRow = function(feature) {
-  var list = this._listFeatures;
+ol.control.FeatureList.prototype._findInPage = function(feature) {
+  var list = this._page;
   if (list) {
     for (var i=0; i<list.length; i++) {
       if (list[i].feature === feature) {
-        return list[i];
+        return list[i]
       }
     }
   }
-  return false
+  return false;
 }
 /** Collapse the table
  * @param {boolean} [b] if no parameters toggle it
@@ -8805,7 +8806,7 @@ ol.control.FeatureList.prototype.collapse = function(b) {
 ol.control.FeatureList.prototype.isCollapsed = function() {
   return this._collapsed;
 }
-/** Set the features to list
+/** Set the features list
  * @param {ol.source.Vector|ol.Collection<ol.Feature>|Array<ol.Feature>} source a vector source or a collection of features to list
  */
 ol.control.FeatureList.prototype.setFeatures = function(source) {
@@ -8878,38 +8879,7 @@ ol.control.FeatureList.prototype._drawList = function(delay) {
   // List of features
   this._listFeatures = [];
   features.forEach(function (f) {
-    var tr = ol.ext.element.create('TR', {
-      on: {
-        click: function (e) {
-          var td = e.target.closest('TD');
-          this.dispatchEvent({
-            type: 'select',
-            property: td.dataset.prop,
-            feature: f,
-            row: e.target.closest('TR'),
-            col: td,
-            originalEvent: e
-          })
-          this.select(f, true)
-        }.bind(this),
-        dblclick: function(e) {
-          var td = e.target.closest('TD');
-          this.dispatchEvent({
-            type: 'dblclick',
-            property: td.dataset.prop,
-            feature: f,
-            row: e.target.closest('TR'),
-            col: td,
-            originalEvent: e
-          })
-        }.bind(this)
-      }
-    })
-    this._listFeatures.push({
-      feature: f,
-      tr: tr
-    })
-    this._updateFeature(f, tr);
+    this._listFeatures.push(f)
   }.bind(this))
   // Sort
   this.sort();
@@ -8919,9 +8889,9 @@ ol.control.FeatureList.prototype._drawList = function(delay) {
  * @returns {boolean}
  */
 ol.control.FeatureList.prototype.updateFeature = function(feature) {
-  var i = this._findFeatureIndex(feature)
-  if (i >= 0) {
-    this._updateFeature(this._listFeatures[i].feature, this._listFeatures[i].tr)
+  var pfeature = this._findInPage(feature)
+  if (pfeature) {
+    this._updateFeature(pfeature.feature, pfeature.tr)
     return true;
   }
   return false;
@@ -8943,6 +8913,46 @@ ol.control.FeatureList.prototype._updateFeature = function(f, tr) {
       parent: tr
     })
   }.bind(this))
+  // Selected ?
+  if (this._curSelection && this._curSelection.feature === f) {
+    this._curSelection.tr = tr;
+    tr.classList.add('ol-selected')
+  }
+}
+/** Get the list element
+ * @param {ol.Feature} f
+ * @returns {Element}
+ */
+ol.control.FeatureList.prototype._getLi = function(f) {
+  var tr = ol.ext.element.create('TR', {
+    on: {
+      click: function (e) {
+        var td = e.target.closest('TD');
+        this.dispatchEvent({
+          type: 'select',
+          property: td.dataset.prop,
+          feature: f,
+          row: e.target.closest('TR'),
+          col: td,
+          originalEvent: e
+        })
+        this.select(f, true)
+      }.bind(this),
+      dblclick: function(e) {
+        var td = e.target.closest('TD');
+        this.dispatchEvent({
+          type: 'dblclick',
+          property: td.dataset.prop,
+          feature: f,
+          row: e.target.closest('TR'),
+          col: td,
+          originalEvent: e
+        })
+      }.bind(this)
+    }
+  })
+  this._updateFeature(f, tr)
+  return tr;
 }
 /** Draw columns heads
  * @private
@@ -8984,7 +8994,7 @@ ol.control.FeatureList.prototype.sort = function() {
     this._listFeatures.sort(function(a, b) {
       for (var i=0; i<sort.length; i++) {
         var p = sort[i];
-        var s = this.sortFn(a.feature, b.feature, p);
+        var s = this.sortFn(a, b, p);
         if (s) return this._sort[p] ? s : -s;
       }
       return 0;
@@ -9042,8 +9052,19 @@ ol.control.FeatureList.prototype._drawPage = function() {
   }))
   // Page list
   var nmax = Math.min(this._listFeatures.length, (page+1)*nb + nb2)
+  this._page = [];
   for (var i = Math.max(0, page*nb - nb2); i < nmax; i++) {
-    this._listbody.appendChild(this._listFeatures[i].tr)
+    // this._listbody.appendChild(this._listFeatures[i].tr)
+    var tr = this._getLi(this._listFeatures[i])
+    this._page.push({
+      feature: this._listFeatures[i],
+      tr: tr
+    })
+    if (this._curSelection && this._listFeatures[i] === this._curSelection.feature) {
+      this._curSelection.tr = tr;
+      tr.classList.add('ol-selected')
+    }
+    this._listbody.appendChild(tr)
   }
   // Last row to preserve space
   this._listbody.appendChild(ol.ext.element.create('TR', {
@@ -9186,7 +9207,7 @@ ol.control.FeatureList.prototype.resize = function(height) {
  */
 ol.control.FeatureList.prototype.getSelection = function() {
   if (this._curSelection) {
-    return this._listFeatures[this._findFeatureIndex(this._curSelection.feature)];
+    return this._curSelection.feature || null;
   }
   return null;
 }
@@ -9203,7 +9224,11 @@ ol.control.FeatureList.prototype.select = function(feature, noScroll) {
   // New selection
   if (feature) {
     if (noScroll) {
-      this._curSelection = this._listFeatures[this._findFeatureIndex(feature)];
+      var f = this._findInPage(feature)
+      this._curSelection = {
+        feature: feature,
+        tr: f ? f.tr : ol.ext.element.create('TR')
+      };
     } else {
       this._curSelection = this.scrollTo(feature)
     }
@@ -19962,7 +19987,7 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
       onload: function (cap) {
         if (cap) {
           // Find layer recursively
-          function findLayer(layers) {
+          var findLayer = function(layers) {
             for (var i=0; i<layers.length; i++) {
               var l = layers[i];
               if (l.Name === layerName || l.Identifier === layerName) {
