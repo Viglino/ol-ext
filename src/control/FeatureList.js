@@ -150,9 +150,10 @@ ol_control_FeatureList.prototype.scrollTo = function(feature) {
     if (i >= 0) {
       var scrollDiv = this._list.parentNode;
       scrollDiv.scrollTo(scrollDiv.scrollLeft, (i+1.5)*this.getRowHeight() - scrollDiv.getBoundingClientRect().height/2)
+      var fpage = this._findInPage(feature)
       return {
-        feature: this._listFeatures[i],
-        tr: ol_ext_element.create('TR')
+        feature: feature,
+        tr: fpage ? fpage.tr : ol_ext_element.create('TR')
       }
     }
   }
