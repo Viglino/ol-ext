@@ -65,6 +65,11 @@
     input[type="number"] {
       width: 3em;
     }
+    #map {
+      width: 100%;
+      height: calc(100vh - 20em);
+      min-height: 500px;
+    }
 	</style>
 </head>
 <body >
@@ -85,31 +90,10 @@
       <br/>
       It uses a A* optimisation.
     </p>
-    <p>
-      You can overwrite methods to customize the result:
-      <ul>
-        <li>
-          <i>getLength()</i> method enable you to specify an other distance calculation.
-        </li>
-        <li>
-            <i>weight()</i> method enable weighting on the graph, for example calculate a speed factor on the edges.
-          </li>
-        <li>
-          <i>direction()</i> method can defined the direction of the edges (-1, 0, 1 or 2).
-        </li>
-      </ul>
-    </p>
-
-    <p>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Logo-licence-ouverte2.svg" style="float:left; height:3em; margin-right:.5em;"/>
-      <img src="https://static.data.gouv.fr/avatars/1b/e4985396724faf9f6e1122baa7b65c.gif" style="float:left; height:3em; margin-right:.5em; background:#fff;"/>
-      The graph used in this example is <a href="https://www.data.gouv.fr/fr/datasets/route-120/">ROUTE 120&reg;</a>, 
-      an opensource (Open licence) database from IGN-France.
-    </p>
 	</div>
 
 	<!-- DIV pour la carte -->
-	<div id="map" style="width:600px; height:400px;"></div>
+	<div id="map"></div>
 
 	<div class="options">
     <h2>Options</h2>
