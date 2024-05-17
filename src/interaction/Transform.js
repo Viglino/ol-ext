@@ -382,7 +382,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
     } else {
       if (this.ispt_) {
         // Calculate extent arround the point
-        var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]])
+        var p = this.getMap().getPixelFromCoordinate(ol_extent_getCenter(ext))
         if (p) {
           var dx = ptRadius ? ptRadius[0] || 10 : 10
           var dy = ptRadius ? ptRadius[1] || 10 : 10
