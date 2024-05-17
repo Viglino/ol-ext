@@ -290,6 +290,7 @@
   }
   // Get the real length of the geom
   dijkstra.getLength = function(geom) {
+    console.log(geom)
     if (geom.getGeometry) {
       //? return geom.get('km')*1000;
       geom = geom.getGeometry();
