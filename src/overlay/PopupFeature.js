@@ -36,7 +36,7 @@ import ol_ext_element from '../util/element.js'
  *  @param {function|undefined} options.onclose: callback function when popup is closed
  *  @param {function|undefined} options.onshow callback function when popup is shown
  *  @param {Number|Array<number>} options.offsetBox an offset box
- *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
+ *  @param {ol.OverlayPositioning | string | undefined} options.positioning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
  *  @param {Template|function} [options.template] A template with a list of properties to use in the popup or a function that takes a feature and returns a Template, default use all feature properties
  *  @param {ol.interaction.Select} options.select a select interaction to get features from
