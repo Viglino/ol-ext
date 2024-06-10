@@ -68,6 +68,8 @@
   <div class="options" style="max-width:20em;">
     <h2>Options:</h2>
     <i>Click on the map to select a feature / use the control to look for features by attributes.</i>
+    <br/>
+    <button onclick="javascript:listCtrl.scrollTo('select')">Return to sélection</button>
     <ul style="list-style:initial; padding: 0 1em;"></ul>
   </div>
   
@@ -136,6 +138,7 @@
     // className: 'ol-bottom',
     collapsed: false,
     features: vectorSource,
+    // number: 20,
     // target: document.body
   });
   listCtrl.enableSort('nom', 'region', 'mag')

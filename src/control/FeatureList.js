@@ -445,7 +445,9 @@ ol_control_FeatureList.prototype.refresh = function(force) {
  */
 ol_control_FeatureList.prototype.update = function() {
   this._drawList();
-  this.select(this._curSelection.feature, true)
+  if (this._curSelection && this._curSelection.feature) {
+    this.select(this._curSelection.feature, true)
+  }
 }
 
 /** Get height of a row
@@ -559,7 +561,9 @@ ol_control_FeatureList.prototype.getColumns = function(features) {
 ol_control_FeatureList.prototype.setColumns = function(columns) {
   this.columns = columns || [];
   this._drawList();
-  this.select(this._curSelection.feature, true)
+  if (this._curSelection && this._curSelection.feature) {
+    this.select(this._curSelection.feature, true)
+  }
 }
 
 /** Dragging sizer
