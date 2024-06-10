@@ -9,12 +9,14 @@ import ol_interaction_Pointer from 'ol/interaction/Pointer.js'
  * @param {any} options
  *  @param {ol.Overlay|Array<ol.Overlay>} options.overlays the overlays to drag
  *  @param {ol.Size} options.offset overlay offset, default [0,0]
+ *  @param {boolean} options.centerOnClick wheter a click inside the popup should move it to the click coordinates, default false
  */
 var ol_interaction_DragOverlay = class olinteractionDragOverlay extends ol_interaction_Pointer {
   constructor(options) {
     options = options || {};
 
     var offset = options.offset || [0, 0];
+    var centerOnClick = options.centerOnClick || false;
 
     // Extend pointer
     super({
@@ -29,17 +31,17 @@ var ol_interaction_DragOverlay = class olinteractionDragOverlay extends ol_inter
         }
         // Start dragging
         if (this._dragging) {
-          if (options.centerOnClick !== false) {
+          if (centerOnClick) {
             this._dragging.setPosition(coordinate, true);
-          } else {
-            coordinate = this._dragging.getPosition();
           }
+          var coordinateInitial = this._dragging.getPosition();
+          this._dragging.offsetClick = [coordinate[0]-coordinateInitial[0], coordinate[1]-coordinateInitial[1]];
           this.dispatchEvent({
             type: 'dragstart',
             overlay: this._dragging,
             originalEvent: evt.originalEvent,
             frameState: evt.frameState,
-            coordinate: coordinate
+            coordinate: coordinateInitial
           });
           return true;
         }
@@ -50,6 +52,7 @@ var ol_interaction_DragOverlay = class olinteractionDragOverlay extends ol_inter
         var res = evt.frameState.viewState.resolution;
         var coordinate = [evt.coordinate[0] + offset[0] * res, evt.coordinate[1] - offset[1] * res];
         if (this._dragging) {
+          coordinate = [coordinate[0]-this._dragging.offsetClick[0], coordinate[1]-this._dragging.offsetClick[1]];
           this._dragging.setPosition(coordinate, true);
           this.dispatchEvent({
             type: 'dragging',
@@ -65,6 +68,7 @@ var ol_interaction_DragOverlay = class olinteractionDragOverlay extends ol_inter
         var res = evt.frameState.viewState.resolution;
         var coordinate = [evt.coordinate[0] + offset[0] * res, evt.coordinate[1] - offset[1] * res];
         if (this._dragging) {
+          coordinate = [coordinate[0]-this._dragging.offsetClick[0], coordinate[1]-this._dragging.offsetClick[1]];
           this.dispatchEvent({
             type: 'dragend',
             overlay: this._dragging,
