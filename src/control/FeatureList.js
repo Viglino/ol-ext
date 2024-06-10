@@ -10,6 +10,7 @@ import ol_ext_element from '../util/element';
  * @fires dblclick
  * @fires collapse
  * @fires resize
+ * @fires sort
  * @param {Object=} options
  *  @param {number} [options.title] table title
  *  @param {Element} [options.target] to display the control outside the map
@@ -250,7 +251,8 @@ ol_control_FeatureList.prototype.sortBy = function(prop, sort) {
   } else {
     this._sort[prop] = (sort !== 'down');
   }
-  this.sort();
+  this.sort(true);
+  this.dispatchEvent({ type: 'sort', property: prop, sort: sort });
 }
 
 /** Get sorted properties list
@@ -411,8 +413,9 @@ ol_control_FeatureList.prototype._drawHead = function() {
 }
 
 /** Sort features in the table
+ * @param {boolean} [silent] sort without triggering an event
  */
-ol_control_FeatureList.prototype.sort = function() {
+ol_control_FeatureList.prototype.sort = function(silent) {
   var sort = Object.keys(this._sort)
   if (sort.length) {
     this._listFeatures.sort(function(a, b) {
@@ -426,6 +429,7 @@ ol_control_FeatureList.prototype.sort = function() {
   }
   // Refresh list
   this.refresh(true)
+  if (!silent) this.dispatchEvent({ type: 'sort' });
 }
 
 /** Refresh the list draw + resize use update if features have changed
