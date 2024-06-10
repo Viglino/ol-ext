@@ -6642,8 +6642,8 @@ ul.ol-legend li div {
   height: 150px;
   border: 5px solid #fff;
   border-width: 5px 0;
-  -webkit-box-sizing: border;
-          box-sizing: border;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   top: 0;
   right: 5px;
   background-image: -webkit-gradient(linear, left top, left bottom, from(0), color-stop(#f00), color-stop(#f0f), color-stop(#00f), color-stop(#0ff), color-stop(#0f0), color-stop(#ff0), to(#f00));

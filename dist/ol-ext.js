@@ -9020,7 +9020,9 @@ ol.control.FeatureList.prototype.refresh = function(force) {
  */
 ol.control.FeatureList.prototype.update = function() {
   this._drawList();
-  this.select(this._curSelection.feature, true)
+  if (this._curSelection && this._curSelection.feature) {
+    this.select(this._curSelection.feature, true)
+  }
 }
 /** Get height of a row
  * @return {number}
@@ -9127,7 +9129,9 @@ ol.control.FeatureList.prototype.getColumns = function(features) {
 ol.control.FeatureList.prototype.setColumns = function(columns) {
   this.columns = columns || [];
   this._drawList();
-  this.select(this._curSelection.feature, true)
+  if (this._curSelection && this._curSelection.feature) {
+    this.select(this._curSelection.feature, true)
+  }
 }
 /** Dragging sizer
  * @private
@@ -19840,7 +19844,7 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
       maxResolution: this.getLayerResolution('max', caps) || 156543.03392804097
     }
     var source_opt = {
-      url: parent.Capability.Request.GetMap.DCPType[0].HTTP.Get.OnlineResource,
+      url: (parent.Capability.Request.GetMap.DCPType[0].HTTP.Get.OnlineResource || '').replace(/service=wms&?/i,''),
       projection: srs,
       attributions: attributions,
       crossOrigin: this.get('cors') ? 'anonymous' : null,
@@ -19987,32 +19991,18 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
     this.getCapabilities(url, {
       onload: function (cap) {
         if (cap) {
-          // Find layer recursively
-          var findLayer = function(layers) {
-            for (var i=0; i<layers.length; i++) {
-              var l = layers[i];
-              if (l.Name === layerName || l.Identifier === layerName) {
-                return l;
-              } else if (l.Layer) {
-                // Sub layer
-                var l2 = findLayer(l.Layer)
-                if (l2) return l2
-              }
+          cap.Capability.Layer.Layer.forEach(function (l) {
+            if (l.Name === layerName || l.Identifier === layerName) {
+              var options = this.getOptionsFromCap(l, cap)
+              var layer = this.getLayerFromOptions(options)
+              this.dispatchEvent({ type: 'load', layer: layer, options: options })
+              if (typeof (onload) === 'function')
+                onload({ layer: layer, options: options })
             }
-          }
-          var lcap = findLayer(cap.Capability.Layer.Layer)
-          // Find one
-          if (lcap) {
-            var options = this.getOptionsFromCap(lcap, cap)
-            var layer = this.getLayerFromOptions(options)
-            this.dispatchEvent({ type: 'load', layer: layer, options: options })
-            if (typeof (onload) === 'function') {
-              onload({ layer: layer, options: options })
-            }
-            return;
-          }
+          }.bind(this))
+        } else {
+          this.dispatchEvent({ type: 'load', error: true })
         }
-        this.dispatchEvent({ type: 'load', error: true })
       }.bind(this)
     })
   }
@@ -24235,11 +24225,13 @@ ol.interaction.Delete = class olinteractionDelete extends ol.interaction.Select 
  * @param {any} options
  *  @param {ol.Overlay|Array<ol.Overlay>} options.overlays the overlays to drag
  *  @param {ol.Size} options.offset overlay offset, default [0,0]
+ *  @param {boolean} options.centerOnClick wheter a click inside the popup should move it to the click coordinates, default false
  */
 ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interaction.Pointer {
   constructor(options) {
     options = options || {};
     var offset = options.offset || [0, 0];
+    var centerOnClick = options.centerOnClick || false;
     // Extend pointer
     super({
       // start draging on an overlay
@@ -24253,17 +24245,17 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
         }
         // Start dragging
         if (this._dragging) {
-          if (options.centerOnClick !== false) {
+          if (centerOnClick) {
             this._dragging.setPosition(coordinate, true);
-          } else {
-            coordinate = this._dragging.getPosition();
           }
+          var coordinateInitial = this._dragging.getPosition();
+          this._dragging.offsetClick = [coordinate[0]-coordinateInitial[0], coordinate[1]-coordinateInitial[1]];
           this.dispatchEvent({
             type: 'dragstart',
             overlay: this._dragging,
             originalEvent: evt.originalEvent,
             frameState: evt.frameState,
-            coordinate: coordinate
+            coordinate: coordinateInitial
           });
           return true;
         }
@@ -24274,6 +24266,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
         var res = evt.frameState.viewState.resolution;
         var coordinate = [evt.coordinate[0] + offset[0] * res, evt.coordinate[1] - offset[1] * res];
         if (this._dragging) {
+          coordinate = [coordinate[0]-this._dragging.offsetClick[0], coordinate[1]-this._dragging.offsetClick[1]];
           this._dragging.setPosition(coordinate, true);
           this.dispatchEvent({
             type: 'dragging',
@@ -24289,6 +24282,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
         var res = evt.frameState.viewState.resolution;
         var coordinate = [evt.coordinate[0] + offset[0] * res, evt.coordinate[1] - offset[1] * res];
         if (this._dragging) {
+          coordinate = [coordinate[0]-this._dragging.offsetClick[0], coordinate[1]-this._dragging.offsetClick[1]];
           this.dispatchEvent({
             type: 'dragend',
             overlay: this._dragging,
@@ -32974,7 +32968,7 @@ ol.source.GridBin = class olsourceGridBin extends ol.source.BinBase {
     options = options || {};
     super(options);
     this.set('gridProjection', options.gridProjection || 'EPSG:4326');
-    this.setSize('size', options.size || 1);
+    this.setSize(options.size || 1);
     this.reset();
   }
   /** Set grid projection
@@ -37546,7 +37540,7 @@ ol.Overlay.Placemark = class olOverlayPlacemark extends ol.Overlay.Popup {
  *  @param {function|undefined} options.onclose: callback function when popup is closed
  *  @param {function|undefined} options.onshow callback function when popup is shown
  *  @param {Number|Array<number>} options.offsetBox an offset box
- *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
+ *  @param {ol.OverlayPositioning | string | undefined} options.positioning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
  *  @param {Template|function} [options.template] A template with a list of properties to use in the popup or a function that takes a feature and returns a Template, default use all feature properties
  *  @param {ol.interaction.Select} options.select a select interaction to get features from
