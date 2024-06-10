@@ -8613,6 +8613,7 @@ ol.control.EditBar = class olcontrolEditBar extends ol.control.Bar {
  * @fires dblclick
  * @fires collapse
  * @fires resize
+ * @fires sort
  * @param {Object=} options
  *  @param {number} [options.title] table title
  *  @param {Element} [options.target] to display the control outside the map
@@ -8837,7 +8838,8 @@ ol.control.FeatureList.prototype.sortBy = function(prop, sort) {
   } else {
     this._sort[prop] = (sort !== 'down');
   }
-  this.sort();
+  this.sort(true);
+  this.dispatchEvent({ type: 'sort', property: prop, sort: sort });
 }
 /** Get sorted properties list
  * @return Object
@@ -8988,8 +8990,9 @@ ol.control.FeatureList.prototype._drawHead = function() {
   }.bind(this))
 }
 /** Sort features in the table
+ * @param {boolean} [silent] sort without triggering an event
  */
-ol.control.FeatureList.prototype.sort = function() {
+ol.control.FeatureList.prototype.sort = function(silent) {
   var sort = Object.keys(this._sort)
   if (sort.length) {
     this._listFeatures.sort(function(a, b) {
@@ -9003,6 +9006,7 @@ ol.control.FeatureList.prototype.sort = function() {
   }
   // Refresh list
   this.refresh(true)
+  if (!silent) this.dispatchEvent({ type: 'sort' });
 }
 /** Refresh the list draw + resize use update if features have changed
  * @param {boolean} [force]
