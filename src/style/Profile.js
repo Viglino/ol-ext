@@ -100,8 +100,8 @@ var ol_style_Profile = class olstyleProfile extends ol_style_Style {
   _renderLine(geom, g, l, e) {
     var i, p, ctx = e.context
 
-    var cos = parseInt(ol_util_VERSION) >= 9 ? 1 : Math.cos(e.rotation)
-    var sin = parseInt(ol_util_VERSION) >= 9 ? 0 : Math.sin(e.rotation)
+    var cos = parseFloat(ol_util_VERSION) > 9.1 ? 1 : Math.cos(e.rotation)
+    var sin = parseFloat(ol_util_VERSION) > 9.1 ? 0 : Math.sin(e.rotation)
     // var a = e.pixelRatio / e.resolution;
     var a = ol_coordinate_dist2d(geom[0], geom[1]) / ol_coordinate_dist2d(g[0], g[1])
     var dx = geom[0][0] - g[0][0] * a * cos - g[0][1] * a * sin
