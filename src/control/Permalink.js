@@ -341,6 +341,9 @@ var ol_control_Permalink = class olcontrolPermalink extends ol_control_Control {
     }
     */
   }
+  /** Refresh the url
+   * @private
+   */
   replaceUrl_(url, force) {
     clearTimeout(this.refreshTout_)
     if (force) {
