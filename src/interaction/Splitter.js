@@ -20,7 +20,7 @@ import '../geom/LineStringSplitAt.js'
  *  @param {ol_Collection.<ol.Feature>} options.features A collection of feature to be split (replace source target).
  *  @param {ol_Collection.<ol.Feature>} options.triggerFeatures Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).
  *  @param {function|undefined} options.filter a filter that takes a feature and return true if the feature is eligible for splitting, default always split.
- *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split. Default is 1e-10.
+ *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split. Default is 1e-3.
  * @todo verify auto intersection on features that split.
  */
 var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction_Interaction {
@@ -69,7 +69,7 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
     }
 
     // Split tolerance between the calculated intersection and the geometry
-    this.tolerance_ = options.tolerance || 1e-10
+    this.tolerance_ = options.tolerance || 1e-3
 
     // Get all features candidate
     this.filterSplit_ = options.filter || function () { return true }

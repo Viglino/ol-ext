@@ -97,7 +97,7 @@
     vector.getSource().addFeature(new ol.Feature(new ol.geom.Point([261720, 5951081])));
 
     // Add splitter before other interaction
-    var splitter = new ol.interaction.Splitter({ source: vector.getSource() });
+    var splitter = new ol.interaction.Splitter({ source: vector.getSource(), tolerance: 0.001 });
     map.addInteraction(splitter);
 
     // Add interactions to modify features
