@@ -8,6 +8,7 @@ import ol_style_Stroke from 'ol/style/Stroke.js'
 import ol_style_Fill from 'ol/style/Fill.js'
 import {asString as ol_color_asString} from 'ol/color.js'
 import {ol_coordinate_dist2d} from '../geom/GeomUtils.js'
+import { VERSION as ol_util_VERSION } from 'ol/util.js'
 
 /** Profile style
  * Draw a profile on the map
@@ -99,8 +100,8 @@ var ol_style_Profile = class olstyleProfile extends ol_style_Style {
   _renderLine(geom, g, l, e) {
     var i, p, ctx = e.context
 
-    var cos = Math.cos(e.rotation)
-    var sin = Math.sin(e.rotation)
+    var cos = parseInt(ol_util_VERSION) >= 9 ? 1 : Math.cos(e.rotation)
+    var sin = parseInt(ol_util_VERSION) >= 9 ? 0 : Math.sin(e.rotation)
     // var a = e.pixelRatio / e.resolution;
     var a = ol_coordinate_dist2d(geom[0], geom[1]) / ol_coordinate_dist2d(g[0], g[1])
     var dx = geom[0][0] - g[0][0] * a * cos - g[0][1] * a * sin
