@@ -19,14 +19,15 @@ import { fromLonLat as ol_geohash_fromLonLat } from '../geom/geohash.js'
  * @constructor
  * @extends {ol_control_Control}
  * @param {Object=} options
- *  @param {boolean} options.urlReplace replace url or not, default true
+ *  @param {boolean} [options.urlReplace=true] replace url or not, default true
  *  @param {boolean|string} [options.localStorage=false] save current map view in localStorage, if 'position' only store map position
- *  @param {boolean} options.geohash use geohash instead of lonlat, default false
- *  @param {integer} options.fixed number of digit in coords, default 6
- *  @param {boolean} options.anchor use "#" instead of "?" in href
- *  @param {boolean} options.visible hide the button on the map, default true
- *  @param {boolean} options.hidden hide the button on the map, default false DEPRECATED: use visible instead
- *  @param {function} options.onclick a function called when control is clicked
+ *  @param {boolean} [options.geohash=false] use geohash instead of lonlat, default false
+ *  @param {integer} [options.fixed=6] number of digit in coords, default 6
+ *  @param {boolean} [options.anchor] use "#" instead of "?" in href
+ *  @param {boolean} [options.visible=true] hide the button on the map, default true
+ *  @param {boolean} [options.hidden] hide the button on the map, default false DEPRECATED: use visible instead
+ *  @param {function} [options.onclick] a function called when control is clicked
+ *  @param {number} [options.refreshDelay=500] 
  */
 var ol_control_Permalink = class olcontrolPermalink extends ol_control_Control {
   constructor(opt_options) {
@@ -108,6 +109,7 @@ var ol_control_Permalink = class olcontrolPermalink extends ol_control_Control {
     if (init.hasOwnProperty('lon')) {
       this.set('initial', init)
     }
+    this.set('refreshDelay', options.refreshDelay || 500)
 
     // Decode permalink
     if (this.replaceState_) this.setPosition()
@@ -328,16 +330,26 @@ var ol_control_Permalink = class olcontrolPermalink extends ol_control_Control {
         for (var i in this.search_) {
           s += (s == "" ? "?" : "&") + i + (typeof (this.search_[i]) !== 'undefined' ? "=" + this.search_[i] : '')
         }
-        window.history.replaceState(null, null, document.location.origin + document.location.pathname + s)
+        this.replaceUrl_(document.location.origin + document.location.pathname + s, true)
+      } else {
+        this.replaceUrl_(this.getLink(), true)
       }
-      else
-        window.history.replaceState(null, null, this.getLink())
     } catch (e) { /* ok */ }
     /*
     if (this._localStorage) {
       localStorage['ol@permalink'] = this.getLink(true);
     }
     */
+  }
+  replaceUrl_(url, force) {
+    clearTimeout(this.refreshTout_)
+    if (force) {
+      window.history.replaceState(null, null, url)
+    } else {
+      this.refreshTout_ = setTimeout(function() {
+        window.history.replaceState(null, null, url)
+      }, this.get('refreshDelay'))
+    }
   }
   /**
    * On view change refresh link
@@ -346,8 +358,9 @@ var ol_control_Permalink = class olcontrolPermalink extends ol_control_Control {
    */
   viewChange_() {
     try {
-      if (this.replaceState_)
-        window.history.replaceState(null, null, this.getLink())
+      if (this.replaceState_) {
+        this.replaceUrl_(this.getLink())
+      }
     } catch (e) { /* ok */ }
     if (this._localStorage) {
       try {
