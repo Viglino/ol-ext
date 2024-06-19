@@ -37536,6 +37536,7 @@ ol.Overlay.Placemark = class olOverlayPlacemark extends ol.Overlay.Popup {
  * @fires show
  * @fires hide
  * @fires select
+ * @fires attribute
  * @param {} options Extend Popup options 
  *  @param {String} options.popupClass the a class of the overlay to style the popup.
  *  @param {bool} options.closeBox popup has a close box, default false.
@@ -37675,7 +37676,7 @@ ol.Overlay.PopupFeature = class olOverlayPopupFeature extends ol.Overlay.Popup {
       var tr, table = ol.ext.element.create('TABLE', { parent: html });
       var atts = this._attributeObject(template);
       var featureAtts = feature.getProperties();
-      for (var att in atts) {
+      Object.keys(atts).forEach(function(att) {
         if (featureAtts.hasOwnProperty(att)) {
           var a = atts[att];
           var content, val = featureAtts[att];
@@ -37691,8 +37692,14 @@ ol.Overlay.PopupFeature = class olOverlayPopupFeature extends ol.Overlay.Popup {
             visible = a.visible(feature, val);
           }
           if (visible) {
-            tr = ol.ext.element.create('TR', { parent: table });
+            tr = ol.ext.element.create('TR', {
+              click: function(e) {
+                this.dispatchEvent({ type: 'attribute', attribute: att, originalEvent: e })
+              }.bind(this),
+              parent: table 
+            });
             ol.ext.element.create('TD', { 
+              className: 'ol-label',
               html: a ? a.title || att : att, 
               parent: tr 
             });
@@ -37714,12 +37721,13 @@ ol.Overlay.PopupFeature = class olOverlayPopupFeature extends ol.Overlay.Popup {
             }
             // Add value
             ol.ext.element.create('TD', {
+              className: 'ol-value',
               html: content,
               parent: tr
             });
           }
         }
-      }
+      }.bind(this))
     }
     // Zoom button
     ol.ext.element.create('BUTTON', { className: 'ol-zoombt', parent: html })
