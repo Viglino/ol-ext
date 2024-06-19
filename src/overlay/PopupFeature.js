@@ -194,7 +194,7 @@ var ol_Overlay_PopupFeature = class olOverlayPopupFeature extends ol_Overlay_Pop
           if (visible) {
             tr = ol_ext_element.create('TR', {
               click: function(e) {
-                this.dispatchEvent({ type: 'attribute', attribute: att, originalEvent: e })
+                this.dispatchEvent({ type: 'attribute', feature: feature, attribute: att, originalEvent: e })
               }.bind(this),
               parent: table 
             });
