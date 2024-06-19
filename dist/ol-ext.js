@@ -30891,7 +30891,6 @@ ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Int
       var vectors = getVectorLayers(map.getLayers())
       vectors.forEach((function (l) {
         var s = l.getSource()
-        console.log('SOURCE', s)
         this._sourceListener.push(s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)))
         this._sourceListener.push(s.on('clearstart', function () {
           this.blockStart('clear')
@@ -30930,7 +30929,6 @@ ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Int
   /** A feature is added / removed
    */
   _onAddRemove(e) {
-    console.log('undore')
     if (this._record) {
       this._redoStack.clear()
       this._redo.length = 0
