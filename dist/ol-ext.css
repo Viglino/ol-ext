@@ -4037,13 +4037,16 @@ ul.ol-legend li div {
 }
 
 /* GPS */
-.ol-searchgps input.search {
+.ol-searchgps input.search,
+.ol-searchcoord input.search {
   display: none;
 }
-.ol-control.ol-searchgps > button:first-child {
+.ol-control.ol-searchgps > button:first-child,
+.ol-control.ol-searchcoord > button:first-child {
   background-image: none;
 }
-.ol-control.ol-searchgps > button:first-child:before {
+.ol-control.ol-searchgps > button:first-child:before,
+.ol-control.ol-searchcoord > button:first-child:before {
   content: "x/y";
   position: unset;
   display: block;
@@ -4054,15 +4057,20 @@ ul.ol-legend li div {
   width: auto;
   height: auto;
 }
-.ol-control.ol-searchgps > button:first-child:after {
+.ol-control.ol-searchgps > button:first-child:after,
+.ol-control.ol-searchcoord > button:first-child:after {
   content: unset;
 }
 .ol-control.ol-searchgps .ol-latitude,
-.ol-control.ol-searchgps .ol-longitude {
+.ol-control.ol-searchgps .ol-longitude,
+.ol-control.ol-searchcoord .ol-latitude,
+.ol-control.ol-searchcoord .ol-longitude {
   clear: both;
 }
 .ol-control.ol-searchgps .ol-latitude label,
-.ol-control.ol-searchgps .ol-longitude label {
+.ol-control.ol-searchgps .ol-longitude label,
+.ol-control.ol-searchcoord .ol-latitude label,
+.ol-control.ol-searchcoord .ol-longitude label {
   width: 5.5em;
   display: inline-block;
   text-align: right;
@@ -4071,6 +4079,11 @@ ul.ol-legend li div {
   margin: 0 -.8em 0 0;
   -webkit-transform-origin: 0 0;
           transform-origin: 0 0;
+}
+.ol-control.ol-searchcoord .ol-latitude label,
+.ol-control.ol-searchcoord .ol-longitude label {
+  width: 2em;
+  margin: 0;
 }
 .ol-control.ol-searchgps .ol-latitude input,
 .ol-control.ol-searchgps .ol-longitude input {
@@ -4102,17 +4115,20 @@ ul.ol-legend li div {
   width: .5em;
   text-align: left;
 }
-.ol-searchgps.ol-control.ol-collapsed button.ol-geoloc {
+.ol-searchgps.ol-control.ol-collapsed button.ol-geoloc,
+.ol-searchcoord.ol-control.ol-collapsed button.ol-geoloc {
   display: none;
 }
-.ol-searchgps button.ol-geoloc {
+.ol-searchgps button.ol-geoloc,
+.ol-searchcoord button.ol-geoloc {
   top: 0;
   float: right;
   margin-right: 3px;
   background-image: none;
   position: relative;
 }
-.ol-searchgps button.ol-geoloc:before {
+.ol-searchgps button.ol-geoloc:before,
+.ol-searchcoord button.ol-geoloc:before {
   content:"";
   position: absolute;
   left: 50%;
@@ -4124,7 +4140,8 @@ ul.ol-legend li div {
   -webkit-transform: translate(-50%,-50%);
           transform: translate(-50%,-50%);
 }
-.ol-searchgps button.ol-geoloc:after {
+.ol-searchgps button.ol-geoloc:after,
+.ol-searchcoord button.ol-geoloc:after {
   content:"";
   position: absolute;
   left: 50%;
