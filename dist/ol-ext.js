@@ -17272,7 +17272,8 @@ ol.control.SelectPopup = class olcontrolSelectPopup extends ol.control.SelectBas
     }
   }
   /** Set the popup values
-   * @param {Object} values a key/value list with key = property value, value = title shown in the popup, default search values in the sources
+   * @param {Object} [values] a key/value list with key = property value, value = title shown in the popup, default search values in the sources
+   * @param {boolean} [sort] true to sort the values
    */
   setValues(options) {
     options = options || {};
