@@ -21,6 +21,7 @@ import '../geom/LineStringSplitAt.js'
  *  @param {ol_Collection.<ol.Feature>} options.triggerFeatures Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).
  *  @param {function|undefined} options.filter a filter that takes a feature and return true if the feature is eligible for splitting, default always split.
  *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split. Default is 1e-3.
+ *  @param {function|undefined} options.alignTolerance Tolerance to check allignment. Default is 1e-3.
  * @todo verify auto intersection on features that split.
  */
 var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction_Interaction {
@@ -68,8 +69,10 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
       this.source_.on("removefeature", this.onRemoveFeature.bind(this))
     }
 
-    // Split tolerance between the calculated intersection and the geometry
+    // Node tolerance to snap
     this.tolerance_ = options.tolerance || 1e-3
+    // Split tolerance between the calculated intersection and the geometry
+    this.tolerance2_ = options.alignTolerance || options.tolerance || 1e-3
 
     // Get all features candidate
     this.filterSplit_ = options.filter || function () { return true }
@@ -186,7 +189,7 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
           var p = this.intersectSegs(seg, [c2[j], c2[j + 1]])
           if (p) {
             split.push(p)
-            g = f.getGeometry().splitAt(p, this.tolerance_)
+            g = f.getGeometry().splitAt(p, this.tolerance2_)
             if (g && g.length > 1) {
               found = f
               return true
@@ -203,7 +206,7 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
       extent = ol_extent_buffer(ol_extent_boundingExtent(seg), this.tolerance_ /*0.01*/)
       this.source_.forEachFeatureIntersectingExtent(extent, function(f) {
         if (f.getGeometry().splitAt) {
-          var g = f.getGeometry().splitAt(c[0], this.tolerance_)
+          var g = f.getGeometry().splitAt(c[0], this.tolerance2_)
           if (g.length > 1) {
             this.source_.removeFeature(f)
             for (k = 0; k < g.length; k++) {
@@ -251,7 +254,7 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
     // Split original
     var splitOriginal = false
     if (split.length) {
-      var result = feature.getGeometry().splitAt(split, this.tolerance_)
+      var result = feature.getGeometry().splitAt(split, this.tolerance2_)
       if (result.length > 1) {
         for (k = 0; k < result.length; k++) {
           f2 = feature.clone()
