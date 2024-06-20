@@ -32,6 +32,9 @@
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
   
+  <!-- Proj4 -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14/proj4.js"></script>
+
   <link rel="stylesheet" href="../style.css"/>
   <style>
   </style>
@@ -52,9 +55,35 @@
 
   <div class="options">
     <i>Use the search control to start a new search.</i>
+    Projection:
+    <select id="grat" onchange="setGraticule(true)">
+      <option value="4326">WGS 84 (EPSG:4326)</option>
+      <option value="2154">Lambert-93 (France) EPSG:2154</option>
+      <option value="27700">British National Grid (EPSG:27700)</option>
+      <option value="54009">Mollweide (ESRI:54009)</option>
+      <option value="23032">ED50 / UTM zone 32N (EPSG:23032)</option>
+      <option value="2163">US National Atlas Equal Area (EPSG:2163)</option>
+      <option value="3413">NSIDC Polar Stereographic North (EPSG:3413)</option>
+      <option value="5479">RSRGD2000 / MSLC2000 (EPSG:5479)</option>
+      <!--
+        <option value="32662">Plate Carree</option>
+      -->
+    </select>
+
   </div>
   
   <script type="text/javascript">
+  proj4.defs("EPSG:2154","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+  proj4.defs("EPSG:27700","+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
+  //proj4.defs("EPSG:32662","+proj=eqc +lat_ts=0 +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
+  //proj4.defs("EPSG:54024","+proj=bonne +lon_0=0 +lat_1=60 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs ");
+  proj4.defs('EPSG:5479', '+proj=lcc +lat_1=-76.66666666666667 +lat_2=-79.33333333333333 +lat_0=-78 +lon_0=163 +x_0=7000000 +y_0=5000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+  proj4.defs('EPSG:23032', '+proj=utm +zone=32 +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs');
+  proj4.defs('EPSG:21781', '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=600000 +y_0=200000 +ellps=bessel +towgs84=674.4,15.1,405.3,0,0,0,0 +units=m +no_defs');
+  proj4.defs('EPSG:3413', '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs');
+  proj4.defs('EPSG:2163', '+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs');
+  proj4.defs('ESRI:54009', '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs');
+
   // Layers
   var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() }) ];
 

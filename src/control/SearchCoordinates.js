@@ -19,12 +19,13 @@ import ol_ext_element from '../util/element.js'
  * @param {Object=} Control options. 
  *  @param {ol/proj/ProjectionLike} options.projection 
  *  @param {string} [options.className] control class name
- *  @param {Element | string | undefined} [options.target] Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} [options.label="search"] Text label to use for the search button, default "search"
- *  @param {string | undefined} [options.labelGPS="Locate with GPS"] placeholder, default "Locate with GPS"
- *  @param {number | undefined} [options.typing=300] a delay on each typing to start searching (ms), default 300.
- *  @param {integer | undefined} [options.minLength=1] minimum length to start searching, default 1
- *  @param {integer | undefined} [options.maxItems=10] maximum number of items to display in the autocomplete list, default 10
+ *  @param {Element | string } [options.target] Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string} [options.label="search"] Text label to use for the search button, default "search"
+ *  @param {string} [options.labelGPS="Locate with GPS"] placeholder, default "Locate with GPS"
+ *  @param {number} [options.typing=300] a delay on each typing to start searching (ms), default 300.
+ *  @param {integer} [options.minLength=1] minimum length to start searching, default 1
+ *  @param {integer} [options.maxItems=10] maximum number of items to display in the autocomplete list, default 10
+ *  @param {integer} [options.digit=2] number of digit in coords
  */
 var ol_control_SearchCoordinates = class olcontrolSearchCoordinates extends ol_control_Search {
   constructor(options) {
@@ -36,6 +37,7 @@ var ol_control_SearchCoordinates = class olcontrolSearchCoordinates extends ol_c
     
     // Projection
     this.projection_ = options.projection || 'EPSG:3857'
+    this.set('digit', typeof(options.digit) === 'number' ? options.digit : 2)
     // Geolocation
     this.geolocation = new ol_Geolocation({
       projection: "EPSG:4326",
@@ -61,7 +63,7 @@ var ol_control_SearchCoordinates = class olcontrolSearchCoordinates extends ol_c
     this.element.appendChild(ul);
   }
   /** Set the projection
-   * 
+   * @param {ol/proj/ProjectionLike} proj
    */
   setProjection(proj) {
     if (this.projection_ !== proj) {
@@ -78,9 +80,9 @@ var ol_control_SearchCoordinates = class olcontrolSearchCoordinates extends ol_c
   _createForm() {
 
     // Value has change
-    var onchange = function (e) {
-      if (lon.value || lat.value) {
-        this._input.value = lon.value + ',' + lat.value;
+    var onchange = function() {
+      if (lonx.value || laty.value) {
+        this._input.value = lonx.value + ',' + laty.value;
       } else {
         this._input.value = '';
       }
@@ -111,7 +113,7 @@ var ol_control_SearchCoordinates = class olcontrolSearchCoordinates extends ol_c
       html: 'X',
       parent: div
     });
-    var lon = createInput('ol-decimal');
+    var lonx = createInput('ol-decimal');
 
     // Y
     div = ol_ext_element.create('DIV', {
@@ -122,19 +124,19 @@ var ol_control_SearchCoordinates = class olcontrolSearchCoordinates extends ol_c
       html: 'Y',
       parent: div
     });
-    var lat = createInput('ol-decimal');
+    var laty = createInput('ol-decimal');
 
     // Focus on open
     if (this.button) {
       this.button.addEventListener("click", function () {
-        lon.focus();
+        lonx.focus();
       });
     }
 
     // Change value on click
     this.on('select', function (e) {
-      lon.value = e.search.gps[0];
-      lat.value = e.search.gps[1];
+      lonx.value = e.search.gps[0];
+      laty.value = e.search.gps[1];
     }.bind(this));
 
     // Change value on geolocation
@@ -142,10 +144,10 @@ var ol_control_SearchCoordinates = class olcontrolSearchCoordinates extends ol_c
       this.geolocation.setTracking(false);
       var coord = this.geolocation.getPosition();
       coord = ol_proj_transform(coord, 'EPSG:4326', this.projection_)
-      console.log(coord)
-      lon.value = coord[0];
-      lat.value = coord[1];
-      this._triggerCustomEvent('keyup', lon);
+      var d = Math.pow(10, this.get('digit'))
+      lonx.value = Math.round(coord[0] * d) / d;
+      laty.value = Math.round(coord[1] * d) / d;
+      this._triggerCustomEvent('keyup', lonx);
     }.bind(this));
   }
   /** Autocomplete function

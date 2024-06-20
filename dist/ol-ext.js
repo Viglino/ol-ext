@@ -15575,12 +15575,13 @@ ol.control.SearchBAN = class olcontrolSearchBAN extends ol.control.SearchPhoton 
  * @param {Object=} Control options. 
  *  @param {ol/proj/ProjectionLike} options.projection 
  *  @param {string} [options.className] control class name
- *  @param {Element | string | undefined} [options.target] Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} [options.label="search"] Text label to use for the search button, default "search"
- *  @param {string | undefined} [options.labelGPS="Locate with GPS"] placeholder, default "Locate with GPS"
- *  @param {number | undefined} [options.typing=300] a delay on each typing to start searching (ms), default 300.
- *  @param {integer | undefined} [options.minLength=1] minimum length to start searching, default 1
- *  @param {integer | undefined} [options.maxItems=10] maximum number of items to display in the autocomplete list, default 10
+ *  @param {Element | string } [options.target] Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string} [options.label="search"] Text label to use for the search button, default "search"
+ *  @param {string} [options.labelGPS="Locate with GPS"] placeholder, default "Locate with GPS"
+ *  @param {number} [options.typing=300] a delay on each typing to start searching (ms), default 300.
+ *  @param {integer} [options.minLength=1] minimum length to start searching, default 1
+ *  @param {integer} [options.maxItems=10] maximum number of items to display in the autocomplete list, default 10
+ *  @param {integer} [options.digit=2] number of digit in coords
  */
 ol.control.SearchCoordinates = class olcontrolSearchCoordinates extends ol.control.Search {
   constructor(options) {
@@ -15590,6 +15591,7 @@ ol.control.SearchCoordinates = class olcontrolSearchCoordinates extends ol.contr
     super(options);
     // Projection
     this.projection_ = options.projection || 'EPSG:3857'
+    this.set('digit', typeof(options.digit) === 'number' ? options.digit : 2)
     // Geolocation
     this.geolocation = new ol.Geolocation({
       projection: "EPSG:4326",
@@ -15613,7 +15615,7 @@ ol.control.SearchCoordinates = class olcontrolSearchCoordinates extends ol.contr
     this.element.appendChild(ul);
   }
   /** Set the projection
-   * 
+   * @param {ol/proj/ProjectionLike} proj
    */
   setProjection(proj) {
     if (this.projection_ !== proj) {
@@ -15629,9 +15631,9 @@ ol.control.SearchCoordinates = class olcontrolSearchCoordinates extends ol.contr
    */
   _createForm() {
     // Value has change
-    var onchange = function (e) {
-      if (lon.value || lat.value) {
-        this._input.value = lon.value + ',' + lat.value;
+    var onchange = function() {
+      if (lonx.value || laty.value) {
+        this._input.value = lonx.value + ',' + laty.value;
       } else {
         this._input.value = '';
       }
@@ -15660,7 +15662,7 @@ ol.control.SearchCoordinates = class olcontrolSearchCoordinates extends ol.contr
       html: 'X',
       parent: div
     });
-    var lon = createInput('ol-decimal');
+    var lonx = createInput('ol-decimal');
     // Y
     div = ol.ext.element.create('DIV', {
       className: 'ol-latitude',
@@ -15670,27 +15672,27 @@ ol.control.SearchCoordinates = class olcontrolSearchCoordinates extends ol.contr
       html: 'Y',
       parent: div
     });
-    var lat = createInput('ol-decimal');
+    var laty = createInput('ol-decimal');
     // Focus on open
     if (this.button) {
       this.button.addEventListener("click", function () {
-        lon.focus();
+        lonx.focus();
       });
     }
     // Change value on click
     this.on('select', function (e) {
-      lon.value = e.search.gps[0];
-      lat.value = e.search.gps[1];
+      lonx.value = e.search.gps[0];
+      laty.value = e.search.gps[1];
     }.bind(this));
     // Change value on geolocation
     this.geolocation.on('change', function () {
       this.geolocation.setTracking(false);
       var coord = this.geolocation.getPosition();
       coord = ol.proj.transform(coord, 'EPSG:4326', this.projection_)
-      console.log(coord)
-      lon.value = coord[0];
-      lat.value = coord[1];
-      this._triggerCustomEvent('keyup', lon);
+      var d = Math.pow(10, this.get('digit'))
+      lonx.value = Math.round(coord[0] * d) / d;
+      laty.value = Math.round(coord[1] * d) / d;
+      this._triggerCustomEvent('keyup', lonx);
     }.bind(this));
   }
   /** Autocomplete function
@@ -28618,6 +28620,7 @@ ol.interaction.Split = class olinteractionSplit extends ol.interaction.Interacti
  *  @param {ol.Collection.<ol.Feature>} options.triggerFeatures Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).
  *  @param {function|undefined} options.filter a filter that takes a feature and return true if the feature is eligible for splitting, default always split.
  *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split. Default is 1e-3.
+ *  @param {function|undefined} options.alignTolerance Tolerance to check allignment. Default is 1e-3.
  * @todo verify auto intersection on features that split.
  */
 ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Interaction {
@@ -28660,8 +28663,10 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
       this.source_.on("changefeature", this.onChangeFeature.bind(this))
       this.source_.on("removefeature", this.onRemoveFeature.bind(this))
     }
-    // Split tolerance between the calculated intersection and the geometry
+    // Node tolerance to snap
     this.tolerance_ = options.tolerance || 1e-3
+    // Split tolerance between the calculated intersection and the geometry
+    this.tolerance2_ = options.alignTolerance || options.tolerance || 1e-3
     // Get all features candidate
     this.filterSplit_ = options.filter || function () { return true }
   }
@@ -28766,7 +28771,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
           var p = this.intersectSegs(seg, [c2[j], c2[j + 1]])
           if (p) {
             split.push(p)
-            g = f.getGeometry().splitAt(p, this.tolerance_)
+            g = f.getGeometry().splitAt(p, this.tolerance2_)
             if (g && g.length > 1) {
               found = f
               return true
@@ -28782,7 +28787,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
       extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/)
       this.source_.forEachFeatureIntersectingExtent(extent, function(f) {
         if (f.getGeometry().splitAt) {
-          var g = f.getGeometry().splitAt(c[0], this.tolerance_)
+          var g = f.getGeometry().splitAt(c[0], this.tolerance2_)
           if (g.length > 1) {
             this.source_.removeFeature(f)
             for (k = 0; k < g.length; k++) {
@@ -28828,7 +28833,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
     // Split original
     var splitOriginal = false
     if (split.length) {
-      var result = feature.getGeometry().splitAt(split, this.tolerance_)
+      var result = feature.getGeometry().splitAt(split, this.tolerance2_)
       if (result.length > 1) {
         for (k = 0; k < result.length; k++) {
           f2 = feature.clone()
