@@ -30122,7 +30122,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
     if (oldMap) {
       var targetElement = oldMap.getTargetElement()
       oldMap.removeLayer(this.overlayLayer_)
-      if (this.previousCursor_ && targetElement) {
+      if (this.previousCursor_ && targetElement && !('ontouchstart' in window)) {
         targetElement.style.cursor = this.previousCursor_
       }
       this.previousCursor_ = undefined
@@ -30523,7 +30523,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
         this.center_ = this.getCenter() || ol.extent.getCenter(extent)
         // we are now rotating (cursor down on rotate mode), so apply the grabbing cursor
         var element = evt.map.getTargetElement()
-        element.style.cursor = this.Cursors.rotate0
+        if (!('ontouchstart' in window)) element.style.cursor = this.Cursors.rotate0
         this.previousCursor_ = element.style.cursor
       } else {
         this.center_ = ol.extent.getCenter(extent)
@@ -30787,10 +30787,11 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
         if (this.previousCursor_ === undefined) {
           this.previousCursor_ = element.style.cursor
         }
-        element.style.cursor = c
+        if (!('ontouchstart' in window)) element.style.cursor = c
       } else {
-        if (this.previousCursor_ !== undefined)
+        if (this.previousCursor_ !== undefined && !('ontouchstart' in window)) {
           element.style.cursor = this.previousCursor_
+        }
         this.previousCursor_ = undefined
       }
     }
@@ -30803,7 +30804,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
     // remove rotate0 cursor on Up event, otherwise it's stuck on grab/grabbing
     if (this.mode_ === 'rotate') {
       var element = evt.map.getTargetElement()
-      element.style.cursor = this.Cursors.default
+      if (!('ontouchstart' in window)) element.style.cursor = this.Cursors.default
       this.previousCursor_ = undefined
     }
     //dispatchEvent
