@@ -4116,10 +4116,14 @@ ul.ol-legend li div {
   text-align: left;
 }
 .ol-searchgps.ol-control.ol-collapsed button.ol-geoloc,
+.ol-searchgps.ol-control.ol-collapsed button.ol-centerloc,
+.ol-searchcoord.ol-control.ol-collapsed button.ol-centerloc,
 .ol-searchcoord.ol-control.ol-collapsed button.ol-geoloc {
   display: none;
 }
 .ol-searchgps button.ol-geoloc,
+.ol-searchgps button.ol-centerloc,
+.ol-searchcoord button.ol-centerloc,
 .ol-searchcoord button.ol-geoloc {
   top: 0;
   float: right;
@@ -4157,6 +4161,23 @@ ul.ol-legend li div {
           box-shadow: 
     .45em 0 currentColor, -.45em 0 currentColor, 0 -.45em currentColor, 0 .45em currentColor,
     .25em 0 currentColor, -.25em 0 currentColor, 0 -.25em currentColor, 0 .25em currentColor;
+}
+
+.ol-searchgps button.ol-centerloc:before,
+.ol-searchcoord button.ol-centerloc:before {
+  content: "📍";
+  border: 0;
+  width: auto;
+  height: auto;
+  padding: 0;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+}
+.ol-searchgps button.ol-centerloc:after,
+.ol-searchcoord button.ol-centerloc:after {
+  display: none;
 }
 .ol-control.ol-select {
   top: .5em;

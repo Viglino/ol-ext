@@ -15577,7 +15577,8 @@ ol.control.SearchBAN = class olcontrolSearchBAN extends ol.control.SearchPhoton 
  *  @param {string} [options.className] control class name
  *  @param {Element | string } [options.target] Specify a target if you want the control to be rendered outside of the map's viewport.
  *  @param {string} [options.label="search"] Text label to use for the search button, default "search"
- *  @param {string} [options.labelGPS="Locate with GPS"] placeholder, default "Locate with GPS"
+ *  @param {string} [options.labelGPS="Locate with GPS"] placeholder
+ *  @param {string} [options.labelCenter="Map center"] placeholder
  *  @param {number} [options.typing=300] a delay on each typing to start searching (ms), default 300.
  *  @param {integer} [options.minLength=1] minimum length to start searching, default 1
  *  @param {integer} [options.maxItems=10] maximum number of items to display in the autocomplete list, default 10
@@ -15609,10 +15610,39 @@ ol.control.SearchCoordinates = class olcontrolSearchCoordinates extends ol.contr
         this.geolocation.setTracking(true);
       }.bind(this)
     });
+    ol.ext.element.create('BUTTON', {
+      className: 'ol-centerloc',
+      title: options.labelCenter || 'Map center',
+      parent: this.element,
+      click: function () {
+        this.setInput()
+      }.bind(this)
+    });
     this._createForm();
     // Move list to the end
     var ul = this.element.querySelector("ul.autocomplete");
     this.element.appendChild(ul);
+  }
+  /** Set the input value in the form (for initialisation purpose)
+   *	@param {Array<number>} [coord] if none get the map center
+   *	@api
+   */
+  setInput(coord) {
+    if (!coord) {
+      if (!this.getMap()) return
+      coord = this.getMap().getView().getCenter();
+      coord = ol.proj.transform(coord, this.getMap().getView().getProjection(), this.getProjection())
+    }
+    var d = Math.pow(10, this.get('digit'))
+    this.inputs_[0].value = Math.round(coord[0] * d) / d
+    this.inputs_[1].value = Math.round(coord[1] * d) / d;
+    this._triggerCustomEvent('keyup', this.inputs_[0]);
+  }
+  /** Get the control projection
+   * @returns {ol/proj/ProjectionLike}
+   */
+  getProjection() {
+    return this.projection_
   }
   /** Set the projection
    * @param {ol/proj/ProjectionLike} proj
@@ -15679,6 +15709,7 @@ ol.control.SearchCoordinates = class olcontrolSearchCoordinates extends ol.contr
         lonx.focus();
       });
     }
+    this.inputs_ = [ lonx, laty ];
     // Change value on click
     this.on('select', function (e) {
       lonx.value = e.search.gps[0];
@@ -15958,6 +15989,20 @@ ol.control.SearchGPS = class olcontrolSearchGPS extends ol.control.Search {
     var ul = this.element.querySelector("ul.autocomplete");
     this.element.appendChild(ul);
   }
+  /** Set the input value in the form (for initialisation purpose)
+   *	@param {Array<number>} [coord] if none get the map center
+   *	@api
+   */
+  setInput(coord) {
+    if (!coord) {
+      if (!this.getMap()) return
+      coord = this.getMap().getView().getCenter();
+      coord = ol.proj.transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326')
+    }
+    this.inputs_[0].value = coord[0];
+    this.inputs_[1].value = coord[1];
+    this._triggerCustomEvent('keyup', this.inputs_[0]);
+  }
   /** Create input form
    * @private
    */
@@ -16035,6 +16080,7 @@ ol.control.SearchGPS = class olcontrolSearchGPS extends ol.control.Search {
     var latd = createInput('ol-dms', '°');
     var latm = createInput('ol-dms', '\'');
     var lats = createInput('ol-dms', '"');
+    this.inputs_ = [lon, lat]
     // Focus on open
     if (this.button) {
       this.button.addEventListener("click", function () {
