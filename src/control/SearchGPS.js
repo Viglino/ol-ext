@@ -71,6 +71,20 @@ var ol_control_SearchGPS = class olcontrolSearchGPS extends ol_control_Search {
     this.element.appendChild(ul);
 
   }
+  /** Set the input value in the form (for initialisation purpose)
+   *	@param {Array<number>} [coord] if none get the map center
+   *	@api
+   */
+  setInput(coord) {
+    if (!coord) {
+      if (!this.getMap()) return
+      coord = this.getMap().getView().getCenter();
+      coord = ol_proj_transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326')
+    }
+    this.inputs_[0].value = coord[0];
+    this.inputs_[1].value = coord[1];
+    this._triggerCustomEvent('keyup', this.inputs_[0]);
+  }
   /** Create input form
    * @private
    */
@@ -152,6 +166,8 @@ var ol_control_SearchGPS = class olcontrolSearchGPS extends ol_control_Search {
     var latd = createInput('ol-dms', '°');
     var latm = createInput('ol-dms', '\'');
     var lats = createInput('ol-dms', '"');
+
+    this.inputs_ = [lon, lat]
 
     // Focus on open
     if (this.button) {
