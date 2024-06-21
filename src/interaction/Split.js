@@ -15,6 +15,7 @@ import ol_Feature from 'ol/Feature.js'
 import ol_geom_LineString from 'ol/geom/LineString.js'
 import {ol_coordinate_dist2d} from "../geom/GeomUtils.js";
 import '../geom/LineStringSplitAt.js'
+import ol_ext_element from '../util/element.js'
 
 /** Interaction split interaction for splitting feature geometry
  * @constructor
@@ -299,10 +300,10 @@ var ol_interaction_Split = class olinteractionSplit extends ol_interaction_Inter
       if (current) {
         if (element.style.cursor != this.cursor_) {
           this.previousCursor_ = element.style.cursor
-          element.style.cursor = this.cursor_
+          ol_ext_element.setCursor(element, this.cursor_)
         }
       } else if (this.previousCursor_ !== undefined) {
-        element.style.cursor = this.previousCursor_
+        ol_ext_element.setCursor(element, this.previousCursor_)
         this.previousCursor_ = undefined
       }
     }

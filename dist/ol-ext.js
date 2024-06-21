@@ -1338,6 +1338,17 @@ ol.ext.element.dispatchEvent = function (eventName, element) {
   }
   element.dispatchEvent(event);
 };
+/** Set cursor
+ * @param {Element|ol/Map} elt
+ * @param {string} cursor
+ */
+ol.ext.element.setCursor = function(elt, cursor) {
+  if (elt instanceof ol.Map) elt = elt.getTargetElement()
+  // prevent flashing on mobile device
+  if (!('ontouchstart' in window) && elt instanceof Element) {
+    elt.style.cursor = cursor;
+  }
+}
 
 /** Get a canvas overlay for a map (non rotated, on top of the map)
  * @param {ol.Map} map
@@ -25455,10 +25466,10 @@ ol.interaction.FillAttribute = class olinteractionFillAttribute extends ol.inter
     if (this.getMap() && this._cursor) {
       if (active) {
         this._previousCursor = this.getMap().getTargetElement().style.cursor;
-        this.getMap().getTargetElement().style.cursor = this._cursor;
+        ol.ext.element.setCursor(this.getMap(), this._cursor);
         //      console.log('setCursor',this._cursor)
       } else {
-        this.getMap().getTargetElement().style.cursor = this._previousCursor;
+        ol.ext.element.setCursor(this.getMap(), this._previousCursor);
         this._previousCursor = undefined;
       }
     }
@@ -26209,7 +26220,7 @@ ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interacti
    */
   setMap(map) {
     if (this.previousCursor_ !== undefined && this.getMap()) {
-      this.getMap().getTargetElement().style.cursor = this.previousCursor_;
+      ol.ext.element.setCursor(this.getMap(), this.previousCursor_);
       this.previousCursor_ = undefined;
     }
     super.setMap(map);
@@ -26220,9 +26231,8 @@ ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interacti
   setActive(b) {
     super.setActive(b);
     if (this.cursor_ && this.getMap() && this.getMap().getTargetElement()) {
-      var style = this.getMap().getTargetElement().style;
       if (this.previousCursor_ !== undefined) {
-        style.cursor = this.previousCursor_;
+        ol.ext.element.setCursor(this.getMap(), this.previousCursor_);
         this.previousCursor_ = undefined;
       }
     }
@@ -26234,7 +26244,7 @@ ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interacti
    */
   setCursor(cursor) {
     if (!cursor && this.previousCursor_ !== undefined && this.getMap()) {
-      this.getMap().getTargetElement().style.cursor = this.previousCursor_;
+      ol.ext.element.setCursor(this.getMap(), this.previousCursor_);
       this.previousCursor_ = undefined;
     }
     this.cursor_ = cursor;
@@ -26325,10 +26335,10 @@ ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interacti
         if (b) {
           if (style.cursor != this.cursor_) {
             this.previousCursor_ = style.cursor;
-            style.cursor = this.cursor_;
+            ol.ext.element.setCursor(map, this.cursor_);
           }
         } else if (this.previousCursor_ !== undefined) {
-          style.cursor = this.previousCursor_;
+          ol.ext.element.setCursor(map, this.previousCursor_);
           this.previousCursor_ = undefined;
         }
       }
@@ -27159,10 +27169,10 @@ ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.inter
       if (current) {
         if (element.style.cursor != this.cursor_) {
           this.previousCursor_ = element.style.cursor
-          element.style.cursor = this.cursor_
+          ol.ext.element.setCursor(element, this.cursor_)
         }
       } else if (this.previousCursor_ !== undefined) {
-        element.style.cursor = this.previousCursor_
+        ol.ext.element.setCursor(element, this.previousCursor_)
         this.previousCursor_ = undefined
       }
     }
@@ -27522,9 +27532,9 @@ ol.interaction.Offset = class olinteractionOffset extends ol.interaction.Pointer
       if (this.previousCursor_ === false) {
         this.previousCursor_ = e.map.getTargetElement().style.cursor;
       }
-      e.map.getTargetElement().style.cursor = 'pointer';
+      ol.ext.element.setCursor(e.map, 'pointer');
     } else {
-      e.map.getTargetElement().style.cursor = this.previousCursor_;
+      ol.ext.element.setCursor(e.map, this.previousCursor_);
       this.previousCursor_ = false;
     }
   }
@@ -28640,10 +28650,10 @@ ol.interaction.Split = class olinteractionSplit extends ol.interaction.Interacti
       if (current) {
         if (element.style.cursor != this.cursor_) {
           this.previousCursor_ = element.style.cursor
-          element.style.cursor = this.cursor_
+          ol.ext.element.setCursor(element, this.cursor_)
         }
       } else if (this.previousCursor_ !== undefined) {
-        element.style.cursor = this.previousCursor_
+        ol.ext.element.setCursor(element, this.previousCursor_)
         this.previousCursor_ = undefined
       }
     }
@@ -30120,10 +30130,9 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
   setMap(map) {
     var oldMap = this.getMap()
     if (oldMap) {
-      var targetElement = oldMap.getTargetElement()
       oldMap.removeLayer(this.overlayLayer_)
-      if (this.previousCursor_ && targetElement && !('ontouchstart' in window)) {
-        targetElement.style.cursor = this.previousCursor_
+      if (this.previousCursor_) {
+        ol.ext.element.setCursor(oldMap, this.previousCursor_)
       }
       this.previousCursor_ = undefined
     }
@@ -30523,7 +30532,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
         this.center_ = this.getCenter() || ol.extent.getCenter(extent)
         // we are now rotating (cursor down on rotate mode), so apply the grabbing cursor
         var element = evt.map.getTargetElement()
-        if (!('ontouchstart' in window)) element.style.cursor = this.Cursors.rotate0
+        ol.ext.element.setCursor(element, this.Cursors.rotate0)
         this.previousCursor_ = element.style.cursor
       } else {
         this.center_ = ol.extent.getCenter(extent)
@@ -30787,10 +30796,10 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
         if (this.previousCursor_ === undefined) {
           this.previousCursor_ = element.style.cursor
         }
-        if (!('ontouchstart' in window)) element.style.cursor = c
+        ol.ext.element.setCursor(element, c);
       } else {
-        if (this.previousCursor_ !== undefined && !('ontouchstart' in window)) {
-          element.style.cursor = this.previousCursor_
+        if (this.previousCursor_ !== undefined) {
+          ol.ext.element.setCursor(element, this.previousCursor_)
         }
         this.previousCursor_ = undefined
       }
@@ -30804,7 +30813,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
     // remove rotate0 cursor on Up event, otherwise it's stuck on grab/grabbing
     if (this.mode_ === 'rotate') {
       var element = evt.map.getTargetElement()
-      if (!('ontouchstart' in window)) element.style.cursor = this.Cursors.default
+      ol.ext.element.setCursor(element, this.Cursors.default)
       this.previousCursor_ = undefined
     }
     //dispatchEvent

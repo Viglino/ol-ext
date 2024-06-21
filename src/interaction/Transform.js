@@ -12,6 +12,7 @@ import {fromExtent as ol_geom_Polygon_fromExtent} from 'ol/geom/Polygon.js'
 import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer, createEmpty as ol_extent_createEmpty, extend as ol_extent_extend, getCenter as ol_extent_getCenter} from 'ol/extent.js'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
 import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_ext_element from '../util/element'
 
 /** Interaction rotate
  * @constructor
@@ -128,10 +129,9 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
   setMap(map) {
     var oldMap = this.getMap()
     if (oldMap) {
-      var targetElement = oldMap.getTargetElement()
       oldMap.removeLayer(this.overlayLayer_)
-      if (this.previousCursor_ && targetElement && !('ontouchstart' in window)) {
-        targetElement.style.cursor = this.previousCursor_
+      if (this.previousCursor_) {
+        ol_ext_element.setCursor(oldMap, this.previousCursor_)
       }
       this.previousCursor_ = undefined
     }
@@ -538,7 +538,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
         this.center_ = this.getCenter() || ol_extent_getCenter(extent)
         // we are now rotating (cursor down on rotate mode), so apply the grabbing cursor
         var element = evt.map.getTargetElement()
-        if (!('ontouchstart' in window)) element.style.cursor = this.Cursors.rotate0
+        ol_ext_element.setCursor(element, this.Cursors.rotate0)
         this.previousCursor_ = element.style.cursor
       } else {
         this.center_ = ol_extent_getCenter(extent)
@@ -817,10 +817,10 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
         if (this.previousCursor_ === undefined) {
           this.previousCursor_ = element.style.cursor
         }
-        if (!('ontouchstart' in window)) element.style.cursor = c
+        ol_ext_element.setCursor(element, c);
       } else {
-        if (this.previousCursor_ !== undefined && !('ontouchstart' in window)) {
-          element.style.cursor = this.previousCursor_
+        if (this.previousCursor_ !== undefined) {
+          ol_ext_element.setCursor(element, this.previousCursor_)
         }
         this.previousCursor_ = undefined
       }
@@ -834,7 +834,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
     // remove rotate0 cursor on Up event, otherwise it's stuck on grab/grabbing
     if (this.mode_ === 'rotate') {
       var element = evt.map.getTargetElement()
-      if (!('ontouchstart' in window)) element.style.cursor = this.Cursors.default
+      ol_ext_element.setCursor(element, this.Cursors.default)
       this.previousCursor_ = undefined
     }
 

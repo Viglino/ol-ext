@@ -8,6 +8,7 @@ import ol_geom_Polygon from 'ol/geom/Polygon.js'
 import {ol_coordinate_dist2d, ol_coordinate_findSegment, ol_coordinate_offsetCoords} from "../geom/GeomUtils.js";
 
 import ol_style_Style_defaultStyle from '../style/defaultStyle.js'
+import ol_ext_element from '../util/element.js';
 
 /** Offset interaction for offseting feature geometry
  * @constructor
@@ -212,9 +213,9 @@ var ol_interaction_Offset = class olinteractionOffset extends ol_interaction_Poi
       if (this.previousCursor_ === false) {
         this.previousCursor_ = e.map.getTargetElement().style.cursor;
       }
-      e.map.getTargetElement().style.cursor = 'pointer';
+      ol_ext_element.setCursor(e.map, 'pointer');
     } else {
-      e.map.getTargetElement().style.cursor = this.previousCursor_;
+      ol_ext_element.setCursor(e.map, this.previousCursor_);
       this.previousCursor_ = false;
     }
   }
