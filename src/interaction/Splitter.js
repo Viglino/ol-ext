@@ -134,8 +134,7 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
   * @private
   */
   splitSource(feature, change) {
-    if (!this.getActive())
-      return
+    if (!this.getActive()) return
 
     // Allready perform a split
     if (this.splitting)
@@ -280,6 +279,8 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
    * @private
   */
   onAddFeature(e) {
+    if (!this.getActive()) return;
+
     this.splitSource(e.feature)
     if (this.splitting) {
       this.added_.push(e.feature)
@@ -289,6 +290,8 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
    * @private
   */
   onRemoveFeature(e) {
+    if (!this.getActive()) return;
+
     if (this.splitting) {
       var n = this.added_.indexOf(e.feature)
       if (n == -1) {
@@ -302,6 +305,8 @@ var ol_interaction_Splitter = class olinteractionSplitter extends ol_interaction
    * @private
   */
   onChangeFeature(e) {
+    if (!this.getActive()) return;
+
     if (this.moving_) {
       this.lastEvent_ = e
     } else {
