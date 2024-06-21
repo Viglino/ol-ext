@@ -55,20 +55,25 @@
 
   <div class="options">
     <i>Use the search control to start a new search.</i>
-    Projection:
-    <select id="grat" onchange="setGraticule(true)">
-      <option value="4326">WGS 84 (EPSG:4326)</option>
-      <option value="2154">Lambert-93 (France) EPSG:2154</option>
-      <option value="27700">British National Grid (EPSG:27700)</option>
-      <option value="54009">Mollweide (ESRI:54009)</option>
-      <option value="23032">ED50 / UTM zone 32N (EPSG:23032)</option>
-      <option value="2163">US National Atlas Equal Area (EPSG:2163)</option>
-      <option value="3413">NSIDC Polar Stereographic North (EPSG:3413)</option>
-      <option value="5479">RSRGD2000 / MSLC2000 (EPSG:5479)</option>
-      <!--
-        <option value="32662">Plate Carree</option>
-      -->
-    </select>
+    <ul>
+      <li>
+        Projection:
+        <select onchange="search.setProjection(this.value)">
+          <option value="EPSG:4326">WGS 84 (EPSG:4326)</option>
+          <option value="EPSG:3857" selected="selected">Pseudo-Mercator EPSG:3857</option>
+          <option value="EPSG:2154">Lambert-93 (France) EPSG:2154</option>
+          <option value="EPSG:27700">British National Grid (EPSG:27700)</option>
+          <option value="ESRI:54009">Mollweide (ESRI:54009)</option>
+          <option value="EPSG:23032">ED50 / UTM zone 32N (EPSG:23032)</option>
+          <option value="EPSG:2163">US National Atlas Equal Area (EPSG:2163)</option>
+          <option value="EPSG:3413">NSIDC Polar Stereographic North (EPSG:3413)</option>
+          <option value="EPSG:5479">RSRGD2000 / MSLC2000 (EPSG:5479)</option>
+          <!--
+            <option value="32662">Plate Carree</option>
+            -->
+        </select>
+      </li>
+    </ul>
 
   </div>
   
@@ -83,6 +88,8 @@
   proj4.defs('EPSG:3413', '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs');
   proj4.defs('EPSG:2163', '+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs');
   proj4.defs('ESRI:54009', '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs');
+  
+  ol.proj.proj4.register(proj4);
 
   // Layers
   var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() }) ];

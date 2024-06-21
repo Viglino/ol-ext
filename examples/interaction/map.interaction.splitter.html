@@ -69,7 +69,7 @@
     var map = new ol.Map({
       target: 'map',
       view: new ol.View({
-        /** /
+        /**/
         zoom: 5,
         center: [261720, 5951081],
         /*/
@@ -103,7 +103,7 @@
     vector.getSource().addFeature(new ol.Feature(new ol.geom.Point([261720, 5951081])));
 
     // Add splitter before other interaction
-    var splitter = new ol.interaction.Splitter({ source: vector.getSource(), tolerance: 1e-8 });
+    var splitter = new ol.interaction.Splitter({ source: vector.getSource(), tolerance: 1e-3 });
     map.addInteraction(splitter);
 
     // Add interactions to modify features
