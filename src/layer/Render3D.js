@@ -6,6 +6,7 @@ import ol_style_Style from 'ol/style/Style.js'
 import ol_style_Stroke from 'ol/style/Stroke.js'
 import ol_style_Fill from 'ol/style/Fill.js'
 import {asString as ol_color_asString} from 'ol/color.js'
+import { VERSION as ol_util_VERSION } from 'ol/util.js'
 
 import {ol_coordinate_getIntersectionPoint} from '../geom/GeomUtils.js'
 
@@ -125,18 +126,12 @@ var ol_render3D = class olrender3D extends ol_Object {
       }
     }
 
-    var ratio = e.frameState.pixelRatio
+    var ratio = this._ratio = e.frameState.pixelRatio
     var ctx = e.context
-    var m = this.matrix_ = e.frameState.coordinateToPixelTransform
-    // Old version (matrix)
-    if (!m) {
-      m = e.frameState.coordinateToPixelMatrix,
-        m[2] = m[4]
-      m[3] = m[5]
-      m[4] = m[12]
-      m[5] = m[13]
-    }
-    this.center_ = [ctx.canvas.width / 2 / ratio, ctx.canvas.height / ratio]
+    this.matrix_ = e.frameState.coordinateToPixelTransform
+    this.inversePixelTransform_ = e.inversePixelTransform;
+    // this.center_ = [ctx.canvas.width / 2 / ratio, ctx.canvas.height / ratio]
+    this.center_ = [e.frameState.size[0] / 2, e.frameState.size[1]]
 
     var f = this.layer_.getSource().getFeaturesInExtent(e.frameState.extent)
 
@@ -149,13 +144,13 @@ var ol_render3D = class olrender3D extends ol_Object {
     var builds = []
     for (var i = 0; i < f.length; i++) {
       var h = this.getFeatureHeight(f[i])
-      if (h)
-        builds.push(this.getFeature3D_(f[i], h))
+      if (h) builds.push(this.getFeature3D_(f[i], h))
     }
-    if (this.get('ghost'))
+    if (this.get('ghost')) {
       this.drawGhost3D_(ctx, builds)
-    else
+    } else {
       this.drawFeature3D_(ctx, builds)
+    }
     ctx.restore()
   }
   /** Set layer to render 3D
@@ -231,12 +226,31 @@ var ol_render3D = class olrender3D extends ol_Object {
       pt[0] * this.matrix_[0] + pt[1] * this.matrix_[1] + this.matrix_[4],
       pt[0] * this.matrix_[2] + pt[1] * this.matrix_[3] + this.matrix_[5]
     ]
+    var p1 = [
+      p0[0] + h / this.res_ * (p0[0] - this.center_[0]),
+      p0[1] + h / this.res_ * (p0[1] - this.center_[1])
+    ]
+
+    var version = parseFloat(ol_util_VERSION);
+    // ol@v9.1+
+    if (version > 9.0) {
+      p0 = [
+        p0[0] * this.inversePixelTransform_[0] - p0[1] * this.inversePixelTransform_[1] + this.inversePixelTransform_[4],
+        - p0[0] * this.inversePixelTransform_[2] + p0[1] * this.inversePixelTransform_[3] + this.inversePixelTransform_[5]
+      ]
+      p1 = [
+        p1[0] * this.inversePixelTransform_[0] - p1[1] * this.inversePixelTransform_[1] + this.inversePixelTransform_[4],
+        - p1[0] * this.inversePixelTransform_[2] + p1[1] * this.inversePixelTransform_[3] + this.inversePixelTransform_[5]
+      ]
+      return {
+        p0: [p0[0]/this._ratio, p0[1]/this._ratio],
+        p1: [p1[0]/this._ratio, p1[1]/this._ratio]
+      }
+    }
+    // Old versions
     return {
       p0: p0,
-      p1: [
-        p0[0] + h / this.res_ * (p0[0] - this.center_[0]),
-        p0[1] + h / this.res_ * (p0[1] - this.center_[1])
-      ]
+      p1: p1
     }
   }
   /** Get drawing
