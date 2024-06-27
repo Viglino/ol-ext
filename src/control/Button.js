@@ -75,6 +75,23 @@ var ol_control_Button = class olcontrolButton extends ol_control_Control {
       ol_ext_element.hide(this.element);
   }
   /**
+   * Test if the control is disabled.
+   * @return {bool}
+   * @api stable
+   */
+  getDisable() {
+    var button = this.element.querySelector('button');
+    return button && button.disabled;
+  }
+  /** Disable the control button. 
+   * @param {bool} b disable (or enable) the control, default false (enable)
+   * @api stable
+   */
+  setDisable(b) {
+    if (this.getDisable() == b) return;
+    this.element.querySelector('button').disabled = b;
+  }
+  /**
    * Set the button title
    * @param {string} title
    */
