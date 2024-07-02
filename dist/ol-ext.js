@@ -37618,7 +37618,7 @@ ol.Overlay.Magnify = class olOverlayMagnify extends ol.Overlay {
   */
   setActive(active) {
     this.set("active", active)
-    this.refreh();
+    this.refresh();
     return this.getActive()
   }
   /** Mouse move
