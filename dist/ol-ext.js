@@ -33930,11 +33930,12 @@ ol.source.Overpass = class olsourceOverpass extends ol.source.Vector {
  * @fires overload
  * @extends {ol.source.Vector}
  * @param {Object} options
- *  @param {string} [options.version=1.1.0] WFS version to use. Can be either 1.0.0, 1.1.0 or 2.0.0.
  *  @param {string} options.typeName WFS type name parameter
- *  @param {number} options.tileZoom zoom to load the tiles
- *  @param {number} options.maxFeatures maximum features returned in the WFS
- *  @param {number} options.featureLimit maximum features in the source before refresh, default Infinity
+ *  @param {string} [options.version=1.1.0] WFS version to use. Can be either 1.0.0, 1.1.0 or 2.0.0.
+ *  @param {string} [options.outputFormat=application/json] WFS outputFormat parameter
+ *  @param {number} [options.tileZoom=14] zoom to load the tiles
+ *  @param {number} [options.maxFeatures] maximum features returned in the WFS
+ *  @param {number} [options.featureLimit=Infinity] maximum features in the source before refresh, default Infinity
  *  @param {boolean} [options.pagination] experimental enable pagination, default no pagination
  */
 ol.source.TileWFS = class olsourceTileWFS extends ol.source.Vector {
@@ -33953,7 +33954,7 @@ ol.source.TileWFS = class olsourceTileWFS extends ol.source.Vector {
       + '&request=GetFeature'
       + '&version=' + (options.version || '1.1.0')
       + '&typename=' + (options.typeName || '')
-      + '&outputFormat=application/json'
+      + '&outputFormat=' + (options.outputFormat || 'application/json')
     if (options.maxFeatures) {
       url += '&maxFeatures=' + options.maxFeatures + '&count=' + options.maxFeatures
     }
