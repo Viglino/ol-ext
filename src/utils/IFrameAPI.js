@@ -27,7 +27,7 @@ var ol_ext_IFrameAPI = function(targetOrigin) {
       switch (e.data.api) {
         case 'ready': {
           // Ready
-          if (!this.ready) {
+          if (!this.ready && e.data.id > 0) {
             this.ready = true;
             this.id = e.data.id;
             window.parent.postMessage(e.data, this.targetOrigin);
