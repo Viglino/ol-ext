@@ -202,6 +202,7 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
           if (l.layer.getImageRatio)
             l.layer.changed();
         });
+        self.getMap().renderSync();
         break;
       }
       case 'mousedown':
@@ -305,10 +306,11 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
         // Clear
-        if (this._time != e.frameState.time) {
+        console.log(this._time, e.frameState.time);
+        if (this._lefttime != e.frameState.time) {
           ctx.clearColor(0, 0, 0, 0);
           ctx.clear(ctx.COLOR_BUFFER_BIT);
-          this._time = e.frameState.time
+          this._lefttime = e.frameState.time;
         }
 
         // Clip
@@ -363,10 +365,10 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
         // Clear
-        if (this._time != e.frameState.time) {
+        if (this._righttime != e.frameState.time) {
           ctx.clearColor(0, 0, 0, 0);
           ctx.clear(ctx.COLOR_BUFFER_BIT);
-          this._time = e.frameState.time
+          this._righttime = e.frameStatea.time;
         }
 
         // Clip
