@@ -1,5 +1,3 @@
-import ol_Map from 'ol/Map'
-
 /*global ol*/
 if (window.ol) {
   /** @namespace  ol.ext */

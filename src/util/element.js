@@ -3,7 +3,7 @@
  * @see https://plainjs.com/javascript/
  * @see http://youmightnotneedjquery.com/
  */
-import ol_Map from 'ol/Map'
+import ol_Map from 'ol/Map.js'
 import ol_ext_input_Checkbox from './input/Checkbox.js'
 import ol_ext_input_Switch from './input/Switch.js'
 import ol_ext_input_Radio from './input/Radio.js'
