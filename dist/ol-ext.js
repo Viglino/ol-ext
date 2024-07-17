@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.19
+ * @version v4.0.20
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -18120,10 +18120,10 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
         // Clear
-        if (this._time != e.frameState.time) {
+        if (this._lefttime != e.frameState.time) {
           ctx.clearColor(0, 0, 0, 0);
           ctx.clear(ctx.COLOR_BUFFER_BIT);
-          this._time = e.frameState.time
+          this._lefttime = e.frameState.time;
         }
         // Clip
         ctx.enable(ctx.SCISSOR_TEST);
@@ -18173,10 +18173,10 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
         // Clear
-        if (this._time != e.frameState.time) {
+        if (this._righttime != e.frameState.time) {
           ctx.clearColor(0, 0, 0, 0);
           ctx.clear(ctx.COLOR_BUFFER_BIT);
-          this._time = e.frameState.time
+          this._righttime = e.frameState.time;
         }
         // Clip
         ctx.enable(ctx.SCISSOR_TEST);
