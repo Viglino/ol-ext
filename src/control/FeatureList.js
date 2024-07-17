@@ -1,6 +1,6 @@
-import ol_geom_Geometry from 'ol/geom/Geometry'
-import ol_control_Control from 'ol/control/Control'
-import ol_ext_element from '../util/element';
+import ol_geom_Geometry from 'ol/geom/Geometry.js'
+import ol_control_Control from 'ol/control/Control.js'
+import ol_ext_element from '../util/element.js';
 
 /** Feature list control
  *

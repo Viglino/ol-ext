@@ -8,7 +8,7 @@ import ol_layer_Tile from 'ol/layer/Tile.js'
 import ol_layer_Vector from 'ol/layer/Vector.js'
 import ol_layer_VectorTile from 'ol/layer/VectorTile.js'
 // ol < 6 compatibility VectorImage is not defined
-// import ol_layer_VectorImage from 'ol/layer/VectorImage'
+// import ol_layer_VectorImage from 'ol/layer/VectorImage.js'
 import ol_layer_Image from 'ol/layer/Image.js'
 import ol_layer_Heatmap from 'ol/layer/Heatmap.js'
 import {intersects as ol_extent_intersects} from 'ol/extent.js'

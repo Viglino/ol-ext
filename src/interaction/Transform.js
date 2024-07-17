@@ -12,7 +12,7 @@ import {fromExtent as ol_geom_Polygon_fromExtent} from 'ol/geom/Polygon.js'
 import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer, createEmpty as ol_extent_createEmpty, extend as ol_extent_extend, getCenter as ol_extent_getCenter} from 'ol/extent.js'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
 import ol_geom_Polygon from 'ol/geom/Polygon.js'
-import ol_ext_element from '../util/element'
+import ol_ext_element from '../util/element.js'
 
 /** Interaction rotate
  * @constructor
