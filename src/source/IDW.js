@@ -58,21 +58,6 @@ var ol_source_IDW = class olsourceIDW extends ol_source_ImageCanvas {
   getSource() {
     return this._source;
   }
-  /** Apply the value to the map RGB. Overwrite this function to set your own colors.
-   * @param {number} v value
-   * @param {Uint8ClampedArray} data RGBA array
-   * @param {number} i index in the RGBA array
-   * @api
-   * /
-  setData(v, data, i) {
-    // Get color
-    var color = this.getColor(v);
-    // Convert to RGB
-    data[i] = color[0];
-    data[i + 1] = color[1];
-    data[i + 2] = color[2];
-    data[i + 3] = color[3];
-  }
   /** Get image value at coord (RGBA)
    * @param {l.coordinate} coord
    * @return {Uint8ClampedArray}
