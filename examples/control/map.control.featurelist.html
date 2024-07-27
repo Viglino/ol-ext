@@ -20,7 +20,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -68,6 +68,8 @@
   <div class="options" style="max-width:20em;">
     <h2>Options:</h2>
     <i>Click on the map to select a feature / use the control to look for features by attributes.</i>
+    <br/>
+    <button onclick="javascript:listCtrl.scrollTo('select')">Return to sélection</button>
     <ul style="list-style:initial; padding: 0 1em;"></ul>
   </div>
   
@@ -136,6 +138,7 @@
     // className: 'ol-bottom',
     collapsed: false,
     features: vectorSource,
+    // number: 20,
     // target: document.body
   });
   listCtrl.enableSort('nom', 'region', 'mag')
@@ -150,7 +153,7 @@
     map.getView().setZoom(map.getView().getZoom() - 1)
   })
 
-  listCtrl.on(['resize', 'collapse'], function(e) {
+  listCtrl.on(['resize', 'collapse', 'sort'], function(e) {
     console.log(e)
   })
 

@@ -22,7 +22,7 @@ var ol_source_GridBin = class olsourceGridBin extends ol_source_BinBase {
     super(options);
 
     this.set('gridProjection', options.gridProjection || 'EPSG:4326');
-    this.setSize('size', options.size || 1);
+    this.setSize(options.size || 1);
     this.reset();
   }
   /** Set grid projection

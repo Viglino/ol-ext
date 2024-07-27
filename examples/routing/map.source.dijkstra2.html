@@ -1,0 +1,343 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+	Copyright (c) 2018 Jean-Marc VIGLINO,
+	released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+	<title>ol-ext: Dijkstra short path</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Add a routing control to your map." />
+	<meta name="keywords" content="ol3, control, search, routing" />
+
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<!-- IE 9 bug on ajax tranport  -->
+	<!--[if lte IE 9]>
+	<script type='text/javascript' src='//cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.3/jquery.xdomainrequest.min.js'></script>
+	<![endif]-->
+
+	<!-- Openlayers -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+
+	
+	<!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+	<script type="text/javascript" src="https://cdn.rawgit.com/Viglino/Geoportail-KISS/gh-pages/apikey.js"></script>
+	
+	<link rel="stylesheet" href="../style.css"/>
+	<style>
+    .loading {
+      position: fixed;
+      color: #666;
+      top: 30%;
+      left: 50%;
+      background: #fff;
+      font-size: 2em;
+      padding: 1em;
+      z-index: 10;
+      box-shadow: 1px 1px 10px 2px rgba(0,0,0,.5);
+      border-radius: 3px;
+      transform: translateX(-50%);
+    }
+    .loading .fa {
+      vertical-align: middle;
+      font-size: 1.5em;
+    }
+    .options ul {
+      margin: 0;
+      padding: 0;
+    }
+    .speed label {
+      display: inline-block;
+      width: 5.5em;
+      text-align: right;
+    }
+    input[type="number"] {
+      width: 3em;
+    }
+    #map {
+      width: 100%;
+      height: calc(100vh - 20em);
+      min-height: 500px;
+    }
+	</style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+	<a href="../../index.html">
+		<h1>ol-ext: Dijkstra short path</h1>
+  </a>
+  <div class=loading>
+    <i class="fa fa fa-spinner fa-pulse"></i> Loading data...
+  </div>
+
+	<div class="info">
+    <p>
+      The <i>ol/graph/Dijkstra</i> use the
+      <a href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">Dijkstra's algorithm</a> 
+      for finding the shortest paths between nodes in a ol/source/Vector (with LineString geometry features).
+      <br/>
+      It uses a A* optimisation.
+    </p>
+	</div>
+
+	<!-- DIV pour la carte -->
+	<div id="map"></div>
+
+	<div class="options">
+    <h2>Options</h2>
+    <ul>
+      <li>
+        While calculating:<br/>
+        <label><input name="view" type="radio" checked onclick="nodes.setVisible(true)"> show nodes</label>
+        <br/>
+        <label><input id="path" name="view" type="radio" onclick="nodes.setVisible(false)"> show path</label>
+      </li>
+      <li>
+        <hr/>
+        <label><input id="speed" type="checkbox" onchange="calcSpeed()"> Use speed:</label>
+        <div class="speed">
+          <label>highway:</label> <input id="A" type="number" value=120 onchange="calcSpeed()" />
+          <br/>
+          <label>main:</label> <input id="P" type="number" value=80 onchange="calcSpeed()" />
+          <br/>
+          <label>regional:</label> <input id="R" type="number" value=70 onchange="calcSpeed()" />
+          <br/>
+          <label>local:</label> <input id="L" type="number" value=60 onchange="calcSpeed()" />
+        </div>
+      </li>
+    </ul>
+  </div>
+  <p>Click points on the map!</p>
+  <p id="warning" style="background:#f80; color:#fff; padding:.5em; display:none; float:left;">
+    Ugh! it's a bit long!
+    <br/>
+    Try to go on searching...
+  </p>
+  <p id="notfound" style="background:#f80; color:#fff; padding:.5em; display:none; float:left;">
+    Sorry, there is no route to go there!
+  </p>
+  <p id="notfound0" style="background:#f80; color:#fff; padding:.5em; display:none; float:left;">
+    You're allready there!
+  </p>
+  <p id="result" style="background:#0b0; color:#fff; padding:.5em; display:none; float:left;">
+    Found it!
+    <br/>
+    Distance: <span></span>.
+  </p>
+	 
+  <script type="text/javascript">
+  // Calculate the speed factor
+  var speed = { A:1, P:1, R:1, L:1};
+  function calcSpeed() {
+    if ($("#speed").prop('checked')) {
+      speed.A = 1 / Math.max(Number($(".speed #A").val()),1);
+      speed.P = 1 / Math.max(Number($(".speed #P").val()),1);
+      speed.R = 1 / Math.max(Number($(".speed #R").val()),1);
+      speed.L = 1 / Math.max(Number($(".speed #L").val()),1);
+    } else {
+      speed = { A:1, P:1, R:1, L:1};
+    }
+  }
+  calcSpeed();
+
+	// Layers
+  var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() })]
+
+	// The map
+	var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 11,
+      center: [-847139, 3971185]
+    }),
+    layers: layers
+  });
+
+  // The vector graph
+  var graph = new ol.source.Vector({
+    url: '../data/network.geojson',
+    format: new ol.format.GeoJSON()
+  });
+  listenerKey = graph.on('change', function() {
+    if (graph.getState() == 'ready') {
+      $('.loading').hide();
+      ol.Observable.unByKey(listenerKey);
+    }
+  });
+	var vector = new ol.layer.Vector({
+    title: 'Graph',
+		source: graph
+	});
+  map.addLayer(vector);
+
+  var stations = new ol.source.Vector({
+    url: '../data/station.geojson',
+    format: new ol.format.GeoJSON()
+  });
+  map.addLayer(new ol.layer.Vector({
+    title: 'Stations',
+    source: stations
+  }));
+
+  // A layer to draw the result
+  var result = new ol.source.Vector();
+  map.addLayer ( new ol.layer.Vector({
+    source: result,
+    style: new ol.style.Style({ 
+      stroke: new ol.style.Stroke({ 
+        width: 2,
+        color: "#f00"
+      }) 
+    })
+  }));
+  
+  // Dijkstra
+  var dijkstra = new ol.graph.Dijkstra({
+		source: graph
+  });
+  // Start processing
+  dijkstra.on('start', function(e) {
+    $('#warning').hide();
+    $("#notfound").hide();
+    $("#notfound0").hide();
+    $("#result").hide();
+    result.clear();
+  });
+  // Finish > show the route
+  dijkstra.on('finish', function(e) {
+    $('#warning').hide();
+    result.clear();
+    console.log(e);
+    if (!e.route.length) {
+      if (e.wDistance===-1) $("#notfound0").show();
+      else $("#notfound").show();
+      $("#result").hide();
+    } else {
+      $("#result").show();
+      var t = (e.distance/1000).toFixed(2) + 'km';
+      // Weighted distance
+      if ($("#speed").prop('checked')) {
+        var h = e.wDistance/1000;
+        var mn = Math.round((e.wDistance%1000)/1000*60);
+        if (mn < 10) mn = '0'+mn;
+        t += '<br/>' + h.toFixed(0) + 'h ' + mn + 'mn';
+      }
+      $("#result span").html(t);
+    }
+    result.addFeatures(e.route);
+    // Get stations
+    var visited = [];
+    e.route.forEach(function(p, i){
+      var f;
+      if (i===0) {
+        f = stations.getFeaturesAtCoordinate(p.getGeometry().getFirstCoordinate())
+        visited.push({
+          feature: f[0],
+          name: p.get('name')
+        })
+      }
+      f = stations.getFeaturesAtCoordinate(p.getGeometry().getLastCoordinate())
+      visited.push({
+          feature: f[0],
+          name: p.get('name')
+        })
+    })
+    visited.forEach(f => console.log(f.name, '-', f.feature.get('name')))
+    // Restart from here
+    start = end;
+    popStart.show(start);
+    popEnd.hide();
+  });
+  // Paused > resume
+  dijkstra.on('pause', function(e) {
+    if (e.overflow) {
+      $('#warning').show();
+      dijkstra.resume();
+    } else {
+      // User pause
+    }
+  });
+  // Calculating > show the current "best way"
+  dijkstra.on('calculating', function(e) {
+    if ($('#path').prop('checked')) {
+      var route = dijkstra.getBestWay();
+      result.clear();
+      result.addFeatures(route);
+    }
+  });
+
+  // Get the weight of an edge
+  dijkstra.weight = function(feature) {
+    var type = feature ? feature.get('type') : 'A';
+    if (!speed[type]) console.error(type)
+    return speed[type] || speed.L;
+  };
+  // Get direction of the edge
+  dijkstra.direction = function(feature) {
+    return feature.get('dir');
+  }
+  // Get the real length of the geom
+  dijkstra.getLength = function(geom) {
+    console.log(geom)
+    if (geom.getGeometry) {
+      //? return geom.get('km')*1000;
+      geom = geom.getGeometry();
+    }
+    return ol.sphere.getLength(geom)
+  }
+
+  // Display nodes in a layer
+	var nodes = new ol.layer.Vector({
+    title: 'Nodes',
+    source: dijkstra.getNodeSource(),
+    style: new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 5,
+        fill: new ol.style.Fill({ color: [255,0,0,.1] })
+      })
+    })
+	});
+  map.addLayer(nodes);
+
+  // Start / end Placemark
+  var popStart = new ol.Overlay.Placemark({ popupClass: 'flagv', color: '#080' });
+  map.addOverlay(popStart);
+  var popEnd = new ol.Overlay.Placemark({ popupClass: 'flag finish', color: '#000' });
+  map.addOverlay(popEnd);
+
+  // Manage start / end on click
+  var start, end;
+  map.on('click', function(e) {
+    if (!start) {
+      start = e.coordinate;
+      popStart.show(start);
+    } else {
+      popEnd.show(e.coordinate);
+      setTimeout(function() {
+        var se = dijkstra.path(start, e.coordinate);
+        if (se) {
+          start = se[0];
+          end = se[1];
+        } else {
+          popEnd.hide();
+        }
+      }, 100)
+    }
+  });
+
+	</script>
+	
+</body>
+</html>

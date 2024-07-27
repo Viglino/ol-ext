@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.18
+ * @version v4.0.21
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -1338,6 +1338,17 @@ ol.ext.element.dispatchEvent = function (eventName, element) {
   }
   element.dispatchEvent(event);
 };
+/** Set cursor
+ * @param {Element|ol/Map} elt
+ * @param {string} cursor
+ */
+ol.ext.element.setCursor = function(elt, cursor) {
+  if (elt instanceof ol.Map) elt = elt.getTargetElement()
+  // prevent flashing on mobile device
+  if (!('ontouchstart' in window) && elt instanceof Element) {
+    elt.style.cursor = cursor;
+  }
+}
 
 /** Get a canvas overlay for a map (non rotated, on top of the map)
  * @param {ol.Map} map
@@ -4644,6 +4655,23 @@ ol.control.Button = class olcontrolButton extends ol.control.Control {
       ol.ext.element.hide(this.element);
   }
   /**
+   * Test if the control is disabled.
+   * @return {bool}
+   * @api stable
+   */
+  getDisable() {
+    var button = this.element.querySelector('button');
+    return button && button.disabled;
+  }
+  /** Disable the control button. 
+   * @param {bool} b disable (or enable) the control, default false (enable)
+   * @api stable
+   */
+  setDisable(b) {
+    if (this.getDisable() == b) return;
+    this.element.querySelector('button').disabled = b;
+  }
+  /**
    * Set the button title
    * @param {string} title
    */
@@ -4760,22 +4788,20 @@ ol.control.Toggle = class olcontrolToggle extends ol.control.Button {
   }
   /**
    * Test if the control is disabled.
-   * @return {bool}.
+   * @return {bool}
    * @api stable
    */
   getDisable() {
-    var button = this.element.querySelector("button");
+    var button = this.element.querySelector('button');
     return button && button.disabled;
   }
   /** Disable the control. If disable, the control will be deactivated too.
   * @param {bool} b disable (or enable) the control, default false (enable)
   */
   setDisable(b) {
-    if (this.getDisable() == b)
-      return;
-    this.element.querySelector("button").disabled = b;
-    if (b && this.getActive())
-      this.setActive(false);
+    if (this.getDisable() == b) return;
+    this.element.querySelector('button').disabled = b;
+    if (b && this.getActive()) this.setActive(false);
     this.dispatchEvent({ type: 'change:disable', key: 'disable', oldValue: !b, disable: b });
   }
   /**
@@ -8613,6 +8639,7 @@ ol.control.EditBar = class olcontrolEditBar extends ol.control.Bar {
  * @fires dblclick
  * @fires collapse
  * @fires resize
+ * @fires sort
  * @param {Object=} options
  *  @param {number} [options.title] table title
  *  @param {Element} [options.target] to display the control outside the map
@@ -8637,7 +8664,7 @@ ol.control.FeatureList = class olcontrolFeatureList extends ol.control.Control {
       element: element,
       target: options.target
     });
-    // List of features / row
+    // List of features / sort
     this._listFeatures = [];
     // Current columns
     this._columns = [];
@@ -8736,22 +8763,23 @@ ol.control.FeatureList.prototype.setBottomScroll = function(b) {
  */
 ol.control.FeatureList.prototype.scrollTo = function(feature) {
   if (feature === 'select') {
-    var tr = this._listbody.querySelector('.ol-selected');
-    if (tr) {
-      this._scrollAt(tr);
-      return tr;
-    }
+    if (this._curSelection) return this.scrollTo(this._curSelection.feature);
+    else return false;
   } else {
     var i = this._findFeatureIndex(feature)
     if (i >= 0) {
       var scrollDiv = this._list.parentNode;
       scrollDiv.scrollTo(scrollDiv.scrollLeft, (i+1.5)*this.getRowHeight() - scrollDiv.getBoundingClientRect().height/2)
-      return this._listFeatures[i];
+      var fpage = this._findInPage(feature)
+      return {
+        feature: feature,
+        tr: fpage ? fpage.tr : ol.ext.element.create('TR')
+      }
     }
   }
   return false;
 }
-/** Find a feature in the list
+/** Find the feature index in the list
  * @param {ol.Feature} feature
  * @returns {Object}
  * @private
@@ -8760,26 +8788,27 @@ ol.control.FeatureList.prototype._findFeatureIndex = function(feature) {
   var list = this._listFeatures;
   if (list) {
     for (var i=0; i<list.length; i++) {
-      if (list[i].feature === feature) {
+      if (list[i] === feature) {
         return i
       }
     }
   }
   return -1;
 }
-/** Find a row given a feature
+/** Find a feature in the current page
  * @param {ol.Feature} feature
+ * @returns {Object} 
  */
-ol.control.FeatureList.prototype._findRow = function(feature) {
-  var list = this._listFeatures;
+ol.control.FeatureList.prototype._findInPage = function(feature) {
+  var list = this._page;
   if (list) {
     for (var i=0; i<list.length; i++) {
       if (list[i].feature === feature) {
-        return list[i];
+        return list[i]
       }
     }
   }
-  return false
+  return false;
 }
 /** Collapse the table
  * @param {boolean} [b] if no parameters toggle it
@@ -8805,7 +8834,7 @@ ol.control.FeatureList.prototype.collapse = function(b) {
 ol.control.FeatureList.prototype.isCollapsed = function() {
   return this._collapsed;
 }
-/** Set the features to list
+/** Set the features list
  * @param {ol.source.Vector|ol.Collection<ol.Feature>|Array<ol.Feature>} source a vector source or a collection of features to list
  */
 ol.control.FeatureList.prototype.setFeatures = function(source) {
@@ -8835,7 +8864,8 @@ ol.control.FeatureList.prototype.sortBy = function(prop, sort) {
   } else {
     this._sort[prop] = (sort !== 'down');
   }
-  this.sort();
+  this.sort(true);
+  this.dispatchEvent({ type: 'sort', property: prop, sort: sort });
 }
 /** Get sorted properties list
  * @return Object
@@ -8878,38 +8908,7 @@ ol.control.FeatureList.prototype._drawList = function(delay) {
   // List of features
   this._listFeatures = [];
   features.forEach(function (f) {
-    var tr = ol.ext.element.create('TR', {
-      on: {
-        click: function (e) {
-          var td = e.target.closest('TD');
-          this.dispatchEvent({
-            type: 'select',
-            property: td.dataset.prop,
-            feature: f,
-            row: e.target.closest('TR'),
-            col: td,
-            originalEvent: e
-          })
-          this.select(f, true)
-        }.bind(this),
-        dblclick: function(e) {
-          var td = e.target.closest('TD');
-          this.dispatchEvent({
-            type: 'dblclick',
-            property: td.dataset.prop,
-            feature: f,
-            row: e.target.closest('TR'),
-            col: td,
-            originalEvent: e
-          })
-        }.bind(this)
-      }
-    })
-    this._listFeatures.push({
-      feature: f,
-      tr: tr
-    })
-    this._updateFeature(f, tr);
+    this._listFeatures.push(f)
   }.bind(this))
   // Sort
   this.sort();
@@ -8919,9 +8918,9 @@ ol.control.FeatureList.prototype._drawList = function(delay) {
  * @returns {boolean}
  */
 ol.control.FeatureList.prototype.updateFeature = function(feature) {
-  var i = this._findFeatureIndex(feature)
-  if (i >= 0) {
-    this._updateFeature(this._listFeatures[i].feature, this._listFeatures[i].tr)
+  var pfeature = this._findInPage(feature)
+  if (pfeature) {
+    this._updateFeature(pfeature.feature, pfeature.tr)
     return true;
   }
   return false;
@@ -8943,6 +8942,46 @@ ol.control.FeatureList.prototype._updateFeature = function(f, tr) {
       parent: tr
     })
   }.bind(this))
+  // Selected ?
+  if (this._curSelection && this._curSelection.feature === f) {
+    this._curSelection.tr = tr;
+    tr.classList.add('ol-selected')
+  }
+}
+/** Get the list element
+ * @param {ol.Feature} f
+ * @returns {Element}
+ */
+ol.control.FeatureList.prototype._getLi = function(f) {
+  var tr = ol.ext.element.create('TR', {
+    on: {
+      click: function (e) {
+        var td = e.target.closest('TD');
+        this.dispatchEvent({
+          type: 'select',
+          property: td.dataset.prop,
+          feature: f,
+          row: e.target.closest('TR'),
+          col: td,
+          originalEvent: e
+        })
+        this.select(f, true)
+      }.bind(this),
+      dblclick: function(e) {
+        var td = e.target.closest('TD');
+        this.dispatchEvent({
+          type: 'dblclick',
+          property: td.dataset.prop,
+          feature: f,
+          row: e.target.closest('TR'),
+          col: td,
+          originalEvent: e
+        })
+      }.bind(this)
+    }
+  })
+  this._updateFeature(f, tr)
+  return tr;
 }
 /** Draw columns heads
  * @private
@@ -8977,14 +9016,15 @@ ol.control.FeatureList.prototype._drawHead = function() {
   }.bind(this))
 }
 /** Sort features in the table
+ * @param {boolean} [silent] sort without triggering an event
  */
-ol.control.FeatureList.prototype.sort = function() {
+ol.control.FeatureList.prototype.sort = function(silent) {
   var sort = Object.keys(this._sort)
   if (sort.length) {
     this._listFeatures.sort(function(a, b) {
       for (var i=0; i<sort.length; i++) {
         var p = sort[i];
-        var s = this.sortFn(a.feature, b.feature, p);
+        var s = this.sortFn(a, b, p);
         if (s) return this._sort[p] ? s : -s;
       }
       return 0;
@@ -8992,6 +9032,7 @@ ol.control.FeatureList.prototype.sort = function() {
   }
   // Refresh list
   this.refresh(true)
+  if (!silent) this.dispatchEvent({ type: 'sort' });
 }
 /** Refresh the list draw + resize use update if features have changed
  * @param {boolean} [force]
@@ -9009,7 +9050,9 @@ ol.control.FeatureList.prototype.refresh = function(force) {
  */
 ol.control.FeatureList.prototype.update = function() {
   this._drawList();
-  this.select(this._curSelection.feature, true)
+  if (this._curSelection && this._curSelection.feature) {
+    this.select(this._curSelection.feature, true)
+  }
 }
 /** Get height of a row
  * @return {number}
@@ -9042,8 +9085,19 @@ ol.control.FeatureList.prototype._drawPage = function() {
   }))
   // Page list
   var nmax = Math.min(this._listFeatures.length, (page+1)*nb + nb2)
+  this._page = [];
   for (var i = Math.max(0, page*nb - nb2); i < nmax; i++) {
-    this._listbody.appendChild(this._listFeatures[i].tr)
+    // this._listbody.appendChild(this._listFeatures[i].tr)
+    var tr = this._getLi(this._listFeatures[i])
+    this._page.push({
+      feature: this._listFeatures[i],
+      tr: tr
+    })
+    if (this._curSelection && this._listFeatures[i] === this._curSelection.feature) {
+      this._curSelection.tr = tr;
+      tr.classList.add('ol-selected')
+    }
+    this._listbody.appendChild(tr)
   }
   // Last row to preserve space
   this._listbody.appendChild(ol.ext.element.create('TR', {
@@ -9105,7 +9159,9 @@ ol.control.FeatureList.prototype.getColumns = function(features) {
 ol.control.FeatureList.prototype.setColumns = function(columns) {
   this.columns = columns || [];
   this._drawList();
-  this.select(this._curSelection.feature, true)
+  if (this._curSelection && this._curSelection.feature) {
+    this.select(this._curSelection.feature, true)
+  }
 }
 /** Dragging sizer
  * @private
@@ -9186,7 +9242,7 @@ ol.control.FeatureList.prototype.resize = function(height) {
  */
 ol.control.FeatureList.prototype.getSelection = function() {
   if (this._curSelection) {
-    return this._listFeatures[this._findFeatureIndex(this._curSelection.feature)];
+    return this._curSelection.feature || null;
   }
   return null;
 }
@@ -9203,7 +9259,11 @@ ol.control.FeatureList.prototype.select = function(feature, noScroll) {
   // New selection
   if (feature) {
     if (noScroll) {
-      this._curSelection = this._listFeatures[this._findFeatureIndex(feature)];
+      var f = this._findInPage(feature)
+      this._curSelection = {
+        feature: feature,
+        tr: f ? f.tr : ol.ext.element.create('TR')
+      };
     } else {
       this._curSelection = this.scrollTo(feature)
     }
@@ -12220,14 +12280,15 @@ ol.control.Overview = class olcontrolOverview extends ol.control.Control {
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} options
- *  @param {boolean} options.urlReplace replace url or not, default true
+ *  @param {boolean} [options.urlReplace=true] replace url or not, default true
  *  @param {boolean|string} [options.localStorage=false] save current map view in localStorage, if 'position' only store map position
- *  @param {boolean} options.geohash use geohash instead of lonlat, default false
- *  @param {integer} options.fixed number of digit in coords, default 6
- *  @param {boolean} options.anchor use "#" instead of "?" in href
- *  @param {boolean} options.visible hide the button on the map, default true
- *  @param {boolean} options.hidden hide the button on the map, default false DEPRECATED: use visible instead
- *  @param {function} options.onclick a function called when control is clicked
+ *  @param {boolean} [options.geohash=false] use geohash instead of lonlat, default false
+ *  @param {integer} [options.fixed=6] number of digit in coords, default 6
+ *  @param {boolean} [options.anchor] use "#" instead of "?" in href
+ *  @param {boolean} [options.visible=true] hide the button on the map, default true
+ *  @param {boolean} [options.hidden] hide the button on the map, default false DEPRECATED: use visible instead
+ *  @param {function} [options.onclick] a function called when control is clicked
+ *  @param {number} [options.refreshDelay=500] 
  */
 ol.control.Permalink = class olcontrolPermalink extends ol.control.Control {
   constructor(opt_options) {
@@ -12302,6 +12363,7 @@ ol.control.Permalink = class olcontrolPermalink extends ol.control.Control {
     if (init.hasOwnProperty('lon')) {
       this.set('initial', init)
     }
+    this.set('refreshDelay', options.refreshDelay || 500)
     // Decode permalink
     if (this.replaceState_) this.setPosition()
   }
@@ -12508,16 +12570,29 @@ ol.control.Permalink = class olcontrolPermalink extends ol.control.Control {
         for (var i in this.search_) {
           s += (s == "" ? "?" : "&") + i + (typeof (this.search_[i]) !== 'undefined' ? "=" + this.search_[i] : '')
         }
-        window.history.replaceState(null, null, document.location.origin + document.location.pathname + s)
+        this.replaceUrl_(document.location.origin + document.location.pathname + s, true)
+      } else {
+        this.replaceUrl_(this.getLink(), true)
       }
-      else
-        window.history.replaceState(null, null, this.getLink())
     } catch (e) { /* ok */ }
     /*
     if (this._localStorage) {
       localStorage['ol@permalink'] = this.getLink(true);
     }
     */
+  }
+  /** Refresh the url
+   * @private
+   */
+  replaceUrl_(url, force) {
+    clearTimeout(this.refreshTout_)
+    if (force) {
+      window.history.replaceState(null, null, url)
+    } else {
+      this.refreshTout_ = setTimeout(function() {
+        window.history.replaceState(null, null, url)
+      }, this.get('refreshDelay'))
+    }
   }
   /**
    * On view change refresh link
@@ -12526,8 +12601,9 @@ ol.control.Permalink = class olcontrolPermalink extends ol.control.Control {
    */
   viewChange_() {
     try {
-      if (this.replaceState_)
-        window.history.replaceState(null, null, this.getLink())
+      if (this.replaceState_) {
+        this.replaceUrl_(this.getLink())
+      }
     } catch (e) { /* ok */ }
     if (this._localStorage) {
       try {
@@ -15512,6 +15588,187 @@ ol.control.SearchBAN = class olcontrolSearchBAN extends ol.control.SearchPhoton 
   }
 }
 
+/*	Copyright (c) 2019 Jean-Marc VIGLINO, 
+	released under the CeCILL-B license (French BSD license)
+	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * Search on GPS coordinate.
+ *
+ * @constructor
+ * @extends {ol.control.Search}
+ * @fires select
+ * @param {Object=} Control options. 
+ *  @param {ol/proj/ProjectionLike} [options.projection="EPSG:3857"] control projection
+ *  @param {string} [options.className] control class name
+ *  @param {Element | string } [options.target] Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string} [options.label="search"] Text label to use for the search button, default "search"
+ *  @param {string} [options.labelGPS="Locate with GPS"] placeholder
+ *  @param {string} [options.labelCenter="Map center"] placeholder
+ *  @param {number} [options.typing=300] a delay on each typing to start searching (ms), default 300.
+ *  @param {integer} [options.minLength=1] minimum length to start searching, default 1
+ *  @param {integer} [options.maxItems=10] maximum number of items to display in the autocomplete list, default 10
+ *  @param {integer} [options.digit=3] number of digit in coords
+ */
+ol.control.SearchCoordinates = class olcontrolSearchCoordinates extends ol.control.Search {
+  constructor(options) {
+    options = options || {};
+    options.className = (options.className || '') + ' ol-searchcoord';
+    options.placeholder = options.placeholder || 'x,y';
+    super(options);
+    // Projection
+    this.projection_ = options.projection || 'EPSG:3857'
+    this.set('digit', typeof(options.digit) === 'number' ? options.digit : 3)
+    // Geolocation
+    this.geolocation = new ol.Geolocation({
+      projection: "EPSG:4326",
+      trackingOptions: {
+        maximumAge: 10000,
+        enableHighAccuracy: true,
+        timeout: 600000
+      }
+    });
+    ol.ext.element.create('BUTTON', {
+      className: 'ol-geoloc',
+      title: options.labelGPS || 'Locate with GPS',
+      parent: this.element,
+      click: function () {
+        this.geolocation.setTracking(true);
+      }.bind(this)
+    });
+    ol.ext.element.create('BUTTON', {
+      className: 'ol-centerloc',
+      title: options.labelCenter || 'Map center',
+      parent: this.element,
+      click: function () {
+        this.setInput()
+      }.bind(this)
+    });
+    this._createForm();
+    // Move list to the end
+    var ul = this.element.querySelector("ul.autocomplete");
+    this.element.appendChild(ul);
+  }
+  /** Set the input value in the form (for initialisation purpose)
+   *	@param {Array<number>} [coord] if none get the map center
+   *	@api
+   */
+  setInput(coord) {
+    if (!coord) {
+      if (!this.getMap()) return
+      coord = this.getMap().getView().getCenter();
+      coord = ol.proj.transform(coord, this.getMap().getView().getProjection(), this.getProjection())
+    }
+    var d = Math.pow(10, this.get('digit'))
+    this.inputs_[0].value = Math.round(coord[0] * d) / d
+    this.inputs_[1].value = Math.round(coord[1] * d) / d;
+    this._triggerCustomEvent('keyup', this.inputs_[0]);
+  }
+  /** Get the control projection
+   * @returns {ol/proj/ProjectionLike}
+   */
+  getProjection() {
+    return this.projection_
+  }
+  /** Set the projection
+   * @param {ol/proj/ProjectionLike} proj
+   */
+  setProjection(proj) {
+    if (this.projection_ !== proj) {
+      this.projection_ = proj;
+      this.clearHistory();
+      this.element.querySelectorAll('INPUT[type="number"]').forEach(function(i) {
+        i.value = '';
+      })
+    }
+  }
+  /** Create input form
+   * @private
+   */
+  _createForm() {
+    // Value has change
+    var onchange = function() {
+      if (lonx.value || laty.value) {
+        this._input.value = lonx.value + ',' + laty.value;
+      } else {
+        this._input.value = '';
+      }
+      // Center on coords
+      this.search();
+    }.bind(this);
+    function createInput(className) {
+      var input = ol.ext.element.create('INPUT', {
+        className: className,
+        type: 'number',
+        step: 'any',
+        lang: 'en',
+        parent: div,
+        on: {
+          'change keyup': onchange
+        }
+      });
+      return input;
+    }
+    // X
+    var div = ol.ext.element.create('DIV', {
+      className: 'ol-longitude',
+      parent: this.element
+    });
+    ol.ext.element.create('LABEL', {
+      html: 'X',
+      parent: div
+    });
+    var lonx = createInput('ol-decimal');
+    // Y
+    div = ol.ext.element.create('DIV', {
+      className: 'ol-latitude',
+      parent: this.element
+    });
+    ol.ext.element.create('LABEL', {
+      html: 'Y',
+      parent: div
+    });
+    var laty = createInput('ol-decimal');
+    // Focus on open
+    if (this.button) {
+      this.button.addEventListener("click", function () {
+        lonx.focus();
+      });
+    }
+    this.inputs_ = [ lonx, laty ];
+    // Change value on click
+    this.on('select', function (e) {
+      lonx.value = e.search.gps[0];
+      laty.value = e.search.gps[1];
+    }.bind(this));
+    // Change value on geolocation
+    this.geolocation.on('change', function () {
+      this.geolocation.setTracking(false);
+      var coord = this.geolocation.getPosition();
+      coord = ol.proj.transform(coord, 'EPSG:4326', this.projection_)
+      var d = Math.pow(10, this.get('digit'))
+      lonx.value = Math.round(coord[0] * d) / d;
+      laty.value = Math.round(coord[1] * d) / d;
+      this._triggerCustomEvent('keyup', lonx);
+    }.bind(this));
+  }
+  /** Autocomplete function
+  * @param {string} s search string
+  * @return {Array<any>|false} an array of search solutions
+  * @api
+  */
+  autocomplete(s) {
+    var result = [];
+    var c = s.split(',');
+    c[0] = Number(c[0]);
+    c[1] = Number(c[1]);
+    // 
+    var coord = ol.proj.transform([c[0], c[1]], this.projection_, this.getMap().getView().getProjection());
+    result.push({ gps: c, coordinate: coord, name: s });
+    return result;
+  }
+}
+
 /*	Copyright (c) 2017 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
@@ -15710,13 +15967,13 @@ ol.control.SearchFeature = class olcontrolSearchFeature extends ol.control.Searc
  * @extends {ol.control.Search}
  * @fires select
  * @param {Object=} Control options. 
- *  @param {string} options.className control class name
- *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} options.label Text label to use for the search button, default "search"
- *  @param {string | undefined} options.placeholder placeholder, default "Search..."
- *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 300.
- *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
- *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {string} [options.className] control class name
+ *  @param {Element | string | undefined} [options.target] Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string | undefined} [options.label=search] Text label to use for the search button, default "search"
+ *  @param {string | undefined} [options.labelGPS="Locate with GPS"] placeholder, default "Locate with GPS"
+ *  @param {number | undefined} [options.typing=300] a delay on each typing to start searching (ms), default 300.
+ *  @param {integer | undefined} [options.minLength=1] minimum length to start searching, default 1
+ *  @param {integer | undefined} [options.maxItems=10] maximum number of items to display in the autocomplete list, default 10
  */
 ol.control.SearchGPS = class olcontrolSearchGPS extends ol.control.Search {
   constructor(options) {
@@ -15735,7 +15992,7 @@ ol.control.SearchGPS = class olcontrolSearchGPS extends ol.control.Search {
     });
     ol.ext.element.create('BUTTON', {
       className: 'ol-geoloc',
-      title: 'Locate with GPS',
+      title: options.labelGPS || 'Locate with GPS',
       parent: this.element,
       click: function () {
         this.geolocation.setTracking(true);
@@ -15757,6 +16014,20 @@ ol.control.SearchGPS = class olcontrolSearchGPS extends ol.control.Search {
     // Move list to the end
     var ul = this.element.querySelector("ul.autocomplete");
     this.element.appendChild(ul);
+  }
+  /** Set the input value in the form (for initialisation purpose)
+   *	@param {Array<number>} [coord] if none get the map center
+   *	@api
+   */
+  setInput(coord) {
+    if (!coord) {
+      if (!this.getMap()) return
+      coord = this.getMap().getView().getCenter();
+      coord = ol.proj.transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326')
+    }
+    this.inputs_[0].value = coord[0];
+    this.inputs_[1].value = coord[1];
+    this._triggerCustomEvent('keyup', this.inputs_[0]);
   }
   /** Create input form
    * @private
@@ -15835,6 +16106,7 @@ ol.control.SearchGPS = class olcontrolSearchGPS extends ol.control.Search {
     var latd = createInput('ol-dms', '°');
     var latm = createInput('ol-dms', '\'');
     var lats = createInput('ol-dms', '"');
+    this.inputs_ = [lon, lat]
     // Focus on open
     if (this.button) {
       this.button.addEventListener("click", function () {
@@ -17238,7 +17510,8 @@ ol.control.SelectPopup = class olcontrolSelectPopup extends ol.control.SelectBas
     }
   }
   /** Set the popup values
-   * @param {Object} values a key/value list with key = property value, value = title shown in the popup, default search values in the sources
+   * @param {Object} [values] a key/value list with key = property value, value = title shown in the popup, default search values in the sources
+   * @param {boolean} [sort] true to sort the values
    */
   setValues(options) {
     options = options || {};
@@ -17847,8 +18120,11 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
         // Clear
-        ctx.clearColor(0, 0, 0, 0);
-        ctx.clear(ctx.COLOR_BUFFER_BIT);
+        if (this._lefttime != e.frameState.time) {
+          ctx.clearColor(0, 0, 0, 0);
+          ctx.clear(ctx.COLOR_BUFFER_BIT);
+          this._lefttime = e.frameState.time;
+        }
         // Clip
         ctx.enable(ctx.SCISSOR_TEST);
         var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
@@ -17867,6 +18143,8 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
           bottomLeft[1] += fullHeight - height;
         }
         ctx.scissor(bottomLeft[0], bottomLeft[1], width, height);
+        ctx.clearColor(0, 0, 0, 0);
+        ctx.clear(ctx.COLOR_BUFFER_BIT);
       }
     } else {
       var size = e.frameState.size;
@@ -17895,8 +18173,11 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
         // Clear
-        ctx.clearColor(0, 0, 0, 0);
-        ctx.clear(ctx.COLOR_BUFFER_BIT);
+        if (this._righttime != e.frameState.time) {
+          ctx.clearColor(0, 0, 0, 0);
+          ctx.clear(ctx.COLOR_BUFFER_BIT);
+          this._righttime = e.frameState.time;
+        }
         // Clip
         ctx.enable(ctx.SCISSOR_TEST);
         var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
@@ -17915,6 +18196,8 @@ ol.control.Swipe = class olcontrolSwipe extends ol.control.Control {
           height = Math.round(fullHeight * (1 - this.get('position')));
         }
         ctx.scissor(bottomLeft[0], bottomLeft[1], width, height);
+        ctx.clearColor(0, 0, 0, 0);
+        ctx.clear(ctx.COLOR_BUFFER_BIT);
       }
     } else {
       var size = e.frameState.size;
@@ -19804,7 +20087,7 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
       maxResolution: this.getLayerResolution('max', caps) || 156543.03392804097
     }
     var source_opt = {
-      url: parent.Capability.Request.GetMap.DCPType[0].HTTP.Get.OnlineResource,
+      url: (parent.Capability.Request.GetMap.DCPType[0].HTTP.Get.OnlineResource || '').replace(/service=wms&?/i,''),
       projection: srs,
       attributions: attributions,
       crossOrigin: this.get('cors') ? 'anonymous' : null,
@@ -19951,32 +20234,18 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
     this.getCapabilities(url, {
       onload: function (cap) {
         if (cap) {
-          // Find layer recursively
-          function findLayer(layers) {
-            for (var i=0; i<layers.length; i++) {
-              var l = layers[i];
-              if (l.Name === layerName || l.Identifier === layerName) {
-                return l;
-              } else if (l.Layer) {
-                // Sub layer
-                var l2 = findLayer(l.Layer)
-                if (l2) return l2
-              }
+          cap.Capability.Layer.Layer.forEach(function (l) {
+            if (l.Name === layerName || l.Identifier === layerName) {
+              var options = this.getOptionsFromCap(l, cap)
+              var layer = this.getLayerFromOptions(options)
+              this.dispatchEvent({ type: 'load', layer: layer, options: options })
+              if (typeof (onload) === 'function')
+                onload({ layer: layer, options: options })
             }
-          }
-          var lcap = findLayer(cap.Capability.Layer.Layer)
-          // Find one
-          if (lcap) {
-            var options = this.getOptionsFromCap(lcap, cap)
-            var layer = this.getLayerFromOptions(options)
-            this.dispatchEvent({ type: 'load', layer: layer, options: options })
-            if (typeof (onload) === 'function') {
-              onload({ layer: layer, options: options })
-            }
-            return;
-          }
+          }.bind(this))
+        } else {
+          this.dispatchEvent({ type: 'load', error: true })
         }
-        this.dispatchEvent({ type: 'load', error: true })
       }.bind(this)
     })
   }
@@ -24199,11 +24468,13 @@ ol.interaction.Delete = class olinteractionDelete extends ol.interaction.Select 
  * @param {any} options
  *  @param {ol.Overlay|Array<ol.Overlay>} options.overlays the overlays to drag
  *  @param {ol.Size} options.offset overlay offset, default [0,0]
+ *  @param {boolean} options.centerOnClick wheter a click inside the popup should move it to the click coordinates, default false
  */
 ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interaction.Pointer {
   constructor(options) {
     options = options || {};
     var offset = options.offset || [0, 0];
+    var centerOnClick = options.centerOnClick || false;
     // Extend pointer
     super({
       // start draging on an overlay
@@ -24217,17 +24488,17 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
         }
         // Start dragging
         if (this._dragging) {
-          if (options.centerOnClick !== false) {
+          if (centerOnClick) {
             this._dragging.setPosition(coordinate, true);
-          } else {
-            coordinate = this._dragging.getPosition();
           }
+          var coordinateInitial = this._dragging.getPosition();
+          this._dragging.offsetClick = [coordinate[0]-coordinateInitial[0], coordinate[1]-coordinateInitial[1]];
           this.dispatchEvent({
             type: 'dragstart',
             overlay: this._dragging,
             originalEvent: evt.originalEvent,
             frameState: evt.frameState,
-            coordinate: coordinate
+            coordinate: coordinateInitial
           });
           return true;
         }
@@ -24238,6 +24509,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
         var res = evt.frameState.viewState.resolution;
         var coordinate = [evt.coordinate[0] + offset[0] * res, evt.coordinate[1] - offset[1] * res];
         if (this._dragging) {
+          coordinate = [coordinate[0]-this._dragging.offsetClick[0], coordinate[1]-this._dragging.offsetClick[1]];
           this._dragging.setPosition(coordinate, true);
           this.dispatchEvent({
             type: 'dragging',
@@ -24253,6 +24525,7 @@ ol.interaction.DragOverlay = class olinteractionDragOverlay extends ol.interacti
         var res = evt.frameState.viewState.resolution;
         var coordinate = [evt.coordinate[0] + offset[0] * res, evt.coordinate[1] - offset[1] * res];
         if (this._dragging) {
+          coordinate = [coordinate[0]-this._dragging.offsetClick[0], coordinate[1]-this._dragging.offsetClick[1]];
           this.dispatchEvent({
             type: 'dragend',
             overlay: this._dragging,
@@ -25208,10 +25481,10 @@ ol.interaction.FillAttribute = class olinteractionFillAttribute extends ol.inter
     if (this.getMap() && this._cursor) {
       if (active) {
         this._previousCursor = this.getMap().getTargetElement().style.cursor;
-        this.getMap().getTargetElement().style.cursor = this._cursor;
+        ol.ext.element.setCursor(this.getMap(), this._cursor);
         //      console.log('setCursor',this._cursor)
       } else {
-        this.getMap().getTargetElement().style.cursor = this._previousCursor;
+        ol.ext.element.setCursor(this.getMap(), this._previousCursor);
         this._previousCursor = undefined;
       }
     }
@@ -25962,7 +26235,7 @@ ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interacti
    */
   setMap(map) {
     if (this.previousCursor_ !== undefined && this.getMap()) {
-      this.getMap().getTargetElement().style.cursor = this.previousCursor_;
+      ol.ext.element.setCursor(this.getMap(), this.previousCursor_);
       this.previousCursor_ = undefined;
     }
     super.setMap(map);
@@ -25973,9 +26246,8 @@ ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interacti
   setActive(b) {
     super.setActive(b);
     if (this.cursor_ && this.getMap() && this.getMap().getTargetElement()) {
-      var style = this.getMap().getTargetElement().style;
       if (this.previousCursor_ !== undefined) {
-        style.cursor = this.previousCursor_;
+        ol.ext.element.setCursor(this.getMap(), this.previousCursor_);
         this.previousCursor_ = undefined;
       }
     }
@@ -25987,7 +26259,7 @@ ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interacti
    */
   setCursor(cursor) {
     if (!cursor && this.previousCursor_ !== undefined && this.getMap()) {
-      this.getMap().getTargetElement().style.cursor = this.previousCursor_;
+      ol.ext.element.setCursor(this.getMap(), this.previousCursor_);
       this.previousCursor_ = undefined;
     }
     this.cursor_ = cursor;
@@ -26078,10 +26350,10 @@ ol.interaction.Hover = class olinteractionHover extends ol.interaction.Interacti
         if (b) {
           if (style.cursor != this.cursor_) {
             this.previousCursor_ = style.cursor;
-            style.cursor = this.cursor_;
+            ol.ext.element.setCursor(map, this.cursor_);
           }
         } else if (this.previousCursor_ !== undefined) {
-          style.cursor = this.previousCursor_;
+          ol.ext.element.setCursor(map, this.previousCursor_);
           this.previousCursor_ = undefined;
         }
       }
@@ -26912,10 +27184,10 @@ ol.interaction.ModifyFeature = class olinteractionModifyFeature extends ol.inter
       if (current) {
         if (element.style.cursor != this.cursor_) {
           this.previousCursor_ = element.style.cursor
-          element.style.cursor = this.cursor_
+          ol.ext.element.setCursor(element, this.cursor_)
         }
       } else if (this.previousCursor_ !== undefined) {
-        element.style.cursor = this.previousCursor_
+        ol.ext.element.setCursor(element, this.previousCursor_)
         this.previousCursor_ = undefined
       }
     }
@@ -27275,9 +27547,9 @@ ol.interaction.Offset = class olinteractionOffset extends ol.interaction.Pointer
       if (this.previousCursor_ === false) {
         this.previousCursor_ = e.map.getTargetElement().style.cursor;
       }
-      e.map.getTargetElement().style.cursor = 'pointer';
+      ol.ext.element.setCursor(e.map, 'pointer');
     } else {
-      e.map.getTargetElement().style.cursor = this.previousCursor_;
+      ol.ext.element.setCursor(e.map, this.previousCursor_);
       this.previousCursor_ = false;
     }
   }
@@ -28393,10 +28665,10 @@ ol.interaction.Split = class olinteractionSplit extends ol.interaction.Interacti
       if (current) {
         if (element.style.cursor != this.cursor_) {
           this.previousCursor_ = element.style.cursor
-          element.style.cursor = this.cursor_
+          ol.ext.element.setCursor(element, this.cursor_)
         }
       } else if (this.previousCursor_ !== undefined) {
-        element.style.cursor = this.previousCursor_
+        ol.ext.element.setCursor(element, this.previousCursor_)
         this.previousCursor_ = undefined
       }
     }
@@ -28418,7 +28690,8 @@ ol.interaction.Split = class olinteractionSplit extends ol.interaction.Interacti
  *  @param {ol.Collection.<ol.Feature>} options.features A collection of feature to be split (replace source target).
  *  @param {ol.Collection.<ol.Feature>} options.triggerFeatures Any newly created or modified features from this collection will be used to split features on the target source (replace triggerSource).
  *  @param {function|undefined} options.filter a filter that takes a feature and return true if the feature is eligible for splitting, default always split.
- *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split. Default is 1e-10.
+ *  @param {function|undefined} options.tolerance Distance between the calculated intersection and a vertex on the source geometry below which the existing vertex will be used for the split. Default is 1e-3.
+ *  @param {function|undefined} options.alignTolerance Tolerance to check allignment. Default is 1e-3.
  * @todo verify auto intersection on features that split.
  */
 ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Interaction {
@@ -28461,8 +28734,10 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
       this.source_.on("changefeature", this.onChangeFeature.bind(this))
       this.source_.on("removefeature", this.onRemoveFeature.bind(this))
     }
+    // Node tolerance to snap
+    this.tolerance_ = options.tolerance || 1e-3
     // Split tolerance between the calculated intersection and the geometry
-    this.tolerance_ = options.tolerance || 1e-10
+    this.tolerance2_ = options.alignTolerance || options.tolerance || 1e-3
     // Get all features candidate
     this.filterSplit_ = options.filter || function () { return true }
   }
@@ -28519,8 +28794,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
   * @private
   */
   splitSource(feature, change) {
-    if (!this.getActive())
-      return
+    if (!this.getActive()) return
     // Allready perform a split
     if (this.splitting)
       return
@@ -28567,7 +28841,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
           var p = this.intersectSegs(seg, [c2[j], c2[j + 1]])
           if (p) {
             split.push(p)
-            g = f.getGeometry().splitAt(p, this.tolerance_)
+            g = f.getGeometry().splitAt(p, this.tolerance2_)
             if (g && g.length > 1) {
               found = f
               return true
@@ -28583,7 +28857,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
       extent = ol.extent.buffer(ol.extent.boundingExtent(seg), this.tolerance_ /*0.01*/)
       this.source_.forEachFeatureIntersectingExtent(extent, function(f) {
         if (f.getGeometry().splitAt) {
-          var g = f.getGeometry().splitAt(c[0], this.tolerance_)
+          var g = f.getGeometry().splitAt(c[0], this.tolerance2_)
           if (g.length > 1) {
             this.source_.removeFeature(f)
             for (k = 0; k < g.length; k++) {
@@ -28629,7 +28903,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
     // Split original
     var splitOriginal = false
     if (split.length) {
-      var result = feature.getGeometry().splitAt(split, this.tolerance_)
+      var result = feature.getGeometry().splitAt(split, this.tolerance2_)
       if (result.length > 1) {
         for (k = 0; k < result.length; k++) {
           f2 = feature.clone()
@@ -28653,6 +28927,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
    * @private
   */
   onAddFeature(e) {
+    if (!this.getActive()) return;
     this.splitSource(e.feature)
     if (this.splitting) {
       this.added_.push(e.feature)
@@ -28662,6 +28937,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
    * @private
   */
   onRemoveFeature(e) {
+    if (!this.getActive()) return;
     if (this.splitting) {
       var n = this.added_.indexOf(e.feature)
       if (n == -1) {
@@ -28675,6 +28951,7 @@ ol.interaction.Splitter = class olinteractionSplitter extends ol.interaction.Int
    * @private
   */
   onChangeFeature(e) {
+    if (!this.getActive()) return;
     if (this.moving_) {
       this.lastEvent_ = e
     } else {
@@ -29868,10 +30145,9 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
   setMap(map) {
     var oldMap = this.getMap()
     if (oldMap) {
-      var targetElement = oldMap.getTargetElement()
       oldMap.removeLayer(this.overlayLayer_)
-      if (this.previousCursor_ && targetElement) {
-        targetElement.style.cursor = this.previousCursor_
+      if (this.previousCursor_) {
+        ol.ext.element.setCursor(oldMap, this.previousCursor_)
       }
       this.previousCursor_ = undefined
     }
@@ -30117,7 +30393,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
     } else {
       if (this.ispt_) {
         // Calculate extent arround the point
-        var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]])
+        var p = this.getMap().getPixelFromCoordinate(ol.extent.getCenter(ext))
         if (p) {
           var dx = ptRadius ? ptRadius[0] || 10 : 10
           var dy = ptRadius ? ptRadius[1] || 10 : 10
@@ -30271,7 +30547,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
         this.center_ = this.getCenter() || ol.extent.getCenter(extent)
         // we are now rotating (cursor down on rotate mode), so apply the grabbing cursor
         var element = evt.map.getTargetElement()
-        element.style.cursor = this.Cursors.rotate0
+        ol.ext.element.setCursor(element, this.Cursors.rotate0)
         this.previousCursor_ = element.style.cursor
       } else {
         this.center_ = ol.extent.getCenter(extent)
@@ -30535,10 +30811,11 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
         if (this.previousCursor_ === undefined) {
           this.previousCursor_ = element.style.cursor
         }
-        element.style.cursor = c
+        ol.ext.element.setCursor(element, c);
       } else {
-        if (this.previousCursor_ !== undefined)
-          element.style.cursor = this.previousCursor_
+        if (this.previousCursor_ !== undefined) {
+          ol.ext.element.setCursor(element, this.previousCursor_)
+        }
         this.previousCursor_ = undefined
       }
     }
@@ -30551,7 +30828,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
     // remove rotate0 cursor on Up event, otherwise it's stuck on grab/grabbing
     if (this.mode_ === 'rotate') {
       var element = evt.map.getTargetElement()
-      element.style.cursor = this.Cursors.default
+      ol.ext.element.setCursor(element, this.Cursors.default)
       this.previousCursor_ = undefined
     }
     //dispatchEvent
@@ -30857,7 +31134,6 @@ ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Int
       var vectors = getVectorLayers(map.getLayers())
       vectors.forEach((function (l) {
         var s = l.getSource()
-        console.log('SOURCE', s)
         this._sourceListener.push(s.on(['addfeature', 'removefeature'], this._onAddRemove.bind(this)))
         this._sourceListener.push(s.on('clearstart', function () {
           this.blockStart('clear')
@@ -30896,7 +31172,6 @@ ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Int
   /** A feature is added / removed
    */
   _onAddRemove(e) {
-    console.log('undore')
     if (this._record) {
       this._redoStack.clear()
       this._redo.length = 0
@@ -32938,7 +33213,7 @@ ol.source.GridBin = class olsourceGridBin extends ol.source.BinBase {
     options = options || {};
     super(options);
     this.set('gridProjection', options.gridProjection || 'EPSG:4326');
-    this.setSize('size', options.size || 1);
+    this.setSize(options.size || 1);
     this.reset();
   }
   /** Set grid projection
@@ -33640,11 +33915,12 @@ ol.source.Overpass = class olsourceOverpass extends ol.source.Vector {
  * @fires overload
  * @extends {ol.source.Vector}
  * @param {Object} options
- *  @param {string} [options.version=1.1.0] WFS version to use. Can be either 1.0.0, 1.1.0 or 2.0.0.
  *  @param {string} options.typeName WFS type name parameter
- *  @param {number} options.tileZoom zoom to load the tiles
- *  @param {number} options.maxFeatures maximum features returned in the WFS
- *  @param {number} options.featureLimit maximum features in the source before refresh, default Infinity
+ *  @param {string} [options.version=1.1.0] WFS version to use. Can be either 1.0.0, 1.1.0 or 2.0.0.
+ *  @param {string} [options.outputFormat=application/json] WFS outputFormat parameter
+ *  @param {number} [options.tileZoom=14] zoom to load the tiles
+ *  @param {number} [options.maxFeatures] maximum features returned in the WFS
+ *  @param {number} [options.featureLimit=Infinity] maximum features in the source before refresh, default Infinity
  *  @param {boolean} [options.pagination] experimental enable pagination, default no pagination
  */
 ol.source.TileWFS = class olsourceTileWFS extends ol.source.Vector {
@@ -33663,7 +33939,7 @@ ol.source.TileWFS = class olsourceTileWFS extends ol.source.Vector {
       + '&request=GetFeature'
       + '&version=' + (options.version || '1.1.0')
       + '&typename=' + (options.typeName || '')
-      + '&outputFormat=application/json'
+      + '&outputFormat=' + (options.outputFormat || 'application/json')
     if (options.maxFeatures) {
       url += '&maxFeatures=' + options.maxFeatures + '&count=' + options.maxFeatures
     }
@@ -33873,21 +34149,13 @@ ol.layer.Vector3D = class ollayerVector3D extends ol.layer.Image {
         this.height_ = this.toHeight_
       }
     }
-    var ratio = e.frameState.pixelRatio
+    var ratio = this._ratio = e.frameState.pixelRatio
     var ctx = e.context
-    var m = this.matrix_ = e.frameState.coordinateToPixelTransform
-    // Old version (matrix)
-    if (!m) {
-      m = e.frameState.coordinateToPixelMatrix,
-        m[2] = m[4]
-      m[3] = m[5]
-      m[4] = m[12]
-      m[5] = m[13]
+    this.matrix_ = e.frameState.coordinateToPixelTransform
+    this.inversePixelTransform_ = e.inversePixelTransform;
+    if (e.frameState.size) {
+      this.center_ = [e.frameState.size[0] / 2, e.frameState.size[1]]
     }
-    this.center_ = [
-      ctx.canvas.width * this.get('center')[0] / ratio,
-      ctx.canvas.height * this.get('center')[1] / ratio
-    ]
     var f = this._source.getFeaturesInExtent(e.frameState.extent)
     ctx.save()
     ctx.scale(ratio, ratio)
@@ -33968,12 +34236,30 @@ ol.layer.Vector3D = class ollayerVector3D extends ol.layer.Image {
       pt[0] * this.matrix_[0] + pt[1] * this.matrix_[1] + this.matrix_[4],
       pt[0] * this.matrix_[2] + pt[1] * this.matrix_[3] + this.matrix_[5]
     ]
+    var p1 = [
+      p0[0] + h / this.res_ * (p0[0] - this.center_[0]),
+      p0[1] + h / this.res_ * (p0[1] - this.center_[1])
+    ]
+    var version = parseFloat(ol.util.VERSION);
+    // ol@v9.1+
+    if (version > 9.0) {
+      p0 = [
+        p0[0] * this.inversePixelTransform_[0] - p0[1] * this.inversePixelTransform_[1] + this.inversePixelTransform_[4],
+        - p0[0] * this.inversePixelTransform_[2] + p0[1] * this.inversePixelTransform_[3] + this.inversePixelTransform_[5]
+      ]
+      p1 = [
+        p1[0] * this.inversePixelTransform_[0] - p1[1] * this.inversePixelTransform_[1] + this.inversePixelTransform_[4],
+        - p1[0] * this.inversePixelTransform_[2] + p1[1] * this.inversePixelTransform_[3] + this.inversePixelTransform_[5]
+      ]
+      return {
+        p0: [p0[0]/this._ratio, p0[1]/this._ratio],
+        p1: [p1[0]/this._ratio, p1[1]/this._ratio]
+      }
+    }
+    // Old versions
     return {
       p0: p0,
-      p1: [
-        p0[0] + h / this.res_ * (p0[0] - this.center_[0]),
-        p0[1] + h / this.res_ * (p0[1] - this.center_[1])
-      ]
+      p1: p1
     }
   }
   /** Get a vector 3D for a feature
@@ -35197,18 +35483,12 @@ ol.render3D = class olrender3D extends ol.Object {
         this.height_ = this.toHeight_
       }
     }
-    var ratio = e.frameState.pixelRatio
+    var ratio = this._ratio = e.frameState.pixelRatio
     var ctx = e.context
-    var m = this.matrix_ = e.frameState.coordinateToPixelTransform
-    // Old version (matrix)
-    if (!m) {
-      m = e.frameState.coordinateToPixelMatrix,
-        m[2] = m[4]
-      m[3] = m[5]
-      m[4] = m[12]
-      m[5] = m[13]
-    }
-    this.center_ = [ctx.canvas.width / 2 / ratio, ctx.canvas.height / ratio]
+    this.matrix_ = e.frameState.coordinateToPixelTransform
+    this.inversePixelTransform_ = e.inversePixelTransform;
+    // this.center_ = [ctx.canvas.width / 2 / ratio, ctx.canvas.height / ratio]
+    this.center_ = [e.frameState.size[0] / 2, e.frameState.size[1]]
     var f = this.layer_.getSource().getFeaturesInExtent(e.frameState.extent)
     ctx.save()
     ctx.scale(ratio, ratio)
@@ -35219,13 +35499,13 @@ ol.render3D = class olrender3D extends ol.Object {
     var builds = []
     for (var i = 0; i < f.length; i++) {
       var h = this.getFeatureHeight(f[i])
-      if (h)
-        builds.push(this.getFeature3D_(f[i], h))
+      if (h) builds.push(this.getFeature3D_(f[i], h))
     }
-    if (this.get('ghost'))
+    if (this.get('ghost')) {
       this.drawGhost3D_(ctx, builds)
-    else
+    } else {
       this.drawFeature3D_(ctx, builds)
+    }
     ctx.restore()
   }
   /** Set layer to render 3D
@@ -35301,12 +35581,30 @@ ol.render3D = class olrender3D extends ol.Object {
       pt[0] * this.matrix_[0] + pt[1] * this.matrix_[1] + this.matrix_[4],
       pt[0] * this.matrix_[2] + pt[1] * this.matrix_[3] + this.matrix_[5]
     ]
+    var p1 = [
+      p0[0] + h / this.res_ * (p0[0] - this.center_[0]),
+      p0[1] + h / this.res_ * (p0[1] - this.center_[1])
+    ]
+    var version = parseFloat(ol.util.VERSION);
+    // ol@v9.1+
+    if (version > 9.0) {
+      p0 = [
+        p0[0] * this.inversePixelTransform_[0] - p0[1] * this.inversePixelTransform_[1] + this.inversePixelTransform_[4],
+        - p0[0] * this.inversePixelTransform_[2] + p0[1] * this.inversePixelTransform_[3] + this.inversePixelTransform_[5]
+      ]
+      p1 = [
+        p1[0] * this.inversePixelTransform_[0] - p1[1] * this.inversePixelTransform_[1] + this.inversePixelTransform_[4],
+        - p1[0] * this.inversePixelTransform_[2] + p1[1] * this.inversePixelTransform_[3] + this.inversePixelTransform_[5]
+      ]
+      return {
+        p0: [p0[0]/this._ratio, p0[1]/this._ratio],
+        p1: [p1[0]/this._ratio, p1[1]/this._ratio]
+      }
+    }
+    // Old versions
     return {
       p0: p0,
-      p1: [
-        p0[0] + h / this.res_ * (p0[0] - this.center_[0]),
-        p0[1] + h / this.res_ * (p0[1] - this.center_[1])
-      ]
+      p1: p1
     }
   }
   /** Get drawing
@@ -37305,7 +37603,7 @@ ol.Overlay.Magnify = class olOverlayMagnify extends ol.Overlay {
   */
   setActive(active) {
     this.set("active", active)
-    this.refreh();
+    this.refresh();
     return this.getActive()
   }
   /** Mouse move
@@ -37489,13 +37787,14 @@ ol.Overlay.Placemark = class olOverlayPlacemark extends ol.Overlay.Popup {
  * @fires show
  * @fires hide
  * @fires select
+ * @fires attribute
  * @param {} options Extend Popup options 
  *  @param {String} options.popupClass the a class of the overlay to style the popup.
  *  @param {bool} options.closeBox popup has a close box, default false.
  *  @param {function|undefined} options.onclose: callback function when popup is closed
  *  @param {function|undefined} options.onshow callback function when popup is shown
  *  @param {Number|Array<number>} options.offsetBox an offset box
- *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
+ *  @param {ol.OverlayPositioning | string | undefined} options.positioning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
  *  @param {Template|function} [options.template] A template with a list of properties to use in the popup or a function that takes a feature and returns a Template, default use all feature properties
  *  @param {ol.interaction.Select} options.select a select interaction to get features from
@@ -37628,7 +37927,7 @@ ol.Overlay.PopupFeature = class olOverlayPopupFeature extends ol.Overlay.Popup {
       var tr, table = ol.ext.element.create('TABLE', { parent: html });
       var atts = this._attributeObject(template);
       var featureAtts = feature.getProperties();
-      for (var att in atts) {
+      Object.keys(atts).forEach(function(att) {
         if (featureAtts.hasOwnProperty(att)) {
           var a = atts[att];
           var content, val = featureAtts[att];
@@ -37644,8 +37943,14 @@ ol.Overlay.PopupFeature = class olOverlayPopupFeature extends ol.Overlay.Popup {
             visible = a.visible(feature, val);
           }
           if (visible) {
-            tr = ol.ext.element.create('TR', { parent: table });
+            tr = ol.ext.element.create('TR', {
+              click: function(e) {
+                this.dispatchEvent({ type: 'attribute', feature: feature, attribute: att, originalEvent: e })
+              }.bind(this),
+              parent: table 
+            });
             ol.ext.element.create('TD', { 
+              className: 'ol-label',
               html: a ? a.title || att : att, 
               parent: tr 
             });
@@ -37667,12 +37972,13 @@ ol.Overlay.PopupFeature = class olOverlayPopupFeature extends ol.Overlay.Popup {
             }
             // Add value
             ol.ext.element.create('TD', {
+              className: 'ol-value',
               html: content,
               parent: tr
             });
           }
         }
-      }
+      }.bind(this))
     }
     // Zoom button
     ol.ext.element.create('BUTTON', { className: 'ol-zoombt', parent: html })
@@ -42795,8 +43101,8 @@ ol.style.Profile = class olstyleProfile extends ol.style.Style {
   /** @private */
   _renderLine(geom, g, l, e) {
     var i, p, ctx = e.context
-    var cos = Math.cos(e.rotation)
-    var sin = Math.sin(e.rotation)
+    var cos = parseFloat(ol.util.VERSION) > 9.1 ? 1 : Math.cos(e.rotation)
+    var sin = parseFloat(ol.util.VERSION) > 9.1 ? 0 : Math.sin(e.rotation)
     // var a = e.pixelRatio / e.resolution;
     var a = ol.coordinate.dist2d(geom[0], geom[1]) / ol.coordinate.dist2d(g[0], g[1])
     var dx = geom[0][0] - g[0][0] * a * cos - g[0][1] * a * sin

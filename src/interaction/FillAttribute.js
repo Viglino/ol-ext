@@ -1,5 +1,6 @@
 import ol_interaction_Select from 'ol/interaction/Select.js'
 import {click as ol_events_condition_click} from 'ol/events/condition.js'
+import ol_ext_element from '../util/element';
 
 /** A Select interaction to fill feature's properties on click.
  * @constructor
@@ -87,10 +88,10 @@ var ol_interaction_FillAttribute = class olinteractionFillAttribute extends ol_i
     if (this.getMap() && this._cursor) {
       if (active) {
         this._previousCursor = this.getMap().getTargetElement().style.cursor;
-        this.getMap().getTargetElement().style.cursor = this._cursor;
+        ol_ext_element.setCursor(this.getMap(), this._cursor);
         //      console.log('setCursor',this._cursor)
       } else {
-        this.getMap().getTargetElement().style.cursor = this._previousCursor;
+        ol_ext_element.setCursor(this.getMap(), this._previousCursor);
         this._previousCursor = undefined;
       }
     }

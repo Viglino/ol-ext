@@ -6,7 +6,7 @@ import ol_layer_Tile from 'ol/layer/Tile.js'
 import ol_format_WMTSCapabilities from 'ol/format/WMTSCapabilities.js'
 import ol_ext_Ajax from '../util/Ajax.js'
 import {transformExtent as ol_proj_transformExtent} from 'ol/proj.js'
-// import {intersects as ol_extent_intersects} from 'ol/extent'
+// import {intersects as ol_extent_intersects} from 'ol/extent.js'
 
 import ol_source_Geoportail from '../source/Geoportail.js'
 

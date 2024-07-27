@@ -716,7 +716,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
     }
 
     var source_opt = {
-      url: parent.Capability.Request.GetMap.DCPType[0].HTTP.Get.OnlineResource,
+      url: (parent.Capability.Request.GetMap.DCPType[0].HTTP.Get.OnlineResource || '').replace(/service=wms&?/i,''),
       projection: srs,
       attributions: attributions,
       crossOrigin: this.get('cors') ? 'anonymous' : null,
@@ -868,32 +868,18 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
     this.getCapabilities(url, {
       onload: function (cap) {
         if (cap) {
-          // Find layer recursively
-          function findLayer(layers) {
-            for (var i=0; i<layers.length; i++) {
-              var l = layers[i];
-              if (l.Name === layerName || l.Identifier === layerName) {
-                return l;
-              } else if (l.Layer) {
-                // Sub layer
-                var l2 = findLayer(l.Layer)
-                if (l2) return l2
-              }
+          cap.Capability.Layer.Layer.forEach(function (l) {
+            if (l.Name === layerName || l.Identifier === layerName) {
+              var options = this.getOptionsFromCap(l, cap)
+              var layer = this.getLayerFromOptions(options)
+              this.dispatchEvent({ type: 'load', layer: layer, options: options })
+              if (typeof (onload) === 'function')
+                onload({ layer: layer, options: options })
             }
-          }
-          var lcap = findLayer(cap.Capability.Layer.Layer)
-          // Find one
-          if (lcap) {
-            var options = this.getOptionsFromCap(lcap, cap)
-            var layer = this.getLayerFromOptions(options)
-            this.dispatchEvent({ type: 'load', layer: layer, options: options })
-            if (typeof (onload) === 'function') {
-              onload({ layer: layer, options: options })
-            }
-            return;
-          }
+          }.bind(this))
+        } else {
+          this.dispatchEvent({ type: 'load', error: true })
         }
-        this.dispatchEvent({ type: 'load', error: true })
       }.bind(this)
     })
   }

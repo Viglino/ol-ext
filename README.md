@@ -81,8 +81,12 @@ The library will be available in the `node_modules/openlayers-ext/dist` director
 <!-- Openlayers -->
 <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-
+<script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?version=4.8.0&features=requestAnimationFrame%2CElement.prototype.classList%2CURL%2CObject.assign"></script>
+<--
+<script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?version=4.8.0&features=requestAnimationFrame%2CElement.prototype.classList%2CURL%2CObject.assign"></script>
+or
+<script src="https://polyfill-fastly.io/v3/polyfill.min.js?features=requestAnimationFrame%2CElement.prototype.classList%2CObject.assign%2CURL"></script>
+-->
 <!-- ol-ext -->
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>

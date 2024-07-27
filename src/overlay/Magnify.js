@@ -80,7 +80,7 @@ var ol_Overlay_Magnify = class olOverlayMagnify extends ol_Overlay {
   */
   setActive(active) {
     this.set("active", active)
-    this.refreh();
+    this.refresh();
     return this.getActive()
   }
   /** Mouse move

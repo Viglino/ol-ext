@@ -223,13 +223,16 @@
 }
 
 /* GPS */
-.ol-searchgps input.search {
+.ol-searchgps input.search,
+.ol-searchcoord input.search {
   display: none;
 }
-.ol-control.ol-searchgps > button:first-child {
+.ol-control.ol-searchgps > button:first-child,
+.ol-control.ol-searchcoord > button:first-child {
   background-image: none;
 }
-.ol-control.ol-searchgps > button:first-child:before {
+.ol-control.ol-searchgps > button:first-child:before,
+.ol-control.ol-searchcoord > button:first-child:before {
   content: "x/y";
   position: unset;
   display: block;
@@ -239,21 +242,31 @@
   width: auto;
   height: auto;
 }
-.ol-control.ol-searchgps > button:first-child:after {
+.ol-control.ol-searchgps > button:first-child:after,
+.ol-control.ol-searchcoord > button:first-child:after {
   content: unset;
 }
 .ol-control.ol-searchgps .ol-latitude,
-.ol-control.ol-searchgps .ol-longitude {
+.ol-control.ol-searchgps .ol-longitude,
+.ol-control.ol-searchcoord .ol-latitude,
+.ol-control.ol-searchcoord .ol-longitude {
   clear: both;
 }
 .ol-control.ol-searchgps .ol-latitude label,
-.ol-control.ol-searchgps .ol-longitude label {
+.ol-control.ol-searchgps .ol-longitude label,
+.ol-control.ol-searchcoord .ol-latitude label,
+.ol-control.ol-searchcoord .ol-longitude label {
   width: 5.5em;
   display: inline-block;
   text-align: right;
   transform: scaleX(.8);
   margin: 0 -.8em 0 0;
   transform-origin: 0 0;
+}
+.ol-control.ol-searchcoord .ol-latitude label,
+.ol-control.ol-searchcoord .ol-longitude label {
+  width: 2em;
+  margin: 0;
 }
 .ol-control.ol-searchgps .ol-latitude input,
 .ol-control.ol-searchgps .ol-longitude input {
@@ -285,17 +298,24 @@
   width: .5em;
   text-align: left;
 }
-.ol-searchgps.ol-control.ol-collapsed button.ol-geoloc {
+.ol-searchgps.ol-control.ol-collapsed button.ol-geoloc,
+.ol-searchgps.ol-control.ol-collapsed button.ol-centerloc,
+.ol-searchcoord.ol-control.ol-collapsed button.ol-centerloc,
+.ol-searchcoord.ol-control.ol-collapsed button.ol-geoloc {
   display: none;
 }
-.ol-searchgps button.ol-geoloc {
+.ol-searchgps button.ol-geoloc,
+.ol-searchgps button.ol-centerloc,
+.ol-searchcoord button.ol-centerloc,
+.ol-searchcoord button.ol-geoloc {
   top: 0;
   float: right;
   margin-right: 3px;
   background-image: none;
   position: relative;
 }
-.ol-searchgps button.ol-geoloc:before {
+.ol-searchgps button.ol-geoloc:before,
+.ol-searchcoord button.ol-geoloc:before {
   content:"";
   position: absolute;
   left: 50%;
@@ -306,7 +326,8 @@
   border-radius: 50%;
   transform: translate(-50%,-50%);
 }
-.ol-searchgps button.ol-geoloc:after {
+.ol-searchgps button.ol-geoloc:after,
+.ol-searchcoord button.ol-geoloc:after {
   content:"";
   position: absolute;
   left: 50%;
@@ -318,4 +339,20 @@
   box-shadow: 
     .45em 0 currentColor, -.45em 0 currentColor, 0 -.45em currentColor, 0 .45em currentColor,
     .25em 0 currentColor, -.25em 0 currentColor, 0 -.25em currentColor, 0 .25em currentColor;
+}
+
+.ol-searchgps button.ol-centerloc:before,
+.ol-searchcoord button.ol-centerloc:before {
+  content: "📍";
+  border: 0;
+  width: auto;
+  height: auto;
+  padding: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.ol-searchgps button.ol-centerloc:after,
+.ol-searchcoord button.ol-centerloc:after {
+  display: none;
 }
