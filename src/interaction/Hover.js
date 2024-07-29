@@ -1,5 +1,5 @@
 import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
-import ol_ext_element from '../util/element';
+import ol_ext_element from '../util/element.js';
 
 /** Interaction hover do to something when hovering a feature
  * @constructor
