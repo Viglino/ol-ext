@@ -47,6 +47,12 @@ ol-ext exists as ES6 modules ([ol-ext](https://www.npmjs.com/package/ol-ext)) an
 npm install ol-ext
 ````
 
+OpenLayers is a peer dependencies, so you need to install it as well.
+````
+npm install ol
+````
+
+
 Then in your js file you can import the classes as follow:
 ```javascript
 import "ol/ol.css"
@@ -81,10 +87,9 @@ The library will be available in the `node_modules/openlayers-ext/dist` director
 <!-- Openlayers -->
 <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
+<-- if you need polyfill --
 <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?version=4.8.0&features=requestAnimationFrame%2CElement.prototype.classList%2CURL%2CObject.assign"></script>
-<--
-<script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?version=4.8.0&features=requestAnimationFrame%2CElement.prototype.classList%2CURL%2CObject.assign"></script>
-or
+-- or --
 <script src="https://polyfill-fastly.io/v3/polyfill.min.js?features=requestAnimationFrame%2CElement.prototype.classList%2CObject.assign%2CURL"></script>
 -->
 <!-- ol-ext -->
