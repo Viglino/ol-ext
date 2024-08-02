@@ -24,6 +24,7 @@ import ol_ext_getVectorContextStyle from '../util/getVectorContextStyle.js'
 * @constructor
 * @fires animationstart
 * @fires animating
+* @fires animationrepeat
 * @fires animationend
 * @fires drawing
 * @param {ol_featureAnimationOptions} options
@@ -242,6 +243,7 @@ ol_layer_Base.prototype.animateFeature = function(feature, fanim, useFilter) {
       // Repeat animation
       if (nb < fanim[step].repeat_) {
         event.extent = false;
+        fanim[step].dispatchEvent({ type:'animationrepeat', feature: feature });
       } else if (step < fanim.length-1) {
         // newt step
         fanim[step].dispatchEvent({ type:'animationend', feature: feature });
