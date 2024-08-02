@@ -33352,6 +33352,7 @@ ol.source.HexBin = class olsourceHexBin extends ol.source.BinBase {
  *  @param {boolean} [options.useWorker=false] use worker to calculate the distance map (may cause flickering on small data sets). Source will fire drawstart, drawend while calculating
  *  @param {Object} [options.lib] Functions that will be made available to operations run in a worker
  *  @param {number} [options.scale=4] scale factor, use large factor to enhance performances (but minor accuracy)
+ *  @param {number} [options.maxD] maximum distance in proj units to compute (default +Infinity).
  *  @param {string|function} options.weight The feature attribute to use for the weight or a function that returns a weight from a feature. Weight values should range from 0 to 100. Default use the weight attribute of the feature.
  */
 ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
@@ -33382,7 +33383,8 @@ ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
       });
     }
     this._position = { extent: [], resolution: 0 };
-    this.set('scale', options.scale || 4);
+    this.set('scale', parseFloat(options.scale) || 4);
+    this.set('maxD', parseFloat(options.maxD) || 0) 
     this._weight = typeof (options.weight) === 'function' ? options.weight : function (f) { return f.get(options.weight || 'weight'); };
   }
   /** Get the source
@@ -33436,6 +33438,7 @@ ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
     var width = e.data.width;
     var height = e.data.height;
     var imageData = new Uint8ClampedArray(width * height * 4);
+    var dm = e.data.maxD * e.data.maxD;
     // Compute image
     var x, y;
     for (y = 0; y < height; y++) {
@@ -33445,6 +33448,9 @@ ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
           var dx = x - pts[i][0];
           var dy = y - pts[i][1];
           var d = dx * dx + dy * dy;
+          if (dm && d > dm) {
+            continue;
+          } 
           // Inverse distance weighting - Shepard's method
           if (d === 0) {
             b = 1;
@@ -33455,14 +33461,16 @@ ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
           t += inv * pts[i][2];
           b += inv;
         }
-        // Set color
-        var color = this.getColor(t / b);
-        // Convert to RGB
-        var pos = (y * width + x) * 4;
-        imageData[pos] = color[0];
-        imageData[pos + 1] = color[1];
-        imageData[pos + 2] = color[2];
-        imageData[pos + 3] = color[3];
+        if (t>0) {
+          // Set color
+          var color = this.getColor(t / b);
+          // Convert to RGB
+          var pos = (y * width + x) * 4;
+          imageData[pos] = color[0];
+          imageData[pos + 1] = color[1];
+          imageData[pos + 2] = color[2];
+          imageData[pos + 3] = color[3];
+        }
       }
     }
     return { type: 'image', data: imageData, width: width, height: height };
@@ -33499,9 +33507,16 @@ ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
     this._source.getFeatures().forEach(function (f) {
       pts.push(tr(f.getGeometry().getFirstCoordinate(), this._weight(f)));
     }.bind(this));
+    var message = { 
+      pts: pts, 
+      width: width, 
+      height: height, 
+      maxD: this.get('maxD') ? this.get('maxD') / this.get('scale') / resolution : 0,
+      resolution: resolution
+    };
     if (this.worker) {
       // kill old worker and star new one
-      this.worker.postMessage({ pts: pts, width: width, height: height }, true);
+      this.worker.postMessage(message, true);
       this.dispatchEvent({ type: 'drawstart' });
       // Move the canvas position meanwhile
       if (this._canvas.width !== Math.round(size[0])
@@ -33517,7 +33532,7 @@ ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
     } else {
       this._canvas.width = Math.round(size[0]);
       this._canvas.height = Math.round(size[1]);
-      var imageData = this.computeImage({ data: { pts: pts, width: width, height: height } });
+      var imageData = this.computeImage({ data: message });
       this.onImageData(imageData);
     }
     return this._canvas;
