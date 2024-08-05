@@ -87,11 +87,28 @@
 	<div id="map"></div>
 	<div class="options">
     Click on the map to add a new measure.
-    <br/> Value:
-    <input id="value" type="number" value="50" min="0" max="100" />
-    <label><input id="random" type="checkbox" checked="checked" /> random</label>
-    <button onclick="idw.getSource().clear()">clear</button>
-    <button onclick="$('body').toggleClass('fullscreen'); map.updateSize()">FullScreen</button>
+    <ul>
+      <li>
+        Value:
+        <input id="value" type="number" value="50" min="0" max="100" />
+        <label><input id="random" type="checkbox" checked="checked" /> random</label>
+      </li>
+      <li>
+        Scale: <select onchange="idw.setScale(this.value)">
+          <option valule="1">1</option>
+          <option valule="2">2</option>
+          <option valule="4" selected>4</option>
+          <option valule="8">8</option>
+        </select>
+      </li>
+      <li>
+        Max distance: <input type="range" step="100000" min="0" max="4000000" value="0" onchange="idw.setMaxD(this.value)">
+      </li>
+      <li style="padding-top: 1em; float: right;">
+        <button onclick="idw.getSource().clear()">clear</button>
+        <button onclick="$('body').toggleClass('fullscreen'); map.updateSize()">FullScreen</button>
+      </li>
+    </ul>
 	</div>
 	
   <script type="text/javascript">

@@ -55,6 +55,20 @@ var ol_source_IDW = class olsourceIDW extends ol_source_ImageCanvas {
     this.set('maxD', parseFloat(options.maxD) || 0) 
     this._weight = typeof (options.weight) === 'function' ? options.weight : function (f) { return f.get(options.weight || 'weight'); };
   }
+  /** Set IDW scale
+   * @param {number} scale
+   */
+  setScale(scale) {
+    this.set('scale', parseFloat(scale) || 4);
+    this.changed();
+  }
+  /** Set IDW max distance
+   * @param {number} [dist] max distance in proj units
+   */
+  setMaxD(dist) {
+    this.set('maxD', parseFloat(dist) || 0);
+    this.changed();
+  }
   /** Get the source
    */
   getSource() {
