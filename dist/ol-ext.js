@@ -31118,10 +31118,11 @@ ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Int
     var self = this
     // Ges vector layers 
     function getVectorLayers(layers, init) {
-      if (!init)
+      if (!init) {
         init = []
+      }
       layers.forEach(function (l) {
-        if (l.getSource() instanceof ol.source.Vector) {
+        if (l.getSource && l.getSource() instanceof ol.source.Vector) {
           if (!self._layers || self._layers.indexOf(l) >= 0) {
             init.push(l)
           }
