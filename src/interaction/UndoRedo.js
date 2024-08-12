@@ -228,10 +228,11 @@ var ol_interaction_UndoRedo = class olinteractionUndoRedo extends ol_interaction
 
     // Ges vector layers 
     function getVectorLayers(layers, init) {
-      if (!init)
+      if (!init) {
         init = []
+      }
       layers.forEach(function (l) {
-        if (l.getSource() instanceof ol_source_Vector) {
+        if (l.getSource && l.getSource() instanceof ol_source_Vector) {
           if (!self._layers || self._layers.indexOf(l) >= 0) {
             init.push(l)
           }
