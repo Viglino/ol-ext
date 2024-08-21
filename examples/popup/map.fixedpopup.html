@@ -135,18 +135,18 @@
       <option value="tooltips">tooltips</option>
     </select>
     <br />
-    <input id="ck" type="checkbox" onchange="if (this.checked) popup.addPopupClass('shadow'); else popup.removePopupClass('shadow');" />
+    <input id="ck" type="checkbox" onchange="this.checked ? popup.addPopupClass('shadow') & popup2.addPopupClass('shadow') : popup.removePopupClass('shadow') & popup2.removePopupClass('shadow')" />
     <label for="ck">shadow</label>
     <br />
-    <input id="cb" type="checkbox" checked onchange="popup.setClosebox(this.checked);" />
+    <input id="cb" type="checkbox" checked onchange="popup.setClosebox(this.checked); popup2.setClosebox(this.checked);" />
     <label for="cb">hasclosebox</label>
     <br />
     <label>
-      <input name="fix" type="radio" checked onchange="popup.setHook('viewport');"  />
+      <input name="fix" type="radio" checked onchange="popup.setHook('viewport'); popup2.setHook('viewport')"  />
       hook on viewport
     </label>
     <label>
-      <input name="fix" type="radio" onchange="popup.setHook('map');" />
+      <input name="fix" type="radio" onchange="popup.setHook('map'); popup2.setHook('map')" />
       hook on map
     </label>
   </div>
