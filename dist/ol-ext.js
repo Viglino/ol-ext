@@ -37232,7 +37232,6 @@ ol.Overlay.Fixed = class olOverlayFixed extends ol.Overlay {
  * @param {} options Extend Overlay options 
  *	@param {String} options.popupClass the a class of the overlay to style the popup.
  *	@param {ol.style.Style} options.style a style to style the link on the map.
- *	@param {boolean} [options.fixed=true] fixed on start.
  *	@param {number} options.minScale min scale for the popup, default .5
  *	@param {number} options.maxScale max scale for the popup, default 2
  *	@param {bool} options.closeBox popup has a close box, default false.
@@ -37240,7 +37239,8 @@ ol.Overlay.Fixed = class olOverlayFixed extends ol.Overlay {
  *	@param {function|undefined} options.onshow callback function when popup is shown
  *	@param {Number|Array<number>} options.offsetBox an offset box
  *	@param {ol.OverlayPositioning | string | undefined} options.positioning 
- *		the 'auto' positioning var the popup choose its positioning to stay on the map.
+ *		the 'auto' positioning: the popup choose its positioning to stay on the map.
+ *  @param {string} options.hook popup is hooked on the 'map' (and move with it) or on the 'viewport', default viewport.
  * @api stable
  */
 ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
@@ -37251,9 +37251,10 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
     super(options)
     this.set('minScale', options.minScale || .5)
     this.set('maxScale', options.maxScale || 2)
-    this.setFixed(options.fixed !== false);
+    this.set('hook', options.hook || 'viewport')
     // Canvas for drawing inks
     var canvas = document.createElement('canvas')
+    this._coord = undefined;
     this._overlay = new ol.layer.Image({
       source: new ol.source.ImageCanvas({
         canvasFunction: function (extent, res, ratio, size) {
@@ -37364,7 +37365,7 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
         }
       }
       pointerEvents[e.pointerId] = e
-      pixelPosition = this._pixel
+      pixelPosition = this._pixel || this.getMap().getPixelFromCoordinate(this.getPosition())
       rotIni = this.get('rotation') || 0
       scaleIni = this.get('scale') || 1
       distIni = distance(pointerEvents)
@@ -37439,53 +37440,34 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
       }.bind(this))
     }
   }
-  /** Fix the popup on the map
-   * @param {boolean} fix
-   */
-  setFixed(fix) {
-    this.set('fixed', !!fix);
-    this.updatePixelPosition();
-    if (this.getMap()) {
-      var position = this.getPosition()
-      this._pixel = this.getMap().getPixelFromCoordinate(position)
-      this.getMap().render();
-    }
-  }
   /** Update pixel position
    * @return {boolean}
    * @private
    */
   updatePixelPosition() {
-    // Standard popup
-    if (!this.get('fixed')) {
-      super.updatePixelPosition();
-      return; 
-    }
-    // Calculate position
     var map = this.getMap()
     var position = this.getPosition()
     if (!map || !map.isRendered() || !position) {
       this.setVisible(false)
       return
     }
+    var mapSize = map.getSize();
     if (!this._pixel) {
-      this._pixel = map.getPixelFromCoordinate(position)
-      var mapSize = map.getSize()
-      this.updateRenderedPosition(this._pixel, mapSize)
-    } else {
-      this.setVisible(true)
+        var pixel = map.getPixelFromCoordinate(this.getPosition());
+        this.updateRenderedPosition(pixel, mapSize);
+        this._coord = map.getCoordinateFromPixel(pixel)
+        this._pixel = pixel;
+    }
+    if (this._pixel && this.get('hook') === 'map') {
+        var pixel = map.getPixelFromCoordinate(this._coord);
+        super.updateRenderedPosition(pixel, mapSize);
+        this._pixel = pixel;
     }
   }
   /** updateRenderedPosition
    * @private
    */
   updateRenderedPosition(pixel, mapsize) {
-    // Standard popup
-    if (!this.get('fixed')) {
-      super.updateRenderedPosition(pixel, mapsize)
-      return;
-    }
-    // Calculate position
     super.updateRenderedPosition(pixel, mapsize)
     this.setRotation()
     this.setScale()
@@ -37495,9 +37477,6 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
    * @param {string} position top/bottom/middle-left/right/center
    */
   setPixelPosition(pix, position) {
-    if (!this.get('fixed')) {
-      return;
-    }
     var r, map = this.getMap()
     var mapSize = map ? map.getSize() : [0, 0]
     if (position) {
@@ -37519,6 +37498,7 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
     }
     if (pix) {
       this._pixel = pix
+      this._coord = map.getCoordinateFromPixel(pix)
     }
     if (map && map.getTargetElement() && this._pixel) {
       this.updateRenderedPosition(this._pixel, mapSize)
@@ -37540,8 +37520,9 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
         this._pixel[1] = this._pixel[1] + rmap.top - r.top + rmap.height - r.height
         outside = true
       }
-      if (outside)
+      if (outside && this.get('hook') !== 'map') {
         this.updateRenderedPosition(this._pixel, mapSize)
+      }
       this._overlay.changed()
     }
   }
@@ -37550,6 +37531,30 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
    */
   getPixelPosition() {
     return this._pixel
+  }
+  /**
+   * Get the coordinate in view of the popup
+   */
+  getCoordinate() {
+    return this._coord
+  }
+  /**
+   * Set the position of the popup.
+   * @param {ol.Coordinate|undefined} position Position.
+   * @api stable
+   */
+  setCoordinate(position) {
+    this._coord = position
+    this.setPixelPosition()
+  }
+  /**
+   * Set the hook
+   * @param {string} [hook] 'map' or 'viewport', default viewport
+   */
+  setHook(hook) {
+    this.set('hook', hook || 'viewport');
+    this._coord = this.get('hook') === 'map' ? this.getMap().getCoordinateFromPixel(this._pixel) : null
+    this.setPixelPosition()
   }
   /**
    * Set the CSS class of the popup.
