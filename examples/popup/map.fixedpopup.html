@@ -142,8 +142,12 @@
     <label for="cb">hasclosebox</label>
     <br />
     <label>
-      <input type="checkbox" checked onchange="popup.setFixed(!popup.get('fixed'));" checked="checked" />
-      fixed
+      <input name="fix" type="radio" checked onchange="popup.setFixed('viewport');"  />
+      hook on viewport
+    </label>
+    <label>
+      <input name="fix" type="radio" onchange="popup.setFixed('map');" />
+      hook on map
     </label>
   </div>
   <p>Click on the points to show a popup ! (shift+click for a second one)</p>
