@@ -37218,6 +37218,7 @@ ol.Overlay.Fixed = class olOverlayFixed extends ol.Overlay {
  * @param {} options Extend Overlay options 
  *	@param {String} options.popupClass the a class of the overlay to style the popup.
  *	@param {ol.style.Style} options.style a style to style the link on the map.
+ *	@param {boolean} [options.fixed=true] fixed on start.
  *	@param {number} options.minScale min scale for the popup, default .5
  *	@param {number} options.maxScale max scale for the popup, default 2
  *	@param {bool} options.closeBox popup has a close box, default false.
@@ -37236,6 +37237,7 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
     super(options)
     this.set('minScale', options.minScale || .5)
     this.set('maxScale', options.maxScale || 2)
+    this.setFixed(options.fixed !== false);
     // Canvas for drawing inks
     var canvas = document.createElement('canvas')
     this._overlay = new ol.layer.Image({
@@ -37423,11 +37425,29 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
       }.bind(this))
     }
   }
+  /** Fix the popup on the map
+   * @param {boolean} fix
+   */
+  setFixed(fix) {
+    this.set('fixed', !!fix);
+    this.updatePixelPosition();
+    if (this.getMap()) {
+      var position = this.getPosition()
+      this._pixel = this.getMap().getPixelFromCoordinate(position)
+      this.getMap().render();
+    }
+  }
   /** Update pixel position
    * @return {boolean}
    * @private
    */
   updatePixelPosition() {
+    // Standard popup
+    if (!this.get('fixed')) {
+      super.updatePixelPosition();
+      return; 
+    }
+    // Calculate position
     var map = this.getMap()
     var position = this.getPosition()
     if (!map || !map.isRendered() || !position) {
@@ -37446,6 +37466,12 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
    * @private
    */
   updateRenderedPosition(pixel, mapsize) {
+    // Standard popup
+    if (!this.get('fixed')) {
+      super.updateRenderedPosition(pixel, mapsize)
+      return;
+    }
+    // Calculate position
     super.updateRenderedPosition(pixel, mapsize)
     this.setRotation()
     this.setScale()
@@ -37455,6 +37481,9 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
    * @param {string} position top/bottom/middle-left/right/center
    */
   setPixelPosition(pix, position) {
+    if (!this.get('fixed')) {
+      return;
+    }
     var r, map = this.getMap()
     var mapSize = map ? map.getSize() : [0, 0]
     if (position) {
@@ -37474,8 +37503,9 @@ ol.Overlay.FixedPopup = class olOverlayFixedPopup extends ol.Overlay.Popup {
       else
         pix[0] = mapSize[0] / 2 + pix[0]
     }
-    if (pix)
+    if (pix) {
       this._pixel = pix
+    }
     if (map && map.getTargetElement() && this._pixel) {
       this.updateRenderedPosition(this._pixel, mapSize)
       // Prevent outside
