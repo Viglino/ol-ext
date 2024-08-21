@@ -37,12 +37,26 @@ var ol_source_TileWFS = class olsourceTileWFS extends ol_source_Vector {
 
     // Loading params
     var format = new ol_format_GeoJSON()
-    var url = options.url
-      + '?service=WFS'
+    var url = new URL(options.url)
+    // Get non standard options (apikey)
+    var search = url.search.replace(/^\?/,'').split('&')
+    url = url.origin + url.pathname
+    var std = /^service$|^request$|^version$|^typename$|^outputFormat$|^maxFeatures$|^bbox$|^srsname$/i;
+    search.forEach(function(s) {
+      var name = s.split('=')[0]
+      if (!std.test(name)) {
+        url += (/\?/.test(url) ? '&' : '?') + s;
+      }
+    })
+    // Query url
+    url = url
+      + (/\?/.test(url) ? '&' : '?')
+      + 'service=WFS'
       + '&request=GetFeature'
       + '&version=' + (options.version || '1.1.0')
       + '&typename=' + (options.typeName || '')
-      + '&outputFormat=' + (options.outputFormat || 'application/json')
+      + '&outputFormat=' + (options.outputFormat || 'application/json');
+    
     if (options.maxFeatures) {
       url += '&maxFeatures=' + options.maxFeatures + '&count=' + options.maxFeatures
     }
@@ -64,11 +78,12 @@ var ol_source_TileWFS = class olsourceTileWFS extends ol_source_Vector {
         loading: loader.loading,
         loaded: loader.loaded
       })
-      this._loadTile(url, extent, projection, format, loader)
+      this._loadTile(this._url, extent, projection, format, loader)
     }
 
     super(sourceOpt)
 
+    this._url = url
     this.set('pagination', options.pagination)
   }
   /**
