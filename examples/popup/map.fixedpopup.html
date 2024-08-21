@@ -140,6 +140,11 @@
     <br />
     <input id="cb" type="checkbox" checked onchange="popup.setClosebox(this.checked);" />
     <label for="cb">hasclosebox</label>
+    <br />
+    <label>
+      <input type="checkbox" checked onchange="popup.setFixed(!popup.get('fixed'));" checked="checked" />
+      fixed
+    </label>
   </div>
   <p>Click on the points to show a popup ! (shift+click for a second one)</p>
   
