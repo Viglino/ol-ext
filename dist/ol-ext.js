@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.22
+ * @version v4.0.23
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -33966,12 +33966,25 @@ ol.source.TileWFS = class olsourceTileWFS extends ol.source.Vector {
     }
     // Loading params
     var format = new ol.format.GeoJSON()
-    var url = options.url
-      + '?service=WFS'
+    var url = new URL(options.url)
+    // Get non standard options (apikey)
+    var search = url.search.replace(/^\?/,'').split('&')
+    url = url.origin + url.pathname
+    var std = /^service$|^request$|^version$|^typename$|^outputFormat$|^maxFeatures$|^bbox$|^srsname$/i;
+    search.forEach(function(s) {
+      var name = s.split('=')[0]
+      if (!std.test(name)) {
+        url += (/\?/.test(url) ? '&' : '?') + s;
+      }
+    })
+    // Query url
+    url = url
+      + (/\?/.test(url) ? '&' : '?')
+      + 'service=WFS'
       + '&request=GetFeature'
       + '&version=' + (options.version || '1.1.0')
       + '&typename=' + (options.typeName || '')
-      + '&outputFormat=' + (options.outputFormat || 'application/json')
+      + '&outputFormat=' + (options.outputFormat || 'application/json');
     if (options.maxFeatures) {
       url += '&maxFeatures=' + options.maxFeatures + '&count=' + options.maxFeatures
     }
@@ -33991,9 +34004,10 @@ ol.source.TileWFS = class olsourceTileWFS extends ol.source.Vector {
         loading: loader.loading,
         loaded: loader.loaded
       })
-      this._loadTile(url, extent, projection, format, loader)
+      this._loadTile(this._url, extent, projection, format, loader)
     }
     super(sourceOpt)
+    this._url = url
     this.set('pagination', options.pagination)
   }
   /**
