@@ -225,7 +225,7 @@ function applyStyle() {
                   if (l.paint[c].stops) {
                     l.paint[c].stops.forEach(function (s) {
                       if (!(/#ffffff/i.test(s[1]) && /^saturate/.test(operation))) {
-                        s[1] = getChromaColor(chroma(s[1])[operation](opt)); 
+                        s[1] = getChromaColor(chroma(s[1])[operation](opt));
                       }
                       // console.log('STOP:',s)
                     })
@@ -245,13 +245,13 @@ function applyStyle() {
                 try {
                   if (l.paint[c].stops) {
                     l.paint[c].stops.forEach(function (s) {
-                      s[1] = getChromaColor(chroma.mix(s[1],color)); 
+                      s[1] = getChromaColor(chroma.mix(s[1],color));
                     })
                   } else {
-                    l.paint[c] = getChromaColor(chroma.mix(l.paint[c],color)); 
+                    l.paint[c] = getChromaColor(chroma.mix(l.paint[c],color));
                   }
                 } catch(e) {};
-                break; 
+                break;
               }
             }
           }
@@ -259,6 +259,15 @@ function applyStyle() {
       })
     }
   }
+
+  // trigger tile refresh by incrementing style id, see: https://github.com/openlayers/ol-mapbox-style/issues/959
+  try {
+    currentStyle["id"] = currentStyle["id"] + 1;
+  }
+  catch {
+    currentStyle["id"] = 0;
+  }
+
   olms.applyStyle(vlayer, currentStyle, "plan_ign");
 }
 
@@ -367,7 +376,7 @@ selStyle.push(new ol.style.Style({
     return new ol.geom.Point(f.getGeometry().getFirstCoordinate())
   }
 }))
-var select = new ol.layer.Vector({ 
+var select = new ol.layer.Vector({
   source: new ol.source.Vector(),
   style: selStyle
 });
@@ -383,7 +392,7 @@ map.on('click', function() {
 var tooltip  = new ol.Overlay.Tooltip({ className: 'default', positioning: 'bottom-center' });
 map.addOverlay(tooltip);
 
-var hover = new ol.interaction.Hover({ 
+var hover = new ol.interaction.Hover({
   cursor: "pointer",
   layers: [vlayer]
 });
@@ -407,7 +416,7 @@ hover.on("enter", function(e) {
   }
   tooltip.setInfo(info);
   //console.log(feature.getProperties());
-  // Select feature 
+  // Select feature
   if (showGeom) {
     var coords = [];
     if (feature instanceof ol.Feature) {
@@ -427,7 +436,7 @@ hover.on("enter", function(e) {
           coords = coords;
           break;
         }
-        case 'MultiLineString' : 
+        case 'MultiLineString' :
         case 'Polygon' : {
           coords = [coords];
           break;
