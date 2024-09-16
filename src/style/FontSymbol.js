@@ -23,6 +23,7 @@ import {asString as ol_color_asString} from 'ol/color.js'
  *  @param {number} options.rotation
  *  @param {boolean} options.rotateWithView
  *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
+ *  @param {number} [options.scale=1]
  *  @param {number} [options.opacity=1]
  *  @param {number} [options.fontSize=1] size of the font compare to the radius, fontSize greater than 1 will exceed the symbol extent
  *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
@@ -50,6 +51,7 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
     super ({
       radius: options.radius,
       fill: options.fill,
+      scale: options.scale,
       rotation: options.rotation,
       displacement: options.displacement,
       rotateWithView: options.rotateWithView,

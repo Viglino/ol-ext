@@ -155,9 +155,9 @@
           */
           image: new ol.style.FontSymbol({
             glyph: 'maki-'+form[type],
-            radius: 12,
+            radius: 24,
             color: color,	
-            scale: 10,
+            scale: 0.5,
             fill: new ol.style.Fill({
               color: color
             }),
@@ -207,9 +207,9 @@
     selectCluster: false,	// disable cluster selection
     // Style the selection
     style: function(f) {
-      var s = getStyle(f);
+      var s = featureStyle(f);
       s[0] = s[0].clone();
-      s[0].getImage().setScale(2)
+      s[0].getImage().setScale(1)
       s[0].setZIndex(1)
       return s;
     }
