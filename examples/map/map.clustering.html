@@ -190,7 +190,7 @@
     source: clusterSource,
     animationDuration: $("#animatecluster").prop('checked') ? 700:0,
     // Cluster style
-    style: getStyle
+    style: getStyle,
   });
   map.addLayer(clusterLayer);
   // add 2000 features
@@ -205,6 +205,14 @@
     // Feature style when it springs apart
     featureStyle: featureStyle,
     selectCluster: false,	// disable cluster selection
+    // Style the selection
+    style: function(f) {
+      var s = getStyle(f);
+      s[0] = s[0].clone();
+      s[0].getImage().setScale(2)
+      s[0].setZIndex(1)
+      return s;
+    }
   });
   map.addInteraction(selectCluster);
 
