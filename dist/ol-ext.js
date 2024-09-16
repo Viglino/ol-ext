@@ -12897,6 +12897,7 @@ ol.control.Print = class olcontrolPrint extends ol.control.Control {
  * @fire error
  * @fire printing
  * @extends {ol.control.Control}
+ * @author https://github.com/chicoff (italian i18n)
  * @param {Object=} options Control options.
  *	@param {string} options.className class of the control
  *	@param {String} options.title button title
@@ -13776,6 +13777,32 @@ ol.control.PrintDialog.prototype._labels = {
     errorMsg: '无法保存地图...',
     printBt: '打印...',
     cancel: '取消'
+  },
+  it: {
+    title: 'Stampa',
+    orientation: 'Orientamento',
+    portrait: 'Verticale',
+    landscape: 'Orizzontale',
+    size: 'Formato pagina',
+    custom: 'Dimensione schermo',
+    margin: 'Margini',
+    scale: 'Scala',
+    legend: 'Legenda',
+    north: 'Freccia nord',
+    mapTitle: 'Titolo della mappa',
+    saveas: 'Salva con nome...',
+    saveLegend: 'Salva legenda...',
+    copied: '✔ Copiato negli appunti',
+    errorMsg: 'Impossibile salvare la mappa',
+    printBt: 'Stampa',
+    clipboardFormat: 'Copia negli appunti...',
+    jpegFormat: 'salva come jpeg',
+    pngFormat: 'salva come png',
+    pdfFormat: 'salva come pdf',
+    none: 'nessuno',
+    small: 'piccolo',
+    large: 'grande',
+    cancel: 'annulla'
   }
 };
 /** List of paper size */
