@@ -27910,7 +27910,9 @@ ol.interaction.SelectCluster = class olinteractionSelectCluster extends ol.inter
       this.getFeatures().clear()
     var center = feature.getGeometry().getCoordinates()
     // Pixel size in map unit
-    var pix = this.getMap().getView().getResolution()
+    var view = this.getMap().getView()
+    var userproj = ol.proj.getUserProjection()
+    var pix = view.getResolution() * (userproj ? view.getProjection().getMetersPerUnit() / userproj.getMetersPerUnit() : 1)
     var r, a, i, max
     var p, cf, lk
     // The features
@@ -27982,7 +27984,9 @@ ol.interaction.SelectCluster = class olinteractionSelectCluster extends ol.inter
       var vectorContext = event.vectorContext || ol.render.getVectorContext(event)
       // Retina device
       var ratio = event.frameState.pixelRatio
-      var res = this.getMap().getView().getResolution()
+      var view = this.getMap().getView()
+      var userproj = ol.proj.getUserProjection()
+      var res = view.getResolution() +  (userproj ? view.getProjection().getMetersPerUnit() / userproj.getMetersPerUnit() : 1)
       var e = ol.easing.easeOut((event.frameState.time - start) / duration)
       for (var i = 0, feature; feature = features[i]; i++)
         if (feature.get('features')) {
