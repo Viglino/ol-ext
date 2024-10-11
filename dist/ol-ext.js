@@ -7967,6 +7967,7 @@ ol.control.Dialog = class olcontrolDialog extends ol.control.Control {
       this.setContent(options);
     }
     this.element.classList.add('ol-visible');
+    this.element.setAttribute('aria-hidden', false);
     var input = this.element.querySelector('input[type="text"],input[type="search"],input[type="number"]');
     if (input)
       input.focus();
@@ -8152,6 +8153,7 @@ ol.control.Dialog = class olcontrolDialog extends ol.control.Control {
    */
   hide() {
     this.element.classList.remove('ol-visible');
+    this.element.setAttribute('aria-hidden', true)
     this.dispatchEvent({ type: 'hide' });
   }
   /** Close the dialog 
