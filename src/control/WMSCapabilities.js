@@ -471,6 +471,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
         }
       }.bind(this))
     }
+    this._optional = optional;
 
     // Get request params
     var request = this.getRequestParam(options)
@@ -727,6 +728,8 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
       }
     }
 
+    Object.keys(this._optional).forEach(o => source_opt.params[o] = this._optional[o])
+
     // Resolution to zoom
     var view = new ol_View({
       projection: this.getMap().getView().getProjection()
@@ -834,8 +837,11 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
         title: this._elements.formTitle.value
       }
     }
-    if (this._elements.formMap.value)
+
+    Object.keys(this._optional).forEach(o => options.source.params[o] = this._optional[o])
+    if (this._elements.formMap.value) {
       options.source.params.MAP = this._elements.formMap.value
+    }
     return options
   }
   /** Fill dialog form

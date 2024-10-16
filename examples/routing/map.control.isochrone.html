@@ -115,8 +115,8 @@
 
   search.on('isochrone', function(iso) {
     if (!batch.length && iso.iteration === 0) vector.getSource().clear();
+    // Simplify using closing operation with jsts
     if (Number($('.simplify').val())) {
-      // Simplify using closing operation with jsts
       var simpli = Number($('.simplify').val());
       var parser = new jsts.io.OL3Parser();
       var geom = iso.feature.getGeometry();
@@ -126,6 +126,7 @@
       buffered = jsts.simplify.DouglasPeuckerSimplifier.simplify(buffered, Math.min(10, simpli/10))
       iso.feature.setGeometry(parser.write(buffered));
     }
+    console.log(currentFeature)
     vector.getSource().addFeature(iso.feature);
     setTimeout(function() {
       map.getView().fit(vector.getSource().getExtent(), { duration:1000 });
@@ -147,10 +148,12 @@
   /* BATCH mode: load a geojson file */
   var batch = [];
   var current_iteration = 0;
+  var currentFeature = null;
   var dialog = new ol.control.Dialog();
   map.addControl(dialog);
 
   function dosearch() {
+    currentFeature = null;
     if (!batch.length) {
       dialog.hide();
       return;
@@ -166,6 +169,7 @@
     var pt = batch[0].getGeometry().getFirstCoordinate();
     var val = search.get('method')==='distance' ? search.get('distance')*1000 : (search.get('hour')||0)*60*60+(search.get('minute')||0)*60;
     if (val) {
+      currentFeature = batch[0];
       search.search(pt, val, current_iteration-1)
     } else {
       batch = [];
@@ -182,6 +186,12 @@
     current_iteration = search.get('iter')+1;
     dosearch();
   });
+
+  // Restart after error
+  function reRun() {
+    current_iteration++;
+    dosearch();
+  }
 </script>
   
 </body>
