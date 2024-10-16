@@ -19883,6 +19883,7 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
         }
       }.bind(this))
     }
+    this._optional = optional;
     // Get request params
     var request = this.getRequestParam(options)
     var opt = []
@@ -20126,6 +20127,7 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
         'VERSION': parent.version || '1.3.0'
       }
     }
+    Object.keys(this._optional).forEach(o => source_opt.params[o] = this._optional[o])
     // Resolution to zoom
     var view = new ol.View({
       projection: this.getMap().getView().getProjection()
@@ -20229,8 +20231,10 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
         title: this._elements.formTitle.value
       }
     }
-    if (this._elements.formMap.value)
+    Object.keys(this._optional).forEach(o => options.source.params[o] = this._optional[o])
+    if (this._elements.formMap.value) {
       options.source.params.MAP = this._elements.formMap.value
+    }
     return options
   }
   /** Fill dialog form
@@ -20407,6 +20411,7 @@ ol.control.WMTSCapabilities = class olcontrolWMTSCapabilities extends ol.control
    * @returns {boolean}
    */
   isSupportedSet(tm) {
+    if (/^PM_.*/.test(tm.TileMatrixSet)) return true;
     return this.supportedSets.indexOf(tm.TileMatrixSet) >= 0;
   }
   /** Return a WMTS options for the given capabilities
