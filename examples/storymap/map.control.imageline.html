@@ -83,23 +83,26 @@
 
   <div class="options">
     <ul>
+     <li>
+        <label>
+          Links
+        </label>
+        <select onchange="iline.set('linkColor', this.value); iline.refresh()">
+          <option value="">none</option>
+          <option value="rgba(255,0,0,.7)">red</option>
+          <option value="rgba(0,255,0,.7)">green</option>
+          <option value="rgba(0,0,255,.7)">blue</option>
+          <option value="rgba(0,0,0,.7)">black</option>
+          <option value="rgba(255,255,255,.7)">white</option>
+        </select>
+      </li>
       <li>
         <label>
           <input id="extent" type="checkbox" onclick="iline.useExtent($(this).prop('checked'));" />
           Show only visible images
         </label>
       </li>
-      <li>
-        <label>
-          <input 
-            id="link" 
-            type="checkbox" 
-            onclick="iline.set('linkColor', $(this).prop('checked') ? 'rgba(255,255,255,.7)':false);" 
-          />
-          Draw links
-        </label>
-      </li>
-      <li>
+       <li>
         <label>
           <input id="hover" type="checkbox" onclick="iline.set('hover',$(this).prop('checked'));" 
           />
