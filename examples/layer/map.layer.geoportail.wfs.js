@@ -115,8 +115,7 @@ function setWFS(type) {
       $('#loading span').text(e.loaded+'/'+e.loading)
     }
   }
-  var key = type.split('|')[0];
-  type = type.split('|')[1];
+  type = type.split('|')[1] || '';
   var title = (type.split(':')[1] || type).replace(/(_|\.)/g,' ').capitalize();
   vectorLayer.set('title', title);
   vectorSource = new ol.source.TileWFS({
