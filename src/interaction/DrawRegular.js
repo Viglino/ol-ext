@@ -259,7 +259,8 @@ var ol_interaction_DrawRegular = class olinteractionDrawRegular extends ol_inter
   handleEvent_(evt) {
     var dx, dy
     // Event date time
-    this._eventTime = new Date()
+    this._eventTime = new Date();
+
     switch (evt.type) {
       case "pointerdown": {
         if (this.conditionFn_ && !this.conditionFn_(evt))
@@ -274,6 +275,7 @@ var ol_interaction_DrawRegular = class olinteractionDrawRegular extends ol_inter
           if (this._longTouch)
             this.handleMoveEvent_(evt)
         }.bind(this), dt)
+        this.lastEvent = evt.type;
         break
       }
       case "pointerup": {
@@ -281,9 +283,10 @@ var ol_interaction_DrawRegular = class olinteractionDrawRegular extends ol_inter
         if (this.started_ && this.coord_) {
           dx = this.downPx_[0] - evt.pixel[0]
           dy = this.downPx_[1] - evt.pixel[1]
+
           if (dx * dx + dy * dy <= this.squaredClickTolerance_) {
             // The pointer has moved
-            if (this.lastEvent == "pointermove" || this.lastEvent == "keydown") {
+            if (this.lastEvent == "pointerdown" || this.lastEvent == "pointermove" || this.lastEvent == "keydown") {
               this.end_(evt)
             }
 
@@ -327,12 +330,13 @@ var ol_interaction_DrawRegular = class olinteractionDrawRegular extends ol_inter
         break
       }
       default: {
-        this.lastEvent = evt.type
-        // Prevent zoom in on dblclick
-        if (this.started_ && evt.type === 'dblclick') {
+        // Prevent zoom or other event on click/singleclick/dblclick
+        if (this.started_ && (evt.type === 'click' || evt.type === 'singleclick' || evt.type === 'dblclick')) {
           //evt.stopPropagation();
           return false
         }
+        this.lastEvent = evt.type
+
         break
       }
     }
