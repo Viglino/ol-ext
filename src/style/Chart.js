@@ -64,8 +64,6 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       if (!this._colors)
         this._colors = ol_style_Chart.colors.classic;
     }
-
-    this.renderChart_();
   }
   /**
    * Clones the style.
@@ -100,7 +98,6 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
   */
   setData(data) {
     this._data = data;
-    this.renderChart_();
   }
   /** Get symbol radius
   */
@@ -114,7 +111,6 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
   setRadius(radius, ratio) {
     this._radius = radius;
     this.donuratio_ = ratio || this.donuratio_;
-    this.renderChart_();
   }
   /** Set animation step
   *	@param {false|number} false to stop animation or the step of the animation [0,1]
@@ -130,11 +126,12 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       this._animation.animate = true;
       this._animation.step = step;
     }
-    this.renderChart_();
   }
   /** @private
   */
-  renderChart_(pixelratio) {
+  getImage(pixelratio) {
+    pixelratio = pixelratio || 1;
+    /*
     if (!pixelratio) {
       if (this.getPixelRatio) {
         pixelratio = window.devicePixelRatio;
@@ -146,6 +143,7 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       }
       return;
     }
+    */
 
     var strokeStyle;
     var strokeWidth = 0;
@@ -156,7 +154,7 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
     }
 
     // no atlas manager is used, create a new canvas
-    var canvas = this.getImage(pixelratio);
+    var canvas = super.getImage(pixelratio);
 
     // draw the circle on the canvas
     var context = (canvas.getContext('2d'));
@@ -266,6 +264,9 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       anchor[0] = c - this._offset[0];
       anchor[1] = c - this._offset[1];
     }
+    
+    // return image
+    return canvas;
   }
 };
 

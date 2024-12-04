@@ -15,7 +15,14 @@
 
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+  <!--
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v10.2.0/dist/ol.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v9.2.0/dist/ol.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v8.1.0/dist/ol.js"></script>
+  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  -->
 
   
   <!-- ol-ext -->
@@ -117,6 +124,7 @@
       var data = [0,0,0,0];
       for (var i=0, f; f=features[i]; i++) data[f.get('type')]++;
       var style = styleCache[data.join(',')];
+      style = false;
       if (!style) {
         var radius = Math.min(size+7, 20);
         style = styleCache[data.join(',')] = new ol.style.Style({
@@ -235,7 +243,6 @@
   })
 
   function testFontLoaded () {
-    console.log('TEST', $(".maki-bus").width())
     // Loaded ?
     if ($(".maki-bus").width() > 60) {
       styleCache = {};
