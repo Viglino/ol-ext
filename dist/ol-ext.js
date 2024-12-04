@@ -25077,7 +25077,7 @@ ol.interaction.DrawRegular = class olinteractionDrawRegular extends ol.interacti
   handleEvent_(evt) {
     var dx, dy
     // Event date time
-    this._eventTime = new Date()
+    this._eventTime = new Date();
     switch (evt.type) {
       case "pointerdown": {
         if (this.conditionFn_ && !this.conditionFn_(evt))
@@ -25092,6 +25092,7 @@ ol.interaction.DrawRegular = class olinteractionDrawRegular extends ol.interacti
           if (this._longTouch)
             this.handleMoveEvent_(evt)
         }.bind(this), dt)
+        this.lastEvent = evt.type;
         break
       }
       case "pointerup": {
@@ -25101,7 +25102,7 @@ ol.interaction.DrawRegular = class olinteractionDrawRegular extends ol.interacti
           dy = this.downPx_[1] - evt.pixel[1]
           if (dx * dx + dy * dy <= this.squaredClickTolerance_) {
             // The pointer has moved
-            if (this.lastEvent == "pointermove" || this.lastEvent == "keydown") {
+            if (this.lastEvent == "pointerdown" || this.lastEvent == "pointermove" || this.lastEvent == "keydown") {
               this.end_(evt)
             }
             // On touch device there is no move event : terminate = click on the same point
@@ -25144,12 +25145,12 @@ ol.interaction.DrawRegular = class olinteractionDrawRegular extends ol.interacti
         break
       }
       default: {
-        this.lastEvent = evt.type
-        // Prevent zoom in on dblclick
-        if (this.started_ && evt.type === 'dblclick') {
+        // Prevent zoom or other event on click/singleclick/dblclick
+        if (this.started_ && (evt.type === 'click' || evt.type === 'singleclick' || evt.type === 'dblclick')) {
           //evt.stopPropagation();
           return false
         }
+        this.lastEvent = evt.type
         break
       }
     }
@@ -41170,7 +41171,6 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       if (!this._colors)
         this._colors = ol.style.Chart.colors.classic;
     }
-    this.renderChart_();
   }
   /**
    * Clones the style.
@@ -41205,7 +41205,6 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
   */
   setData(data) {
     this._data = data;
-    this.renderChart_();
   }
   /** Get symbol radius
   */
@@ -41219,7 +41218,6 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
   setRadius(radius, ratio) {
     this._radius = radius;
     this.donuratio_ = ratio || this.donuratio_;
-    this.renderChart_();
   }
   /** Set animation step
   *	@param {false|number} false to stop animation or the step of the animation [0,1]
@@ -41235,11 +41233,12 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       this._animation.animate = true;
       this._animation.step = step;
     }
-    this.renderChart_();
   }
   /** @private
   */
-  renderChart_(pixelratio) {
+  getImage(pixelratio) {
+    pixelratio = pixelratio || 1;
+    /*
     if (!pixelratio) {
       if (this.getPixelRatio) {
         pixelratio = window.devicePixelRatio;
@@ -41251,6 +41250,7 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       }
       return;
     }
+    */
     var strokeStyle;
     var strokeWidth = 0;
     if (this._stroke) {
@@ -41258,7 +41258,7 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       strokeWidth = this._stroke.getWidth();
     }
     // no atlas manager is used, create a new canvas
-    var canvas = this.getImage(pixelratio);
+    var canvas = super.getImage(pixelratio);
     // draw the circle on the canvas
     var context = (canvas.getContext('2d'));
     context.save();
@@ -41361,6 +41361,8 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       anchor[0] = c - this._offset[0];
       anchor[1] = c - this._offset[1];
     }
+    // return image
+    return canvas;
   }
 };
 /** Default color set: classic, dark, pale, pastel, neon
