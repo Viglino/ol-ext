@@ -41163,6 +41163,8 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
     this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
     this._animation = (typeof (options.animation) == 'number') ? { animate: true, step: options.animation } : this._animation = { animate: false, step: 1 };
     this._max = options.max;
+    // Not yet drawn
+    this._done = false
     this._data = options.data;
     if (options.colors instanceof Array) {
       this._colors = options.colors;
@@ -41205,6 +41207,7 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
   */
   setData(data) {
     this._data = data;
+    this._done = false
   }
   /** Get symbol radius
   */
@@ -41218,6 +41221,7 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
   setRadius(radius, ratio) {
     this._radius = radius;
     this.donuratio_ = ratio || this.donuratio_;
+    this._done = false
   }
   /** Set animation step
   *	@param {false|number} false to stop animation or the step of the animation [0,1]
@@ -41233,32 +41237,51 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       this._animation.animate = true;
       this._animation.step = step;
     }
+    this._done = false
   }
   /** @private
   */
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
+    // Get canvas
     /*
-    if (!pixelratio) {
-      if (this.getPixelRatio) {
-        pixelratio = window.devicePixelRatio;
-        this.renderChart_(pixelratio);
-        if (this.getPixelRatio && pixelratio !== 1)
-          this.renderChart_(1);
-      } else {
-        this.renderChart_(1);
-      }
-      return;
+    var canvas0 = super.getImage(pixelratio);
+    if (!this._canvas) this._canvas = []
+    var canvas = this._canvas[pixelratio];
+    if (!canvas) {
+      this._canvas[pixelratio] = canvas = document.createElement('canvas');
     }
-    */
+      */
+     /*
+    if (!this._canvas) this._canvas = []
+    var canvas = this._canvas[pixelratio];
+    if (!canvas) {
+      var  renderOptions = this.renderOptions_;
+      this._canvas[pixelratio] = canvas = document.createElement('canvas');
+      canvas.width = renderOptions.size * pixelratio,
+      canvas.height = renderOptions.size * pixelratio
+    }
+      */
+    if (this.renderOptions_) {
+      this.renderOptions_.chartOptions = [
+        'chart',
+        Object.values(this._animation).join(','),
+        this._type,
+        this._data.join(','),
+        this._colors.join(','),
+        this._donutratio,
+        this._max,
+      ].join('-')
+    }
+    var canvas = super.getImage(pixelratio);
+    if (this._done) return canvas;
+    this._done = true
     var strokeStyle;
     var strokeWidth = 0;
     if (this._stroke) {
       strokeStyle = ol.color.asString(this._stroke.getColor());
       strokeWidth = this._stroke.getWidth();
     }
-    // no atlas manager is used, create a new canvas
-    var canvas = super.getImage(pixelratio);
     // draw the circle on the canvas
     var context = (canvas.getContext('2d'));
     context.save();
@@ -42556,6 +42579,17 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     // get canvas
+    if (this.renderOptions_) {
+      this.renderOptions_.fontsymbolOptions = [
+        'font-symbol',
+        this._fontSize, 
+        this._form, 
+        this._gradient, 
+        this._offset, 
+        this._fontStyle,
+        Object.values(this._glyph).join(',')
+      ].join('-')
+    }
     var canvas = super.getImage(pixelratio);
     var strokeStyle;
     var strokeWidth = 0;
@@ -42984,7 +43018,16 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
    */
   getImage(pixelratio) {
     pixelratio = pixelratio || window.devicePixelRatio;
-    var canvas = ol.style.RegularShape.prototype.getImage.call(this, pixelratio)
+    if (this.renderOptions_) {
+      this.renderOptions_.photoOptions = [
+        'photo', 
+        this._crossOrigin,
+        this._src,
+        this._shadow,
+        this._kind,
+      ].join('-')
+    }
+    var canvas = super.getImage(pixelratio)
     if ((this._gethit || this.img_) && this._currentRatio === pixelratio) return canvas;
     // Calculate image at pixel ratio
     this._currentRatio = pixelratio;
@@ -43543,6 +43586,12 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     var radius = this._radius;
+    if (this.renderOptions_) {
+      this.renderOptions_.shadowOptions = [
+        'shadow',
+        this._blur
+      ].join('-')
+    }
     var canvas = super.getImage(pixelratio);
     // Remove the circle on the canvas
     var context = (canvas.getContext('2d'));
