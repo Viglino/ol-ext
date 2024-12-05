@@ -202,7 +202,16 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
    */
   getImage(pixelratio) {
     pixelratio = pixelratio || window.devicePixelRatio;
-    var canvas = ol_style_RegularShape.prototype.getImage.call(this, pixelratio)
+    if (this.renderOptions_) {
+      this.renderOptions_.photoOptions = [
+        'photo', 
+        this._crossOrigin,
+        this._src,
+        this._shadow,
+        this._kind,
+      ].join('-')
+    }
+    var canvas = super.getImage(pixelratio)
     if ((this._gethit || this.img_) && this._currentRatio === pixelratio) return canvas;
     // Calculate image at pixel ratio
     this._currentRatio = pixelratio;

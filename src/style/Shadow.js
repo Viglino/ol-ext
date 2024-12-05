@@ -71,7 +71,12 @@ var ol_style_Shadow = class olstyleShadow extends ol_style_RegularShape {
     pixelratio = pixelratio || 1;
 
     var radius = this._radius;
-
+    if (this.renderOptions_) {
+      this.renderOptions_.shadowOptions = [
+        'shadow',
+        this._blur
+      ].join('-')
+    }
     var canvas = super.getImage(pixelratio);
 
     // Remove the circle on the canvas

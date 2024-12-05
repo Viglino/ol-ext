@@ -200,6 +200,17 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     // get canvas
+    if (this.renderOptions_) {
+      this.renderOptions_.fontsymbolOptions = [
+        'font-symbol',
+        this._fontSize, 
+        this._form, 
+        this._gradient, 
+        this._offset, 
+        this._fontStyle,
+        Object.values(this._glyph).join(',')
+      ].join('-')
+    }
     var canvas = super.getImage(pixelratio);
 
     var strokeStyle;
