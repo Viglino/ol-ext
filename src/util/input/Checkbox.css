@@ -5,14 +5,20 @@
 }
 .ol-ext-toggle-switch input[type="radio"],
 .ol-ext-toggle-switch input[type="checkbox"] {
-  display: none;
+  /* display: none; */
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  display: inline-block;
 }
 .ol-ext-toggle-switch span {
   color: rgba(0,60,136,.5);
   position: relative;
   cursor: pointer;
   background-color: #ccc;
-  transition: .4s, background-color 0s, border-color 0s;
+  transition: .4s, background-color 0s, border-color 0s, box-shadow 0s;
   width: 1.6em;
   height: 1em;
   display: inline-block;
@@ -62,6 +68,9 @@
   cursor: pointer;
   height: 0;
   width: 0;
+  margin: 0;
+  padding: 0;
+  display: inline-block;
 }
 .ol-ext-check span {
   color: rgba(0,60,136,.5);
@@ -108,4 +117,12 @@
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background-color: currentColor;
+}
+
+/* focus */
+.ol-ext-toggle-switch input:focus-visible + span {
+  box-shadow: inset 0 0 0 1px #fff, 0 0 0 1.8px rgba(0,0,0,.8);
+}
+.ol-ext-check input:focus-visible + span {
+  box-shadow: inset 0 0 0 1px #fff, 0 0 0 1.8px rgba(0,0,0,.8);
 }

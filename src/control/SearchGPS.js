@@ -56,10 +56,11 @@ var ol_control_SearchGPS = class olcontrolSearchGPS extends ol_control_Search {
       html: 'decimal',
       after: 'DMS',
       change: function (e) {
-        if (e.target.checked)
+        if (e.target.checked) {
           this.element.classList.add('ol-dms');
-        else
+        } else {
           this.element.classList.remove('ol-dms');
+        }
       }.bind(this),
       parent: this.element
     });
@@ -104,16 +105,18 @@ var ol_control_SearchGPS = class olcontrolSearchGPS extends ol_control_Search {
         this._input.value = '';
       }
       if (!e.target.classList.contains('ol-dms')) {
-        var s = ol_coordinate_toStringHDMS([Number(lon.value), Number(lat.value)]);
-        var c = s.replace(/(N|S|E|W)/g, '').split('″');
-        c[1] = c[1].trim().split(' ');
-        lond.value = (/W/.test(s) ? -1 : 1) * parseInt(c[1][0]);
-        lonm.value = parseInt(c[1][1]);
-        lons.value = parseInt(c[1][2]);
-        c[0] = c[0].trim().split(' ');
-        latd.value = (/W/.test(s) ? -1 : 1) * parseInt(c[0][0]);
-        latm.value = parseInt(c[0][1]);
-        lats.value = parseInt(c[0][2]);
+        var s = ol_coordinate_toStringHDMS([Number(lon.value) || 0, Number(lat.value) || 0]);
+        var c = s.replace(/(N|S)/g,'-').replace(/(E|W)/g, '').split('-');
+        try {
+          c[1] = c[1].trim().split(' ');
+          lond.value = (/W/.test(s) ? -1 : 1) * parseInt(c[1][0]);
+          lonm.value = parseInt(c[1][1] || 0);
+          lons.value = parseInt(c[1][2] || 0);
+          c[0] = c[0].trim().split(' ');
+          latd.value = (/S/.test(s) ? -1 : 1) * parseInt(c[0][0]);
+          latm.value = parseInt(c[0][1] || 0);
+          lats.value = parseInt(c[0][2] || 0);
+        } catch(e) { /* oops */ }
       }
       this.search();
     }.bind(this);

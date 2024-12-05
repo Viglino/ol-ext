@@ -294,6 +294,10 @@ var ol_control_Dialog = class olcontrolDialog extends ol_control_Control {
   /** Close the dialog
    */
   hide() {
+    // Remove focus on dialog
+    if (document.activeElement && document.activeElement !== document.body) {
+      document.activeElement.blur();
+    }
     this.element.classList.remove('ol-visible');
     this.element.setAttribute('aria-hidden', true)
     this.dispatchEvent({ type: 'hide' });
