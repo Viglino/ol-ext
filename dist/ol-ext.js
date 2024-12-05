@@ -41244,24 +41244,6 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     // Get canvas
-    /*
-    var canvas0 = super.getImage(pixelratio);
-    if (!this._canvas) this._canvas = []
-    var canvas = this._canvas[pixelratio];
-    if (!canvas) {
-      this._canvas[pixelratio] = canvas = document.createElement('canvas');
-    }
-      */
-     /*
-    if (!this._canvas) this._canvas = []
-    var canvas = this._canvas[pixelratio];
-    if (!canvas) {
-      var  renderOptions = this.renderOptions_;
-      this._canvas[pixelratio] = canvas = document.createElement('canvas');
-      canvas.width = renderOptions.size * pixelratio,
-      canvas.height = renderOptions.size * pixelratio
-    }
-      */
     if (this.renderOptions_) {
       this.renderOptions_.chartOptions = [
         'chart',
