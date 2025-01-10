@@ -58,8 +58,9 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
       declutterMode: options.declutterMode,
     });
 
-    if (typeof (options.opacity) == "number")
+    if (typeof (options.opacity) == "number"){
       this.setOpacity(options.opacity);
+    }
     this._color = options.color;
     this._fontSize = options.fontSize || 1;
     this._fontStyle = options.fontStyle || '';
@@ -70,13 +71,16 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
     this._gradient = options.gradient;
     this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 
-    if (options.glyph)
+    if (options.glyph){
       this._glyph = this.getGlyph(options.glyph);
-    else
+    } else {
       this._glyph = this.getTextGlyph(options.text || '', options.font);
+    }
 
-    if (!this.getDisplacement)
+    if (!this.getDisplacement){
       this.getImage();
+    }
+    this.render();
   }
   /** Static function : add new font defs
    * @param {String|Object} font the font name or a description ({ font: font_name, name: font_name, copyright: '', prefix })
@@ -192,6 +196,22 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
     return ol_style_FontSymbol.defs.fonts[glyph.font];
   }
   /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions();
+    opt.fontsymbolOptions = [
+      'font-symbol',
+      this._fontSize, 
+      this._form, 
+      this._gradient, 
+      this._offset, 
+      this._fontStyle,
+      Object.values(this._glyph||[]).join(',')
+    ].join('-')
+    return opt;
+  }
+  /**
    * Get the image icon.
    * @param {number} pixelRatio Pixel ratio.
    * @return {HTMLCanvasElement} Image or Canvas element.
@@ -200,17 +220,6 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     // get canvas
-    if (this.renderOptions_) {
-      this.renderOptions_.fontsymbolOptions = [
-        'font-symbol',
-        this._fontSize, 
-        this._form, 
-        this._gradient, 
-        this._offset, 
-        this._fontStyle,
-        Object.values(this._glyph).join(',')
-      ].join('-')
-    }
     var canvas = super.getImage(pixelratio);
 
     var strokeStyle;

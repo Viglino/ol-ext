@@ -66,6 +66,7 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       if (!this._colors)
         this._colors = ol_style_Chart.colors.classic;
     }
+    this.render()
   }
   /**
    * Clones the style.
@@ -132,23 +133,28 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
     }
     this._done = false
   }
+  /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions();
+    opt.chartOptions = [
+      'chart',
+      Object.values(this._animation||{}).join(','),
+      this._type,
+      (this._data || []).join(','),
+      (this._colors || []).join(','),
+      this._donutratio,
+      this._max,
+    ].join('-')
+    return opt;
+  }
   /** @private
-  */
+   */
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
 
     // Get canvas
-    if (this.renderOptions_) {
-      this.renderOptions_.chartOptions = [
-        'chart',
-        Object.values(this._animation).join(','),
-        this._type,
-        this._data.join(','),
-        this._colors.join(','),
-        this._donutratio,
-        this._max,
-      ].join('-')
-    }
     var canvas = super.getImage(pixelratio);
     
     if (this._done) return canvas;

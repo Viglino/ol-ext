@@ -41,8 +41,10 @@ var ol_style_Shadow = class olstyleShadow extends ol_style_RegularShape {
     if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0];
 
     // ol < 6
-    if (!this.setDisplacement)
+    if (!this.setDisplacement){
       this.getImage();
+    }
+    this.render()
   }
   /**
    * Clones the style.
@@ -62,6 +64,19 @@ var ol_style_Shadow = class olstyleShadow extends ol_style_RegularShape {
     return s;
   }
   /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions();
+    opt.shadowOptions = [
+      'shadow',
+      this._radius,
+      this._fill,
+      this._blur
+    ].join('-')
+    return opt;
+  }
+  /**
    * Get the image icon.
    * @param {number} pixelRatio Pixel ratio.
    * @return {HTMLCanvasElement} Image or Canvas element.
@@ -71,12 +86,6 @@ var ol_style_Shadow = class olstyleShadow extends ol_style_RegularShape {
     pixelratio = pixelratio || 1;
 
     var radius = this._radius;
-    if (this.renderOptions_) {
-      this.renderOptions_.shadowOptions = [
-        'shadow',
-        this._blur
-      ].join('-')
-    }
     var canvas = super.getImage(pixelratio);
 
     // Remove the circle on the canvas

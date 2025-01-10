@@ -35,8 +35,9 @@ import ol_style_Fill from 'ol/style/Fill.js'
 var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
   constructor(options) {
     options = options || {}
-    if (!options.displacement)
+    if (!options.displacement){
       options.displacement = [options.offsetX || 0, -options.offsetY || 0]
+    }
     var sanchor = (options.kind === "anchored" ? 8 : 0)
     var shadow = (Number(options.shadow) || 0)
     if (!options.stroke) {
@@ -93,12 +94,15 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
     this._onload = options.onload
     this._onerror = options.onerror
 
-    if (typeof (options.opacity) == 'number')
+    if (typeof (options.opacity) == 'number'){
       this.setOpacity(options.opacity)
-    if (typeof (options.rotation) == 'number')
+    }
+    if (typeof (options.rotation) == 'number'){
       this.setRotation(options.rotation)
+    }
 
     // Calculate image
+    this.render();
     this.getImage()
   }
   /** Set photo offset
@@ -106,6 +110,7 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
    */
   setOffset(offset) {
     this._offset = [offset[0] || 0, offset[1] || 0]
+    this.render()
     this.getImage()
   }
   /**
@@ -128,6 +133,7 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
       rotation: this.getRotation(),
       declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     })
+    i.render()
     i.getImage()
     return i
   }
@@ -195,6 +201,21 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
     context.closePath()
   }
   /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions()
+    opt.photoOptions = [
+        'photo', 
+        this._crossOrigin,
+        this._crop,
+        this._src,
+        this._shadow,
+        this._kind,
+      ].join('-')
+    return opt;
+  }
+  /**
    * Get the image icon.
    * @param {number} pixelRatio Pixel ratio.
    * @return {HTMLCanvasElement} Image or Canvas element.
@@ -202,15 +223,6 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
    */
   getImage(pixelratio) {
     pixelratio = pixelratio || window.devicePixelRatio;
-    if (this.renderOptions_) {
-      this.renderOptions_.photoOptions = [
-        'photo', 
-        this._crossOrigin,
-        this._src,
-        this._shadow,
-        this._kind,
-      ].join('-')
-    }
     var canvas = super.getImage(pixelratio)
     if ((this._gethit || this.img_) && this._currentRatio === pixelratio) return canvas;
     // Calculate image at pixel ratio

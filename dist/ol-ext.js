@@ -41180,6 +41180,7 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       if (!this._colors)
         this._colors = ol.style.Chart.colors.classic;
     }
+    this.render()
   }
   /**
    * Clones the style.
@@ -41246,22 +41247,27 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
     }
     this._done = false
   }
+  /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions();
+    opt.chartOptions = [
+      'chart',
+      Object.values(this._animation||{}).join(','),
+      this._type,
+      (this._data || []).join(','),
+      (this._colors || []).join(','),
+      this._donutratio,
+      this._max,
+    ].join('-')
+    return opt;
+  }
   /** @private
-  */
+   */
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     // Get canvas
-    if (this.renderOptions_) {
-      this.renderOptions_.chartOptions = [
-        'chart',
-        Object.values(this._animation).join(','),
-        this._type,
-        this._data.join(','),
-        this._colors.join(','),
-        this._donutratio,
-        this._max,
-      ].join('-')
-    }
     var canvas = super.getImage(pixelratio);
     if (this._done) return canvas;
     this._done = true
@@ -42428,8 +42434,9 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
       rotateWithView: options.rotateWithView,
       declutterMode: options.declutterMode,
     });
-    if (typeof (options.opacity) == "number")
+    if (typeof (options.opacity) == "number"){
       this.setOpacity(options.opacity);
+    }
     this._color = options.color;
     this._fontSize = options.fontSize || 1;
     this._fontStyle = options.fontStyle || '';
@@ -42439,12 +42446,15 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
     this._form = options.form || "none";
     this._gradient = options.gradient;
     this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
-    if (options.glyph)
+    if (options.glyph){
       this._glyph = this.getGlyph(options.glyph);
-    else
+    } else {
       this._glyph = this.getTextGlyph(options.text || '', options.font);
-    if (!this.getDisplacement)
+    }
+    if (!this.getDisplacement){
       this.getImage();
+    }
+    this.render();
   }
   /** Static function : add new font defs
    * @param {String|Object} font the font name or a description ({ font: font_name, name: font_name, copyright: '', prefix })
@@ -42560,6 +42570,22 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
     return ol.style.FontSymbol.defs.fonts[glyph.font];
   }
   /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions();
+    opt.fontsymbolOptions = [
+      'font-symbol',
+      this._fontSize, 
+      this._form, 
+      this._gradient, 
+      this._offset, 
+      this._fontStyle,
+      Object.values(this._glyph||[]).join(',')
+    ].join('-')
+    return opt;
+  }
+  /**
    * Get the image icon.
    * @param {number} pixelRatio Pixel ratio.
    * @return {HTMLCanvasElement} Image or Canvas element.
@@ -42568,17 +42594,6 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     // get canvas
-    if (this.renderOptions_) {
-      this.renderOptions_.fontsymbolOptions = [
-        'font-symbol',
-        this._fontSize, 
-        this._form, 
-        this._gradient, 
-        this._offset, 
-        this._fontStyle,
-        Object.values(this._glyph).join(',')
-      ].join('-')
-    }
     var canvas = super.getImage(pixelratio);
     var strokeStyle;
     var strokeWidth = 0;
@@ -42848,8 +42863,9 @@ ol.style.Image.prototype.getImagePNG = function(ratio) {
 ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
   constructor(options) {
     options = options || {}
-    if (!options.displacement)
+    if (!options.displacement){
       options.displacement = [options.offsetX || 0, -options.offsetY || 0]
+    }
     var sanchor = (options.kind === "anchored" ? 8 : 0)
     var shadow = (Number(options.shadow) || 0)
     if (!options.stroke) {
@@ -42899,11 +42915,14 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
     this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0]
     this._onload = options.onload
     this._onerror = options.onerror
-    if (typeof (options.opacity) == 'number')
+    if (typeof (options.opacity) == 'number'){
       this.setOpacity(options.opacity)
-    if (typeof (options.rotation) == 'number')
+    }
+    if (typeof (options.rotation) == 'number'){
       this.setRotation(options.rotation)
+    }
     // Calculate image
+    this.render();
     this.getImage()
   }
   /** Set photo offset
@@ -42911,6 +42930,7 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
    */
   setOffset(offset) {
     this._offset = [offset[0] || 0, offset[1] || 0]
+    this.render()
     this.getImage()
   }
   /**
@@ -42933,6 +42953,7 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
       rotation: this.getRotation(),
       declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     })
+    i.render()
     i.getImage()
     return i
   }
@@ -43000,6 +43021,21 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
     context.closePath()
   }
   /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions()
+    opt.photoOptions = [
+        'photo', 
+        this._crossOrigin,
+        this._crop,
+        this._src,
+        this._shadow,
+        this._kind,
+      ].join('-')
+    return opt;
+  }
+  /**
    * Get the image icon.
    * @param {number} pixelRatio Pixel ratio.
    * @return {HTMLCanvasElement} Image or Canvas element.
@@ -43007,15 +43043,6 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
    */
   getImage(pixelratio) {
     pixelratio = pixelratio || window.devicePixelRatio;
-    if (this.renderOptions_) {
-      this.renderOptions_.photoOptions = [
-        'photo', 
-        this._crossOrigin,
-        this._src,
-        this._shadow,
-        this._kind,
-      ].join('-')
-    }
     var canvas = super.getImage(pixelratio)
     if ((this._gethit || this.img_) && this._currentRatio === pixelratio) return canvas;
     // Calculate image at pixel ratio
@@ -43546,8 +43573,10 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
     this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
     if (!options.displacement) options.displacement = [options.offsetX || 0, -options.offsetY || 0];
     // ol < 6
-    if (!this.setDisplacement)
+    if (!this.setDisplacement){
       this.getImage();
+    }
+    this.render()
   }
   /**
    * Clones the style.
@@ -43567,6 +43596,19 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
     return s;
   }
   /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions();
+    opt.shadowOptions = [
+      'shadow',
+      this._radius,
+      this._fill,
+      this._blur
+    ].join('-')
+    return opt;
+  }
+  /**
    * Get the image icon.
    * @param {number} pixelRatio Pixel ratio.
    * @return {HTMLCanvasElement} Image or Canvas element.
@@ -43575,12 +43617,6 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     var radius = this._radius;
-    if (this.renderOptions_) {
-      this.renderOptions_.shadowOptions = [
-        'shadow',
-        this._blur
-      ].join('-')
-    }
     var canvas = super.getImage(pixelratio);
     // Remove the circle on the canvas
     var context = (canvas.getContext('2d'));
