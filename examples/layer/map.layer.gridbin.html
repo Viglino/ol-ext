@@ -121,13 +121,19 @@
       <li>
         Size: <input id="size" type="number" min=".1" value="1" onchange="reset();" /> units
       </li>
+      <li>
+        <label>
+          <input id="circle" type="checkbox" onchange="reset();" />
+          use circle shape
+        </label>
+      </li>
     
       <li>
-          <div class="info">
-              <input id="showsource" type="checkbox" onchange="layerSource.setVisible($(this).prop('checked')); modify.setActive($(this).prop('checked'));" /><label for="showsource">
-                  Display source features and move them around to see what happens to the bin!
-              </label>
-          </div>
+        <div class="info">
+          <input id="showsource" type="checkbox" onchange="layerSource.setVisible($(this).prop('checked')); modify.setActive($(this).prop('checked'));" /><label for="showsource">
+            Display source features and move them around to see what happens to the bin!
+          </label>
+        </div>
       </li>
     
       <li>
@@ -250,6 +256,7 @@
   }
   function reset() {
     grid.getSource().setSize(Number($('#size').val()));
+    grid.getSource().setCircle($('#circle').prop('checked'));
     calcMinMax();
   };
   // add 1000 features

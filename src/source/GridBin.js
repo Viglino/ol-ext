@@ -5,6 +5,8 @@
 import ol_source_BinBase from './BinBase.js'
 import {transform as ol_proj_transform} from 'ol/proj.js'
 import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import { fromCircle as ol_geom_Polygon_fromCircle } from 'ol/geom/Polygon.js'
+import ol_geom_Circle from 'ol/geom/Circle.js'
 
 /** A source for grid binning
  * @constructor
@@ -12,6 +14,7 @@ import ol_geom_Polygon from 'ol/geom/Polygon.js'
  * @param {Object} options ol_source_VectorOptions + grid option
  *  @param {ol.source.Vector} options.source Source
  *  @param {number} [options.size] size of the grid in meter, default 200m
+ *  @param {boolean} [options.circle=false] use a circle shape
  *  @param {function} [options.geometryFunction] Function that takes an ol.Feature as argument and returns an ol.geom.Point as feature's center.
  *  @param {function} [options.flatAttributes] Function takes a bin and the features it contains and aggragate the features in the bin attributes when saving
  */
@@ -23,6 +26,7 @@ var ol_source_GridBin = class olsourceGridBin extends ol_source_BinBase {
 
     this.set('gridProjection', options.gridProjection || 'EPSG:4326');
     this.setSize(options.size || 1);
+    this.setCircle(options.circle || false);
     this.reset();
   }
   /** Set grid projection
@@ -39,6 +43,13 @@ var ol_source_GridBin = class olsourceGridBin extends ol_source_BinBase {
     this.set('size', size);
     this.reset();
   }
+  /** Set geometry shape as circle
+   * @param {boolean} b
+   */
+  setCircle(b) {
+    this.set('circle', b);
+    this.reset();
+  }
   /** Get the grid geometry at the coord
    * @param {ol.Coordinate} coord
    * @returns {ol.geom.Polygon}
@@ -49,7 +60,15 @@ var ol_source_GridBin = class olsourceGridBin extends ol_source_BinBase {
     var size = this.get('size');
     var x = size * Math.floor(coord[0] / size);
     var y = size * Math.floor(coord[1] / size);
-    var geom = new ol_geom_Polygon([[[x, y], [x + size, y], [x + size, y + size], [x, y + size], [x, y]]]);
+
+    var geom;
+    if (this.get('circle')) {
+      geom = new ol_geom_Circle([x+size/2, y+size/2], size/2)
+      geom = ol_geom_Polygon_fromCircle(geom);
+    } else {
+      geom = new ol_geom_Polygon([[[x, y], [x + size, y], [x + size, y + size], [x, y + size], [x, y]]]);
+    }
+
     return geom.transform(this.get('gridProjection'), this.getProjection() || 'EPSG:3857');
   }
 }
