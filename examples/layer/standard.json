@@ -1,12 +1,15 @@
 {
   "version":8,
   "name":"PLAN IGN",
-  "sprite":"https://wxs.ign.fr/static/vectorTiles/styles/PLAN.IGN/sprite/PlanIgn",
-  "sources":{
+  "glyphs":"https://data.geopf.fr/annexes/ressources/vectorTiles/fonts/{fontstack}/{range}.pbf",
+	"sprite": "https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/sprite/PlanIgn",
+   "sources":{
     "plan_ign":{
-      "type":"vector",
-      "url":"https://wxs.ign.fr/choisirgeoportail/geoportail/tms/1.0.0/PLAN.IGN/metadata.json"
-      }
+      "type": "vector",
+      "tiles": [
+          "https://data.geopf.fr/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf"
+      ]
+ }
     },
   "transition":{"duration":300,"delay":0},
   "layers":[
