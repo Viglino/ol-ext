@@ -24,7 +24,6 @@
   display: block;
 }
 
-
 .ol-ext-print-dialog > form,
 .ol-ext-print-dialog.ol-visible > form {
   transition: none;
@@ -37,6 +36,7 @@
   max-height: 100%;
   background-color: #eee;
   padding: 0;
+  width: unset;
 }
 .ol-ext-print-dialog .ol-print-map {
   position: absolute;

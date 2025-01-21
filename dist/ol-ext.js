@@ -7867,6 +7867,10 @@ ol.control.Compass = class olcontrolCompass extends ol.control.CanvasBase {
  * Application dialog
  * @extends {ol.control.Control}
  * @constructor
+ * @fires show
+ * @fires hide
+ * @fires cancel
+ * @fires button
  * @param {*} options
  *  @param {string} options.className
  *  @param {ol.Map} options.map the map to place the dialog inside
@@ -7883,13 +7887,31 @@ ol.control.Dialog = class olcontrolDialog extends ol.control.Control {
   constructor(options) {
     options = options || {};
     if (options.fullscreen) options.target = document.body;
-    var element = ol.ext.element.create('DIV', {
+    var fullscreen = (options.target === document.body);
+    var element = ol.ext.element.create(fullscreen ? 'DIALOG' : 'DIV', {
       className: ((options.className || '') + (options.zoom ? ' ol-zoom' : '') + ' ol-ext-dialog').trim()
     })
     super({
       element: element,
       target: options.target
     });
+    if (fullscreen) {
+      // Handle close (DIALOG)
+      element.addEventListener('close', function(){
+        this.hide();
+      }.bind(this));
+      // Prevent cancel (DIALOG on escape)
+      document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Escape') return;
+        if (!this.get('closeBox') && this.isOpen()) {
+          e.preventDefault()
+        }
+      }.bind(this))
+      // Cencel event
+      element.addEventListener('cancel', function(e) {
+        this.dispatchEvent('cancel');
+      }.bind(this));
+    }
     // Constructor
     element.addEventListener('click', function (e) {
       if (this.get('hideOnBack') && e.target === element) this.close();
@@ -7966,11 +7988,13 @@ ol.control.Dialog = class olcontrolDialog extends ol.control.Control {
       }
       this.setContent(options);
     }
+    if (this.element.showModal) this.element.showModal();
     this.element.classList.add('ol-visible');
     this.element.setAttribute('aria-hidden', false);
     var input = this.element.querySelector('input[type="text"],input[type="search"],input[type="number"]');
-    if (input)
-      input.focus();
+    if (input) {
+      setTimeout(function() { input.focus(); })
+    }
     this.dispatchEvent({ type: 'show' });
     if (options) {
       // Auto close
@@ -8156,9 +8180,15 @@ ol.control.Dialog = class olcontrolDialog extends ol.control.Control {
     if (document.activeElement && document.activeElement !== document.body) {
       document.activeElement.blur();
     }
-    this.element.classList.remove('ol-visible');
-    this.element.setAttribute('aria-hidden', true)
-    this.dispatchEvent({ type: 'hide' });
+    // DIALOG element
+    if (this.element.close) {
+      this.element.close();
+    }
+    if (this.isOpen()) {
+      this.element.classList.remove('ol-visible');
+      this.element.setAttribute('aria-hidden', true)
+      this.dispatchEvent({ type: 'hide' });
+    }
   }
   /** Close the dialog 
    */

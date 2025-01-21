@@ -154,6 +154,8 @@
 
   // Prompt dialog
   var dialogPrompt = new ol.control.Dialog({
+    fullscreen: true,
+    // closeBox: false,
     content: 'Enter a value:<br/><input class="value" type="text" placeholder="Enter a value" />',
     title: 'Prompt', 
     buttons:{ submit:'ok', cancel:'cancel' }
@@ -169,7 +171,10 @@
   map.addControl(dialogPrompt);
 
   // Progress dialog
-  var dialogProgress = new ol.control.Dialog();
+  var dialogProgress = new ol.control.Dialog({
+    fullscreen: true,
+    closeBox: false
+  });
   dialogProgress.setContent({
     content: 'Processing...',
     title: 'Progress', 

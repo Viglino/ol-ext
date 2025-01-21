@@ -358,6 +358,14 @@
   overflow-x: hidden;
   overflow-y: auto;
 }
+dialog.ol-ext-dialog > form {
+  left: 50%;
+  width: -webkit-max-content;
+  width: -moz-max-content;
+  width: max-content;
+  max-width: 90%;
+}
+
 .ol-ext-dialog > form.ol-closebox {
   padding-top: 1.5em;
 }
@@ -3041,7 +3049,6 @@ ul.ol-legend li div {
   display: block;
 }
 
-
 .ol-ext-print-dialog > form,
 .ol-ext-print-dialog.ol-visible > form {
   -webkit-transition: none;
@@ -3056,6 +3063,7 @@ ul.ol-legend li div {
   max-height: 100%;
   background-color: #eee;
   padding: 0;
+  width: unset;
 }
 .ol-ext-print-dialog .ol-print-map {
   position: absolute;
