@@ -800,10 +800,9 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
               var opacity = Math.min(1, Math.max(0, layer.getOpacity() + delta))
               layer.setOpacity(opacity)
             }
-            // Display info
+            // Select on enter
             if (e.key === 'Enter') {
-              if (self.oninfo) self.oninfo(layer)
-              self.dispatchEvent({ type: "info", layer: layer })
+              if (self.get('selection')) self.selectLayer(layer)
             }
             // Move up dans down
             if (/ArrowUp|ArrowDown/.test(e.key) && e.ctrlKey) {
