@@ -1976,7 +1976,9 @@ body > .ol-ext-dialog > form {
 */
 .ol-layerswitcher input[type="radio"],
 .ol-layerswitcher input[type="checkbox"] {
-  display:none;
+  width: 0;
+  height: 0;
+  opacity: 0;
 }
 
 .ol-layerswitcher .panel li {
@@ -2065,6 +2067,12 @@ body > .ol-ext-dialog > form {
   background: #fff;
   -webkit-box-sizing:border-box;
           box-sizing:border-box;
+}
+
+.ol-layerswitcher [type="radio"]:focus + label,
+.ol-layerswitcher [type="checkbox"]:focus + label {
+  -webkit-box-shadow: 0 0 0 2px #369;
+          box-shadow: 0 0 0 2px #369;
 }
 
 .ol-layerswitcher [type="radio"] + label:before,

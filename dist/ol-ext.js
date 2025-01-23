@@ -6641,7 +6641,10 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
         type: layer.get('baseLayer') ? 'radio' : 'checkbox',
         className: 'ol-visibility',
         checked: layer.getVisible(),
-        click: setVisibility,
+        click: function(e) {
+          setVisibility.bind(this)(e)
+          setTimeout(function() { e.target.checked = layer.getVisible(); });
+        },
         parent: d
       })
       // Label
@@ -20768,7 +20771,7 @@ ol.Map.prototype.animateFeature = function(feature, fanim) {
       ol.Observable.unByKey(listener);
     }
   });
-  layer.animateFeature(feature, fanim);
+  return layer.animateFeature(feature, fanim);
 };
 /** Animate feature on a vector layer 
  * @fires animationstart, animationend
