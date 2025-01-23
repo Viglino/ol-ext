@@ -145,7 +145,7 @@ ol_Map.prototype.animateFeature = function(feature, fanim) {
       ol_Observable_unByKey(listener);
     }
   });
-  layer.animateFeature(feature, fanim);
+  return layer.animateFeature(feature, fanim);
 };
 
 /** Animate feature on a vector layer 
