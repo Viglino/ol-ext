@@ -427,8 +427,7 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
     // Remove existing layers
     this._clearLayerForLI()
     this.panel_.querySelectorAll('li').forEach(function (li) {
-      if (!li.classList.contains('ol-header'))
-        li.remove()
+      if (!li.classList.contains('ol-header')) li.remove()
     }.bind(this))
     // Draw list
     if (this._layerGroup) {
@@ -511,10 +510,11 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
         var isSelected = self.getSelection() === drop
         if (drop && target) {
           var collection
-          if (group)
+          if (group) {
             collection = group.getLayers()
-          else
+          } else {
             collection = self._layerGroup ? self._layerGroup.getLayers() : self.getMap().getLayers()
+          }
           var layers = collection.getArray()
           // Switch layers
           for (var i = 0; i < layers.length; i++) {
@@ -525,16 +525,16 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
           }
           for (var j = 0; j < layers.length; j++) {
             if (layers[j] === target) {
-              if (i > j)
+              if (i > j) {
                 collection.insertAt(j, drop)
-              else
+              } else {
                 collection.insertAt(j + 1, drop)
+              }
               break
             }
           }
         }
-        if (isSelected)
-          self.selectLayer(drop)
+        if (isSelected) self.selectLayer(drop)
 
         self.dispatchEvent({ type: "reorder-end", layer: drop, group: group })
       }
@@ -782,7 +782,7 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
       })
 
       // Visibility
-      ol_ext_element.create('INPUT', {
+      var input = ol_ext_element.create('INPUT', {
         type: layer.get('baseLayer') ? 'radio' : 'checkbox',
         className: 'ol-visibility',
         checked: layer.getVisible(),
@@ -790,8 +790,52 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
           setVisibility.bind(this)(e)
           setTimeout(function() { e.target.checked = layer.getVisible(); });
         },
+        on: {
+          // Set opacity on keydown
+          keydown: function(e) {
+            // Change opacity on arrow
+            if (/ArrowLeft|ArrowRight/.test(e.key)) {
+              e.preventDefault();
+              var delta = e.key==='ArrowLeft' ? -0.1 : e.key==='ArrowRight' ? +0.1 : 0;
+              var opacity = Math.min(1, Math.max(0, layer.getOpacity() + delta))
+              layer.setOpacity(opacity)
+            }
+            // Display info
+            if (e.key === 'Enter') {
+              if (self.oninfo) self.oninfo(layer)
+              self.dispatchEvent({ type: "info", layer: layer })
+            }
+            // Move up dans down
+            if (/ArrowUp|ArrowDown/.test(e.key) && e.ctrlKey) {
+              e.preventDefault();
+              var pos = collection.getArray().indexOf(layer);
+              if (pos > -1) {
+                if (e.key === 'ArrowDown') {
+                  if (pos > 0) {
+                    collection.remove(layer);
+                    collection.insertAt(pos-1, layer)
+                    self._focus = layer
+                    self.dispatchEvent({ type: "reorder-end", layer: layer })
+                  }
+                } else {
+                  if (pos < collection.getLength()-1) {
+                    collection.remove(layer);
+                    collection.insertAt(pos+1, layer)
+                    self._focus = layer
+                    self.dispatchEvent({ type: "reorder-end", layer: layer })
+                  }
+                }
+              }
+            }
+          }
+        },
         parent: d
       })
+      // Focus on element
+      if (layer === self._focus) {
+        input.focus();
+        self.overflow()
+      }
       // Label
       var label = ol_ext_element.create('LABEL', {
         title: layer.get('title') || layer.get('name'),
@@ -941,8 +985,12 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
 
     this.viewChange()
 
-    if (ul === this.panel_)
-      this.overflow()
+    if (ul === this.panel_) {
+      this.overflow('')
+      // Remove focus
+      this._focus = null;
+    }
+
   }
   /** Select a layer
    * @param {ol.layer.Layer} layer
@@ -982,9 +1030,15 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
       layer = this.getMap().getLayers().item(this.getMap().getLayers().getLength() - 1)
     }
     this._selectedLayer = layer
+    // Has focus ?
+    if (this.element.querySelector('input.ol-visibility:focus')) {
+      this._focus = layer;
+    }
+    // Draw
     this.drawPanel()
-    if (!silent)
+    if (!silent) {
       this.dispatchEvent({ type: 'select', layer: layer })
+    }
   }
   /** Get selected layer
    * @returns {ol.layer.Layer}

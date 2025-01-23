@@ -188,10 +188,12 @@
   box-sizing:border-box;
 }
 
-.ol-layerswitcher [type="radio"]:focus + label,
-.ol-layerswitcher [type="checkbox"]:focus + label {
-  box-shadow: 0 0 0 2px #369;
+.ol-layerswitcher li:has(> div > [type="radio"]:focus),
+.ol-layerswitcher li:has(> div > [type="checkbox"]:focus) {
+  border-color: #369;
+  box-shadow: inset 0 0 0 1px #369;
 }
+
 
 .ol-layerswitcher [type="radio"] + label:before,
 .ol-layerswitcher [type="radio"] + label:after {
