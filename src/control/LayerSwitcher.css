@@ -102,7 +102,9 @@
 */
 .ol-layerswitcher input[type="radio"],
 .ol-layerswitcher input[type="checkbox"] {
-  display:none;
+  width: 0;
+  height: 0;
+  opacity: 0;
 }
 
 .ol-layerswitcher .panel li {
@@ -184,6 +186,11 @@
   border: 2px solid #369;
   background: #fff;
   box-sizing:border-box;
+}
+
+.ol-layerswitcher [type="radio"]:focus + label,
+.ol-layerswitcher [type="checkbox"]:focus + label {
+  box-shadow: 0 0 0 2px #369;
 }
 
 .ol-layerswitcher [type="radio"] + label:before,

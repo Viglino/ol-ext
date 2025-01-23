@@ -786,7 +786,10 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
         type: layer.get('baseLayer') ? 'radio' : 'checkbox',
         className: 'ol-visibility',
         checked: layer.getVisible(),
-        click: setVisibility,
+        click: function(e) {
+          setVisibility.bind(this)(e)
+          setTimeout(function() { e.target.checked = layer.getVisible(); });
+        },
         parent: d
       })
       // Label
