@@ -42674,15 +42674,31 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
    */
   createRenderOptions() {
     var opt = super.createRenderOptions();
+    var stroke = 'none';
+    if (this._stroke) {
+      stroke = [
+        ol.color.asString(this._stroke.getColor() || '#000'),
+        this._stroke.getWidth() || 0,
+        this._stroke.getLineDash(),
+        this._stroke.getLineDashOffset() || 0,
+        this._stroke.getLineJoin(),
+        this._stroke.getLineCap(),
+        this._stroke.getMiterLimit(),
+      ].join('-')
+    }
     opt.fontsymbolOptions = [
       'font-symbol',
+      this._color,
       this._fontSize, 
+      this._fontStyle,
+      stroke,
+      this._fill ? ol.color.asString(this._fill.getColor() || '') : '',
+      this._radius, 
       this._form, 
       this._gradient, 
-      this._offset, 
-      this._fontStyle,
+      (this._offset || []).join(','), 
       Object.values(this._glyph||[]).join(',')
-    ].join('-')
+    ].join('-');
     return opt;
   }
   /**
