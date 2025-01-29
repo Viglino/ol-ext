@@ -205,6 +205,7 @@
     target:$(".layerSwitcher").get(0), 
     // displayInLayerSwitcher: function (l) { return false; },
     show_progress:true,
+    // reordering: false,
     extent: true,
     trash: true,
     oninfo: function (l) { alert(l.get("title")); }
@@ -237,7 +238,7 @@
   function displayInLayerSwitcher(b) {
     nearth.set('displayInLayerSwitcher', b);
   }
-  
+
   // Get options values
   if ($("#opb").prop("checked")) $('body').addClass('hideOpacity');
   if ($("#percent").prop("checked")) $('body').addClass('showPercent');

@@ -793,40 +793,55 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
         on: {
           // Set opacity on keydown
           keydown: function(e) {
-            // Change opacity on arrow
-            if (/ArrowLeft|ArrowRight/.test(e.key)) {
-              e.preventDefault();
-              var delta = e.key==='ArrowLeft' ? -0.1 : e.key==='ArrowRight' ? +0.1 : 0;
-              var opacity = Math.min(1, Math.max(0, layer.getOpacity() + delta))
-              layer.setOpacity(opacity)
-            }
-            // Select on enter
-            if (e.key === 'Enter') {
-              if (self.get('selection')) self.selectLayer(layer)
-            }
-            // Move up dans down
-            if (/ArrowUp|ArrowDown/.test(e.key) && e.ctrlKey) {
-              e.preventDefault();
-              var pos = collection.getArray().indexOf(layer);
-              if (pos > -1) {
-                if (e.key === 'ArrowDown') {
-                  if (pos > 0) {
-                    collection.remove(layer);
-                    collection.insertAt(pos-1, layer)
-                    self._focus = layer
-                    self.dispatchEvent({ type: "reorder-end", layer: layer })
-                  }
-                } else {
-                  if (pos < collection.getLength()-1) {
-                    collection.remove(layer);
-                    collection.insertAt(pos+1, layer)
-                    self._focus = layer
-                    self.dispatchEvent({ type: "reorder-end", layer: layer })
+            switch (e.key) {
+              // Change opacity on arrow
+              case 'ArrowLeft':
+              case 'ArrowRight': {
+                e.preventDefault();
+                e.stopPropagation();
+                var delta = (e.key==='ArrowLeft' ? -0.1 : 0.1);
+                var opacity = Math.min(1, Math.max(0, layer.getOpacity() + delta))
+                layer.setOpacity(opacity)
+                break;
+              }
+              // Select on enter
+              case 'Enter': {
+                if (self.get('selection')) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  self.selectLayer(layer)
+                }
+                break;
+              }
+              // Move up dans down
+              case 'ArrowUp':
+              case 'ArrowDown': {
+                if (e.ctrlKey && this.reordering) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  var pos = collection.getArray().indexOf(layer);
+                  if (pos > -1) {
+                    if (e.key === 'ArrowDown') {
+                      if (pos > 0) {
+                        collection.remove(layer);
+                        collection.insertAt(pos-1, layer)
+                        self._focus = layer
+                        self.dispatchEvent({ type: "reorder-end", layer: layer })
+                      }
+                    } else {
+                      if (pos < collection.getLength()-1) {
+                        collection.remove(layer);
+                        collection.insertAt(pos+1, layer)
+                        self._focus = layer
+                        self.dispatchEvent({ type: "reorder-end", layer: layer })
+                      }
+                    }
                   }
                 }
+                break;
               }
             }
-          }
+          }.bind(this)
         },
         parent: d
       })
