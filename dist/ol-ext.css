@@ -2069,8 +2069,7 @@ body > .ol-ext-dialog > form {
           box-sizing:border-box;
 }
 
-.ol-layerswitcher li:has(> div > [type="radio"]:focus),
-.ol-layerswitcher li:has(> div > [type="checkbox"]:focus) {
+.ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) {
   border-color: #369;
   -webkit-box-shadow: inset 0 0 0 1px #369;
           box-shadow: inset 0 0 0 1px #369;
