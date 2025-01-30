@@ -46,12 +46,12 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
       className: 'ol-tab',
       html: options.paletteLabel || 'palette',
       tabindex: 0,
-      click: function () {
-        this.element.classList.remove('ol-picker-tab');
-      }.bind(this),
       on: {
         keydown: function(e) {
           this._handlePikerKey(e, 'remove')
+        }.bind(this),
+        focus: function() {
+          this.element.classList.remove('ol-picker-tab');
         }.bind(this)
       },
       parent: bar
@@ -60,12 +60,12 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
       className: 'ol-tab',
       html: options.pickerLabel || 'picker',
       tabindex: 0,
-      click: function () {
-        this.element.classList.add('ol-picker-tab');
-      }.bind(this),
-      on: {
+        on: {
         keydown: function(e) {
           this._handlePikerKey(e, 'add')
+        }.bind(this),
+        focus: function() {
+          this.element.classList.add('ol-picker-tab');
         }.bind(this)
       },
       parent: bar
@@ -157,6 +157,13 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
         this._addCustomColor(this.getColor());
         this.collapse(true);
       }.bind(this),
+      on: {
+        keydown: function(e) {
+          if (e.key === 'Tab') {
+            this.collapse(true);
+          }
+        }.bind(this)
+      },
       parent: container
     });
 
