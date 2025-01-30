@@ -140,11 +140,12 @@ var ol_ext_input_Collection = class olextinputCollection extends ol_Object {
                     this.dispatchEvent({ type: 'item:order', position: newPos, oldPosition: pos, item: item });
                     this.refresh(item);
                   }
-                  break;
                 }
+                break;
               }
               // Select
               case 'Enter': {
+                console.log('enter')
                 e.preventDefault();
                 e.stopPropagation();
                 this.select(item);
