@@ -45,17 +45,29 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
     ol_ext_element.create('DIV', {
       className: 'ol-tab',
       html: options.paletteLabel || 'palette',
+      tabindex: 0,
       click: function () {
         this.element.classList.remove('ol-picker-tab');
       }.bind(this),
+      on: {
+        keydown: function(e) {
+          this._handlePikerKey(e, 'remove')
+        }.bind(this)
+      },
       parent: bar
     });
     ol_ext_element.create('DIV', {
       className: 'ol-tab',
       html: options.pickerLabel || 'picker',
+      tabindex: 0,
       click: function () {
         this.element.classList.add('ol-picker-tab');
       }.bind(this),
+      on: {
+        keydown: function(e) {
+          this._handlePikerKey(e, 'add')
+        }.bind(this)
+      },
       parent: bar
     });
 
@@ -222,6 +234,26 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
         this._currentColor = this.getColorID(this.getColor());
       }
     }.bind(this));
+  }
+  /**
+   * @private
+   */
+  _handlePikerKey(e, what) {
+    if (e.key === 'Tab') return;
+    e.stopPropagation();
+    e.preventDefault();
+    switch (e.key) {
+      case 'Enter':
+      case ' ': 
+      case 'Space': {
+        this.element.classList[what]('ol-picker-tab');
+        break;
+      }
+      case 'Escape': {
+        this.collapse(true);
+        break;
+      }
+    }
   }
   /** Add color to palette
    * @param {ol.colorLike} color

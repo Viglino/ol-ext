@@ -2482,6 +2482,12 @@ ol.ext.input.PopupBase = class olextinputPopupBase extends ol.ext.input.Base {
     this.set('autoClose', options.autoClose !== false);
     this.element = ol.ext.element.create('DIV', {
       className: ('ol-ext-popup-input ' + (options.className || '')).trim(),
+      tabindex: 0,
+      on: {
+        keydown: function(e) {
+          this._handleKey(e)
+        }.bind(this)
+      }
     });
     switch (options.position) {
       case 'inline': break;
@@ -2526,6 +2532,27 @@ ol.ext.input.PopupBase = class olextinputPopupBase extends ol.ext.input.Base {
     window.addEventListener('resize', function () {
       this.collapse(true);
     }.bind(this));
+  }
+  /** Handle key pressed on input
+   * @private
+   */
+  _handleKey(e) {
+    switch (e.key) {
+      case 'Enter':
+      case ' ': 
+      case 'Space': {
+        e.stopPropagation();
+        e.preventDefault();
+        this.toggle();
+        break;
+      }
+      case 'Escape': {
+        e.stopPropagation();
+        e.preventDefault();
+        this.collapse(true);
+        break;
+      }
+    }
   }
   /** show/hide color picker
    * @param {boolean} [b=false]
@@ -2861,17 +2888,29 @@ ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
     ol.ext.element.create('DIV', {
       className: 'ol-tab',
       html: options.paletteLabel || 'palette',
+      tabindex: 0,
       click: function () {
         this.element.classList.remove('ol-picker-tab');
       }.bind(this),
+      on: {
+        keydown: function(e) {
+          this._handlePikerKey(e, 'remove')
+        }.bind(this)
+      },
       parent: bar
     });
     ol.ext.element.create('DIV', {
       className: 'ol-tab',
       html: options.pickerLabel || 'picker',
+      tabindex: 0,
       click: function () {
         this.element.classList.add('ol-picker-tab');
       }.bind(this),
+      on: {
+        keydown: function(e) {
+          this._handlePikerKey(e, 'add')
+        }.bind(this)
+      },
       parent: bar
     });
     // Popup container
@@ -3025,6 +3064,26 @@ ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
         this._currentColor = this.getColorID(this.getColor());
       }
     }.bind(this));
+  }
+  /**
+   * @private
+   */
+  _handlePikerKey(e, what) {
+    if (e.key === 'Tab') return;
+    e.stopPropagation();
+    e.preventDefault();
+    switch (e.key) {
+      case 'Enter':
+      case ' ': 
+      case 'Space': {
+        this.element.classList[what]('ol-picker-tab');
+        break;
+      }
+      case 'Escape': {
+        this.collapse(true);
+        break;
+      }
+    }
   }
   /** Add color to palette
    * @param {ol.colorLike} color
