@@ -6020,6 +6020,7 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
  * @fires reorder-end
  * @fires layer:visible
  * @fires layer:opacity
+ * @fires layer:keydown
  * 
  * @constructor
  * @extends {ol.control.Control}
@@ -6778,6 +6779,14 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
                 }
                 break;
               }
+              // Expend 
+              case '-': 
+              case '+': {
+                if (layer.getLayers) {
+                  this._focus = layer;
+                  layer.set("openInLayerSwitcher", !layer.get("openInLayerSwitcher"))
+                }
+              }
               // Move up dans down
               case 'ArrowUp':
               case 'ArrowDown': {
@@ -6804,6 +6813,10 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
                   }
                 }
                 break;
+              }
+              default: {
+                var group = this._getLayerForLI(ul.parentNode)
+                this.dispatchEvent({ type: 'layer:keydown', key: e.key, group: group, li: li, layer: layer, originalEvent: e })
               }
             }
           }.bind(this)

@@ -23,6 +23,7 @@ import ol_ext_element from '../util/element.js'
  * @fires reorder-end
  * @fires layer:visible
  * @fires layer:opacity
+ * @fires layer:keydown
  * 
  * @constructor
  * @extends {ol_control_Control}
@@ -813,6 +814,14 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
                 }
                 break;
               }
+              // Expend 
+              case '-': 
+              case '+': {
+                if (layer.getLayers) {
+                  this._focus = layer;
+                  layer.set("openInLayerSwitcher", !layer.get("openInLayerSwitcher"))
+                }
+              }
               // Move up dans down
               case 'ArrowUp':
               case 'ArrowDown': {
@@ -839,6 +848,10 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
                   }
                 }
                 break;
+              }
+              default: {
+                var group = this._getLayerForLI(ul.parentNode)
+                this.dispatchEvent({ type: 'layer:keydown', key: e.key, group: group, li: li, layer: layer, originalEvent: e })
               }
             }
           }.bind(this)

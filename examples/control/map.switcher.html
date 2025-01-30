@@ -71,6 +71,26 @@
     #map .ol-layerswitcher > button {
       margin: 2px;
     }
+    .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .layerInfo:after,
+    .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .layerTrash:after,
+    .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .myInfo:after {
+      content: "i";
+      position: relative;
+      top: 10px;
+      left: 3px;
+      background: red;
+      padding: 0 5px;
+      font-size: 13px;
+    }
+    .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .layerTrash:after {
+      content: "x";
+    }
+
+    .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .myInfo:after {
+      content: "?";
+      top: 0;
+    }
+
   </style>
 </head>
 <body >
@@ -222,7 +242,7 @@
   // Add a new button to the list 
   switcher.on('drawlist', function(e) {
     var layer = e.layer;
-    $('<div>').text('?')// addClass('layerInfo')
+    $('<div class="myInfo">').text('?')// addClass('layerInfo')
       .click(function(){
         alert(layer.get('title'));
       })
@@ -241,6 +261,33 @@
       }
     });
   switcher.setHeader($('<div>').append(button).get(0))
+
+  // Accessibility keys
+  switcher.on('layer:keydown', function (e) {
+    switch(e.key.toLowerCase()) {
+      // Show info
+      case '?': 
+      case 'i': {
+        alert(e.layer.get('title'))
+        break;
+      }
+      // Zoom to extent
+      case 'e': {
+        var k = e.li.querySelector('.layerExtent')
+        if (k) k.click();
+        break;
+      }
+      // Remove layer
+      case 'x': {
+        if (e.group) {
+          e.group.getLayers().remove(e.layer)
+        } else {
+          map.removeLayer(e.layer)
+        }
+        break;
+      }
+    }
+  })
 
   map.addControl(switcher);
   // Insert nearth layer in layer switcher
