@@ -1979,6 +1979,7 @@ body > .ol-ext-dialog > form {
   width: 0;
   height: 0;
   opacity: 0;
+  position: absolute;
 }
 
 .ol-layerswitcher .panel li {

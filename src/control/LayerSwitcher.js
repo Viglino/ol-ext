@@ -883,7 +883,7 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
         }.bind(this),
         parent: label
       })
-
+      
       //  up/down
       if (this.reordering) {
         if ((i < layers.length - 1 && (layer.get("allwaysOnTop") || !layers[i + 1].get("allwaysOnTop")))

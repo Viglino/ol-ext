@@ -85,12 +85,18 @@
     .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .layerTrash:after {
       content: "x";
     }
-
     .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .myInfo:after {
       content: "?";
-      top: 0;
     }
-
+    kbd {
+      display: inline-block;
+      border: 1px solid #aaa;
+      padding: 0.1em .25em;
+      border-radius: 3px;
+      background-color: #e0e0e0;
+      box-shadow: inset -1px -1px 2px #bbb, inset 2px 2px 2px #efefef;
+      font-style: normal;
+    }
   </style>
 </head>
 <body >
@@ -130,7 +136,10 @@
         You can use the <i>drawlist</i> event handle the current line display (add button, change list style, etc.)
       </li>
       <li>
-        It trigger a <i>toogle</i> event when shown/hidden
+        It triggers a <i>toogle</i> event when shown/hidden
+      </li>
+      <li>
+        It triggers a <i>layer:keydown</i> event when a key is pressed on the layer
       </li>
     </ul>
     <p>
@@ -152,6 +161,9 @@
     <br/>
     <input id="percent" type="checkbox" onchange="$('body').toggleClass('showPercent');" />
     <label for="percent">show percent information</label>
+    <p><i>
+      Use <kbd>Tab</kbd> to navigate in the layer switcher, <kbd>⇐</kbd> and <kbd>⇒</kbd> to change opacity, <kbd>Ctrl</kbd>+<kbd>⇑</kbd> or <kbd>⇓</kbd> to move up / down in the list.
+    </i></p>
   </div>
   
   <script type="text/javascript">
