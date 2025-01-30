@@ -51,6 +51,14 @@
       line-height: 1.2em;
       border-bottom: 1px solid rgba(51, 102, 153, 0.3);
     }
+    key {
+      display: inline-block;
+      border: 1px solid #aaa;
+      padding: 0.1em .25em;
+      border-radius: 3px;
+      background-color: #e0e0e0;
+      box-shadow: inset -1px -1px 2px #bbb, inset 2px 2px 2px #efefef;
+    }
   </style>
 
 </head>
@@ -61,8 +69,13 @@
     <h1>ol-ext: Collection input!</h1>
   </a>
   <div class="info">
-    <i>ol/ext/input/Collection</i> lets you create list elements that synchronize with a <i>ol/Collection</i>.
-    List can be ordered interactively and keep associated Collection up to date.
+    <p>
+      <i>ol/ext/input/Collection</i> lets you create list elements that synchronize with a <i>ol/Collection</i>.
+      List can be ordered interactively and keep associated Collection up to date.
+    </p>
+    <p>
+      Use <key>Tab</key> to navigate in the list, <key>Enter</key> or <key>Space</key> to select a line and <key>Ctrl</key>+<key>⇧</key> or <key>⇩</key> arrow to reorder the liste
+    </p>
   </div>
 
   <div id="collection"></div>
