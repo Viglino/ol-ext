@@ -61,7 +61,16 @@
     .toggleVisibility.show:before {
       background: #369;
     }
-
+    #map:focus-visible, 
+    #map button:focus-visible {
+      /*
+      box-shadow: inset 0 0 3px#369;
+      */
+      outline: 2px solid #369;
+    }
+    #map .ol-layerswitcher > button {
+      margin: 2px;
+    }
   </style>
 </head>
 <body >
@@ -110,7 +119,7 @@
   </div>
 
   <!-- Map div -->
-  <div id="map" style="width:600px; height:400px;"></div>
+  <div id="map" style="width:600px; height:400px;" tabindex="0"></div>
   <div class="external layerSwitcher"><b>External layer switcher</b></div>
 
   <div class="options">
