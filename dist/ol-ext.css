@@ -6555,6 +6555,10 @@ ul.ol-legend li div {
   width: 2em;
   height: 100%;
   cursor: n-resize;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
 }
 .ol-collection-list li .ol-order:before {
   content: '';

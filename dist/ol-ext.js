@@ -2654,6 +2654,7 @@ ol.ext.input.Checkbox = class olextinputCheckbox extends ol.ext.input.Base {
  * @constructor
  * @fires item:select
  * @fires item:dblclick
+ * @fires item:keydown
  * @fires item:order
  * @extends {ol.Object}
  * @param {*} options
@@ -2791,11 +2792,18 @@ ol.ext.input.Collection = class olextinputCollection extends ol.Object {
                 break;
               }
               // Select
-              case 'Enter': {
-                console.log('enter')
+              case ' ': 
+              case 'Space': {
                 e.preventDefault();
                 e.stopPropagation();
                 this.select(item);
+                break;
+              }
+              case 'Tab': {
+                break;
+              }
+              default: {
+                this.dispatchEvent({ type: 'item:keydown', key: e.key, originalEvent: e, position: pos, item: item })
                 break;
               }
             }
