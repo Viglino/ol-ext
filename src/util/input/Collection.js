@@ -6,6 +6,7 @@ import ol_ext_element from '../element.js'
  * @constructor
  * @fires item:select
  * @fires item:dblclick
+ * @fires item:keydown
  * @fires item:order
  * @extends {ol_Object}
  * @param {*} options
@@ -144,11 +145,18 @@ var ol_ext_input_Collection = class olextinputCollection extends ol_Object {
                 break;
               }
               // Select
-              case 'Enter': {
-                console.log('enter')
+              case ' ': 
+              case 'Space': {
                 e.preventDefault();
                 e.stopPropagation();
                 this.select(item);
+                break;
+              }
+              case 'Tab': {
+                break;
+              }
+              default: {
+                this.dispatchEvent({ type: 'item:keydown', key: e.key, originalEvent: e, position: pos, item: item })
                 break;
               }
             }

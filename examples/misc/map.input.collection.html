@@ -32,9 +32,7 @@
   
   <link rel="stylesheet" href="../style.css" />
   <style>
-    body {
-     user-select: none; 
-    }
+
     #collection {
       width: 20em; 
       margin: 1em; 
@@ -76,6 +74,9 @@
     <p>
       Use <kbd>Tab</kbd> to navigate in the list, <kbd>Enter</kbd> or <kbd>Space</kbd> to select a line and <kbd>Ctrl</kbd>+<kbd>⇧</kbd> or <kbd>⇩</kbd> arrow to reorder the liste
     </p>
+    <p>
+      Double-click or <kbd>Enter</kbd> to display info.
+    </p>
   </div>
 
   <div id="collection"></div>
@@ -114,6 +115,15 @@ ul.on(['item:select', 'item:order'], function (e) {
 })
 ul.on('item:dblclick', function (e) {
   alert (e.item.title.replace('<br/>', ' '));
+})
+// Key down event on an item
+ul.on('item:keydown', function(e) {
+  if (e.key === 'Enter') {
+    ul.select(e.item)
+    setTimeout(function(){
+      alert (e.item.title.replace('<br/>', ' '));
+    })
+  }
 })
 
 </script>
