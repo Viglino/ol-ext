@@ -5064,30 +5064,41 @@ ol.control.Search = class olcontrolSearch extends ol.control.Control {
       // move up/down
       if (e.key == 'ArrowDown' || e.key == 'ArrowUp' || e.key == 'Down' || e.key == 'Up') {
         if (li) {
-          li.classList.remove("select");
-          li = (/Down/.test(e.key)) ? li.nextElementSibling : li.previousElementSibling;
-          if (li)
-            li.classList.add("select");
+          var newli = (/Down/.test(e.key)) ? li.nextElementSibling : li.previousElementSibling;
+          if (newli && !newli.classList.contains('copy')) {
+            li.classList.remove("select");
+            newli.classList.add("select");
+            input.value = newli.innerText;
+          }
         } else {
-          element.querySelector("ul.autocomplete li").classList.add("select");
+          li = element.querySelector("ul.autocomplete li")
+          li.classList.add("select");
+          input.value = li.innerText;
         }
       }
       // Clear input
-      else if (e.type == 'input' && !val) {
-        setTimeout(function () {
-          self.drawList_();
-        }, 200);
+      else if (e.type == 'input') {
+        if (!val) {
+          setTimeout(function () {
+            self.drawList_();
+          }, 200);
+        }
+        if (li) {
+          input.value = val = '';
+          li.classList.remove("select");
+        }
       }
       // Select in the list
-      else if (li && (e.type == "search" || e.key == "Enter")) {
-        if (element.classList.contains("ol-control"))
+      else if (li && (e.type === "search" || e.key === "Enter")) {
+        if (element.classList.contains("ol-control")) {
           input.blur();
+        }
         li.classList.remove("select");
         cur = val;
         self._handleSelect(self._list[li.getAttribute("data-search")]);
       }
       // Search / autocomplete
-      else if ((e.type == "search" || e.key == 'Enter')
+      else if ((e.type === "search" || e.key === 'Enter')
         || (cur != val && options.typing >= 0)) {
         // current search
         cur = val;
@@ -5136,6 +5147,11 @@ ol.control.Search = class olcontrolSearch extends ol.control.Control {
           element.classList.remove('ol-revers');
         }
       }.bind(this));
+      input.addEventListener('keydown', function() {
+        this.set('reverse', false);
+        element.classList.remove('ol-collapsed');
+        element.classList.remove('ol-revers');
+      }.bind(this))
     }
     element.appendChild(input);
     // Reverse geocode
@@ -5144,15 +5160,17 @@ ol.control.Search = class olcontrolSearch extends ol.control.Control {
         type: 'button',
         class: 'ol-revers',
         title: options.reverseTitle || 'click on the map',
-        click: function () {
-          if (!this.get('reverse')) {
-            this.set('reverse', !this.get('reverse'));
-            input.focus();
-            element.classList.add('ol-revers');
-          } else {
-            this.set('reverse', false);
-          }
-        }.bind(this)
+        on: { 
+          focus: function () {
+            if (!this.get('reverse')) {
+              this.set('reverse', !this.get('reverse'));
+              input.focus();
+              element.classList.add('ol-revers');
+            } else {
+              this.set('reverse', false);
+            }
+          }.bind(this)
+        }
       });
       element.appendChild(reverse);
     }

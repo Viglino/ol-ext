@@ -35,8 +35,13 @@
 
   <style>
     #map {
+      /*
       width: 600px;
       height: 400px;
+      */
+      inset: 0;
+      margin: 0;
+      position: fixed;
     }
   </style>
 
@@ -75,7 +80,7 @@
   map.addControl(new ol.control.LayerSwitcher());
   map.addControl(new ol.control.Permalink({visible: false}));
 
-  var tileSize = 512;
+  var tileSize = 256 // 512;
   var geoImage;
   var ddrop = new ol.interaction.DropFile({
     formatConstructors: ['none'] 
@@ -132,9 +137,15 @@
         [tileSize,tileSize]
       );
       // var dt = canvas.toDataURL('image/png');
+      /** /
       canvas.toBlob(function(blob) {
         saveAs(blob, geoImage.get('title')+'_'+z+'-'+x+'-'+y+'.png');
       }, 'image/png');
+      /*/
+      canvas.toBlob(function(blob) {
+        saveAs(blob, geoImage.get('title')+'_'+z+'-'+x+'-'+y+'.jpg');
+      }, 'imag/jpeg', 0.7);
+      /**/
     }
     console.log(tiles.length)
     if (tiles.length) setTimeout(function() { loadFiles(tiles); }, 1000);
