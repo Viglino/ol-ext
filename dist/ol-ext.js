@@ -25323,8 +25323,9 @@ ol.interaction.DrawRegular = class olinteractionDrawRegular extends ol.interacti
   /** Draw sketch (Point)
   */
   drawPoint_(pt, noclear) {
-    if (!noclear)
+    if (!noclear) {
       this.overlayLayer_.getSource().clear()
+    }
     this.overlayLayer_.getSource().addFeature(new ol.Feature(new ol.geom.Point(pt)))
   }
   /**
@@ -25336,8 +25337,7 @@ ol.interaction.DrawRegular = class olinteractionDrawRegular extends ol.interacti
     this._eventTime = new Date();
     switch (evt.type) {
       case "pointerdown": {
-        if (this.conditionFn_ && !this.conditionFn_(evt))
-          break
+        if (this.conditionFn_ && !this.conditionFn_(evt)) break
         this.downPx_ = evt.pixel
         this.start_(evt)
         // Test long touch
@@ -25397,6 +25397,8 @@ ol.interaction.DrawRegular = class olinteractionDrawRegular extends ol.interacti
             this.handleMoveEvent_(evt)
             this.lastEvent = evt.type
           }
+        } else {
+          this.drawPoint_(evt.coordinate)
         }
         break
       }
