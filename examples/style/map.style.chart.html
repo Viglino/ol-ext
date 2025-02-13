@@ -17,13 +17,12 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
 
-  
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
   <!--
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v10.2.0/dist/ol.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v9.2.0/dist/ol.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v8.1.0/dist/ol.js"></script>
-  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v10.2.0/dist/ol.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v9.2.0/dist/ol.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v8.1.0/dist/ol.js"></script>
+    <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
   -->
 
 
@@ -72,6 +71,8 @@
   <div id="select" class="info">No selection</div>
 
   <script type="text/javascript">
+
+  console.log('ol@' + ol.util.VERSION)
 
   // Layers
   var layer = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' })

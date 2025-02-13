@@ -157,8 +157,8 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
     // Get canvas
     var canvas = super.getImage(pixelratio);
     
-    if (this._done) return canvas;
-    this._done = true
+    if (this._done === pixelratio) return canvas;
+    this._done = pixelratio
 
     var strokeStyle;
     var strokeWidth = 0;
