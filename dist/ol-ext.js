@@ -19894,9 +19894,19 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
       this._elements.formCrossOrigin.checked = true
     }.bind(this))
     // Select list
-    this._elements.select = ol.ext.element.create('DIV', {
+    this._elements.select = ol.ext.element.create('SELECT', {
       className: 'ol-select-list',
-      tabIndex: 2,
+      on: {
+        keydown: function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            var index = this._elements.select.selectedIndex;
+            if (index >= 0) {
+              this._elements.select.querySelectorAll('OPTION')[index].click();
+            }
+          }
+        }.bind(this)
+      },
+      size: 100,
       parent: rdiv
     })
     // Info data
@@ -20213,7 +20223,7 @@ ol.control.WMSCapabilities = class olcontrolWMSCapabilities extends ol.control.B
       parent.Layer.forEach(function (l) {
         if (!l.Attribution) l.Attribution = parent.Attribution
         if (!l.EX_GeographicBoundingBox) l.EX_GeographicBoundingBox = parent.EX_GeographicBoundingBox
-        var li = ol.ext.element.create('DIV', {
+        var li = ol.ext.element.create('OPTION', {
           className: (l.Layer ? 'ol-title ' : '') + 'level-' + level,
           html: l.Name || l.Title,
           click: function () {

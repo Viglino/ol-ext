@@ -4990,9 +4990,11 @@ ul.ol-legend li div {
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
   max-height: 14.5em;
+  border-radius: 0;
+  font-size: 1em;
 }
-.ol-wmscapabilities .ol-select-list div {
-  padding: 0 .5em;
+.ol-wmscapabilities .ol-select-list option {
+  padding: 0.1em .5em 0;
   cursor: pointer;
   width: 100%;
   -webkit-box-sizing: border-box;
@@ -5022,11 +5024,11 @@ ul.ol-legend li div {
 .ol-wmscapabilities .ol-select-list .ol-title {
   background-color: rgba(0,60,136,.1);
 }
-.ol-wmscapabilities .ol-select-list div:hover {
+.ol-wmscapabilities .ol-select-list option:hover {
   background-color: rgba(0,60,136,.5);
   color: #fff;
 }
-.ol-wmscapabilities .ol-select-list div.selected {
+.ol-wmscapabilities .ol-select-list .selected {
   background-color: rgba(0,60,136,.7);
   color: #fff;
 }
