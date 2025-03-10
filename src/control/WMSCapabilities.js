@@ -221,9 +221,19 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
       this._elements.formCrossOrigin.checked = true
     }.bind(this))
     // Select list
-    this._elements.select = ol_ext_element.create('DIV', {
+    this._elements.select = ol_ext_element.create('SELECT', {
       className: 'ol-select-list',
-      tabIndex: 2,
+      on: {
+        keydown: function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            var index = this._elements.select.selectedIndex;
+            if (index >= 0) {
+              this._elements.select.querySelectorAll('OPTION')[index].click();
+            }
+          }
+        }.bind(this)
+      },
+      size: 100,
       parent: rdiv
     })
     // Info data
@@ -548,7 +558,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
       parent.Layer.forEach(function (l) {
         if (!l.Attribution) l.Attribution = parent.Attribution
         if (!l.EX_GeographicBoundingBox) l.EX_GeographicBoundingBox = parent.EX_GeographicBoundingBox
-        var li = ol_ext_element.create('DIV', {
+        var li = ol_ext_element.create('OPTION', {
           className: (l.Layer ? 'ol-title ' : '') + 'level-' + level,
           html: l.Name || l.Title,
           click: function () {
