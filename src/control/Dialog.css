@@ -121,8 +121,7 @@ dialog.ol-ext-dialog > form {
   color: rgba(0,60,136,1);
   cursor: pointer;
   border-radius: .25em;
-  outline-width: 0;
-}
+} 
 .ol-ext-dialog > form .ol-buttons input:hover {
   background-color:  rgba(0,60,136,.1);
 }
