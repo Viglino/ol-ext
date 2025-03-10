@@ -561,6 +561,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
         var li = ol_ext_element.create('OPTION', {
           className: (l.Layer ? 'ol-title ' : '') + 'level-' + level,
           html: l.Name || l.Title,
+          title: l.Name || l.Title,
           click: function () {
             // Reset
             this._elements.buttons.innerHTML = ''
