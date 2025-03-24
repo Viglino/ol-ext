@@ -8406,7 +8406,10 @@ ol.control.Dialog = class olcontrolDialog extends ol.control.Control {
     if (this.isOpen()) {
       this.element.classList.remove('ol-visible');
       this.element.setAttribute('aria-hidden', true)
-      this.dispatchEvent({ type: 'hide' });
+      // Dispatch event when close
+      setTimeout(function() {
+        this.dispatchEvent({ type: 'hide' });
+      }.bind(this))
     }
   }
   /** Close the dialog 
