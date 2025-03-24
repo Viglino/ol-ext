@@ -48,9 +48,9 @@ var ol_control_Dialog = class olcontrolDialog extends ol_control_Control {
           e.preventDefault()
         }
       }.bind(this))
-      // Cencel event
+      // Cancel event
       element.addEventListener('cancel', function(e) {
-        this.dispatchEvent('cancel');
+        setTimeout(function() { this.dispatchEvent('cancel'); }.bind(this))
       }.bind(this));
     }
 
@@ -295,8 +295,10 @@ var ol_control_Dialog = class olcontrolDialog extends ol_control_Control {
       e.preventDefault();
       if (button !== 'submit' || this.get('closeOnSubmit') !== false) this.hide();
       var inputs = this.getInputs();
-      this.dispatchEvent({ type: 'button', button: button, inputs: inputs });
-      if (typeof (callback) === 'function') callback(button, inputs);
+      setTimeout(function() {
+        this.dispatchEvent({ type: 'button', button: button, inputs: inputs });
+        if (typeof (callback) === 'function') callback(button, inputs);
+      }.bind(this))
     }.bind(this);
     return fn;
   }
