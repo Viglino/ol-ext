@@ -19,7 +19,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
+  <script src="/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -85,10 +85,7 @@
   <script type="text/javascript">
     // Layers
     var layers = [
-      new ol.layer.Tile({
-        title:'terrain-background',
-        source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
-      })
+      new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' })
     ];
     // The map
     var map = new ol.Map({
@@ -158,6 +155,7 @@
       }),
       modifyfeature: new ol.interaction.ModifyFeature ({ 
         sources: vector.getSource(),
+        cursor: 'pointer',
         // insertVertexCondition: function(){ return false; }
         // style: getStyle
       })

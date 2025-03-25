@@ -3,6 +3,7 @@
  * @see https://plainjs.com/javascript/
  * @see http://youmightnotneedjquery.com/
  */
+import ol_Map from 'ol/Map.js'
 import ol_ext_input_Checkbox from './input/Checkbox.js'
 import ol_ext_input_Switch from './input/Switch.js'
 import ol_ext_input_Radio from './input/Radio.js'
@@ -601,5 +602,17 @@ ol_ext_element.dispatchEvent = function (eventName, element) {
   }
   element.dispatchEvent(event);
 };
+
+/** Set cursor
+ * @param {Element|ol/Map} elt
+ * @param {string} cursor
+ */
+ol_ext_element.setCursor = function(elt, cursor) {
+  if (elt instanceof ol_Map) elt = elt.getTargetElement()
+  // prevent flashing on mobile device
+  if (!('ontouchstart' in window) && elt instanceof Element) {
+    elt.style.cursor = cursor;
+  }
+}
 
 export default ol_ext_element

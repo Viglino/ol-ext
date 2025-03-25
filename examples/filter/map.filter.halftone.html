@@ -19,7 +19,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -99,11 +99,12 @@
   </div>
 
   <script type="text/javascript">
-    ol.layer.Geoportail.register("ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW", {"key":"altimetrie","server":"https://wxs.ign.fr/geoportail/wmts","layer":"ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW","title":"Estompage","format":"image/png","style":"estompage_grayscale","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-63.186966,-21.406914,55.8884,50.9218],"desc":"Couche d'ombrage calculée à partir des données altimétriques de l'IGN permettant de mieux appréhender le relief. L'estompage proposé est réalisé à partir des données MNT BDAlti au pas de 25m avec deux soleils : un au nord-est de hauteur 45°, l'autre zénithal.","originators":{"IGN":{"href":"https://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.186966,-21.406914,55.8884,50.9218]}]}}});
+    ol.layer.Geoportail.register("ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW", {"layer":"ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW","theme":"altimetrie","desc":"Couche d'ombrage calculée à partir des données altimétriques de l'IGN permettant de mieux appréhender le relief. L'estompage proposé est réalisé à partir des données MNT BDAlti au pas de 25m avec deux soleils : un au nord-est de hauteur 45°, l'autre zénithal.","server":"https://data.geopf.fr/wmts","bbox":[-63.187,-21.4069,55.8884,50.9218],"format":"image/png","minZoom":0,"maxZoom":15,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"style":"estompage_grayscale","tilematrix":"PM","title":"Estompage","legend":["https://data.geopf.fr/annexes/ressources/legendes/LEGEND.jpg"]});
     var layers = [
-      new ol.layer.Tile({ title: 'stamen', permalink:'stamen', visible: true, source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' }) }),
-      new ol.layer.Geoportail({ layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', visible: false, permalink:'shadow' }),
-      new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', visible: false, permalink:'ortho' })
+      new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', visible: false, permalink:'map' }),
+      //new ol.layer.Geoportail({ layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', visible: false, permalink:'shadow' }),
+      new ol.layer.Geoportail({ layer: 'TRANSPORTNETWORKS.ROADS', visible: false, permalink:'shadow' }),
+      new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS', visible: true, permalink:'ortho' })
     ]
     // enhance opacity
     layers[1].getSource().setTileLoadFunction(ol.ext.imageLoader.pixelTransform(function(p, i) {

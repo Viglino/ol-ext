@@ -19,7 +19,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -64,18 +64,19 @@
 
   <script type="text/javascript">
     // Layers
-    var layers = [
-      new ol.layer.Tile({
-        title:'terrain-background',
-        source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
-      })
-    ];
+    var layers = [new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' })];
     // The map
     var map = new ol.Map({
       target: 'map',
       view: new ol.View({
+        /**/
         zoom: 5,
-        center: [261720, 5951081]
+        center: [261720, 5951081],
+        /*/
+        zoom: 15,
+        center: [0, 48],
+        projection: 'EPSG:4326'
+        /**/
       }),
       layers: layers
     });
@@ -102,7 +103,7 @@
     vector.getSource().addFeature(new ol.Feature(new ol.geom.Point([261720, 5951081])));
 
     // Add splitter before other interaction
-    var splitter = new ol.interaction.Splitter({ source: vector.getSource() });
+    var splitter = new ol.interaction.Splitter({ source: vector.getSource(), tolerance: 1e-3 });
     map.addInteraction(splitter);
 
     // Add interactions to modify features

@@ -32,7 +32,8 @@ import {ol_coordinate_dist2d} from "../geom/GeomUtils.js";
  *	@param {function|undefined} options.onshow callback function when popup is shown
  *	@param {Number|Array<number>} options.offsetBox an offset box
  *	@param {ol.OverlayPositioning | string | undefined} options.positioning 
- *		the 'auto' positioning var the popup choose its positioning to stay on the map.
+ *		the 'auto' positioning: the popup choose its positioning to stay on the map.
+ *  @param {string} options.hook popup is hooked on the 'map' (and move with it) or on the 'viewport', default viewport.
  * @api stable
  */
 var ol_Overlay_FixedPopup = class olOverlayFixedPopup extends ol_Overlay_Popup {
@@ -44,10 +45,12 @@ var ol_Overlay_FixedPopup = class olOverlayFixedPopup extends ol_Overlay_Popup {
 
     this.set('minScale', options.minScale || .5)
     this.set('maxScale', options.maxScale || 2)
+    this.set('hook', options.hook || 'viewport')
 
     // Canvas for drawing inks
     var canvas = document.createElement('canvas')
 
+    this._coord = undefined;
     this._overlay = new ol_layer_Image({
       source: new ol_source_ImageCanvas({
         canvasFunction: function (extent, res, ratio, size) {
@@ -161,7 +164,7 @@ var ol_Overlay_FixedPopup = class olOverlayFixedPopup extends ol_Overlay_Popup {
         }
       }
       pointerEvents[e.pointerId] = e
-      pixelPosition = this._pixel
+      pixelPosition = this._pixel || this.getMap().getPixelFromCoordinate(this.getPosition())
       rotIni = this.get('rotation') || 0
       scaleIni = this.get('scale') || 1
       distIni = distance(pointerEvents)
@@ -247,12 +250,17 @@ var ol_Overlay_FixedPopup = class olOverlayFixedPopup extends ol_Overlay_Popup {
       this.setVisible(false)
       return
     }
+    var mapSize = map.getSize();
     if (!this._pixel) {
-      this._pixel = map.getPixelFromCoordinate(position)
-      var mapSize = map.getSize()
-      this.updateRenderedPosition(this._pixel, mapSize)
-    } else {
-      this.setVisible(true)
+        var pixel = map.getPixelFromCoordinate(this.getPosition());
+        this.updateRenderedPosition(pixel, mapSize);
+        this._coord = map.getCoordinateFromPixel(pixel)
+        this._pixel = pixel;
+    }
+    if (this._pixel && this.get('hook') === 'map') {
+        var pixel = map.getPixelFromCoordinate(this._coord);
+        super.updateRenderedPosition(pixel, mapSize);
+        this._pixel = pixel;
     }
   }
   /** updateRenderedPosition
@@ -287,8 +295,10 @@ var ol_Overlay_FixedPopup = class olOverlayFixedPopup extends ol_Overlay_Popup {
       else
         pix[0] = mapSize[0] / 2 + pix[0]
     }
-    if (pix)
+    if (pix) {
       this._pixel = pix
+      this._coord = map.getCoordinateFromPixel(pix)
+    }
     if (map && map.getTargetElement() && this._pixel) {
       this.updateRenderedPosition(this._pixel, mapSize)
       // Prevent outside
@@ -309,8 +319,9 @@ var ol_Overlay_FixedPopup = class olOverlayFixedPopup extends ol_Overlay_Popup {
         this._pixel[1] = this._pixel[1] + rmap.top - r.top + rmap.height - r.height
         outside = true
       }
-      if (outside)
+      if (outside && this.get('hook') !== 'map') {
         this.updateRenderedPosition(this._pixel, mapSize)
+      }
       this._overlay.changed()
     }
   }
@@ -319,6 +330,30 @@ var ol_Overlay_FixedPopup = class olOverlayFixedPopup extends ol_Overlay_Popup {
    */
   getPixelPosition() {
     return this._pixel
+  }
+  /**
+   * Get the coordinate in view of the popup
+   */
+  getCoordinate() {
+    return this._coord
+  }
+  /**
+   * Set the position of the popup.
+   * @param {ol.Coordinate|undefined} position Position.
+   * @api stable
+   */
+  setCoordinate(position) {
+    this._coord = position
+    this.setPixelPosition()
+  }
+  /**
+   * Set the hook
+   * @param {string} [hook] 'map' or 'viewport', default viewport
+   */
+  setHook(hook) {
+    this.set('hook', hook || 'viewport');
+    this._coord = this.get('hook') === 'map' ? this.getMap().getCoordinateFromPixel(this._pixel) : null
+    this.setPixelPosition()
   }
   /**
    * Set the CSS class of the popup.

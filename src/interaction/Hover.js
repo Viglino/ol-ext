@@ -1,4 +1,5 @@
 import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
+import ol_ext_element from '../util/element.js';
 
 /** Interaction hover do to something when hovering a feature
  * @constructor
@@ -64,7 +65,7 @@ var ol_interaction_Hover = class olinteractionHover extends ol_interaction_Inter
    */
   setMap(map) {
     if (this.previousCursor_ !== undefined && this.getMap()) {
-      this.getMap().getTargetElement().style.cursor = this.previousCursor_;
+      ol_ext_element.setCursor(this.getMap(), this.previousCursor_);
       this.previousCursor_ = undefined;
     }
     super.setMap(map);
@@ -75,9 +76,8 @@ var ol_interaction_Hover = class olinteractionHover extends ol_interaction_Inter
   setActive(b) {
     super.setActive(b);
     if (this.cursor_ && this.getMap() && this.getMap().getTargetElement()) {
-      var style = this.getMap().getTargetElement().style;
       if (this.previousCursor_ !== undefined) {
-        style.cursor = this.previousCursor_;
+        ol_ext_element.setCursor(this.getMap(), this.previousCursor_);
         this.previousCursor_ = undefined;
       }
     }
@@ -89,7 +89,7 @@ var ol_interaction_Hover = class olinteractionHover extends ol_interaction_Inter
    */
   setCursor(cursor) {
     if (!cursor && this.previousCursor_ !== undefined && this.getMap()) {
-      this.getMap().getTargetElement().style.cursor = this.previousCursor_;
+      ol_ext_element.setCursor(this.getMap(), this.previousCursor_);
       this.previousCursor_ = undefined;
     }
     this.cursor_ = cursor;
@@ -183,10 +183,10 @@ var ol_interaction_Hover = class olinteractionHover extends ol_interaction_Inter
         if (b) {
           if (style.cursor != this.cursor_) {
             this.previousCursor_ = style.cursor;
-            style.cursor = this.cursor_;
+            ol_ext_element.setCursor(map, this.cursor_);
           }
         } else if (this.previousCursor_ !== undefined) {
-          style.cursor = this.previousCursor_;
+          ol_ext_element.setCursor(map, this.previousCursor_);
           this.previousCursor_ = undefined;
         }
       }

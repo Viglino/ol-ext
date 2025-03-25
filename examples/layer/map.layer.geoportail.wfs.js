@@ -115,12 +115,11 @@ function setWFS(type) {
       $('#loading span').text(e.loaded+'/'+e.loading)
     }
   }
-  var key = type.split('|')[0];
-  type = type.split('|')[1];
+  type = type.split('|')[1] || '';
   var title = (type.split(':')[1] || type).replace(/(_|\.)/g,' ').capitalize();
   vectorLayer.set('title', title);
   vectorSource = new ol.source.TileWFS({
-    url: 'https://wxs.ign.fr/'+key+'/geoportail/wfs',
+    url: 'https://data.geopf.fr/wfs/ows',
     typeName: type,
     tileZoom: minZoom,
     pagination: true

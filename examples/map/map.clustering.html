@@ -15,8 +15,15 @@
 
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+  <!--
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v10.2.0/dist/ol.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v9.2.0/dist/ol.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v8.1.0/dist/ol.js"></script>
+  <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
+  -->
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -117,6 +124,7 @@
       var data = [0,0,0,0];
       for (var i=0, f; f=features[i]; i++) data[f.get('type')]++;
       var style = styleCache[data.join(',')];
+      style = false;
       if (!style) {
         var radius = Math.min(size+7, 20);
         style = styleCache[data.join(',')] = new ol.style.Style({
@@ -155,9 +163,9 @@
           */
           image: new ol.style.FontSymbol({
             glyph: 'maki-'+form[type],
-            radius: 12,
+            radius: 24,
             color: color,	
-            scale: 10,
+            scale: 0.5,
             fill: new ol.style.Fill({
               color: color
             }),
@@ -190,7 +198,7 @@
     source: clusterSource,
     animationDuration: $("#animatecluster").prop('checked') ? 700:0,
     // Cluster style
-    style: getStyle
+    style: getStyle,
   });
   map.addLayer(clusterLayer);
   // add 2000 features
@@ -205,6 +213,14 @@
     // Feature style when it springs apart
     featureStyle: featureStyle,
     selectCluster: false,	// disable cluster selection
+    // Style the selection
+    style: function(f) {
+      var s = featureStyle(f);
+      s[0] = s[0].clone();
+      s[0].getImage().setScale(1)
+      s[0].setZIndex(1)
+      return s;
+    }
   });
   map.addInteraction(selectCluster);
 
@@ -227,7 +243,6 @@
   })
 
   function testFontLoaded () {
-    console.log('TEST', $(".maki-bus").width())
     // Loaded ?
     if ($(".maki-bus").width() > 60) {
       styleCache = {};

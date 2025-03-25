@@ -11,20 +11,13 @@
   <meta name="description" content="A control to add timeline on a map." />
   <meta name="keywords" content="ol, timeline, control, date" />
 
-  <!-- Prevent image error on load with https -->
-	<script>
-		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
-      location.href = window.location.href.replace(/^https:/,'http:');
-		}
-	</script>
-
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -110,20 +103,19 @@
   <script type="text/javascript">
 
   // Two base layers
-  var stamen = new ol.layer.Tile({
-    title: "Watercolor",
-    baseLayer: true,
-    source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
-  });
+  var carto =new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' })
 
   // Style function
   var cache = {};
   function style(select){
     return function(f) {
+      // Is hidden
+      if (!f.get('visible')) return [];
+      // Display feature on the map
       var style = cache[f.get('img')+'-'+select];
       if (!style) {
         var img = new ol.style.Photo({
-          src: f.get('img'),
+          src: '//wsrv.nl/?url=' + f.get('img'),
           radius: select ? 20:15,
           shadow: true,
           stroke: new ol.style.Stroke({
@@ -133,7 +125,8 @@
           onload: function() { f.changed(); }
         })
         style = cache[f.get('img')+'-'+select] = new ol.style.Style({
-          image: img
+          image: img,
+          zIndex: select ? 1 : 0
         })
       }
       return style;
@@ -161,7 +154,7 @@
       zoom: 6,
       center: [173664, 6166327]
     }),
-    layers: [stamen, vector]
+    layers: [carto, vector]
   });
 
   // One feature per year
@@ -196,10 +189,10 @@
     // Filter features visibility
     vectorSource.getFeatures().forEach(function(f) {
       var date = new Date(f.get('date'));
-      if (date<e.dateStart || date>e.dateEnd) {
-        f.setStyle([]);
+      if (date < e.dateStart || date > e.dateEnd) {
+        f.set('visible', false)
       } else {
-        f.setStyle();
+        f.set('visible', true)
       }
     });
   });
@@ -214,7 +207,7 @@
       tline.setDate(f.get('date'));
       // Show info
 			var info = $("#select").html("");
-			$("<img>").attr('src',f.get("img")).appendTo(info);
+			$("<img>").attr('src', '//wsrv.nl/?url=' + f.get("img")).appendTo(info);
 			$("<p>").text(f.get("text")).appendTo(info);
       $("<p>").text(f.get("commune")+" ("+f.get("region")+" - "
         + (new Date(f.get("date"))).toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'})

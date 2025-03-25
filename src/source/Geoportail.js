@@ -16,7 +16,7 @@ import ol_ext_Ajax from '../util/Ajax.js'
  *  @param {number} options.minZoom
  *  @param {number} options.maxZoom
  *  @param {string} options.server
- *  @param {string} options.gppKey api key, default 'choisirgeoportail'
+ *  @param {string} [options.gppKey] api key, default none
  *  @param {string} options.authentication basic authentication associated with the gppKey as btoa("login:pwd")
  *  @param {string} options.format image format, default 'image/jpeg'
  *  @param {string} options.style layer style, default 'normal'
@@ -46,8 +46,8 @@ var ol_source_Geoportail = class olsourceGeoportail extends ol_source_WMTS {
     tg.minZoom = (options.minZoom ? options.minZoom : 0)
     var attr = [ ol_source_Geoportail.defaultAttribution ]
     if (options.attributions) attr = options.attributions
-    var server = options.server || 'https://wxs.ign.fr/geoportail/wmts'
-    var gppKey = options.gppKey || options.key || 'choisirgeoportail'
+    var server = options.server || 'https://data.geopf.fr/wmts' // 'https://wxs.ign.fr/geoportail/wmts' old version
+    var gppKey = options.gppKey || options.key || ''
 
     var wmts_options = {
       url: ol_source_Geoportail.getServiceURL(server, gppKey),
@@ -191,16 +191,34 @@ var ol_source_Geoportail = class olsourceGeoportail extends ol_source_WMTS {
 
 /** Standard IGN-GEOPORTAIL attribution 
  */
-ol_source_Geoportail.defaultAttribution = '<a href="http://www.geoportail.gouv.fr/">Géoportail</a> &copy; <a href="http://www.ign.fr/">IGN-France</a>';
+ol_source_Geoportail.defaultAttribution = '<a href="https://geoservices.ign.fr/">Géoservices</a> &copy; <a href="http://www.ign.fr/">IGN-France</a>';
 
 /** Get service URL according to server url or standard url
  */
 ol_source_Geoportail.getServiceURL = function(server, gppKey) {
-  if (server) {
-    return server.replace(/^(https?:\/\/[^/]*)(.*)$/, "$1/" + gppKey + "$2")
+  // Old gppkey
+  if (gppKey === 'gpf') gppKey = '';
+  // Check server
+  if (!server) {
+    if (gppKey) {
+      server = 'https://data.geopf.fr/private/wmts';
+    } else {
+      server = 'https://data.geopf.fr/wmts';
+    }
+  } 
+  // Add api key
+  if (/geopf/.test(server)) {
+    if (gppKey) {
+      return server + '?apikey=' + gppKey;
+    } else {
+      return server;
+    }
   } else {
-    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") + gppKey + "/geoportail/wmts"
+    return server.replace(/^(https?:\/\/[^/]*)(.*)$/, "$1/" + gppKey + "$2")
   }
+  /*
+    return (window.geoportailConfig ? window.geoportailConfig.url : "https://wxs.ign.fr/") + gppKey + "/geoportail/wmts"
+  */
 }
 
 export default ol_source_Geoportail

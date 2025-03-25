@@ -8,7 +8,7 @@ import ol_layer_Tile from 'ol/layer/Tile.js'
 import ol_layer_Vector from 'ol/layer/Vector.js'
 import ol_layer_VectorTile from 'ol/layer/VectorTile.js'
 // ol < 6 compatibility VectorImage is not defined
-// import ol_layer_VectorImage from 'ol/layer/VectorImage'
+// import ol_layer_VectorImage from 'ol/layer/VectorImage.js'
 import ol_layer_Image from 'ol/layer/Image.js'
 import ol_layer_Heatmap from 'ol/layer/Heatmap.js'
 import {intersects as ol_extent_intersects} from 'ol/extent.js'
@@ -23,6 +23,7 @@ import ol_ext_element from '../util/element.js'
  * @fires reorder-end
  * @fires layer:visible
  * @fires layer:opacity
+ * @fires layer:keydown
  * 
  * @constructor
  * @extends {ol_control_Control}
@@ -427,8 +428,7 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
     // Remove existing layers
     this._clearLayerForLI()
     this.panel_.querySelectorAll('li').forEach(function (li) {
-      if (!li.classList.contains('ol-header'))
-        li.remove()
+      if (!li.classList.contains('ol-header')) li.remove()
     }.bind(this))
     // Draw list
     if (this._layerGroup) {
@@ -511,10 +511,11 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
         var isSelected = self.getSelection() === drop
         if (drop && target) {
           var collection
-          if (group)
+          if (group) {
             collection = group.getLayers()
-          else
+          } else {
             collection = self._layerGroup ? self._layerGroup.getLayers() : self.getMap().getLayers()
+          }
           var layers = collection.getArray()
           // Switch layers
           for (var i = 0; i < layers.length; i++) {
@@ -525,16 +526,16 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
           }
           for (var j = 0; j < layers.length; j++) {
             if (layers[j] === target) {
-              if (i > j)
+              if (i > j) {
                 collection.insertAt(j, drop)
-              else
+              } else {
                 collection.insertAt(j + 1, drop)
+              }
               break
             }
           }
         }
-        if (isSelected)
-          self.selectLayer(drop)
+        if (isSelected) self.selectLayer(drop)
 
         self.dispatchEvent({ type: "reorder-end", layer: drop, group: group })
       }
@@ -594,8 +595,18 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
         var li
         if (!e.touches) {
           li = e.target
+          
+          // Get the HTML node within web component on click drag
+          if(e.target.shadowRoot){
+            li = e.composedPath()[0]
+          }
         } else {
-          li = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY)
+          li = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+          
+          //Get actual HTML node within web component on touch drag
+          while(li.shadowRoot){
+            li = li.shadowRoot.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY)
+          }
         }
         if (li.classList.contains("ol-switcherbottomdiv")) {
           self.overflow(-1)
@@ -772,13 +783,86 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
       })
 
       // Visibility
-      ol_ext_element.create('INPUT', {
+      var input = ol_ext_element.create('INPUT', {
         type: layer.get('baseLayer') ? 'radio' : 'checkbox',
         className: 'ol-visibility',
         checked: layer.getVisible(),
-        click: setVisibility,
+        click: function(e) {
+          setVisibility.bind(this)(e)
+          setTimeout(function() { e.target.checked = layer.getVisible(); });
+        },
+        on: {
+          // Set opacity on keydown
+          keydown: function(e) {
+            switch (e.key) {
+              // Change opacity on arrow
+              case 'ArrowLeft':
+              case 'ArrowRight': {
+                e.preventDefault();
+                e.stopPropagation();
+                var delta = (e.key==='ArrowLeft' ? -0.1 : 0.1);
+                var opacity = Math.min(1, Math.max(0, layer.getOpacity() + delta))
+                layer.setOpacity(opacity)
+                break;
+              }
+              // Select on enter
+              case 'Enter': {
+                if (self.get('selection')) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  self.selectLayer(layer)
+                }
+                break;
+              }
+              // Expend 
+              case '-': 
+              case '+': {
+                if (layer.getLayers) {
+                  this._focus = layer;
+                  layer.set("openInLayerSwitcher", !layer.get("openInLayerSwitcher"))
+                }
+              }
+              // Move up dans down
+              case 'ArrowUp':
+              case 'ArrowDown': {
+                if (e.ctrlKey && this.reordering) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  var pos = collection.getArray().indexOf(layer);
+                  if (pos > -1) {
+                    if (e.key === 'ArrowDown') {
+                      if (pos > 0) {
+                        collection.remove(layer);
+                        collection.insertAt(pos-1, layer)
+                        self._focus = layer
+                        self.dispatchEvent({ type: "reorder-end", layer: layer })
+                      }
+                    } else {
+                      if (pos < collection.getLength()-1) {
+                        collection.remove(layer);
+                        collection.insertAt(pos+1, layer)
+                        self._focus = layer
+                        self.dispatchEvent({ type: "reorder-end", layer: layer })
+                      }
+                    }
+                  }
+                }
+                break;
+              }
+              default: {
+                var group = this._getLayerForLI(ul.parentNode)
+                this.dispatchEvent({ type: 'layer:keydown', key: e.key, group: group, li: li, layer: layer, originalEvent: e })
+              }
+            }
+          }.bind(this)
+        },
         parent: d
       })
+      // Focus on element
+      if (layer === self._focus) {
+        input.focus();
+        self.overflow()
+      }
       // Label
       var label = ol_ext_element.create('LABEL', {
         title: layer.get('title') || layer.get('name'),
@@ -799,7 +883,7 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
         }.bind(this),
         parent: label
       })
-
+      
       //  up/down
       if (this.reordering) {
         if ((i < layers.length - 1 && (layer.get("allwaysOnTop") || !layers[i + 1].get("allwaysOnTop")))
@@ -928,8 +1012,12 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
 
     this.viewChange()
 
-    if (ul === this.panel_)
-      this.overflow()
+    if (ul === this.panel_) {
+      this.overflow('')
+      // Remove focus
+      this._focus = null;
+    }
+
   }
   /** Select a layer
    * @param {ol.layer.Layer} layer
@@ -969,9 +1057,15 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
       layer = this.getMap().getLayers().item(this.getMap().getLayers().getLength() - 1)
     }
     this._selectedLayer = layer
+    // Has focus ?
+    if (this.element.querySelector('input.ol-visibility:focus')) {
+      this._focus = layer;
+    }
+    // Draw
     this.drawPanel()
-    if (!silent)
+    if (!silent) {
       this.dispatchEvent({ type: 'select', layer: layer })
+    }
   }
   /** Get selected layer
    * @returns {ol.layer.Layer}

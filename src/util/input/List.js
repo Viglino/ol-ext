@@ -1,7 +1,7 @@
 import ol_ext_element from '../element.js';
 import ol_ext_input_Base from './Base.js'
 
-/** Checkbox input
+/** An input as a list of values
  * @constructor
  * @extends {ol_ext_input_Base}
  * @param {*} options

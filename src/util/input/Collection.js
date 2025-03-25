@@ -6,6 +6,7 @@ import ol_ext_element from '../element.js'
  * @constructor
  * @fires item:select
  * @fires item:dblclick
+ * @fires item:keydown
  * @fires item:order
  * @extends {ol_Object}
  * @param {*} options
@@ -93,8 +94,9 @@ var ol_ext_input_Collection = class olextinputCollection extends ol_Object {
     return this.collection.getArray().indexOf(this._currentItem);
   }
   /** Redraw the list
+   * @param {*} [focus] item to focus on
    */
-  refresh() {
+  refresh(focus) {
     this.element.innerHTML = '';
     this._listElt = [];
     if (!this.collection)
@@ -115,6 +117,56 @@ var ol_ext_input_Collection = class olextinputCollection extends ol_Object {
         },
         parent: this.element
       });
+      // Accessibility
+      var check = ol_ext_element.create('INPUT', {
+        'aria-label': this._title(item),
+        type: 'checkbox',   
+        className: 'ol-input-focus',
+        on: {
+          keydown: function(e) {
+            switch (e.key) {
+              // Move up dans down
+              case 'ArrowUp':
+              case 'ArrowDown': {
+                if (e.ctrlKey) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  this.select(item);
+                  var newPos = (e.key === 'ArrowUp' ? pos-1 : pos+1);
+                  if (newPos >= 0 && newPos < this.collection.getLength()) {
+                    this._reorder = true;
+                    this.collection.removeAt(pos);
+                    this.collection.insertAt(newPos, item);
+                    this._reorder = false;
+                    this.dispatchEvent({ type: 'item:order', position: newPos, oldPosition: pos, item: item });
+                    this.refresh(item);
+                  }
+                }
+                break;
+              }
+              // Select
+              case ' ': 
+              case 'Space': {
+                e.preventDefault();
+                e.stopPropagation();
+                this.select(item);
+                break;
+              }
+              case 'Tab': {
+                break;
+              }
+              default: {
+                this.dispatchEvent({ type: 'item:keydown', key: e.key, originalEvent: e, position: pos, item: item })
+                break;
+              }
+            }
+          }.bind(this)
+        },
+        parent: li
+      })
+      if (focus === item) {
+        check.focus();
+      }
       this._listElt.push({ li: li, item: item });
       var order = ol_ext_element.create('DIV', {
         className: 'ol-noscroll ol-order',

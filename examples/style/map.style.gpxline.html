@@ -21,7 +21,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -124,11 +124,11 @@
 	});
   map.addLayer(vector);
   
-  // Profil control
-  var profil = new ol.control.Profil({
+  // Profile control
+  var profile = new ol.control.Profile({
     target: $('.options').get(0)
   });
-  map.addControl(profil);
+  map.addControl(profile);
   
 	// Show feature profile when loaded
   var pt = new ol.Feature(new ol.geom.Point([0,0]));
@@ -145,16 +145,15 @@
   overlay.getSource().addFeature(pt);
   overlay.setMap(map);
 
-
 	source.once('change',function(e) {
     if (source.getState() === 'ready'){
       getMinMax (source.getFeatures()[0]);
       createLegend ();
-      profil.setGeometry(source.getFeatures()[0]);
+      profile.setGeometry(source.getFeatures()[0]);
 		}
   });
   // Show a popup on over
-	profil.on(["over","out"], function(e){
+	profile.on(["over","out"], function(e){
     if (!pt) return;
 		if (e.type=="over"){
       // Show point at coord

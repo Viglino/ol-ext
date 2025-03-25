@@ -1,0 +1,25 @@
+.ol-ext-print-dialog2x .ol-map,
+.ol-ext-print-dialog2x .ol-map2 {
+  width: 100%;
+  height: 50%;
+}
+.ol-ext-print-dialog2x[data-orientation="landscape"] .ol-map,
+.ol-ext-print-dialog2x[data-orientation="landscape"] .ol-map2 {
+  display: inline-block;
+  width: 50%;
+  height: 100%;
+}
+
+.ol-ext-print-dialog2x[data-clip-map] .ol-map,
+.ol-ext-print-dialog2x[data-swipe-orientation] .ol-map {
+  width: 100%!important;
+  height: 100%!important;
+}
+.ol-ext-print-dialog2x[data-clip-map] .ol-map2,
+.ol-ext-print-dialog2x[data-swipe-orientation] .ol-map2 {
+  width: 100%!important;
+  height: 100%!important;
+  position: relative!important;
+  left: 0;
+  top: -100%;
+}

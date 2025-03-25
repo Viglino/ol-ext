@@ -17,13 +17,13 @@ import ol_ext_element from '../util/element.js'
  * @extends {ol_control_Search}
  * @fires select
  * @param {Object=} Control options. 
- *  @param {string} options.className control class name
- *  @param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
- *  @param {string | undefined} options.label Text label to use for the search button, default "search"
- *  @param {string | undefined} options.placeholder placeholder, default "Search..."
- *  @param {number | undefined} options.typing a delay on each typing to start searching (ms), default 300.
- *  @param {integer | undefined} options.minLength minimum length to start searching, default 1
- *  @param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
+ *  @param {string} [options.className] control class name
+ *  @param {Element | string | undefined} [options.target] Specify a target if you want the control to be rendered outside of the map's viewport.
+ *  @param {string | undefined} [options.label=search] Text label to use for the search button, default "search"
+ *  @param {string | undefined} [options.labelGPS="Locate with GPS"] placeholder, default "Locate with GPS"
+ *  @param {number | undefined} [options.typing=300] a delay on each typing to start searching (ms), default 300.
+ *  @param {integer | undefined} [options.minLength=1] minimum length to start searching, default 1
+ *  @param {integer | undefined} [options.maxItems=10] maximum number of items to display in the autocomplete list, default 10
  */
 var ol_control_SearchGPS = class olcontrolSearchGPS extends ol_control_Search {
   constructor(options) {
@@ -44,7 +44,7 @@ var ol_control_SearchGPS = class olcontrolSearchGPS extends ol_control_Search {
     });
     ol_ext_element.create('BUTTON', {
       className: 'ol-geoloc',
-      title: 'Locate with GPS',
+      title: options.labelGPS || 'Locate with GPS',
       parent: this.element,
       click: function () {
         this.geolocation.setTracking(true);
@@ -56,10 +56,11 @@ var ol_control_SearchGPS = class olcontrolSearchGPS extends ol_control_Search {
       html: 'decimal',
       after: 'DMS',
       change: function (e) {
-        if (e.target.checked)
+        if (e.target.checked) {
           this.element.classList.add('ol-dms');
-        else
+        } else {
           this.element.classList.remove('ol-dms');
+        }
       }.bind(this),
       parent: this.element
     });
@@ -70,6 +71,20 @@ var ol_control_SearchGPS = class olcontrolSearchGPS extends ol_control_Search {
     var ul = this.element.querySelector("ul.autocomplete");
     this.element.appendChild(ul);
 
+  }
+  /** Set the input value in the form (for initialisation purpose)
+   *	@param {Array<number>} [coord] if none get the map center
+   *	@api
+   */
+  setInput(coord) {
+    if (!coord) {
+      if (!this.getMap()) return
+      coord = this.getMap().getView().getCenter();
+      coord = ol_proj_transform(coord, this.getMap().getView().getProjection(), 'EPSG:4326')
+    }
+    this.inputs_[0].value = coord[0];
+    this.inputs_[1].value = coord[1];
+    this._triggerCustomEvent('keyup', this.inputs_[0]);
   }
   /** Create input form
    * @private
@@ -90,16 +105,18 @@ var ol_control_SearchGPS = class olcontrolSearchGPS extends ol_control_Search {
         this._input.value = '';
       }
       if (!e.target.classList.contains('ol-dms')) {
-        var s = ol_coordinate_toStringHDMS([Number(lon.value), Number(lat.value)]);
-        var c = s.replace(/(N|S|E|W)/g, '').split('″');
-        c[1] = c[1].trim().split(' ');
-        lond.value = (/W/.test(s) ? -1 : 1) * parseInt(c[1][0]);
-        lonm.value = parseInt(c[1][1]);
-        lons.value = parseInt(c[1][2]);
-        c[0] = c[0].trim().split(' ');
-        latd.value = (/W/.test(s) ? -1 : 1) * parseInt(c[0][0]);
-        latm.value = parseInt(c[0][1]);
-        lats.value = parseInt(c[0][2]);
+        var s = ol_coordinate_toStringHDMS([Number(lon.value) || 0, Number(lat.value) || 0]);
+        var c = s.replace(/(N|S)/g,'-').replace(/(E|W)/g, '').split('-');
+        try {
+          c[1] = c[1].trim().split(' ');
+          lond.value = (/W/.test(s) ? -1 : 1) * parseInt(c[1][0]);
+          lonm.value = parseInt(c[1][1] || 0);
+          lons.value = parseInt(c[1][2] || 0);
+          c[0] = c[0].trim().split(' ');
+          latd.value = (/S/.test(s) ? -1 : 1) * parseInt(c[0][0]);
+          latm.value = parseInt(c[0][1] || 0);
+          lats.value = parseInt(c[0][2] || 0);
+        } catch(e) { /* oops */ }
       }
       this.search();
     }.bind(this);
@@ -152,6 +169,8 @@ var ol_control_SearchGPS = class olcontrolSearchGPS extends ol_control_Search {
     var latd = createInput('ol-dms', '°');
     var latm = createInput('ol-dms', '\'');
     var lats = createInput('ol-dms', '"');
+
+    this.inputs_ = [lon, lat]
 
     // Focus on open
     if (this.button) {

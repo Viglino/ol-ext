@@ -160,7 +160,7 @@ var ol_format_GeoJSONX = class olformatGeoJSONX extends ol_format_GeoJSON {
         }
         // Almost 2 points...
         if (xy.length < 2 && v.length > 1) {
-          var p = 'A,A' + (hasZ ? ',A':'') + (hasM ? ',A':'');
+          p = 'A,A' + (hasZ ? ',A':'') + (hasM ? ',A':'');
           xy.push(p);
         }
         // encoded

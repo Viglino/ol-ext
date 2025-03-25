@@ -20,7 +20,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -94,8 +94,8 @@
   // Layers
   var layers = [
     new ol.layer.Tile({
-      title:'terrain-background',
-      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
+      title: "OSM",
+      source: new ol.source.OSM(),
     })
   ];
 

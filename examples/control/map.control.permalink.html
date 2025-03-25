@@ -19,7 +19,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -91,9 +91,9 @@
       permalink:"O",	// Name of the layer in the permalink
       source: new ol.source.OSM() 
     });
-    var stamen = new ol.layer.Tile({
+    var stamen = new ol.layer.Geoportail({
       permalink:"S",	// Name of the layer in the permalink
-      source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) 
+      layer: 'ORTHOIMAGERY.ORTHOPHOTOS'
     });
 
     // The map

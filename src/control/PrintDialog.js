@@ -23,6 +23,7 @@ import ol_control_Compass from './Compass.js';
  * @fire error
  * @fire printing
  * @extends {ol.control.Control}
+ * @author https://github.com/chicoff (italian i18n)
  * @param {Object=} options Control options.
  *	@param {string} options.className class of the control
  *	@param {String} options.title button title
@@ -34,7 +35,7 @@ import ol_control_Compass from './Compass.js';
  *	@param {string} options.orientation Page orientation (landscape/portrait), default guest the best one
  *	@param {boolean} options.immediate force print even if render is not complete,  default false
  *	@param {boolean} [options.openWindow=false] open the file in a new window on print
- *	@param {boolean} [options.copy=true] add a copy select option
+ *	@param {boolean} [options.copy=true] add a copy to clipboard select option
  *	@param {boolean} [options.save=true] add a save select option
  *	@param {boolean} [options.pdf=true] add a pdf select option
  *	@param {function} [options.saveAs] a function to save the image as blob
@@ -73,13 +74,10 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     }
 
     // Print control
-    options.target = options.target || ol_ext_element.create('DIV')
+    options.target = ol_ext_element.create('DIV')
     var printCtrl = this._printCtrl = new ol_control_Print(options)
     printCtrl.on(['print', 'error', 'printing'], function (e) {
-      content.setAttribute('data-status', e.type)
-      if (!e.clipboard) {
-        this.dispatchEvent(e)
-      }
+      this._printing(e)
     }.bind(this))
 
     // North arrow
@@ -326,7 +324,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
       className: 'ol-saveas',
       parent: ul
     })
-    var copied = ol_ext_element.create('DIV', {
+    ol_ext_element.create('DIV', {
       html: this.i18n('copied'),
       className: 'ol-clipboard-copy',
       parent: li
@@ -334,26 +332,22 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     var save = ol_ext_element.create('SELECT', {
       on: {
         change: function () {
-          // Copy to clipboard
-          if (this.formats[save.value].clipboard) {
-            printCtrl.copyMap(this.formats[save.value], function (isok) {
-              if (isok) {
-                copied.classList.add('visible')
-                setTimeout(function () { copied.classList.remove('visible') }, 1000)
-              }
-            })
-          } else {
-            // Print to file
-            var format = (typeof (this.getSize()) === 'string' ? this.getSize() : null)
-            var opt = Object.assign({
-              format: format,
-              size: format ? this.paperSize[format] : null,
-              orient: this.getOrientation(),
-              margin: this.getMargin(),
-            }, this.formats[save.value])
-            printCtrl.print(opt)
-          }
+          var saveas = save.value;
           save.value = ''
+          // Copy to clipboard
+          if (this.formats[saveas].clipboard) {
+            if (this._copyMap(saveas)) return;
+          } 
+          // Print to file
+          var format = (typeof (this.getSize()) === 'string' ? this.getSize() : null)
+          var opt = Object.assign({
+            format: format,
+            size: format ? this.paperSize[format] : null,
+            orient: this.getOrientation(),
+            margin: this.getMargin(),
+          }, this.formats[saveas])
+          // console.log('OPTIONS',opt)
+          printCtrl.print(opt)
         }.bind(this)
       },
       parent: li
@@ -378,6 +372,10 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
         parent: save
       })
     }.bind(this))
+    // No options
+    if (save.querySelectorAll('option').length === 1) {
+      save.style.display = 'none';
+    }
 
     // Save Legend
     li = ol_ext_element.create('LI', {
@@ -513,14 +511,14 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
       document.body.classList.add('ol-print-document')
       originalTarget = map.getTargetElement()
       originalSize = map.getSize()
-      if (typeof (this.getSize()) === 'string')
+      if (typeof (this.getSize()) === 'string') {
         this.setSize(this.getSize())
-      else
+      } else {
         this.setSize(originalSize)
+      }
       map.setTarget(printMap)
       // Refresh on move end
-      if (scalelistener)
-        ol_Observable_unByKey(scalelistener)
+      if (scalelistener) ol_Observable_unByKey(scalelistener)
       scalelistener = map.on('moveend', function () {
         this.setScale(ol_sphere_getMapScale(map))
       }.bind(this))
@@ -573,12 +571,10 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     printDialog.on('hide', function () {
       // No print
       document.body.classList.remove('ol-print-document')
-      if (!originalTarget)
-        return
+      if (!originalTarget) return
       this.getMap().setTarget(originalTarget)
       originalTarget = null
-      if (scalelistener)
-        ol_Observable_unByKey(scalelistener)
+      if (scalelistener) ol_Observable_unByKey(scalelistener)
       // restore
       if (extraCtrl.title) {
         extraCtrl.title.control.setVisible(extraCtrl.title.isVisible)
@@ -658,6 +654,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
    */
   setOrientation(ori) {
     this._orientation = (ori === 'landscape' ? 'landscape' : 'portrait')
+    this._printDialog.element.dataset.orientation = this._orientation
     this._input.orientation[this._orientation].checked = true
     this.setSize()
   }
@@ -686,14 +683,14 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
    */
   setSize(size) {
     // reset status
-    this._printDialog.getContentElement().setAttribute('data-status', '')
+    this._printDialog.getContentElement().dataset.status = ''
 
-    if (size)
+    if (size) {
       this._size = size
-    else
+    } else {
       size = this._size
-    if (!size)
-      return
+    }
+    if (!size) return
 
     if (typeof (size) === 'string') {
       // Test uppercase
@@ -738,6 +735,30 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
     }
 
     this.dispatchEvent({ type: 'dialog:refresh' })
+  }
+  /** Dispatch print events
+   * @private
+   */
+  _printing(e) {
+    this._printDialog.getContentElement().dataset.status = e.type
+    if (!e.clipboard) {
+      this.dispatchEvent(e)
+    }
+  }
+  /** Copy map to clipboard
+   * @param {string} format
+   * @return {boolean} if copy
+   * @private
+   */
+  _copyMap(format) {
+    var copied = this._printDialog.element.querySelector('.ol-clipboard-copy')
+    this._printCtrl.copyMap(this.formats[format], function (isok) {
+      if (isok) {
+        copied.classList.add('visible')
+        setTimeout(function () { copied.classList.remove('visible') }, 1000)
+      }
+    })
+    return true
   }
   /** Get dialog content element
    * @return {Element}
@@ -799,20 +820,16 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
    */
   print(options) {
     options = options || {}
-    if (options.size)
-      this.setSize(options.size)
-    if (options.scale)
-      this.setScale(options.scale)
-    if (options.orientation)
-      this.setOrientation(options.orientation)
-    if (options.margin)
-      this.setMargin(options.margin)
+    if (options.size) this.setSize(options.size)
+    if (options.scale) this.setScale(options.scale)
+    if (options.orientation) this.setOrientation(options.orientation)
+    if (options.margin) this.setMargin(options.margin)
     this._printDialog.show()
   }
   /** Get print control
    * @returns {ol_control_Print}
    */
-  getrintControl() {
+  getPrintControl() {
     return this._printCtrl
   }
 }
@@ -915,6 +932,32 @@ ol_control_PrintDialog.prototype._labels = {
     errorMsg: '无法保存地图...',
     printBt: '打印...',
     cancel: '取消'
+  },
+  it: {
+    title: 'Stampa',
+    orientation: 'Orientamento',
+    portrait: 'Verticale',
+    landscape: 'Orizzontale',
+    size: 'Formato pagina',
+    custom: 'Dimensione schermo',
+    margin: 'Margini',
+    scale: 'Scala',
+    legend: 'Legenda',
+    north: 'Freccia nord',
+    mapTitle: 'Titolo della mappa',
+    saveas: 'Salva con nome...',
+    saveLegend: 'Salva legenda...',
+    copied: '✔ Copiato negli appunti',
+    errorMsg: 'Impossibile salvare la mappa',
+    printBt: 'Stampa',
+    clipboardFormat: 'Copia negli appunti...',
+    jpegFormat: 'salva come jpeg',
+    pngFormat: 'salva come png',
+    pdfFormat: 'salva come pdf',
+    none: 'nessuno',
+    small: 'piccolo',
+    large: 'grande',
+    cancel: 'annulla'
   }
 };
 

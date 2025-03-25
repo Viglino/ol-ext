@@ -14,7 +14,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -43,7 +43,7 @@
     <select onchange="setOVLayer(this)">
       <option value="0" selected="selected">Vector</option>
       <option value="1">OSM</option>
-      <option value="2">Stamen</option>
+      <option value="2">IGN-France</option>
       <option value="3">Mapbox</option>
     </select>
     <br />
@@ -67,7 +67,7 @@
         zoom: 5,
         center: [270148, 6247782]
       }),
-      layers: [ new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) }) ]
+      layers: [ new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2') ]
     });
 
     // GeoJSON layer
@@ -90,9 +90,7 @@
     var layers2 = [
       vector,
       new ol.layer.Tile({	source: new ol.source.OSM()	}),
-      new ol.layer.Tile({
-        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
-      }),
+      new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS'),
       new ol.layer.Tile({
         source: new ol.source.XYZ({
         url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-2/{z}/{x}/{y}.png'

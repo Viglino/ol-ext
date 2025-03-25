@@ -17,7 +17,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -103,22 +103,22 @@ map.addControl(new ol.control.PrintDialog({ openWindow: true, pdf: false }));
 var layers = [
   {
     title: 'MNT SRTM3',
-    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    url: 'https://data.geopf.fr/wms-r/wms',
     layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SRTM3',
     //extent: [ -20037554.725947514, -8625918.87376409, 20037554.725947514, 8625918.87376409 ]
   },{
     title: 'MNS',
-    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    url: 'https://data.geopf.fr/wms-r/wms',
     layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES.MNS',
     extent: [ -578959.605490584, 5203133.393641367, 921974.2487313666, 6643289.75487211 ]
   }, {
     title: 'MNT-RGE-Alti',
-    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    url: 'https://data.geopf.fr/wms-r/wms',
     layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES',
     extent: [ -7007874.496280316, -1460624.494037931, 5043253.3127169, 6639937.650114076 ]
   }, {
     title: 'MNT BDAlti V1',
-    url: 'https://wxs.ign.fr/altimetrie/geoportail/r/wms',
+    url: 'https://data.geopf.fr/wms-r/wms',
     layer: 'ELEVATION.ELEVATIONGRIDCOVERAGE',
     extent: [ -7007874.496280316, -1460624.494037931, 5043253.3127169, 6639937.650114076 ]
   }
@@ -149,7 +149,7 @@ elev.on('change', function() {
   switcher.drawPanel();
 })
 
-ol.layer.Geoportail.register("ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW", {"key":"altimetrie","server":"https://wxs.ign.fr/geoportail/wmts","layer":"ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW","title":"Estompage","format":"image/png","style":"estompage_grayscale","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-63.186966,-21.406914,55.8884,50.9218],"desc":"Couche d'ombrage calculée à partir des données altimétriques de l'IGN permettant de mieux appréhender le relief. L'estompage proposé est réalisé à partir des données MNT BDAlti au pas de 25m avec deux soleils : un au nord-est de hauteur 45°, l'autre zénithal.","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.186966,-21.406914,55.8884,50.9218]}]}}});
+ol.layer.Geoportail.register("ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW", {"layer":"ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW","theme":"altimetrie","desc":"Couche d'ombrage calculée à partir des données altimétriques de l'IGN permettant de mieux appréhender le relief. L'estompage proposé est réalisé à partir des données MNT BDAlti au pas de 25m avec deux soleils : un au nord-est de hauteur 45°, l'autre zénithal.","server":"https://data.geopf.fr/wmts","bbox":[-63.187,-21.4069,55.8884,50.9218],"format":"image/png","minZoom":0,"maxZoom":15,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"style":"estompage_grayscale","tilematrix":"PM","title":"Estompage"});
 var shadow = new ol.layer.Geoportail({
   title: 'Estompage - by IGN-France',
   className: 'blend',

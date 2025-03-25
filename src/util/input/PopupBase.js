@@ -26,6 +26,12 @@ var ol_ext_input_PopupBase = class olextinputPopupBase extends ol_ext_input_Base
 
     this.element = ol_ext_element.create('DIV', {
       className: ('ol-ext-popup-input ' + (options.className || '')).trim(),
+      tabindex: 0,
+      on: {
+        keydown: function(e) {
+          this._handleKey(e)
+        }.bind(this)
+      }
     });
     switch (options.position) {
       case 'inline': break;
@@ -70,11 +76,31 @@ var ol_ext_input_PopupBase = class olextinputPopupBase extends ol_ext_input_Base
         this.collapse(true);
       down = false;
     }.bind(this));
-
     // Hide on window resize
     window.addEventListener('resize', function () {
       this.collapse(true);
     }.bind(this));
+  }
+  /** Handle key pressed on input
+   * @private
+   */
+  _handleKey(e) {
+    switch (e.key) {
+      case 'Enter':
+      case ' ': 
+      case 'Space': {
+        e.stopPropagation();
+        e.preventDefault();
+        this.toggle();
+        break;
+      }
+      case 'Escape': {
+        e.stopPropagation();
+        e.preventDefault();
+        this.collapse(true);
+        break;
+      }
+    }
   }
   /** show/hide color picker
    * @param {boolean} [b=false]

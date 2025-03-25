@@ -103,22 +103,20 @@ var ol_control_Toggle = class olcontrolToggle extends ol_control_Button {
   }
   /**
    * Test if the control is disabled.
-   * @return {bool}.
+   * @return {bool}
    * @api stable
    */
   getDisable() {
-    var button = this.element.querySelector("button");
+    var button = this.element.querySelector('button');
     return button && button.disabled;
   }
   /** Disable the control. If disable, the control will be deactivated too.
   * @param {bool} b disable (or enable) the control, default false (enable)
   */
   setDisable(b) {
-    if (this.getDisable() == b)
-      return;
-    this.element.querySelector("button").disabled = b;
-    if (b && this.getActive())
-      this.setActive(false);
+    if (this.getDisable() == b) return;
+    this.element.querySelector('button').disabled = b;
+    if (b && this.getActive()) this.setActive(false);
 
     this.dispatchEvent({ type: 'change:disable', key: 'disable', oldValue: !b, disable: b });
   }

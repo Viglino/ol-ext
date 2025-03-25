@@ -20,17 +20,21 @@
   height: 0;
 }
 
+
 .ol-control.ol-bookmark > div {
-  display: none;
+  display: block;
   min-width: 5em;
+}
+.ol-control.ol-bookmark.ol-collapsed > div {
+  display: none;
 }
 .ol-control.ol-bookmark input {
   font-size: 0.9em;
-  margin: 0.1em 0 ;
+  margin: 0 0.5em 0.5em;
   padding: 0 0.5em;
 }
 .ol-control.ol-bookmark ul {
-  margin:0;
+  margin: 0 0 0.5em;
   padding: 0;
   list-style: none;
   min-width: 10em;

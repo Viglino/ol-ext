@@ -17,7 +17,7 @@
 	<!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+	<script src="/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 	
 	<!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -118,7 +118,7 @@ gpbw.getSource().setTileLoadFunction(ol.ext.imageLoader.grayscale());
 map.addLayer(gpbw);
 
 // new layer JPG + turns white pixels transparent
-ol.layer.Geoportail.register("ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX", {"key":"orthohisto","server":"https://wxs.ign.fr/geoportail/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX","title":"Orthophotographie d’urgence Alex","format":"image/jpeg","style":"normal","queryable":false,"tilematrix":"PM","minZoom":6,"maxZoom":20,"bbox":[7.079166,43.80946,7.6419926,44.19026],"desc":"Orthophotographie réalisée suite au passage de la tempête Alex dans les Alpes Maritimes","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":6,"maxZoom":20,"constraint":[{"minZoom":6,"maxZoom":20,"bbox":[7.079166,43.80946,7.6419926,44.19026]}]}}});
+ol.layer.Geoportail.register("ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX", {"layer":"ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX","theme":"ortho","desc":"Orthophotographie réalisée suite au passage de la tempête Alex dans les Alpes Maritimes","server":"https://data.geopf.fr/wmts","bbox":[7.07917,43.8095,7.64199,44.1903],"format":"image/jpeg","minZoom":6,"maxZoom":20,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"style":"normal","tilematrix":"PM","title":"Orthophotographie d’urgence Alex"});
 var layer = new ol.layer.Geoportail({ 
   title: 'JPEG layer + transparent',
   layer: 'ORTHOIMAGERY.ORTHOPHOTOS.URGENCE.ALEX' 

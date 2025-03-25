@@ -16,6 +16,8 @@
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions, popup to use with Openlayers.    
 [View live examples online](http://viglino.github.io/ol-ext/) or the [API documentation](http://viglino.github.io/ol-ext/doc/doc-pages/).
 
+[Typescript declarations](https://github.com/Siedlerchr/types-ol-ext) by [@Siedlerchr](https://github.com/Siedlerchr).
+
 **Keywords:** 
 Storymap,
 Timeline control,
@@ -45,6 +47,20 @@ ol-ext exists as ES6 modules ([ol-ext](https://www.npmjs.com/package/ol-ext)) an
 npm install ol-ext
 ````
 
+OpenLayers is a peer dependencies, so you need to install it as well.
+````
+npm install ol
+````
+
+
+Then in your js file you can import the classes as follow:
+```javascript
+import "ol/ol.css"
+import "ol-ext/dist/ol-ext.css"
+
+import LayerSwitcher from "ol-ext/control/LayerSwitcher"
+```
+
 See the following examples for more detail on bundling ol-ext with your application:
 
 * Using [webpack](https://github.com/darkscript/ol-ol-ext-webpack-example)
@@ -71,8 +87,11 @@ The library will be available in the `node_modules/openlayers-ext/dist` director
 <!-- Openlayers -->
 <link rel="stylesheet" href="https://openlayers.org/en/latest/css/ol.css" />
 <script type="text/javascript" src="https://openlayers.org/en/latest/build/ol.js"></script>
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
-
+<-- if you need polyfill --
+<script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?version=4.8.0&features=requestAnimationFrame%2CElement.prototype.classList%2CURL%2CObject.assign"></script>
+-- or --
+<script src="https://polyfill-fastly.io/v3/polyfill.min.js?features=requestAnimationFrame%2CElement.prototype.classList%2CObject.assign%2CURL"></script>
+-->
 <!-- ol-ext -->
 <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
 <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>

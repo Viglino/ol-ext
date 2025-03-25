@@ -1,15 +1,15 @@
-.ol-profil {
+.ol-profile {
   position: relative;
   user-select: none;
 }
-.ol-control.ol-profil {
+.ol-control.ol-profile {
   position: absolute;
   top: 0.5em;
   right: 3em;
   text-align: right;
   overflow: hidden;
 }
-.ol-profil .ol-zoom-out {
+.ol-profile .ol-zoom-out {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -20,7 +20,7 @@
   border-radius: 2px;
   cursor: pointer;
 }
-.ol-profil .ol-zoom-out:before {
+.ol-profile .ol-zoom-out:before {
   content: '';
   height: 2px;
   width: 60%;
@@ -31,30 +31,30 @@
   transform: translate(-50%, -50%);
 }
 
-.ol-profil .ol-inner  {
+.ol-profile .ol-inner  {
   position: relative;
   padding: 0.5em;
   font-size: 0.8em;
 }
-.ol-control.ol-profil .ol-inner {
+.ol-control.ol-profile .ol-inner {
   display: block;
   background-color: rgba(255,255,255,0.7);
   margin: 2.3em 2px 2px;
 }
-.ol-control.ol-profil.ol-collapsed .ol-inner {
+.ol-control.ol-profile.ol-collapsed .ol-inner {
   display: none;
 }
 
-.ol-profil canvas {
+.ol-profile canvas {
   display: block;
 }
-.ol-profil button {
+.ol-profile button {
   display: block;
   position: absolute;
   right: 0;
   overflow: hidden;
 }
-.ol-profil button i {
+.ol-profile button i {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -63,8 +63,8 @@
   height: 1em;
   overflow: hidden;
 }
-.ol-profil button i:before,
-.ol-profil button i:after {
+.ol-profile button i:before,
+.ol-profile button i:after {
   content: "";
   position: absolute;
   display: block;
@@ -73,26 +73,26 @@
   height: .9em;
   transform: scaleX(.8) translate(-.25em, .5em) rotate(45deg);
 }
-.ol-profil button i:after {
+.ol-profile button i:after {
   transform: scaleX(.8) translate(.35em, .7em) rotate(45deg);
 }
 
-.ol-profil.ol-collapsed button {
+.ol-profile.ol-collapsed button {
   position: static;
 }
 
-.ol-profil .ol-profilbar,
-.ol-profil .ol-profilcursor {
+.ol-profile .ol-profilebar,
+.ol-profile .ol-profilecursor {
   position:absolute;
   pointer-events: none;
   width: 1px;
   display: none;
 }
-.ol-profil .ol-profilcursor {
+.ol-profile .ol-profilecursor {
   width: 0;
   height: 0;
 }
-.ol-profil .ol-profilcursor:before {
+.ol-profile .ol-profilecursor:before {
   content:"";
   pointer-events: none;
   display: block;
@@ -100,21 +100,21 @@
   width:5px;
   height:5px;
 }
-.ol-profil .ol-profilbar,
-.ol-profil .ol-profilcursor:before {
+.ol-profile .ol-profilebar,
+.ol-profile .ol-profilecursor:before {
   background: red;
 }
 
-.ol-profil table {
+.ol-profile table {
   text-align: center;
   width: 100%;
 }
 
-.ol-profil table span {
+.ol-profile table span {
   display: block;
 }
 
-.ol-profilpopup {
+.ol-profilepopup {
   background-color: rgba(255, 255, 255, 0.5);
   margin: 0.5em;
   padding: 0 0.5em;
@@ -122,29 +122,29 @@
   top:-1em;
   white-space: nowrap;
 }
-.ol-profilpopup.ol-left {
+.ol-profilepopup.ol-left {
   right:0;
 }
 
 
-.ol-profil table td {
+.ol-profile table td {
   padding: 0 2px;
 }
 
-.ol-profil table .track-info {
+.ol-profile table .track-info {
   display: table-row;
 }
-.ol-profil table .point-info {
+.ol-profile table .point-info {
   display: none;
 }
-.ol-profil .over table .track-info {
+.ol-profile .over table .track-info {
   display: none;
 }
-.ol-profil .over table .point-info {
+.ol-profile .over table .point-info {
   display: table-row;
 }
 
-.ol-profil p {
+.ol-profile p {
   text-align: center;
   margin:0;
 }

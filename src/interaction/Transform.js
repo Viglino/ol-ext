@@ -12,6 +12,7 @@ import {fromExtent as ol_geom_Polygon_fromExtent} from 'ol/geom/Polygon.js'
 import {boundingExtent as ol_extent_boundingExtent, buffer as ol_extent_buffer, createEmpty as ol_extent_createEmpty, extend as ol_extent_extend, getCenter as ol_extent_getCenter} from 'ol/extent.js'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
 import ol_geom_Polygon from 'ol/geom/Polygon.js'
+import ol_ext_element from '../util/element.js'
 
 /** Interaction rotate
  * @constructor
@@ -68,6 +69,8 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
       style: function (feature) {
         return (self.style[(feature.get('handle') || 'default') + (feature.get('constraint') || '') + (feature.get('option') || '')])
       },
+      updateWhileAnimating: true,
+      updateWhileInteracting: true,
     })
 
     // Collection of feature to transform
@@ -126,10 +129,9 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
   setMap(map) {
     var oldMap = this.getMap()
     if (oldMap) {
-      var targetElement = oldMap.getTargetElement()
       oldMap.removeLayer(this.overlayLayer_)
-      if (this.previousCursor_ && targetElement) {
-        targetElement.style.cursor = this.previousCursor_
+      if (this.previousCursor_) {
+        ol_ext_element.setCursor(oldMap, this.previousCursor_)
       }
       this.previousCursor_ = undefined
     }
@@ -154,11 +156,11 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
     super.setActive(b)
   }
   /** Set default sketch style
-   * @param {Object|undefined} options
-   *  @param {ol_style_Stroke} stroke stroke style for selection rectangle
-   *  @param {ol_style_Fill} fill fill style for selection rectangle
-   *  @param {ol_style_Stroke} pointStroke stroke style for handles
-   *  @param {ol_style_Fill} pointFill fill style for handles
+   * @param {Object} [options]
+   *  @param {ol_style_Stroke} [stroke] stroke style for selection rectangle, default red dash
+   *  @param {ol_style_Fill} [fill] fill style for selection rectangle, default red
+   *  @param {ol_style_Stroke} [pointStroke] stroke style for handles, default red
+   *  @param {ol_style_Fill} [pointFill] fill style for handles, default white
    */
   setDefaultStyle(options) {
     options = options || {}
@@ -380,7 +382,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
     } else {
       if (this.ispt_) {
         // Calculate extent arround the point
-        var p = this.getMap().getPixelFromCoordinate([ext[0], ext[1]])
+        var p = this.getMap().getPixelFromCoordinate(ol_extent_getCenter(ext))
         if (p) {
           var dx = ptRadius ? ptRadius[0] || 10 : 10
           var dy = ptRadius ? ptRadius[1] || 10 : 10
@@ -513,7 +515,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
       // Save info
       var viewRotation = this.getMap().getView().getRotation()
       // Get coordinate of the handle (for snapping)
-      this.coordinate_ = feature.getGeometry().getCoordinates(); //evt.coordinate
+      this.coordinate_ = feature.get('handle') ? feature.getGeometry().getCoordinates() : evt.coordinate;
       this.pixel_ = this.getMap().getCoordinateFromPixel(this.coordinate_) // evt.pixel;
       this.geoms_ = []
       this.rotatedGeoms_ = []
@@ -536,7 +538,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
         this.center_ = this.getCenter() || ol_extent_getCenter(extent)
         // we are now rotating (cursor down on rotate mode), so apply the grabbing cursor
         var element = evt.map.getTargetElement()
-        element.style.cursor = this.Cursors.rotate0
+        ol_ext_element.setCursor(element, this.Cursors.rotate0)
         this.previousCursor_ = element.style.cursor
       } else {
         this.center_ = ol_extent_getCenter(extent)
@@ -815,10 +817,11 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
         if (this.previousCursor_ === undefined) {
           this.previousCursor_ = element.style.cursor
         }
-        element.style.cursor = c
+        ol_ext_element.setCursor(element, c);
       } else {
-        if (this.previousCursor_ !== undefined)
-          element.style.cursor = this.previousCursor_
+        if (this.previousCursor_ !== undefined) {
+          ol_ext_element.setCursor(element, this.previousCursor_)
+        }
         this.previousCursor_ = undefined
       }
     }
@@ -831,7 +834,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
     // remove rotate0 cursor on Up event, otherwise it's stuck on grab/grabbing
     if (this.mode_ === 'rotate') {
       var element = evt.map.getTargetElement()
-      element.style.cursor = this.Cursors.default
+      ol_ext_element.setCursor(element, this.Cursors.default)
       this.previousCursor_ = undefined
     }
 

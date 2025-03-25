@@ -19,7 +19,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -57,12 +57,8 @@
     var osm = new ol.layer.WebGLTile({
       source: new ol.source.OSM() 
     });
-    var stamen = new ol.layer.WebGLTile({
-      source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) 
-    });
-    var label = new ol.layer.WebGLTile({
-      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' }) 
-    });
+    var layer = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
+    var label = new ol.layer.Geoportail('GEOGRAPHICALNAMES.NAMES');
     // GeoJSON layer
     var vectorSource = new ol.source.Vector({
       url: '../data/fond_guerre.geojson',
@@ -85,14 +81,14 @@
         zoom: 12,
         center: [270701, 6247637]
       }),
-      layers: [ stamen, osm, label, vectorLayer ]
+      layers: [ layer, osm, label, vectorLayer ]
     });
 
     // Control
     var ctrl = new ol.control.Swipe();
     map.addControl(ctrl);
-    // Set stamen on left
-    ctrl.addLayer(stamen);
+    // Set layer on left
+    ctrl.addLayer(layer);
     // OSM on right
     ctrl.addLayer(osm, true);
     ctrl.addLayer(vectorLayer, true);

@@ -19,7 +19,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
     <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -78,19 +78,16 @@
       <li>
         <label>layer:</label>
         <select id="layer" onchange="setLayer()">
-          <option value="stamen">Stamen</option>
-          <option value="mbox" selected="selected">MapBox</option>
+          <option value="ortho">Ortho</option>
+          <option value="ignmap" selected="selected">Map</option>
         </select>
       </li>
     </ul>
   </div>
 
   <script type="text/javascript">
-    var stamen = new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) });
-    var mbox = new ol.layer.Tile({
-      title:'terrain-background',
-      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
-    });
+    var ortho = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' })
+    var ignmap = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' })
 
     // The map
     var map = new ol.Map({
@@ -101,20 +98,20 @@
       }),
       controls: ol.control.defaults.defaults({rotate: false}),
       interactions: ol.interaction.defaults.defaults({ altShiftDragRotate:false, pinchRotate:false }),
-      layers: [ stamen, mbox ]
+      layers: [ ortho, ignmap ]
     });
 
     function setLayer() {
-      var b = $("#layer").val()=="stamen";
-      stamen.setVisible(b);
-      mbox.setVisible(!b);
+      var b = $("#layer").val()=="ortho";
+      ortho.setVisible(b);
+      ignmap.setVisible(!b);
     }
     setLayer();
 
     // Enhance filter
     var lego = new ol.filter.Lego({ brickSize:$("#size").val(), img:$("#brick").val() });
-    mbox.addFilter(lego);
-    stamen.addFilter(lego);
+    ignmap.addFilter(lego);
+    ortho.addFilter(lego);
 
   </script>
 

@@ -84,9 +84,11 @@ var ol_Overlay_AnimatedCanvas = class olOverlayAnimatedCanvas extends ol_Overlay
    * @param {ol.Map} map The map instance.
    */
   setMap(map) {
+    /*
     if (this.getMap()) {
       this.getMap().getViewport().querySelector('.ol-overlaycontainer').removeChild(this._canvas);
     }
+    */
     this._listener.forEach(function (l) {
       ol_Observable_unByKey(l);
     });
@@ -108,6 +110,7 @@ var ol_Overlay_AnimatedCanvas = class olOverlayAnimatedCanvas extends ol_Overlay
         }
       }.bind(this)));
     }
+    this.setAnimation(!!map);
   }
   /** Create particules or return exiting ones
    */

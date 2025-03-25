@@ -173,7 +173,7 @@ h2 {
 }
 
 #map button {
-  outline: none;
+  /* outline: none; */
 }
 
 .ol-attribution img {

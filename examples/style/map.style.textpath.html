@@ -17,7 +17,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
   <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
@@ -106,7 +106,7 @@
   <script type="text/javascript">
 
   // Layers
-  var layer = new ol.layer.Tile({ source: new ol.source.Stamen({ layer: 'watercolor' }) });
+  var layer = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
     
   // The map
   var map = new ol.Map ({

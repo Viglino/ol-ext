@@ -249,8 +249,9 @@ var ol_interaction_DrawRegular = class olinteractionDrawRegular extends ol_inter
   /** Draw sketch (Point)
   */
   drawPoint_(pt, noclear) {
-    if (!noclear)
+    if (!noclear) {
       this.overlayLayer_.getSource().clear()
+    }
     this.overlayLayer_.getSource().addFeature(new ol_Feature(new ol_geom_Point(pt)))
   }
   /**
@@ -259,11 +260,10 @@ var ol_interaction_DrawRegular = class olinteractionDrawRegular extends ol_inter
   handleEvent_(evt) {
     var dx, dy
     // Event date time
-    this._eventTime = new Date()
+    this._eventTime = new Date();
     switch (evt.type) {
       case "pointerdown": {
-        if (this.conditionFn_ && !this.conditionFn_(evt))
-          break
+        if (this.conditionFn_ && !this.conditionFn_(evt)) break
         this.downPx_ = evt.pixel
         this.start_(evt)
         // Test long touch
@@ -274,6 +274,7 @@ var ol_interaction_DrawRegular = class olinteractionDrawRegular extends ol_inter
           if (this._longTouch)
             this.handleMoveEvent_(evt)
         }.bind(this), dt)
+        this.lastEvent = evt.type;
         break
       }
       case "pointerup": {
@@ -281,9 +282,10 @@ var ol_interaction_DrawRegular = class olinteractionDrawRegular extends ol_inter
         if (this.started_ && this.coord_) {
           dx = this.downPx_[0] - evt.pixel[0]
           dy = this.downPx_[1] - evt.pixel[1]
+
           if (dx * dx + dy * dy <= this.squaredClickTolerance_) {
             // The pointer has moved
-            if (this.lastEvent == "pointermove" || this.lastEvent == "keydown") {
+            if (this.lastEvent == "pointerdown" || this.lastEvent == "pointermove" || this.lastEvent == "keydown") {
               this.end_(evt)
             }
 
@@ -323,16 +325,19 @@ var ol_interaction_DrawRegular = class olinteractionDrawRegular extends ol_inter
             this.handleMoveEvent_(evt)
             this.lastEvent = evt.type
           }
+        } else {
+          this.drawPoint_(evt.coordinate)
         }
         break
       }
       default: {
-        this.lastEvent = evt.type
-        // Prevent zoom in on dblclick
-        if (this.started_ && evt.type === 'dblclick') {
+        // Prevent zoom or other event on click/singleclick/dblclick
+        if (this.started_ && (evt.type === 'click' || evt.type === 'singleclick' || evt.type === 'dblclick')) {
           //evt.stopPropagation();
           return false
         }
+        this.lastEvent = evt.type
+
         break
       }
     }

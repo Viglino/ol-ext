@@ -1,0 +1,222 @@
+.ol-feature-list {
+  position: relative;
+}
+.ol-control.ol-feature-list {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+.ol-control.ol-feature-list > button:before {
+  content: "";
+  position: absolute;
+  width: 60%;
+  height: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: inset 0 2.5px;  
+  background-image: linear-gradient(90deg, currentColor, transparent);
+}
+
+.ol-control.ol-feature-list.ol-collapsed {
+  bottom: .5em;
+  left: .5em;
+  width: auto;
+}
+.ol-feature-list .ol-content {
+  background-color: #f4f6f8;
+  clear: both;
+}
+.ol-feature-list.ol-collapsed .ol-content > * {
+  display: none;
+}
+.ol-feature-list .ol-header {
+  position: relative;
+  overflow: hidden;
+}
+.ol-feature-list.ol-collapsed .ol-header {
+  display: block;
+}
+
+.ol-control.ol-feature-list > button,
+.ol-control.ol-feature-list.ol-collapsed .ol-content {
+  display: none;
+}
+.ol-control.ol-feature-list.ol-collapsed > button {
+  display: block;
+}
+
+.ol-feature-list .ol-sizer {
+  width: 100%;
+  height: 1px;
+  cursor: row-resize;
+  background-color: #ccc;
+  position: relative;
+  border: 1px solid #f4f6f8;
+  border-width: 1px 0;
+}
+.ol-feature-list.ol-bottom .ol-sizer {
+  position: absolute;
+  bottom: 0;
+}
+.ol-feature-list .ol-sizer:before {
+  content: "";
+  width: 1.5em;
+  height: 4px;
+  background-color: #ddd;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  border: 3px solid transparent;
+  border-width: 3px 1.5em;
+  box-shadow: inset 0 -1px #aaa, inset 0 1px #aaa;
+  border-radius: 2px;
+}
+.ol-feature-list .ol-sizer:hover:before {
+  background-color: #ccc;
+}
+
+.ol-feature-list .ol-content .ol-header p {
+  display: inline-block;
+  margin: 0.1em .25em;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: calc(100% - 2em);
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.ol-feature-list .ol-content .ol-header .ol-buttons {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ol-feature-list .ol-content .ol-header button {
+  position: relative;
+  border: 0;
+  background: transparent;
+  vertical-align: middle;
+  width: 1em;
+  height: 1em;
+  margin: 0 .2em;
+  box-sizing: border-box;
+}
+.ol-feature-list .ol-content .ol-header button.ol-closebox:before,
+.ol-feature-list .ol-content .ol-header button.ol-closebox:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: currentColor;
+  width: .1em;
+  height: 1em;
+  display: block;
+  font-style: normal;
+}
+.ol-feature-list .ol-content .ol-header button.ol-closebox:after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.ol-feature-list.ol-collapsed .ol-content .ol-header button.ol-closebox {
+  border: 1px solid currentColor;
+}
+.ol-feature-list.ol-collapsed .ol-content .ol-header button.ol-closebox:before {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+.ol-feature-list.ol-collapsed .ol-content .ol-header button.ol-closebox:after {
+  display: none;
+}
+
+.ol-feature-list .ol-scroll-container {
+  overflow: auto;
+  height: 10em;
+  min-height: 3em;
+}
+.ol-feature-list .ol-scroll-container:focus {
+  outline: unset;
+}
+
+.ol-feature-list table {
+  background-color: #fff;
+  border-collapse: collapse;
+  white-space: nowrap;
+  position: relative;
+}
+.ol-feature-list table thead {
+  background-color: #f4f6f8;
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+}
+/* Fixed height */
+.ol-feature-list table tr {
+  height: 1.4em;
+  box-sizing: border-box;
+}
+.ol-feature-list table tbody tr:hover {
+  background-color: #eee;
+  cursor: pointer;
+}
+
+.ol-feature-list table tbody tr.ol-selected {
+  background-color: #eee;
+}
+
+.ol-feature-list table td {
+  border: 0 solid #ddd;
+  border-width: 0 0 1px 1px;
+  overflow: hidden;
+  width: 100px;
+}
+.ol-feature-list table td.number {
+  text-align: right;
+}
+.ol-feature-list table td.undefined {
+  text-align: center;
+  background-color: #fafafa;
+}
+.ol-feature-list table tr:hover td,
+.ol-feature-list table .ol-selected td {
+  background-color: transparent;
+}
+.ol-feature-list thead td {
+  position: relative;
+}
+.ol-feature-list thead td.sort {
+  padding-right: 1.5em;
+}
+
+.ol-feature-list thead td p {
+  margin: 0;
+  display: inline-block;
+}
+.ol-feature-list table td button {
+  position: absolute;
+  width: 1.2em;
+  height: 1.4em;
+  top: 0;
+  right: 0;
+  margin: .1em 0;
+  padding: 0;
+  background-color: transparent;
+  border: 0;
+}
+.ol-feature-list thead td button.sort:before {
+  content: '⇅';
+  font-style: normal;
+  font-weight: normal;
+  cursor: pointer;
+  font-size: 1em;
+  line-height: 1em;
+}
+.ol-feature-list thead td button.sortup:before {
+  content: '↧';
+}
+.ol-feature-list thead td button.sortdown:before {
+  content: '↥';
+}

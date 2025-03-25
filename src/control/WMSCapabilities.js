@@ -80,6 +80,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
         if (!caps.Capability.Layer.Layer) {
           this.showError({ type: 'noLayer' })
         } else {
+          caps.url = evt.options.url
           this.showCapabilities(caps)
         }
       }
@@ -220,9 +221,19 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
       this._elements.formCrossOrigin.checked = true
     }.bind(this))
     // Select list
-    this._elements.select = ol_ext_element.create('DIV', {
+    this._elements.select = ol_ext_element.create('SELECT', {
       className: 'ol-select-list',
-      tabIndex: 2,
+      on: {
+        keydown: function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            var index = this._elements.select.selectedIndex;
+            if (index >= 0) {
+              this._elements.select.querySelectorAll('OPTION')[index].click();
+            }
+          }
+        }.bind(this)
+      },
+      size: 100,
       parent: rdiv
     })
     // Info data
@@ -470,6 +481,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
         }
       }.bind(this))
     }
+    this._optional = optional;
 
     // Get request params
     var request = this.getRequestParam(options)
@@ -484,7 +496,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
     }
 
     // Fill form
-    this._elements.input.value = (url || '') + (opt ? '?' + opt.join('&') : '')
+    var uri = this._elements.input.value = (url || '') + (opt ? '?' + opt.join('&') : '')
     this.clearForm()
 
     // Sen drequest
@@ -495,12 +507,14 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
       this._ajax.send(this._proxy, {
         url: q
       }, {
+        url: uri,
         timeout: options.timeout || 10000,
         callback: options.onload,
         abort: false
       })
     } else {
       this._ajax.send(url, request, {
+        url: uri,
         timeout: options.timeout || 10000,
         callback: options.onload,
         abort: false
@@ -542,13 +556,12 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
     var addLayers = function (parent, level) {
       level = level || 0
       parent.Layer.forEach(function (l) {
-        if (!l.Attribution)
-          l.Attribution = parent.Attribution
-        if (!l.EX_GeographicBoundingBox)
-          l.EX_GeographicBoundingBox = parent.EX_GeographicBoundingBox
-        var li = ol_ext_element.create('DIV', {
+        if (!l.Attribution) l.Attribution = parent.Attribution
+        if (!l.EX_GeographicBoundingBox) l.EX_GeographicBoundingBox = parent.EX_GeographicBoundingBox
+        var li = ol_ext_element.create('OPTION', {
           className: (l.Layer ? 'ol-title ' : '') + 'level-' + level,
           html: l.Name || l.Title,
+          title: l.Name || l.Title,
           click: function () {
             // Reset
             this._elements.buttons.innerHTML = ''
@@ -715,7 +728,7 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
     }
 
     var source_opt = {
-      url: parent.Capability.Request.GetMap.DCPType[0].HTTP.Get.OnlineResource,
+      url: (parent.Capability.Request.GetMap.DCPType[0].HTTP.Get.OnlineResource || '').replace(/service=wms&?/i,''),
       projection: srs,
       attributions: attributions,
       crossOrigin: this.get('cors') ? 'anonymous' : null,
@@ -725,6 +738,8 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
         'VERSION': parent.version || '1.3.0'
       }
     }
+
+    Object.keys(this._optional).forEach(o => source_opt.params[o] = this._optional[o])
 
     // Resolution to zoom
     var view = new ol_View({
@@ -833,8 +848,11 @@ var ol_control_WMSCapabilities = class olcontrolWMSCapabilities extends ol_contr
         title: this._elements.formTitle.value
       }
     }
-    if (this._elements.formMap.value)
+
+    Object.keys(this._optional).forEach(o => options.source.params[o] = this._optional[o])
+    if (this._elements.formMap.value) {
       options.source.params.MAP = this._elements.formMap.value
+    }
     return options
   }
   /** Fill dialog form

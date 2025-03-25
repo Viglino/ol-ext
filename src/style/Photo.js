@@ -18,7 +18,8 @@ import ol_style_Fill from 'ol/style/Fill.js'
  *  @param { default | square | circle | anchored | folio } options.kind
  *  @param {boolean} options.crop crop within square, default is false
  *  @param {Number} options.radius symbol size
- *  @param {boolean} options.shadow drop a shadow
+ *  @param {Number} [options.shadow=0] drop a shadow (the shadow width in pixel)
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *  @param {ol_style_Stroke} options.stroke
  *  @param {String} options.src image src
  *  @param {String} options.crossOrigin The crossOrigin attribute for loaded images. Note that you must provide a crossOrigin value if you want to access pixel data with the Canvas renderer.
@@ -34,8 +35,9 @@ import ol_style_Fill from 'ol/style/Fill.js'
 var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
   constructor(options) {
     options = options || {}
-    if (!options.displacement)
+    if (!options.displacement){
       options.displacement = [options.offsetX || 0, -options.offsetY || 0]
+    }
     var sanchor = (options.kind === "anchored" ? 8 : 0)
     var shadow = (Number(options.shadow) || 0)
     if (!options.stroke) {
@@ -51,7 +53,8 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
       points: 0,
       displacement: [options.displacement[0] || 0, (options.displacement[1] || 0) + sanchor],
       // No fill to create a hit detection Image (v5) or transparent (v6) 
-      fill: ol_style_RegularShape.prototype.render ? new ol_style_Fill({ color: [0, 0, 0, 0] }) : null
+      fill: ol_style_RegularShape.prototype.render ? new ol_style_Fill({ color: [0, 0, 0, 0] }) : null,
+      declutterMode: options.declutterMode,
     })
     this.sanchor_ = sanchor;
     this._shadow = shadow;
@@ -91,12 +94,15 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
     this._onload = options.onload
     this._onerror = options.onerror
 
-    if (typeof (options.opacity) == 'number')
+    if (typeof (options.opacity) == 'number'){
       this.setOpacity(options.opacity)
-    if (typeof (options.rotation) == 'number')
+    }
+    if (typeof (options.rotation) == 'number'){
       this.setRotation(options.rotation)
+    }
 
     // Calculate image
+    this.render();
     this.getImage()
   }
   /** Set photo offset
@@ -104,6 +110,7 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
    */
   setOffset(offset) {
     this._offset = [offset[0] || 0, offset[1] || 0]
+    this.render()
     this.getImage()
   }
   /**
@@ -123,8 +130,10 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
       offsetX: this._offset[0],
       offsetY: this._offset[1],
       opacity: this.getOpacity(),
-      rotation: this.getRotation()
+      rotation: this.getRotation(),
+      declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     })
+    i.render()
     i.getImage()
     return i
   }
@@ -192,6 +201,21 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
     context.closePath()
   }
   /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions()
+    opt.photoOptions = [
+        'photo', 
+        this._crossOrigin,
+        this._crop,
+        this._src,
+        this._shadow,
+        this._kind,
+      ].join('-')
+    return opt;
+  }
+  /**
    * Get the image icon.
    * @param {number} pixelRatio Pixel ratio.
    * @return {HTMLCanvasElement} Image or Canvas element.
@@ -199,7 +223,7 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
    */
   getImage(pixelratio) {
     pixelratio = pixelratio || window.devicePixelRatio;
-    var canvas = ol_style_RegularShape.prototype.getImage.call(this, pixelratio)
+    var canvas = super.getImage(pixelratio)
     if ((this._gethit || this.img_) && this._currentRatio === pixelratio) return canvas;
     // Calculate image at pixel ratio
     this._currentRatio = pixelratio;

@@ -30,6 +30,7 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
     options.className = ('ol-ext-colorpicker ' + (options.hastab ? 'ol-tab ' : '') + (options.className || '')).trim();
     super(options);
 
+    this.input.disabled = true;
     if (options.opacity === false) {
       this.element.classList.add('ol-nopacity');
     }
@@ -44,17 +45,29 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
     ol_ext_element.create('DIV', {
       className: 'ol-tab',
       html: options.paletteLabel || 'palette',
-      click: function () {
-        this.element.classList.remove('ol-picker-tab');
-      }.bind(this),
+      tabindex: 0,
+      on: {
+        keydown: function(e) {
+          this._handlePikerKey(e, 'remove')
+        }.bind(this),
+        focus: function() {
+          this.element.classList.remove('ol-picker-tab');
+        }.bind(this)
+      },
       parent: bar
     });
     ol_ext_element.create('DIV', {
       className: 'ol-tab',
       html: options.pickerLabel || 'picker',
-      click: function () {
-        this.element.classList.add('ol-picker-tab');
-      }.bind(this),
+      tabindex: 0,
+        on: {
+        keydown: function(e) {
+          this._handlePikerKey(e, 'add')
+        }.bind(this),
+        focus: function() {
+          this.element.classList.add('ol-picker-tab');
+        }.bind(this)
+      },
       parent: bar
     });
 
@@ -144,6 +157,13 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
         this._addCustomColor(this.getColor());
         this.collapse(true);
       }.bind(this),
+      on: {
+        keydown: function(e) {
+          if (e.key === 'Tab') {
+            this.collapse(true);
+          }
+        }.bind(this)
+      },
       parent: container
     });
 
@@ -221,6 +241,26 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
         this._currentColor = this.getColorID(this.getColor());
       }
     }.bind(this));
+  }
+  /**
+   * @private
+   */
+  _handlePikerKey(e, what) {
+    if (e.key === 'Tab') return;
+    e.stopPropagation();
+    e.preventDefault();
+    switch (e.key) {
+      case 'Enter':
+      case ' ': 
+      case 'Space': {
+        this.element.classList[what]('ol-picker-tab');
+        break;
+      }
+      case 'Escape': {
+        this.collapse(true);
+        break;
+      }
+    }
   }
   /** Add color to palette
    * @param {ol.colorLike} color

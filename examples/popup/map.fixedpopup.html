@@ -12,20 +12,13 @@
   <meta name="description" content="Display fixed popup on the map" />
   <meta name="keywords" content="openlayers, ol, popup, overlay, fix" />
 
-  <!-- Prevent image error on load with https -->
-	<script>
-		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
-      location.href = window.location.href.replace(/^https:/,'http:');
-		}
-	</script>
-
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -142,22 +135,26 @@
       <option value="tooltips">tooltips</option>
     </select>
     <br />
-    <input id="ck" type="checkbox" onchange="if (this.checked) popup.addPopupClass('shadow'); else popup.removePopupClass('shadow');" />
+    <input id="ck" type="checkbox" onchange="this.checked ? popup.addPopupClass('shadow') & popup2.addPopupClass('shadow') : popup.removePopupClass('shadow') & popup2.removePopupClass('shadow')" />
     <label for="ck">shadow</label>
     <br />
-    <input id="cb" type="checkbox" checked onchange="popup.setClosebox(this.checked);" />
+    <input id="cb" type="checkbox" checked onchange="popup.setClosebox(this.checked); popup2.setClosebox(this.checked);" />
     <label for="cb">hasclosebox</label>
+    <br />
+    <label>
+      <input name="fix" type="radio" checked onchange="popup.setHook('viewport'); popup2.setHook('viewport')"  />
+      hook on viewport
+    </label>
+    <label>
+      <input name="fix" type="radio" onchange="popup.setHook('map'); popup2.setHook('map')" />
+      hook on map
+    </label>
   </div>
   <p>Click on the points to show a popup ! (shift+click for a second one)</p>
   
   <script type="text/javascript">
   // Layers
-  var layers = [
-    new ol.layer.Tile({
-      title:'terrain-background',
-      source: new ol.source.StadiaMaps({ layer: 'stamen_terrain' })
-    })
-  ];
+  var layers = [ new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' }) ];
 
   // Popup overlay
   var popup = new ol.Overlay.FixedPopup ({
@@ -205,7 +202,7 @@
   select.getFeatures().on(['add'], function(e) {
     var feature = e.element;
     var content = "";
-    content += "<img src='"+feature.get("img")+"'/>";
+    content += "<img src='" + '//wsrv.nl/?url=' + feature.get("img") + "'/>";
     content += feature.get("text");
     content += '<br/><i>powered by <a href="https://github.com/Viglino/ol-ext" target="ol">ol-ext</a></i>';
     if (select.getFeatures().getLength()>1) {

@@ -1,0 +1,125 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2017-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Search by coordinates</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="Control to add a grid reference to a map." />
+  <meta name="keywords" content="ol3, control, search, BAN, french, places, autocomplete" />
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- IE 9 bug on ajax tranport  -->
+  <!--[if lte IE 9]>
+  <script type='text/javascript' src='//cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.3/jquery.xdomainrequest.min.js'></script>
+  <![endif]-->
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  
+  <!-- Proj4 -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14/proj4.js"></script>
+
+  <link rel="stylesheet" href="../style.css"/>
+  <style>
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Search by coordinates control</h1>
+  </a>
+
+  <div class="info">
+    <i>ol.control.SearchCoordinates</i> is a control to search place using coordinates</a>.
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <i>Use the search control to start a new search.</i>
+    <ul>
+      <li>
+        Projection:
+        <select onchange="search.setProjection(this.value)">
+          <option value="EPSG:4326">WGS 84 (EPSG:4326)</option>
+          <option value="EPSG:3857" selected="selected">Pseudo-Mercator EPSG:3857</option>
+          <option value="EPSG:2154">Lambert-93 (France) EPSG:2154</option>
+          <option value="EPSG:27700">British National Grid (EPSG:27700)</option>
+          <option value="ESRI:54009">Mollweide (ESRI:54009)</option>
+          <option value="EPSG:23032">ED50 / UTM zone 32N (EPSG:23032)</option>
+          <option value="EPSG:2163">US National Atlas Equal Area (EPSG:2163)</option>
+          <option value="EPSG:3413">NSIDC Polar Stereographic North (EPSG:3413)</option>
+          <option value="EPSG:5479">RSRGD2000 / MSLC2000 (EPSG:5479)</option>
+          <!--
+            <option value="32662">Plate Carree</option>
+            -->
+        </select>
+      </li>
+    </ul>
+
+  </div>
+  
+  <script type="text/javascript">
+  proj4.defs("EPSG:2154","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+  proj4.defs("EPSG:27700","+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs");
+  //proj4.defs("EPSG:32662","+proj=eqc +lat_ts=0 +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
+  //proj4.defs("EPSG:54024","+proj=bonne +lon_0=0 +lat_1=60 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs ");
+  proj4.defs('EPSG:5479', '+proj=lcc +lat_1=-76.66666666666667 +lat_2=-79.33333333333333 +lat_0=-78 +lon_0=163 +x_0=7000000 +y_0=5000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+  proj4.defs('EPSG:23032', '+proj=utm +zone=32 +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs');
+  proj4.defs('EPSG:21781', '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=600000 +y_0=200000 +ellps=bessel +towgs84=674.4,15.1,405.3,0,0,0,0 +units=m +no_defs');
+  proj4.defs('EPSG:3413', '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs');
+  proj4.defs('EPSG:2163', '+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs');
+  proj4.defs('ESRI:54009', '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs');
+  
+  ol.proj.proj4.register(proj4);
+
+  // Layers
+  var layers = [ new ol.layer.Tile({ source: new ol.source.OSM() }) ];
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 5,
+      center: [166326, 5992663]
+    }),
+    layers: layers
+  });
+
+  // Set the control grid reference
+  var search = new ol.control.SearchCoordinates({
+    // target: $('.options').get(0)
+  });
+  map.addControl (search);
+
+  // Select feature when click on the reference index
+  search.on('select', function(e){
+    // console.log(e);
+    map.getView().animate({
+      center:e.search.coordinate,
+      zoom: Math.max (map.getView().getZoom(),5)
+    });
+  });
+
+  </script>
+  
+</body>
+</html>

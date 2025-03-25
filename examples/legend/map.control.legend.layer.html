@@ -19,7 +19,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
 
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -59,7 +59,7 @@
 <script type="text/javascript">
   
   // Layers
-  var stamen = new ol.layer.Tile({ title: 'Watercolor', source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) });
+  var layer = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
   var geology = new ol.layer.Tile ({
     "title": "Cartes géologiques",
     "extent": [
@@ -94,7 +94,7 @@
       zoom: 7,
       center: [166326, 5992663]
     }),
-    layers: [stamen, geology]
+    layers: [layer, geology]
   });
 
   map.addControl(new ol.control.LayerSwitcher({ collapsed: false }))
@@ -112,11 +112,11 @@
   map.addControl(legendCtrl);
 
   // New legend associated with a layer
-  var stamenLegend = new ol.legend.Legend({ layer: stamen, margin: 4 })
-  stamenLegend.addItem({ title: 'Form' })
+  var vectorLegend = new ol.legend.Legend({ layer: layer, margin: 4 })
+  vectorLegend.addItem({ title: 'Form' })
   var form = { Triangle:3, Square:4, Pentagon: 5, Hexagon: 6 };
   for (var i in form) {
-    stamenLegend.addItem({ 
+    vectorLegend.addItem({ 
       title: i, 
       typeGeom: 'Point',
       style: new ol.style.Style({
@@ -138,7 +138,7 @@
     src: 'http://geoservices.brgm.fr/geologie?language=fre&version=1.3.0&service=WMS&request=GetLegendGraphic&sld_version=1.1.0&layer=GEOSERVICES_GEOLOGIE&format=image/png&STYLE=default'
   }))
 
-  legend.addItem(stamenLegend)
+  legend.addItem(vectorLegend)
   legend.addItem(layerLegend)
 
 </script>

@@ -55,8 +55,10 @@ var vlayer = new ol.layer.VectorTile({
     projection: new ol.proj.Projection({code:"EPSG:3857"}),
     //url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
     //url : "https://wxs.ign.fr/choisirgeoportail/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
-    url : "https://wxs.ign.fr/essentiels/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
+    url : "https://data.geopf.fr/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
+    // url : "https://wxs.ign.fr/essentiels/geoportail/tms/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
     // url: "https://vectortiles.ign.fr/rok4server/1.0.0/PLAN.IGN/{z}/{x}/{y}.pbf",
+    // url: "https://tiles.openfreemap.org/planet/20241002_001001_pt/{z}/{x}/{y}.pbf",
     attributions: '<a href="https://geoservices.ign.fr/blog/2018/07/08/nouveautes_vecteur.html">&copy; IGN-Géoportail</a>',
   }),
   declutter: true
@@ -71,12 +73,13 @@ var baseStyles = {};
 
 ol.ext.Ajax.get({
   //url: './styles/planign.json',
-  url: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/standard.json',
+  url: 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/standard.json',
   // url: 'https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/static/vectorTiles/styles/PLAN.IGN/classique.json',
   // url: 'https://vectortiles.ign.fr/demonstrateur/styles/planign.json',
   //url: 'http://calac-4.ign.fr/pyramide_ecran/style_mapbox.json',
   // url: 'https://vectortiles.ign.fr/demonstrateur/styles/gris.json',
   // url: 'https://vectortiles.ign.fr/demonstrateur/styles/muet.json',
+  // url: '../data/liberty.json',
   success: function(style) {
     /* add sens circu * /
     style.layers.push(rdirect);
@@ -98,7 +101,7 @@ ol.ext.Ajax.get({
   })
   ol.ext.Ajax.get({
     //url: 'https://wxs.ign.fr/choisirgeoportail/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
-    url: 'https://wxs.ign.fr/essentiels/static/vectorTiles/styles/PLAN.IGN/'+s+'.json',
+    url: 'https://data.geopf.fr/annexes/ressources/vectorTiles/styles/PLAN.IGN/'+s+'.json',
     success: function(style) {
       baseStyles[s] = style;
     }
@@ -114,7 +117,10 @@ drop.on('loadend', function(e) {
     var json = JSON.parse(e.result);
     reset();
     setBaseStyle(json);
-  } catch(e) { /* ok */ }
+  } catch(e) { 
+    console.log(e)
+    /* ok */ 
+  }
 })
 
 // Set base style
@@ -131,8 +137,16 @@ function setBaseStyle(n) {
     }
   }
   currentStyle.layers.forEach(function(l) {
-    var source = l['source-layer'];
+    var source = l['source-layer'] || l.id;
     var theme = source.split('_')[0];
+    console.log(source, theme)
+    if (!config[theme]) {
+      config[theme] = { style: {}}
+    }
+    if (!config[theme].style[source]) {
+      config[theme].style[source] = { layers: [] }
+    }
+    if (!l.layout) l.layout = {}
     config[theme].style[source].layers.push(l);
     config[theme].style[source].visible = l.layout.visibility!=='none';
     $('.options input.'+source).prop('checked', l.layout.visibility!=='none')
@@ -186,9 +200,10 @@ function applyStyle() {
       style = config[theme].style[st];
       if (!style.savePaintColor) style.savePaintColor = [];
       style.layers.forEach(function(l, i) {
+        if (!l.layout) l.layout = {};
         l.layout.visibility = (vis && style.visible) ? 'visible' : 'none';
         ['text-color', /*'text-halo-color',*/ 'fill-color', 'fill-outline-color', 'line-color', 'circle-color', 'circle-stroke-color', 'icon-color'].forEach(function(c) {
-          if (!l.paint[c]) return;
+          if (!l.paint || !l.paint[c]) return;
           if (!style.savePaintColor[i]) style.savePaintColor[i] = {};
           var savePaintColor = style.savePaintColor[i];
           // Init
@@ -224,7 +239,7 @@ function applyStyle() {
                   if (l.paint[c].stops) {
                     l.paint[c].stops.forEach(function (s) {
                       if (!(/#ffffff/i.test(s[1]) && /^saturate/.test(operation))) {
-                        s[1] = getChromaColor(chroma(s[1])[operation](opt)); 
+                        s[1] = getChromaColor(chroma(s[1])[operation](opt));
                       }
                       // console.log('STOP:',s)
                     })
@@ -244,13 +259,13 @@ function applyStyle() {
                 try {
                   if (l.paint[c].stops) {
                     l.paint[c].stops.forEach(function (s) {
-                      s[1] = getChromaColor(chroma.mix(s[1],color)); 
+                      s[1] = getChromaColor(chroma.mix(s[1],color));
                     })
                   } else {
-                    l.paint[c] = getChromaColor(chroma.mix(l.paint[c],color)); 
+                    l.paint[c] = getChromaColor(chroma.mix(l.paint[c],color));
                   }
                 } catch(e) {};
-                break; 
+                break;
               }
             }
           }
@@ -258,6 +273,15 @@ function applyStyle() {
       })
     }
   }
+
+  // trigger tile refresh by incrementing style id, see: https://github.com/openlayers/ol-mapbox-style/issues/959
+  try {
+    currentStyle["id"] = currentStyle["id"] + 1;
+  }
+  catch {
+    currentStyle["id"] = 0;
+  }
+
   olms.applyStyle(vlayer, currentStyle, "plan_ign");
 }
 
@@ -276,7 +300,6 @@ function showLayers() {
     }
   });
   var ul = $('.options ul');
-  console.log(sources)
   Object.keys(sources).forEach(function(s) {
     config[s] = {
       visible: true,
@@ -338,6 +361,7 @@ function showLayers() {
       var li = $('<li>').appendTo(ul2);
       var source = sources[s][i][0];
       var label = $('<label>').text(i.replace(/toponyme_|routier_|ocs_|hydro_|parcellaire_/, '')).attr('title', i).appendTo(li);
+      if (!source.layout) source.layout = { visibility: 'visible' }
       config[s].style[i] = {
         visible: source.layout.visibility!=='none',
         layers: sources[s][i]
@@ -366,7 +390,7 @@ selStyle.push(new ol.style.Style({
     return new ol.geom.Point(f.getGeometry().getFirstCoordinate())
   }
 }))
-var select = new ol.layer.Vector({ 
+var select = new ol.layer.Vector({
   source: new ol.source.Vector(),
   style: selStyle
 });
@@ -382,7 +406,7 @@ map.on('click', function() {
 var tooltip  = new ol.Overlay.Tooltip({ className: 'default', positioning: 'bottom-center' });
 map.addOverlay(tooltip);
 
-var hover = new ol.interaction.Hover({ 
+var hover = new ol.interaction.Hover({
   cursor: "pointer",
   layers: [vlayer]
 });
@@ -406,7 +430,7 @@ hover.on("enter", function(e) {
   }
   tooltip.setInfo(info);
   //console.log(feature.getProperties());
-  // Select feature 
+  // Select feature
   if (showGeom) {
     var coords = [];
     if (feature instanceof ol.Feature) {
@@ -426,7 +450,7 @@ hover.on("enter", function(e) {
           coords = coords;
           break;
         }
-        case 'MultiLineString' : 
+        case 'MultiLineString' :
         case 'Polygon' : {
           coords = [coords];
           break;

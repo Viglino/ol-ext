@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2019 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Print dialog</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta name="description" content="Print control for Openlayers" />
+	<meta name="keywords" content="openlayers, control, print, canvas" />
+
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+
+
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <!-- https://github.com/MrRio/jsPDF -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <style>
+    #map,
+    #map2 {
+      width:50%; 
+      height:calc(100vh - 10em);
+      display: inline-block;
+      margin: 0;
+    }
+  </style>
+</head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: print dialog</h1>
+  </a>
+  <div class="info">
+    The <b>ol/control/PrintDialog</b> is dialog to format the map for printing or exporting.
+    <br/>
+    It can handle <a href="../canvas/map.canvas.control.html">canvas controls</a> and 
+    <a href="../legend/map.control.legend.html">legend control</a> customisation on print.
+    <br/>
+    See <a href="map.control.printdialog.fr.html">internationalization example</a>...
+    <br/>
+    Use <a href="https://github.com/eligrey/FileSaver.js/">eligrey/FileSaver</a> 
+    or <a href="https://github.com/MrRio/jsPDF">MrRio/jsPDF</a>
+    to save resulting image on print.
+  </div>
+
+  <!-- Map div -->
+  <div id="map"></div><div id="map2"></div>
+
+  <script type="text/javascript">
+
+// The map
+var map = new ol.Map({
+  target: 'map',
+  view: new ol.View ({
+    zoom: 5,
+    center: [266812, 5960201]
+  }),
+  controls: ol.control.defaults.defaults({ "attribution": false }),
+  layers: [
+    new ol.layer.Geoportail({layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }),
+    new ol.layer.Geoportail({layer: 'GEOGRAPHICALNAMES.NAMES' }),
+  ]
+});
+map.addControl(new ol.control.CanvasAttribution({ canvas: true }));
+
+var map2 = new ol.Map({
+  target: 'map2',
+  view: new ol.View ({
+    zoom: 5,
+    center: [266812, 5960201]
+  }),
+  controls: ol.control.defaults.defaults({ "attribution": false }),
+  layers: [
+    new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' }),
+  ]
+});
+map2.addControl(new ol.control.CanvasAttribution({ canvas: true }));
+
+// Synchronize the maps 
+map.addInteraction( new ol.interaction.Synchronize({ maps: [map2] }) );
+map2.addInteraction( new ol.interaction.Synchronize({ maps: [map] }) );
+
+// Print control
+var printControl = new ol.control.PrintDialog2x({ 
+  // target: document.querySelector('.info'),
+  // targetDialog: map.getTargetElement() 
+  // save: false,
+  // copy: false,
+  // pdf: false
+});
+printControl.setSize('A4');
+map.addControl(printControl);
+printControl.setMap2(map2)
+
+/* On print > save image file */
+printControl.on(['print', 'error'], function(e) {
+  // Print success
+  if (e.image) {
+    if (e.pdf) {
+      // Export pdf using the print info
+      var pdf = new jsPDF({
+        orientation: e.print.orientation,
+        unit: e.print.unit,
+        format: e.print.size
+      });
+      pdf.addImage(e.image, 'JPEG', e.print.position[0], e.print.position[0], e.print.imageWidth, e.print.imageHeight);
+      pdf.save(e.print.legend ? 'legend.pdf' : 'map.pdf');
+    } else  {
+      // Save image as file
+      e.canvas.toBlob(function(blob) {
+        var name = (e.print.legend ? 'legend.' : 'map.')+e.imageType.replace('image/','');
+        saveAs(blob, name);
+      }, e.imageType, e.quality);
+    }
+  } else {
+    console.warn('No canvas to export');
+  }
+});
+
+</script>
+
+</body>
+</html>

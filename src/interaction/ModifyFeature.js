@@ -20,6 +20,7 @@ import {altKeyOnly as ol_events_condition_altKeyOnly} from 'ol/events/condition.
 import {primaryAction as ol_events_condition_primaryAction} from 'ol/events/condition.js'
 import {always as ol_events_condition_always} from 'ol/events/condition.js'
 
+import ol_ext_element from '../util/element.js'
 import '../geom/LineStringSplitAt.js'
 
 /** Interaction for modifying feature geometries. Similar to the core ol/interaction/Modify.
@@ -778,10 +779,10 @@ var ol_interaction_ModifyFeature = class olinteractionModifyFeature extends ol_i
       if (current) {
         if (element.style.cursor != this.cursor_) {
           this.previousCursor_ = element.style.cursor
-          element.style.cursor = this.cursor_
+          ol_ext_element.setCursor(element, this.cursor_)
         }
       } else if (this.previousCursor_ !== undefined) {
-        element.style.cursor = this.previousCursor_
+        ol_ext_element.setCursor(element, this.previousCursor_)
         this.previousCursor_ = undefined
       }
     }

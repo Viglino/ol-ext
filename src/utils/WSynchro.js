@@ -5,7 +5,6 @@
 */
 if (!window.WSynchro) {
   var WSynchro = { windows: [] };
-  alert ('noSynch')
 }
 
 /** Open a new window to synchronize

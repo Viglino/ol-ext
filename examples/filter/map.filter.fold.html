@@ -21,7 +21,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <script type="text/javascript" src="../../dist/ol-ext.js"></script>
@@ -88,8 +88,8 @@
 
   <script type="text/javascript">
 
-    var stamen = new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) })
-    var labels = new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_toner_labels' }), opacity:0.8 })
+    var stamen = new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS')
+    var labels = new ol.layer.Geoportail('GEOGRAPHICALNAMES.NAMES')
 
     // The map
     var map = new ol.Map({

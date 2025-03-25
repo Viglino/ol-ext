@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <!--
+  Copyright (c) 2015-2019 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Swipe control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol.control.Permalink add a premalink control to the map." />
+  <meta name="keywords" content="ol3, control, swipe, compare" />
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://openlayers.org/en/latest/legacy/ol.css" />
+  <script type="text/javascript" src="https://openlayers.org/en/latest/legacy/ol.js"></script>
+
+
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+</head>
+
+<body>
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Swipe control</h1>
+  </a>
+  <div class="info">
+    <i>ol.control.Swipe</i> is a control that add a split screen to compare two map overlays.
+    <br />
+    Layers can be added to left (top) or right (bottom) side of the map.
+    Layers that are not added are displayed on both sides.
+  </div>
+
+  <!-- Map div -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <ul>
+      <li>
+        <input id="ori" type="checkbox" onchange="ctrl.set('orientation',$(this).prop('checked')?'horizontal':'vertical')" /><label
+          for="ori"> horizontal swipe</label>
+      </li>
+      <li>
+        <button type="button" onclick="ctrl.set('position', 0.5);">Reset position</button>
+      </li>
+    </ul>
+  </div>
+
+  <script type="text/javascript">
+
+    var source1 = new ol.source.GeoTIFF({
+      sources: [
+        { url: 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/36/Q/WD/2020/7/S2A_36QWD_20200701_0_L2A/TCI.tif' }
+      ]
+    })
+    var cogLeft = new ol.layer.WebGLTile({
+      title: 'left',
+      source: source1
+    });
+    var cogRight = new ol.layer.WebGLTile({
+      title: 'right',
+      className: 'right',
+      source: new ol.source.GeoTIFF({
+        sources: [
+          { url: 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/36/Q/WD/2020/7/S2A_36QWD_20200701_0_L2A/TCI.tif' }
+        ]
+      })
+    });
+    // The map
+    var map = new ol.Map({
+      target: 'map',
+      className: 'left',
+      view: source1.getView(),
+      layers:[cogLeft,cogRight]
+    });
+
+    var ctrl = new ol.control.Swipe();
+    map.addControl(ctrl);
+    ctrl.addLayer(cogRight, true);
+    ctrl.addLayer(cogLeft, false);
+
+    map.addControl(new ol.control.LayerSwitcher)
+  </script>
+
+</body>
+
+</html>

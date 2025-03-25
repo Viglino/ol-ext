@@ -3,6 +3,7 @@
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import {transform as ol_proj_transform} from 'ol/proj.js'
+import {transformExtent as ol_proj_transformExtent} from 'ol/proj.js'
 import ol_control_Search from './Search.js'
 import ol_control_SearchJSON from './SearchJSON.js'
 
@@ -15,7 +16,7 @@ import ol_control_SearchJSON from './SearchJSON.js'
  * @param {any} options extend ol.control.SearchJSON options
  *	@param {string} options.className control class name
  *	@param {string | undefined} [options.apiKey] the service api key.
- *	@param {string | undefined} [options.version] API version '2' to use geocodage-beta-2, default v1
+ *	@param {string | undefined} [options.version] API version 1 or 2 or geoplateforme (latest), default latest
  *	@param {string | undefined} options.authentication: basic authentication for the service API as btoa("login:pwd")
  *	@param {Element | string | undefined} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {string | undefined} options.label Text label to use for the search button, default "search"
@@ -24,9 +25,13 @@ import ol_control_SearchJSON from './SearchJSON.js'
  *	@param {number | undefined} options.typing a delay on each typing to start searching (ms), default 500.
  *	@param {integer | undefined} options.minLength minimum length to start searching, default 3
  *	@param {integer | undefined} options.maxItems maximum number of items to display in the autocomplete list, default 10
- *
- *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} options.type type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
+ *	@param {StreetAddress|PositionOfInterest|CadastralParcel|Commune} [options.type] type of search. Using Commune will return the INSEE code, default StreetAddress,PositionOfInterest
+ *	@param {string} [options.terr] territory METROPOLE|DOMTOM|dep code
+ *  @param {boolean} [options.position] Search, with priority to geo position (map center), default false
+ *	@param {ol.extent} [options.bbox] if set search inside the bbox (in map projection)
+ *	@param {boolean} [options.useExtent] returns candidates inside the current map extent, default false
  * @see {@link https://geoservices.ign.fr/documentation/geoservices/geocodage.html}
+ * @see {@link https://geoservices.ign.fr/documentation/services/services-deprecies/itineraires-deprecies/autocompletion-rest}
  * @see {@link https://geoservices.ign.fr/documentation/services/api-et-services-ogc/geocodage-beta-20/documentation-technique-de-lapi}
  */
 var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_control_SearchJSON {
@@ -36,12 +41,20 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
     options.typing = options.typing || 500;
     if (options.version == 1) {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/ols/apis/completion';
-    } else {
+      options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
+    } else if (options.version == 2) {
       options.url = 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/geoportail/geocodage/rest/0.1/completion';
+      options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
+    } else {
+      options.url = 'https://data.geopf.fr/geocodage/completion';
+      options.copy = '<a href="https://geoservices.ign.fr/" target="new">&copy; IGN-Géoplateforme</a>';
     }
-    options.copy = '<a href="https://www.geoportail.gouv.fr/" target="new">&copy; IGN-Géoportail</a>';
     super(options);
+    this.set('position', options.position);
+    this.set('useExtent', options.useExtent);
+    this.set('bbox', options.bbox)
     this.set('type', options.type || 'StreetAddress,PositionOfInterest');
+    this.set('terr', options.terr);
     this.set('timeout', options.timeout || 2000);
     // Authentication
     // this._auth = options.authentication;
@@ -177,11 +190,24 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
    * @api
    */
   requestData(s) {
-    return {
+    var rdata = {
       text: s,
       type: this.get('type') === 'Commune' ? 'PositionOfInterest' : this.get('type') || 'StreetAddress,PositionOfInterest',
+      terr: this.get('terr') || undefined,
       maximumResponses: this.get('maxItems')
     };
+    if (this.get('type') === 'Commune') rdata.poiType = 'commune';
+    if (this.get('position')) {
+      var center = this.getMap().getView().getCenter()
+      rdata.lonlat = ol_proj_transform(center, this.getMap().getView().getProjection(), 'EPSG:4326').join(',');
+    }
+    if (this.get('bbox')) {
+      rdata.bbox = ol_proj_transformExtent(this.get('bbox'), this.getMap().getView().getProjection(), 'EPSG:4326').join(',')
+    } else if (this.get('useExtent')) {
+      var bbox = this.getMap().getView().calculateExtent()
+      rdata.bbox = ol_proj_transformExtent(bbox, this.getMap().getView().getProjection(), 'EPSG:4326').join(',')
+    }
+    return rdata;
   }
   /**
    * Handle server response to pass the features array to the display list
@@ -190,16 +216,7 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
    * @api
    */
   handleResponse(response) {
-    var features = response.results;
-    if (this.get('type') === 'Commune') {
-      for (var i = features.length - 1; i >= 0; i--) {
-        if (features[i].kind
-          && (features[i].classification > 5 || features[i].kind == "Département")) {
-          features.splice(i, 1);
-        }
-      }
-    }
-    return features;
+    return response.results;
   }
   /** A ligne has been clicked in the menu > dispatch event
    * @param {any} f the feature, as passed in the autocomplete
@@ -219,11 +236,9 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
       if (this.get('type') === 'Commune') {
         this.searchCommune(f, function () {
           ol_control_Search.prototype.select.call(this, f, reverse, c, options);
-          //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
         }.bind(this));
       } else {
         super.select(f, reverse, c, options);
-        //this.dispatchEvent({ type:"select", search:f, coordinate: c, revers: reverse, options: options });
       }
     } else {
       this.searchCommune(f);
@@ -282,12 +297,14 @@ var ol_control_SearchGeoportail = class olcontrolSearchGeoportail extends ol_con
         { dataType: 'XML' }
       );
     } else {
-      this.ajax(url + '?lon=' + f.x + '&lat=' + f.y + '&limit=1', 
+      this.ajax(url + '?lon=' + f.x + '&lat=' + f.y + '&index=parcel&limit=1', 
         {},
         function (resp) {
           try {
             var r = JSON.parse(resp).features[0];
-            f.insee = r.properties.citycode
+            f.insee = r.properties.departmentcode + r.properties.municipalitycode
+            f.districtcode = r.properties.districtcode
+            // f.insee = r.properties.citycode
             if (cback) {
               cback.call(this, [f]);
             } else {

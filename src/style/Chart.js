@@ -18,6 +18,7 @@ import {asString as ol_color_asString} from 'ol/color.js'
  *	@param {String} options.type Chart type: pie,pie3D, donut or bar
  *	@param {number} options.radius Chart radius/size, default 20
  *	@param {number} options.rotation Rotation in radians (positive rotation clockwise). Default is 0.
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
  *	@param {bool} options.snapToPixel use integral numbers of pixels, default true
  *	@param {_ol_style_Stroke_} options.stroke stroke style
  *	@param {String|Array<ol_color>} options.colors predefined color set "classic","dark","pale","pastel","neon" / array of color string, default classic
@@ -42,7 +43,8 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       fill: new ol_style_Fill({ color: [0, 0, 0] }),
       rotation: options.rotation,
       displacement: options.displacement,
-      snapToPixel: options.snapToPixel
+      snapToPixel: options.snapToPixel,
+      declutterMode: options.declutterMode,
     });
     this.setScale(options.scale || 1);
 
@@ -53,6 +55,8 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
     this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
     this._animation = (typeof (options.animation) == 'number') ? { animate: true, step: options.animation } : this._animation = { animate: false, step: 1 };
     this._max = options.max;
+    // Not yet drawn
+    this._done = false
 
     this._data = options.data;
     if (options.colors instanceof Array) {
@@ -62,8 +66,7 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       if (!this._colors)
         this._colors = ol_style_Chart.colors.classic;
     }
-
-    this.renderChart_();
+    this.render()
   }
   /**
    * Clones the style.
@@ -81,7 +84,8 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       colors: this._colors,
       offsetX: this._offset[0],
       offsetY: this._offset[1],
-      animation: this._animation
+      animation: this._animation,
+      declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     });
     s.setScale(this.getScale());
     s.setOpacity(this.getOpacity());
@@ -97,7 +101,7 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
   */
   setData(data) {
     this._data = data;
-    this.renderChart_();
+    this._done = false
   }
   /** Get symbol radius
   */
@@ -111,7 +115,7 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
   setRadius(radius, ratio) {
     this._radius = radius;
     this.donuratio_ = ratio || this.donuratio_;
-    this.renderChart_();
+    this._done = false
   }
   /** Set animation step
   *	@param {false|number} false to stop animation or the step of the animation [0,1]
@@ -127,22 +131,34 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       this._animation.animate = true;
       this._animation.step = step;
     }
-    this.renderChart_();
+    this._done = false
+  }
+  /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions();
+    opt.chartOptions = [
+      'chart',
+      Object.values(this._animation||{}).join(','),
+      this._type,
+      (this._data || []).join(','),
+      (this._colors || []).join(','),
+      this._donutratio,
+      this._max,
+    ].join('-')
+    return opt;
   }
   /** @private
-  */
-  renderChart_(pixelratio) {
-    if (!pixelratio) {
-      if (this.getPixelRatio) {
-        pixelratio = window.devicePixelRatio;
-        this.renderChart_(pixelratio);
-        if (this.getPixelRatio && pixelratio !== 1)
-          this.renderChart_(1);
-      } else {
-        this.renderChart_(1);
-      }
-      return;
-    }
+   */
+  getImage(pixelratio) {
+    pixelratio = pixelratio || 1;
+
+    // Get canvas
+    var canvas = super.getImage(pixelratio);
+    
+    if (this._done === pixelratio) return canvas;
+    this._done = pixelratio
 
     var strokeStyle;
     var strokeWidth = 0;
@@ -151,9 +167,6 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       strokeStyle = ol_color_asString(this._stroke.getColor());
       strokeWidth = this._stroke.getWidth();
     }
-
-    // no atlas manager is used, create a new canvas
-    var canvas = this.getImage(pixelratio);
 
     // draw the circle on the canvas
     var context = (canvas.getContext('2d'));
@@ -263,6 +276,9 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
       anchor[0] = c - this._offset[0];
       anchor[1] = c - this._offset[1];
     }
+    
+    // return image
+    return canvas;
   }
 };
 

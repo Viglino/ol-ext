@@ -26,12 +26,16 @@ var ol_ext_IFrameAPI = function(targetOrigin) {
     } else {
       switch (e.data.api) {
         case 'ready': {
-          this.ready = true;
-          this.id = e.data.id;
-          window.parent.postMessage(e.data, this.targetOrigin);
+          // Ready
+          if (!this.ready && e.data.id > 0) {
+            this.ready = true;
+            this.id = e.data.id;
+            window.parent.postMessage(e.data, this.targetOrigin);
+          }
           break;
         }
         case 'getAPI': {
+          // return api
           e.data.data = Object.keys(this.setter);
           e.data.id = this.id;
           window.parent.postMessage(e.data, this.targetOrigin);

@@ -30,13 +30,14 @@ import ol_ext_element from '../util/element.js'
  * @fires show
  * @fires hide
  * @fires select
+ * @fires attribute
  * @param {} options Extend Popup options 
  *  @param {String} options.popupClass the a class of the overlay to style the popup.
  *  @param {bool} options.closeBox popup has a close box, default false.
  *  @param {function|undefined} options.onclose: callback function when popup is closed
  *  @param {function|undefined} options.onshow callback function when popup is shown
  *  @param {Number|Array<number>} options.offsetBox an offset box
- *  @param {ol.OverlayPositioning | string | undefined} options.positionning 
+ *  @param {ol.OverlayPositioning | string | undefined} options.positioning 
  *    the 'auto' positioning var the popup choose its positioning to stay on the map.
  *  @param {Template|function} [options.template] A template with a list of properties to use in the popup or a function that takes a feature and returns a Template, default use all feature properties
  *  @param {ol.interaction.Select} options.select a select interaction to get features from
@@ -173,7 +174,7 @@ var ol_Overlay_PopupFeature = class olOverlayPopupFeature extends ol_Overlay_Pop
       var tr, table = ol_ext_element.create('TABLE', { parent: html });
       var atts = this._attributeObject(template);
       var featureAtts = feature.getProperties();
-      for (var att in atts) {
+      Object.keys(atts).forEach(function(att) {
         if (featureAtts.hasOwnProperty(att)) {
           var a = atts[att];
           var content, val = featureAtts[att];
@@ -191,8 +192,14 @@ var ol_Overlay_PopupFeature = class olOverlayPopupFeature extends ol_Overlay_Pop
           }
 
           if (visible) {
-            tr = ol_ext_element.create('TR', { parent: table });
+            tr = ol_ext_element.create('TR', {
+              click: function(e) {
+                this.dispatchEvent({ type: 'attribute', feature: feature, attribute: att, originalEvent: e })
+              }.bind(this),
+              parent: table 
+            });
             ol_ext_element.create('TD', { 
+              className: 'ol-label',
               html: a ? a.title || att : att, 
               parent: tr 
             });
@@ -216,12 +223,13 @@ var ol_Overlay_PopupFeature = class olOverlayPopupFeature extends ol_Overlay_Pop
 
             // Add value
             ol_ext_element.create('TD', {
+              className: 'ol-value',
               html: content,
               parent: tr
             });
           }
         }
-      }
+      }.bind(this))
     }
     // Zoom button
     ol_ext_element.create('BUTTON', { className: 'ol-zoombt', parent: html })

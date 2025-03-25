@@ -22,6 +22,8 @@ import {asString as ol_color_asString} from 'ol/color.js'
  *  @param {number} options.radius
  *  @param {number} options.rotation
  *  @param {boolean} options.rotateWithView
+ *  @param {string} [options.declutterMode] Declutter mode "declutter" | "obstacle" | "none" | undefined	
+ *  @param {number} [options.scale=1]
  *  @param {number} [options.opacity=1]
  *  @param {number} [options.fontSize=1] size of the font compare to the radius, fontSize greater than 1 will exceed the symbol extent
  *  @param {string} [options.fontStyle] the font style (bold, italic, bold italic, etc), default none
@@ -49,13 +51,16 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
     super ({
       radius: options.radius,
       fill: options.fill,
+      scale: options.scale,
       rotation: options.rotation,
       displacement: options.displacement,
-      rotateWithView: options.rotateWithView
+      rotateWithView: options.rotateWithView,
+      declutterMode: options.declutterMode,
     });
 
-    if (typeof (options.opacity) == "number")
+    if (typeof (options.opacity) == "number"){
       this.setOpacity(options.opacity);
+    }
     this._color = options.color;
     this._fontSize = options.fontSize || 1;
     this._fontStyle = options.fontStyle || '';
@@ -66,13 +71,16 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
     this._gradient = options.gradient;
     this._offset = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 
-    if (options.glyph)
+    if (options.glyph){
       this._glyph = this.getGlyph(options.glyph);
-    else
+    } else {
       this._glyph = this.getTextGlyph(options.text || '', options.font);
+    }
 
-    if (!this.getDisplacement)
+    if (!this.getDisplacement){
       this.getImage();
+    }
+    this.render();
   }
   /** Static function : add new font defs
    * @param {String|Object} font the font name or a description ({ font: font_name, name: font_name, copyright: '', prefix })
@@ -127,7 +135,8 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
       offsetY: this._offset[1],
       opacity: this.getOpacity(),
       rotation: this.getRotation(),
-      rotateWithView: this.getRotateWithView()
+      rotateWithView: this.getRotateWithView(),
+      declutterMode: this.getDeclutterMode ? this.getDeclutterMode() : null,
     });
     g.setScale(this.getScale());
     return g;
@@ -185,6 +194,38 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
    */
   getFontInfo(glyph) {
     return ol_style_FontSymbol.defs.fonts[glyph.font];
+  }
+  /**
+   * @return {RenderOptions}  The render options
+   */
+  createRenderOptions() {
+    var opt = super.createRenderOptions();
+    var stroke = 'none';
+    if (this._stroke) {
+      stroke = [
+        ol_color_asString(this._stroke.getColor() || '#000'),
+        this._stroke.getWidth() || 0,
+        this._stroke.getLineDash(),
+        this._stroke.getLineDashOffset() || 0,
+        this._stroke.getLineJoin(),
+        this._stroke.getLineCap(),
+        this._stroke.getMiterLimit(),
+      ].join('-')
+    }
+    opt.fontsymbolOptions = [
+      'font-symbol',
+      this._color,
+      this._fontSize, 
+      this._fontStyle,
+      stroke,
+      this._fill ? ol_color_asString(this._fill.getColor() || '') : '',
+      this._radius, 
+      this._form, 
+      this._gradient, 
+      (this._offset || []).join(','), 
+      Object.values(this._glyph||[]).join(',')
+    ].join('-');
+    return opt;
   }
   /**
    * Get the image icon.

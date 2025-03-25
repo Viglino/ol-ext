@@ -17,7 +17,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -52,16 +52,8 @@
 
   <script type="text/javascript">
   // Layers
-  var mapbox = new ol.layer.Tile({
-    minResolution: 306,
-    source: new ol.source.XYZ({
-      url: 'https://{a-d}.tiles.mapbox.com/v3/mapbox.natural-earth-hypso-bathy/{z}/{x}/{y}.png',
-      attributions: [ '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ' ] 
-    })
-  });
-  var stamen = new ol.layer.Tile({
-    source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) 
-  });
+  var ortho = new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' });
+  var carto = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
 
   // The map
   var map = new ol.Map ({
@@ -70,9 +62,7 @@
       zoom: 5,
       center: [166326, 5992663]
     }),
-    layers: [ new ol.layer.Tile({
-      source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) 
-    })]
+    layers: [ ortho ]
   });
 
   var map2 = new ol.Map ({
@@ -81,9 +71,7 @@
       zoom: 5,
       center: [166326, 5992663]
     }),
-    layers: [ new ol.layer.Tile({
-      source: new ol.source.StadiaMaps({ layer: 'stamen_toner' }) 
-    })]
+    layers: [ carto ]
   });
 
   // Synchronize the maps 

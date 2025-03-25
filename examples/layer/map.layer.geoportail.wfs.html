@@ -23,7 +23,6 @@
 	<!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-	<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
 	
 	<!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -47,17 +46,20 @@
   <i class="wait fa fa-spinner fa-pulse"></i>
 
 	<a href="../../index.html">
-		<h1>ol-ext: Geoportail WFS</h1>
+		<h1>ol-ext: Géoplateforme WFS</h1>
 	</a>
 	<div class="info dialog" onclick="$('.info').addClass('hidden');">
     <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/IGN_logo_2012.svg" />
     <p>
-      Cet exemple affiche les flux WFS du Géoportail et permet de télécharger les données IGN au format GeoJSON. 
+      Cet exemple affiche les flux WFS de la Géoplateforme et permet de télécharger les données IGN au format GeoJSON. 
       <ol>
         <li>Choisissez la couche</li>
         <li>Visualisez la zone à charger</li>
         <li>Téléchargez...</li>
       </ol>
+    </p>
+    <p>
+      Pour un chargement plus précis par <a href="http://localhost:8181/examples/misc/geoportail.loader.html">c'est par ici</a>.
     </p>
     <p>
       Les bases de données de l'IGN sont diffusées selon les termes de la 
@@ -86,7 +88,6 @@
       <option value="essentiels|BDTOPO_V3:batiment">batiments</option>
       <option value="essentiels|CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle">parcelle</option>
       <option value="topographie|BDTOPO_V3:troncon_hydrographique">Hydro</option>
-      <!-- http://wxs.ign.fr/corinelandcover/geoportail/wfs?service=WFS&request=GetCapabilities -->
       <option value="clc|LANDCOVER.CLC90_FR:clc90_fr">CLandCover 1990</option>
       <option value="clc|LANDCOVER.CLC00_FR:clc00_fr">CLandCover 2000</option>
       <option value="clc|LANDCOVER.CLC06R_FR:clc06r_fr">CLandCover 2006</option>

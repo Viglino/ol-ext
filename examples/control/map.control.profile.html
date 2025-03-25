@@ -1,0 +1,247 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2013 Jean-Marc VIGLINO,
+  released under the Beerware license (http://fr.wikipedia.org/wiki/Beerware).
+-->
+  <title>ol-ext: ol control profile</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="A profile control for OL3 that draw a profile of a 3D lineString." />
+  <meta name="keywords" content="ol3, profile, control, 3D, Z, altitude, GPX, GPS" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+
+
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    /* Hide info for e on map */
+    .ol-control.ol-profile table {
+      display: none;
+    }
+    /* Customize cursor color */
+    .options .ol-profilebar, .options .ol-profilecursor::before {
+      background-color: blue;
+    }
+  </style>
+  </head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: ol control profile</h1>
+  </a>
+  <div class="info">
+    <i>ol.control.Profile</i> is a control that draw a profile of a 3D lineString 
+    (with a XYZ or XYZM layout).
+    <br/>
+    The control can be drawn inside or outside the map.
+    <br/>
+    It fires an <i>over</i> and <i>out</i> event with informations on the point of the profile 
+    that is pointed by the mouse (to show the point on the map).
+    <ul>
+      <li>
+        <i>graduation</i> option let you specify the z axis graduation interval
+      </li>
+      <li>
+        <i>zmin</i> option let you specify the z axis origin
+      </li>
+      <li>
+        <i>zmax</i> option let you specify the z axis maximum
+      </li>
+      <li>
+        <i>amplitude</i> option let you specify the alitude amplitude
+      </li>
+      <li>
+        The <i>popup</i> function lets you show a popup when cursor fly over the profile.
+      </li>
+    </ul>
+    Use <i>selectable</i> option to enable selection on the profile. 
+    Listen to <i>dragstart</i>, <i>dragging</i> and <i>dragend</i> events.
+    Use <i>getSelection()</i> to retrieve the selection.
+    <br/>
+    <i>zoomable</i> option lets you zoom into the track.
+  </div>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <h2>Options:</h2>
+    <a target="_new" download="profile.png" class="btn" onclick="this.setAttribute('href',profile2.getImage());">Export PNG</a>
+    <a target="_new" download="profile.png" class="btn" onclick="profile.toggle();">Toggle profile (programatically)</a>
+  </div>
+
+  <script type="text/javascript">
+  // Layers
+  var layer = new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS');
+
+  // The map
+  var map = new ol.Map({
+    target: 'map',
+    view: new ol.View({
+      zoom: 13,
+      center: [649083, 5408224]
+    }),
+    layers: [layer]
+  });
+
+  // New profile in the map
+  var profile = new ol.control.Profile();
+  map.addControl(profile);
+  // New profile outside the map
+  var profile2 = new ol.control.Profile({
+    target: document.querySelector(".options"),
+    selectable: true,
+    // zoomable: true,
+    style: new ol.style.Style({
+      fill: new ol.style.Fill({ color: '#ccc' })
+    }),
+    width:400, height:200
+  });
+  map.addControl(profile2);
+
+  // Vector style
+  var style = [	
+    new ol.style.Style({
+      image: new ol.style.RegularShape({
+        radius: 10,
+        radius2: 5,
+        points: 5,
+        fill: new ol.style.Fill({ color: 'blue' })
+      }),
+      stroke: new ol.style.Stroke({
+        color: [255,0,0],
+        width: 2
+      })
+    })
+  ];
+  var selStyle = [	
+    new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: [0,0,255],
+        width: 2
+      })
+    })
+  ];
+
+  // Vector layer
+  var source = new ol.source.Vector({
+    //url: '../data/192553.gpx',
+    url: '../data/2009-09-04_rando.gpx',
+    format: new ol.format.GPX()
+  });
+  var vector = new ol.layer.Vector({
+    source: source,
+    style: function(f) {
+      return (f.get('select') ? selStyle : style);
+    }
+  });
+  map.addLayer(vector);
+
+  // Show feature profile when loaded
+  var pt, feature;
+  source.once('change',function(e) {
+    if (source.getState() === 'ready') {
+      feature = source.getFeatures()[0];
+      profile.setGeometry(feature);
+      profile2.setGeometry(feature, {
+        graduation:250,
+        amplitude:1000,
+        zmin:0
+      });
+      pt = new ol.Feature(new ol.geom.Point([0,0]));
+      pt.setStyle([]);
+      source.addFeature(pt);
+    }
+  });
+
+  // Draw a point on the map when mouse fly over profile
+  function drawPoint(e) {
+    if (!pt) return;
+    if (e.type=="over"){
+      // Show point at coord
+      pt.setGeometry(new ol.geom.Point(e.coord));
+      pt.setStyle(null);
+    } else {
+      // hide point
+      pt.setStyle([]);
+    }
+  };
+  // Show a popup on over
+  profile.on(["over","out"], function(e) {
+    if (e.type=="over") profile.popup(e.coord[2]+" m");
+    drawPoint(e);
+  });
+  // Just draw point
+  profile2.on(["over","out"], drawPoint);
+
+  // Show selection
+  var start = 0;
+  var selection;
+	profile2.on('click', function(e){
+    if (selection) {
+      source.removeFeature(selection);
+      selection = false;
+    }
+  });
+	profile2.on('dragstart', function(e){
+    start = e.index;
+  });
+	profile2.on(['dragend', 'dragging'], function(e){
+    var g = profile2.getSelection(start, e.index);
+    if (selection) {
+      selection.getGeometry().setCoordinates(g);
+    } else {
+      selection = new ol.Feature(new ol.geom.LineString(g));
+      selection.set('select', true);
+      source.addFeature(selection);
+    }
+  });
+  profile2.on('zoom', function(e) {
+    setTimeout(function() {
+      if (selection) source.removeFeature(selection);
+      if (e.geometry) {
+        selection = new ol.Feature(e.geometry);
+        selection.set('select', true);
+        source.addFeature(selection);
+      } else {
+        selection = null;
+      }
+    })
+  });
+
+  // Show on map over
+  var hover = new ol.interaction.Hover({ cursor: "pointer", hitTolerance:10 });
+  map.addInteraction(hover);
+  hover.on("hover", function(e) {
+    // Point on the line
+    var c = feature.getGeometry().getClosestPoint(e.coordinate)
+    drawPoint({ type: "over", coord: c });
+    // Show profile
+    var p = profile.showAt(e.coordinate);
+    profile.popup(p[2]+" m");
+    profile2.showAt(e.coordinate);
+  });
+  hover.on("leave", function(e) {
+    profile.popup();
+    profile.showAt();
+    profile2.showAt();
+    drawPoint({});
+  });
+  </script>
+  
+</body>
+</html>

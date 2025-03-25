@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>ol-ext: Openlayers feature animation</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="ol.featureAnimation are used to play animations on ol3 maps." />
+  <meta name="keywords" content="ol3, animation, along, line, path" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  <!-- Proj4 -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14/proj4.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .ol-control {
+      display: none;
+    }
+    #map {
+      background-color: #e7e8ef;;
+    }
+  </style>
+  </head>
+<body >
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>ol-ext: Openlayers feature animation</h1>
+  </a>
+  <p class="info">
+    This example show how to use <i>ol.featureAnimation.Path</i> to animate a feature along a path.
+    <br/>
+    Use the <i>rotate</i> option to make the symbols rotate along the path.
+  </p>
+
+  <!-- DIV pour la carte -->
+  <div id="map" style="width:600px; height:400px;"></div>
+
+  <div class="options">
+    <h2>Options:</h2>
+    <ul><li>
+      Easing:
+      <select id="easing" >
+        <option value="linear">linear</option>
+        <option value="easeOut">easeOut</option>
+        <option value="easeIn">easeIn</option>
+        <option value="inAndOut">inAndOut</option>
+      </select>
+    </li><li>
+      <label><input id="revers" type="checkbox" /> revers</label>
+    </li><li>
+      <label><input id="rotation" type="checkbox" checked /> rotate symbol</label>
+    </li><li>
+      speed: <input id="speed" type="range" min="0" max="10000" step="100" value="3000" style="vertical-align:middle" />
+    </li><li>
+      <button onclick="animateFeature()">Animate!</button>
+    </li></ul>
+  </div>
+  
+  <script type="text/javascript">
+  // Define proj4 projection
+  proj4.defs("EPSG:3031", "+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs");
+  proj4.defs("EPSG:3032","+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=70 +x_0=6000000 +y_0=6000000 +datum=WGS84 +units=m +no_defs +type=crs");
+  proj4.defs("EPSG:9354","+proj=stere +lat_0=-90 +lat_ts=-65 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs");
+  proj4.defs("EPSG:3412","+proj=stere +lat_0=-90 +lat_ts=-70 +lon_0=0 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs +type=crs");
+  if (ol.proj.proj4 && ol.proj.proj4.register) ol.proj.proj4.register(proj4);
+  var proj = 'EPSG:3032'
+
+  // Layers
+  var layer = new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS')
+
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View ({
+      zoom: 0,
+      //center: [740741, 5776642]
+      center: [646752, 5407059],
+      projection: proj
+    }),
+    layers: [layer]
+  });
+
+  var style = [
+    new ol.style.Style({
+      image: new ol.style.RegularShape({
+        radius: 10,
+        radius2: 5,
+        points: 5,
+        fill: new ol.style.Fill({ color: 'blue' })
+      }),
+      stroke: new ol.style.Stroke({
+        color: [255,255,255,.3],
+        lineDash: [5,4],
+        width: 1
+      }),
+      fill: new ol.style.Fill({
+        color: [0,0,255,0.3]
+      })
+    })
+  ];
+
+  // Red style
+  var redStyle = [
+  new ol.style.Style({
+      image: new ol.style.Icon({
+        src: '../data/boat.svg',
+        radius2: 5,
+      })
+    })
+  ]
+
+  // Triangle style
+  var img = new Image();
+  img.src = "../data/boat.png";
+  document.body.append(img)
+    
+  var triangle = new ol.style.Icon({
+    src: '../data/boat.png',
+    scale: .5,
+  })
+  triangle.load();
+
+
+  var styleTriangle = 
+    new ol.style.Style({
+      image: triangle,
+      stroke: new ol.style.Stroke({
+        color: [0,0,255],
+        width: 2
+      }),
+      fill: new ol.style.Fill({
+        color: [0,0,255,0.3]
+      })
+    })
+  ;
+
+  // Vector layer
+  var source = new ol.source.Vector({
+    //url: '../data/192553.gpx',
+    url: '../data/2009-09-04_rando.gpx',
+    format: new ol.format.GPX(),
+    url: '../data/course.geojson',
+    format: new ol.format.GeoJSON(),
+  });
+  var vector = new ol.layer.Vector({
+    source: source,
+    updateWhileAnimating: true,
+    updateWhileInteracting: true,
+    style: style
+  });
+  map.addLayer(vector);
+
+  // Animation
+  var path;
+  source.once('change',function(e){
+    if (source.getState() === 'ready') {
+      path = source.getFeatures()[0];
+      // source.removeFeature (path)
+    }
+  });
+  // Add a feature on the map
+  var f, anim, controler;
+  function animateFeature(){
+    if (path) {
+      f = new ol.Feature(new ol.geom.Point([0,0]));
+      if ($("#rotation").prop('checked')) f.setStyle(styleTriangle);
+      else f.setStyle(style);
+      anim = new ol.featureAnimation.Path({
+        path: path,
+        rotate: $("#rotation").prop('checked'),
+        easing: ol.easing[$("#easing").val()],
+        speed: Number($("#speed").val()),
+        revers: $("#revers").prop('checked')
+      });
+      anim.on('animating', (e) => {
+        map.getView().setCenter(e.geom.getCoordinates())
+        // map.getView().setRotation(e.rotation||0)
+      })
+      controler = vector.animateFeature ( f, anim );
+    }
+  }
+
+  /*
+  for (var i=0; i<4; i++){
+    setTimeout (animateFeature, i*500);
+  }
+  */
+
+
+  </script>
+  
+</body>
+</html>

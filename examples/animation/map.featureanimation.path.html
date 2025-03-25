@@ -13,7 +13,6 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -61,7 +60,7 @@
   
   <script type="text/javascript">
   // Layers
-  var layer = new ol.layer.Tile({ source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' }) });
+  var layer = new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS')
 
   // The map
   var map = new ol.Map ({
@@ -75,19 +74,6 @@
   });
 
   var style = [
-    new ol.style.Style({
-      image: new ol.style.Shadow({
-        radius: 15,
-      }),
-      stroke: new ol.style.Stroke({
-        color: [0,0,0,0.3],
-        width: 2
-      }),
-      fill: new ol.style.Fill({
-        color: [0,0,0,0.3]
-      }),
-      zIndex: -1
-    }),
     new ol.style.Style({
       image: new ol.style.RegularShape({
         radius: 10,
@@ -104,8 +90,18 @@
       })
     })
   ];
-  // Offset image
-  style[1].getImage().getAnchor()[1] += 10
+
+  // Red style
+  var redStyle = [
+  new ol.style.Style({
+      image: new ol.style.RegularShape({
+        radius: 10,
+        radius2: 5,
+        points: 5,
+        fill: new ol.style.Fill({ color: 'red' })
+      })
+    })
+  ]
 
   // Triangle style
   var triangle = new ol.style.RegularShape({
@@ -144,6 +140,8 @@
   });
   var vector = new ol.layer.Vector({
     source: source,
+    updateWhileAnimating: true,
+    updateWhileInteracting: true,
     style: style
   });
   map.addLayer(vector);
@@ -153,6 +151,7 @@
   source.once('change',function(e){
     if (source.getState() === 'ready') {
       path = source.getFeatures()[0];
+      // source.removeFeature (path)
     }
   });
   // Add a feature on the map
@@ -169,6 +168,11 @@
         speed: Number($("#speed").val()),
         revers: $("#revers").prop('checked')
       });
+      if (!$("#rotation").prop('checked')) {
+        anim.on('drawing', function(e) {
+          if (e.time > 5000) e.style = redStyle;
+        })
+      }
       /** / 
       source.addFeature(f);
       anim.on('animationend', function(e)

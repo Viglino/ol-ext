@@ -47,6 +47,9 @@ var ol_control_SwipeMap = class olcontrolSwipeMap extends ol_control_Control {
       if (e.key === 'orientation') {
         this.element.classList.remove("horizontal", "vertical");
         this.element.classList.add(this.get('orientation'));
+        if (this.getMap()) {
+          this.getMap().getTargetElement().dataset.swipeOrientation = this.get('orientation')
+        }
       }
       this._clip();
     }.bind(this));
@@ -61,16 +64,17 @@ var ol_control_SwipeMap = class olcontrolSwipeMap extends ol_control_Control {
    */
   setMap(map) {
     if (this.getMap()) {
-      if (this._listener)
-        ol_Observable_unByKey(this._listener);
+      if (this._listener) ol_Observable_unByKey(this._listener);
       var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
       layerDiv.style.clip = '';
-    }
+      delete this.getMap().getTargetElement().dataset.swipeOrientation
+    } 
 
     super.setMap(map);
 
     if (map) {
       this._listener = map.on('change:size', this._clip.bind(this));
+      this._clip();
     }
   }
   /** Clip
@@ -80,12 +84,16 @@ var ol_control_SwipeMap = class olcontrolSwipeMap extends ol_control_Control {
     if (this.getMap()) {
       var layerDiv = this.getMap().getViewport().querySelector('.ol-layers');
       var rect = this.getRectangle();
-      layerDiv.style.clip = 'rect('
+      if (rect) {
+        layerDiv.style.clip = 'rect('
         + rect[1] + 'px,' // top
         + rect[2] + 'px,' // right
         + rect[3] + 'px,' // bottom
         + rect[0] + 'px' //left
         + ')';
+      }
+      // Orientation
+      this.getMap().getTargetElement().dataset.swipeOrientation = this.get('orientation')
     }
   }
   /** Get visible rectangle
@@ -93,6 +101,7 @@ var ol_control_SwipeMap = class olcontrolSwipeMap extends ol_control_Control {
    */
   getRectangle() {
     var s = this.getMap().getSize();
+    if (!s) return;
     if (this.get('orientation') === 'vertical') {
       if (this.get('right')) {
         return [s[0] * this.get('position'), 0, s[0], s[1]];

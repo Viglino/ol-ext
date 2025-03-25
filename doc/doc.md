@@ -3,6 +3,40 @@
 
 [ol-ext](https://github.com/Viglino/ol-ext) is a set of extensions, controls, interactions to use with Openlayers.    
 
+## Quick start
+
+### Install ol-ext
+
+Install the npm ol-ext package and link to the node_modules directory:
+```
+npm install ol-ext
+```
+
+See [Openlayers quickstart](https://openlayers.org/doc/quickstart.html) to create an Openlayers project.
+
+In the `main.js` file add ol-ext classes:
+```javascript
+// Import the layer switcher control
+import LayerSwitcher from "ol-ext/control/LayerSwitcher"
+
+const switcher = new LayerSwitcher;
+// You can add it to the map
+map.addControl(switcher)
+```
+
+Remember to import the style in your `style.css`:
+```css
+@import "node_modules/ol/ol.css";
+@import "node_modules/ol-ext/dist/ol-ext.css";
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+/* ... */
+```
+
 ### Check out [online examples](http://viglino.github.io/ol-ext/).
 The [example page](http://viglino.github.io/ol-ext/) is the best way to have a quick look at all the library.
 
@@ -12,10 +46,11 @@ The [example page](http://viglino.github.io/ol-ext/) is the best way to have a q
 * [Map](./ol.Map.html): adds methods to the map
 * [layer](./ol.layer.Base.html): usefull methods attached to layers
 * [source](./ol.source.html): new sources ([DBPedia](./ol.source.DBPedia.html), [hexagonal binning](./ol.source.HexBin.html), [georeferenced images](./ol.source.GeoImage.html), [...](./ol.source.html))
-* [controls](./ol.control.html): adds new controls ([tool bars](./ol.control.Bar.html), [Graticule](./ol.control.Graticule.html), [LayerSwitcher](./ol.control.LayerSwitcher.html), [Search](./ol.control.Search.html), [Profil](./ol.control.Profil.html), [...](./ol.control.html))
+* [controls](./ol.control.html): adds new controls ([tool bars](./ol.control.Bar.html), [Graticule](./ol.control.Graticule.html), [LayerSwitcher](./ol.control.LayerSwitcher.html), [Search](./ol.control.Search.html), [Profile](./ol.control.Profile.html), [...](./ol.control.html))
 * [style](./ol.style.html): a set of style functions to style features on the maps ([charts symbols](./ol.style.Chart.html), [FillPattern](./ol.style.FillPattern.html), [FontSymbol](./ol.style.FontSymbol.html), [Photo](./ol.style.Photo.html), [TextPath](./ol.style.TextPath.html), [...](./ol.style.html))
 * [filter](./ol.filter.html): filters to apply on layers ([Colorize](./ol.filter.Colorize.html), [Crop](./ol.filter.Crop.html), [Mask](./ol.filter.Mask.html), [...](./ol.filter.html))  
 * [featureAnimation](./ol.featureAnimation.html): animates features on the map.   
+
 
 ### Bugs
 

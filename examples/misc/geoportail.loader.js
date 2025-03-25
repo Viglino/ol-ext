@@ -201,7 +201,7 @@ function loadTiles() {
       // Read tile
       var extent = f.getGeometry().getExtent();
       $.ajax({
-        url: 'https://wxs.ign.fr/'+(/eau/.test(typeName) ? 'h1osiyvfm7c4wu976jv6gpum' : 'choisirgeoportail')+'/geoportail/wfs?service=WFS&' +
+        url: 'https://data.geopf.fr/wfs/ows?service=WFS&' +
           'version=1.1.0&request=GetFeature&' +
           'typename='+typeName+'&' +
           'outputFormat=application/json&srsname=EPSG:3857&' +

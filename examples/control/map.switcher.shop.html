@@ -19,7 +19,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -33,9 +33,11 @@
       color: inherit;
       font-size: 1.3em;
     }
+    /*
     textarea:focus, input:focus, select:focus {
       outline: none;
     }
+    */
     /* Remove opacity */
     .layerswitcher-opacity {
       display: none;
@@ -43,6 +45,12 @@
     .ol-layer-shop .ol-bar input[type="number"] {
       width: 3em;
       height: 1em;
+    }
+    #map:focus-visible {
+      outline: 2px solid #369;
+    }
+    button:focus-visible {
+      outline: solid!important;
     }
   </style>
 </head>
@@ -57,7 +65,7 @@
   </div>
 
   <!-- Map div -->
-  <div id="map" style="width: 100%; height: 400px;"></div>
+  <div id="map" style="width: 100%; height: 400px;" tabindex="0"></div>
   <div class="options">
   </div>
   
@@ -68,52 +76,27 @@
     title: 'Base Layers',
     openInLayerSwitcher: true,
     layers: [
-      new ol.layer.Tile({
-        title: "Watercolor",
-        className: "Watercolor",
-        baseLayer: true,
-        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
-      }),
-      new ol.layer.Tile({
-        title: "Toner",
-        className: "Toner",
+    new ol.layer.Geoportail({
         baseLayer: true,
         visible: false,
-        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
+        layer: 'ORTHOIMAGERY.ORTHOPHOTOS'
+      }),
+      new ol.layer.Geoportail({
+        baseLayer: true,
+        layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
       }),
       new ol.layer.Tile({
         title: "OSM",
-        className: "OSM",
         baseLayer: true,
         source: new ol.source.OSM(),
         visible: false
       })
     ]
   });
-  var clc = new ol.layer.Tile ({
-    title: 'CORINE Land Cover - France métropolitaine - 2018',
-    className: 'CLC',
-    extent: [
-      -1099999.9999649636,
-      4949999.999934867,
-      1300000.000049673,
-      6699999.999949973
-    ],
-    queryable: true,
-    abstract: "Inventaire biophysique de l'occupation des sols en 2018 en 44 postes.",
-    minResolution: 0.09449404761899723,
-    maxResolution: 197231.79878968254,
-    source: new ol.source.TileWMS({
-      url: 'https://wxs.ign.fr/clc/geoportail/r/wms',
-      projection: 'EPSG:3857',
-      attributions: [],
-      crossOrigin: 'anonymous',
-      params: {
-        LAYERS: 'LANDCOVER.CLC18_FR',
-        FORMAT: 'image/png',
-        VERSION: '1.3.0'
-      }
-    })
+  ol.layer.Geoportail.register("LANDCOVER.CLC18", {"layer":"LANDCOVER.CLC18","theme":"clc","desc":"Inventaire biophysique de l'occupation des sols en 2018 en 50 postes pour les DOM et 44 postes pour la Métropole. CORINE Land Cover est une base de données d’occupation des sols produite dans le cadre du programme européen d’observation de la Terre Copernicus. Cet inventaire biophysique de l’occupation des terres fournit une information géographique de référence pour 39 États européens. La continuité du programme et la diffusion des données CORINE Land Cover sont pilotées par l'Agence européenne pour l'environnement. Le producteur pour la France est le Service de la donnée et des études statistiques du ministère chargé de l’écologie. L'utilisation de cette base de données permet des applications variées adaptées aux problématiques de l'environnement et à celles de l'aménagement du territoire : production cartographique, exploitation à des fins statistiques ou bien encore analyses géographiques en combinaison avec d'autres bases de données. Outil de connaissance et d'analyse, CORINE Land Cover apporte également une aide à la décision comme instrument de suivi, de surveillance et de gestion de l'environnement, des milieux naturels et de l'aménagement de l'espace. La base de données CORINE Land Cover 2018 a été réalisée à partir de CORINE Land Cover 2012 révisée et de la base des changements 2012-2018.","server":"https://data.geopf.fr/wmts","bbox":[-63.3725,-21.4756,55.9259,51.4428],"format":"image/png","minZoom":0,"maxZoom":16,"originators":{"Geoservices":{"attribution":"Géoservices","href":"https://geoservices.ign.fr/"}},"queryable":false,"style":"CORINE Land Cover","tilematrix":"PM","title":"CORINE Land Cover - 2018"});
+  var clc = new ol.layer.Geoportail({ 
+    layer: 'LANDCOVER.CLC18', 
+    //className: 'clc' 
   });
   // The Map
   var map = new ol.Map({
@@ -138,10 +121,10 @@
         className: 'PARCELLAIRE_EXPRESS' 
       }),
       clc,
-      new ol.layer.Tile({
+      new ol.layer.Geoportail({
         title: 'Labels',
         className: 'Labels',
-        source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' })
+        layer: 'GEOGRAPHICALNAMES.NAMES'
       }) 
     ]
   });
@@ -160,7 +143,7 @@
       'BRGM': 'https://geoservices.brgm.fr/geologie',
       'OSM': 'https://wms.openstreetmap.fr/wms',
       'OSM-Mundialis': 'https://ows.mundialis.de/services/service',
-      'CorineLandCover': 'https://wxs.ign.fr/corinelandcover/geoportail/r/wms'
+      'IGN-Géoservices': 'https://data.geopf.fr/wms-r/wms'
     },
     onselect: function(layer) {
       var index = map.getLayers().getArray().indexOf(ctrl.getSelection());
@@ -180,7 +163,7 @@
   }), 'bottom');
   
   // Info dialogue
-  var dlg = new ol.control.Dialog({ closeBox: true, hideOnBack: true });
+  var dlg = new ol.control.Dialog({ closeBox: true, hideOnBack: true, fullscreen: true });
   map.addControl(dlg);
   // Show info
   ctrl.addControl(new ol.control.Button({

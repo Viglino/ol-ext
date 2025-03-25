@@ -17,7 +17,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -67,23 +67,19 @@
     <ul>
       <li>
         url: 
-        <input id="url" type="text" value="https://wxs.ign.fr/cartes/geoportail/wmts" />
+        <input id="url" type="text" value="https://data.geopf.fr/wmts?" />
         <button onclick="cap.showDialog($('#url').val())">search</button>
       </li>
       <li>
         Services : 
-        <button onclick="cap.showDialog('https://wxs.ign.fr/cartes/geoportail/wmts'); ">Geoportail maps</button>
-        <button onclick="cap.showDialog('https://wxs.ign.fr/clc/geoportail/wmts'); ">CorineLandCover</button>
+        <button onclick="cap.showDialog('https://data.geopf.fr/wmts'); ">Géoservices</button>
+        <button onclick="cap.showDialog('https://data.geopf.fr/private/wmts?apikey=ign_scan_ws'); ">Geoservices avec clé</button>
       </li>
     </ul>
     <button onclick="exportCarte()" style="display: none;">exportCarte</button>
   </div>
   
 <script type="text/javascript">
-  // http services load on http
-  if (location.protocol === 'https:' && !/^localhost/.test(location.host)) {
-    location.href = window.location.href.replace(/^https:/,'http:');
-  }
 /*
   // Define proj4 2154
   proj4.defs("EPSG:2154","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
@@ -112,22 +108,12 @@
     // target: $('.options').get(0),
     target: document.body,
     // srs: ['EPSG:2154'],
+    // Set optional apikey (for use with IGN's Geoservices)
+    optional: 'apikey,key',
     cors: true,
     services: {
-      'Géoportail-cartes' : 'https://wxs.ign.fr/cartes/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-ortho' : 'https://wxs.ign.fr/ortho/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-orthohisto' : 'https://wxs.ign.fr/orthohisto/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-satellite' : 'https://wxs.ign.fr/satellite/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-cartovecto' : 'https://wxs.ign.fr/cartovecto/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-economie' : 'https://wxs.ign.fr/economie/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-environnement' : 'https://wxs.ign.fr/environnement/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-sol' : 'https://wxs.ign.fr/sol/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-parcellaire' : 'https://wxs.ign.fr/parcellaire/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-transports' : 'https://wxs.ign.fr/transports/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-administratif' : 'https://wxs.ign.fr/administratif/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-altimetrie' : 'https://wxs.ign.fr/altimetrie/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-agriculture' : 'https://wxs.ign.fr/agriculture/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities',
-      'Géoportail-CLC' : 'https://wxs.ign.fr/clc/geoportail/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities'
+      'Géoplateforme' : 'https://data.geopf.fr/wmts',
+      'Géoplateforme + apikey' : 'https://data.geopf.fr/private/wmts?apikey=ign_scan_ws'
     },
     // Show trace in the console
     trace: true

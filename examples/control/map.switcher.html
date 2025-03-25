@@ -17,7 +17,7 @@
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -61,7 +61,42 @@
     .toggleVisibility.show:before {
       background: #369;
     }
-
+    #map:focus-visible, 
+    #map button:focus-visible {
+      /*
+      box-shadow: inset 0 0 3px#369;
+      */
+      outline: 2px solid #369;
+    }
+    #map .ol-layerswitcher > button {
+      margin: 2px;
+    }
+    .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .layerInfo:after,
+    .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .layerTrash:after,
+    .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .myInfo:after {
+      content: "i";
+      position: relative;
+      top: 10px;
+      left: 3px;
+      background: red;
+      padding: 0 5px;
+      font-size: 13px;
+    }
+    .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .layerTrash:after {
+      content: "x";
+    }
+    .ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) > div > .myInfo:after {
+      content: "?";
+    }
+    kbd {
+      display: inline-block;
+      border: 1px solid #aaa;
+      padding: 0.1em .25em;
+      border-radius: 3px;
+      background-color: #e0e0e0;
+      box-shadow: inset -1px -1px 2px #bbb, inset 2px 2px 2px #efefef;
+      font-style: normal;
+    }
   </style>
 </head>
 <body >
@@ -101,7 +136,10 @@
         You can use the <i>drawlist</i> event handle the current line display (add button, change list style, etc.)
       </li>
       <li>
-        It trigger a <i>toogle</i> event when shown/hidden
+        It triggers a <i>toogle</i> event when shown/hidden
+      </li>
+      <li>
+        It triggers a <i>layer:keydown</i> event when a key is pressed on the layer
       </li>
     </ul>
     <p>
@@ -110,19 +148,22 @@
   </div>
 
   <!-- Map div -->
-  <div id="map" style="width:600px; height:400px;"></div>
+  <div id="map" style="width:600px; height:400px;" tabindex="0"></div>
   <div class="external layerSwitcher"><b>External layer switcher</b></div>
 
   <div class="options">
     <h2>Options:</h2>
     <input id="dils" type="checkbox" checked="checked" onchange="displayInLayerSwitcher(this.checked);"/>
-    <label for="dils">display "Pirate Map" in LayerSwitcher (zoom out to make it visible).</label>
+    <label for="dils">display "Natural Earth" in LayerSwitcher (zoom out to make it visible).</label>
     <br/>
     <input id="opb" type="checkbox" onchange="$('body').toggleClass('hideOpacity');" />
     <label for="opb">hide opacity bar</label>
     <br/>
     <input id="percent" type="checkbox" onchange="$('body').toggleClass('showPercent');" />
     <label for="percent">show percent information</label>
+    <p><i>
+      Use <kbd>Tab</kbd> to navigate in the layer switcher, <kbd>⇐</kbd> and <kbd>⇒</kbd> to change opacity, <kbd>Ctrl</kbd>+<kbd>⇑</kbd> or <kbd>⇓</kbd> to move up / down in the list.
+    </i></p>
   </div>
   
   <script type="text/javascript">
@@ -132,16 +173,14 @@
     title: 'Base Layers',
     openInLayerSwitcher: true,
     layers: [
-      new ol.layer.Tile({
-        title: "Watercolor",
-        baseLayer: true,
-        source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
-      }),
-      new ol.layer.Tile({
-        title: "Toner",
+      new ol.layer.Geoportail({
         baseLayer: true,
         visible: false,
-        source: new ol.source.StadiaMaps({ layer: 'stamen_toner' })
+        layer: 'ORTHOIMAGERY.ORTHOPHOTOS'
+      }),
+      new ol.layer.Geoportail({
+        baseLayer: true,
+        layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'
       }),
       new ol.layer.Tile({
         title: "OSM",
@@ -152,25 +191,12 @@
     ]
   });
   // A layer with minResolution (hidden on hight zoom level)
-  var mapbox = new ol.layer.Tile({
-    title: "Pirate Map", 
-    displayInLayerSwitcher: false,
-    minResolution: 1223,
-    source: new ol.source.XYZ({	
-      attributions: [
-        '&copy; <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> ',
-        ol.source.OSM.ATTRIBUTION
-      ],
-      url: 'https://{a-d}.tiles.mapbox.com/v3/aj.Sketchy2/{z}/{x}/{y}.png'
-    })
-  });
+  var nearth = new ol.layer.Geoportail({
+    layer: 'CARTES.NATURALEARTH',
+    maxZoom: 6
+  })
   // An overlay that stay on top
-  var labels = new ol.layer.Tile({
-    title: "Labels (on top)",
-    allwaysOnTop: true,			// Stay on top of layer switcher
-    noSwitcherDelete: true,		// Prevent deleting from layer switcher
-    source: new ol.source.StadiaMaps({ layer: 'stamen_terrain_labels' })
-  });
+  var labels = new ol.layer.Geoportail('GEOGRAPHICALNAMES.NAMES');
   // WMS with bbox
   var brgm = new ol.layer.Tile ({
     "title": "GEOLOGIE",
@@ -203,7 +229,7 @@
       zoom: 11,
       center: [260497, 6249720]
     }),
-    layers: [ baseLayers, mapbox, brgm, labels ]
+    layers: [ baseLayers, nearth, brgm, labels ]
   });
   // Add control inside the map
   var ctrl = new ol.control.LayerSwitcher({
@@ -220,6 +246,7 @@
     target:$(".layerSwitcher").get(0), 
     // displayInLayerSwitcher: function (l) { return false; },
     show_progress:true,
+    // reordering: false,
     extent: true,
     trash: true,
     oninfo: function (l) { alert(l.get("title")); }
@@ -227,7 +254,7 @@
   // Add a new button to the list 
   switcher.on('drawlist', function(e) {
     var layer = e.layer;
-    $('<div>').text('?')// addClass('layerInfo')
+    $('<div class="myInfo">').text('?')// addClass('layerInfo')
       .click(function(){
         alert(layer.get('title'));
       })
@@ -247,12 +274,39 @@
     });
   switcher.setHeader($('<div>').append(button).get(0))
 
+  // Accessibility keys
+  switcher.on('layer:keydown', function (e) {
+    switch(e.key.toLowerCase()) {
+      // Show info
+      case '?': 
+      case 'i': {
+        alert(e.layer.get('title'))
+        break;
+      }
+      // Zoom to extent
+      case 'e': {
+        var k = e.li.querySelector('.layerExtent')
+        if (k) k.click();
+        break;
+      }
+      // Remove layer
+      case 'x': {
+        if (e.group) {
+          e.group.getLayers().remove(e.layer)
+        } else {
+          map.removeLayer(e.layer)
+        }
+        break;
+      }
+    }
+  })
+
   map.addControl(switcher);
-  // Insert mapbox layer in layer switcher
+  // Insert nearth layer in layer switcher
   function displayInLayerSwitcher(b) {
-    mapbox.set('displayInLayerSwitcher', b);
+    nearth.set('displayInLayerSwitcher', b);
   }
-  
+
   // Get options values
   if ($("#opb").prop("checked")) $('body').addClass('hideOpacity');
   if ($("#percent").prop("checked")) $('body').addClass('showPercent');

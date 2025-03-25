@@ -6,6 +6,10 @@ import ol_ext_element from '../util/element.js'
  * Application dialog
  * @extends {ol_control_Control}
  * @constructor
+ * @fires show
+ * @fires hide
+ * @fires cancel
+ * @fires button
  * @param {*} options
  *  @param {string} options.className
  *  @param {ol.Map} options.map the map to place the dialog inside
@@ -22,14 +26,33 @@ var ol_control_Dialog = class olcontrolDialog extends ol_control_Control {
   constructor(options) {
     options = options || {};
     if (options.fullscreen) options.target = document.body;
+    var fullscreen = (options.target === document.body);
 
-    var element = ol_ext_element.create('DIV', {
+    var element = ol_ext_element.create(fullscreen ? 'DIALOG' : 'DIV', {
       className: ((options.className || '') + (options.zoom ? ' ol-zoom' : '') + ' ol-ext-dialog').trim()
     })
     super({
       element: element,
       target: options.target
     });
+
+    if (fullscreen) {
+      // Handle close (DIALOG)
+      element.addEventListener('close', function(){
+        this.hide();
+      }.bind(this));
+      // Prevent cancel (DIALOG on escape)
+      document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Escape') return;
+        if (!this.get('closeBox') && this.isOpen()) {
+          e.preventDefault()
+        }
+      }.bind(this))
+      // Cancel event
+      element.addEventListener('cancel', function(e) {
+        setTimeout(function() { this.dispatchEvent('cancel'); }.bind(this))
+      }.bind(this));
+    }
 
     // Constructor
     element.addEventListener('click', function (e) {
@@ -108,10 +131,13 @@ var ol_control_Dialog = class olcontrolDialog extends ol_control_Control {
       }
       this.setContent(options);
     }
+    if (this.element.showModal) this.element.showModal();
     this.element.classList.add('ol-visible');
+    this.element.setAttribute('aria-hidden', false);
     var input = this.element.querySelector('input[type="text"],input[type="search"],input[type="number"]');
-    if (input)
-      input.focus();
+    if (input) {
+      setTimeout(function() { input.focus(); })
+    }
     this.dispatchEvent({ type: 'show' });
     if (options) {
       // Auto close
@@ -269,8 +295,10 @@ var ol_control_Dialog = class olcontrolDialog extends ol_control_Control {
       e.preventDefault();
       if (button !== 'submit' || this.get('closeOnSubmit') !== false) this.hide();
       var inputs = this.getInputs();
-      this.dispatchEvent({ type: 'button', button: button, inputs: inputs });
-      if (typeof (callback) === 'function') callback(button, inputs);
+      setTimeout(function() {
+        this.dispatchEvent({ type: 'button', button: button, inputs: inputs });
+        if (typeof (callback) === 'function') callback(button, inputs);
+      }.bind(this))
     }.bind(this);
     return fn;
   }
@@ -293,8 +321,22 @@ var ol_control_Dialog = class olcontrolDialog extends ol_control_Control {
   /** Close the dialog
    */
   hide() {
-    this.element.classList.remove('ol-visible');
-    this.dispatchEvent({ type: 'hide' });
+    // Remove focus on dialog
+    if (document.activeElement && document.activeElement !== document.body) {
+      document.activeElement.blur();
+    }
+    // DIALOG element
+    if (this.element.close) {
+      this.element.close();
+    }
+    if (this.isOpen()) {
+      this.element.classList.remove('ol-visible');
+      this.element.setAttribute('aria-hidden', true)
+      // Dispatch event when close
+      setTimeout(function() {
+        this.dispatchEvent({ type: 'hide' });
+      }.bind(this))
+    }
   }
   /** Close the dialog 
    */

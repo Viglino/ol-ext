@@ -4,6 +4,7 @@
 */
 import ol_control_Control from 'ol/control/Control.js'
 import ol_format_WKT from 'ol/format/WKT.js'
+import ol_format_GeoJSON from 'ol/format/GeoJSON.js'
 import {toLonLat as ol_proj_toLonLat} from 'ol/proj.js'
 import ol_ext_Ajax from '../util/Ajax.js';
 import ol_ext_element from '../util/element.js';
@@ -35,10 +36,8 @@ import ol_control_SearchGeoportail from './SearchGeoportail.js'
  */
 var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends ol_control_Control {
   constructor(options) {
-    if (!options)
-      options = {};
-    if (options.typing == undefined)
-      options.typing = 300;
+    if (!options) options = {};
+    if (options.typing == undefined) options.typing = 300;
 
     var classNames = (options.className ? options.className : '') + ' ol-isochrone ol-routing';
     if (!options.target) classNames += ' ol-unselectable ol-control';
@@ -141,7 +140,7 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
         }
       }.bind(this));
 
-    this.set('url', 'https://wxs.ign.fr/' + (options.apiKey || 'essentiels') + '/isochrone/isochrone.json');
+    this.set('url', 'https://data.geopf.fr/navigation/isochrone')
     this._ajax = new ol_ext_Ajax({
       dataType: 'JSON',
       auth: options.auth
@@ -191,7 +190,6 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
    * @param [string] method The method (time or distance)
    */
   setMethod(method) {
-    7;
     method = (/distance/.test(method) ? 'distance' : 'time');
     this.element.querySelector(".ol-method-time").classList.remove("selected");
     this.element.querySelector(".ol-method-distance").classList.remove("selected");
@@ -254,18 +252,17 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
     }
     var dt = Math.round(option * (this.get('iter') - (iter || 0)) / this.get('iter'));
     if (typeof option === 'number') {
-      // Send data
+      // Send data => Capabilities: https://data.geopf.fr/navigation/getcapabilities
       var data = {
-        'gp-access-lib': '2.1.0',
-        location: ol_proj_toLonLat(coord, proj),
-        graphName: (this.get('mode') === 'pedestrian' ? 'Pieton' : 'Voiture'),
-        exclusions: this.get('exclusions') || undefined,
-        method: method,
-        time: method === 'time' ? dt : undefined,
-        distance: method === 'distance' ? dt : undefined,
-        reverse: (this.get('direction') === 'reverse'),
-        smoothing: this.get('smoothing') || true,
-        holes: this.get('holes') || false
+        // resource: 'jmk_valhalla_cost_type_test', 
+        resource: 'bdtopo-valhalla',
+        point: ol_proj_toLonLat(coord, proj),
+        profile: this.get('mode') === 'pedestrian' ? 'pedestrian' : 'car',
+        costType: method,
+        costValue: dt,
+        geometryFormat: 'geojson',
+        direction: (this.get('direction') === 'reverse') ? 'arrival' : 'departure',
+        // crs: 'EPSG:4326'
       };
       this._ajax.send(this.get('url'), data, {
         coord: coord,
@@ -279,18 +276,29 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
    * @private
    */
   _success(e) {
+    console.log(e)
     var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
     // Convert to features
-    var format = new ol_format_WKT();
     var evt = e.response;
-    evt.feature = format.readFeature(evt.wktGeometry, {
-      dataProjection: 'EPSG:4326',
-      featureProjection: proj
-    });
+    var format;
+    if (evt.wktGeometry) {
+      format = new ol_format_WKT();
+      evt.feature = format.readFeature(evt.wktGeometry, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: proj
+      });
+      delete evt.wktGeometry;
+    } else {
+      format = new ol_format_GeoJSON();
+      evt.feature = format.readFeature(evt.geometry, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: proj
+      });
+      delete evt.geometry;
+    }
     evt.feature.set('iteration', e.options.iteration);
     evt.feature.set('method', e.options.data.method);
     evt.feature.set(e.options.data.method, e.options.data[e.options.data.method]);
-    delete evt.wktGeometry;
     evt.type = 'isochrone';
     evt.iteration = e.options.iteration - 1;
     this.dispatchEvent(evt);

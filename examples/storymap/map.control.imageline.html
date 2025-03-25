@@ -11,20 +11,13 @@
   <meta name="description" content="A control to show image on a map." />
   <meta name="keywords" content="ol, image, control, line" />
 
-  <!-- Prevent image error on load with https -->
-	<script>
-		if (location.protocol == 'https:' && !/^localhost/.test(location.host)) {
-      location.href = window.location.href.replace(/^https:/,'http:');
-		}
-	</script>
-
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -90,23 +83,26 @@
 
   <div class="options">
     <ul>
+     <li>
+        <label>
+          Links
+        </label>
+        <select onchange="iline.set('linkColor', this.value); iline.refresh()">
+          <option value="">none</option>
+          <option value="rgba(255,0,0,.7)">red</option>
+          <option value="rgba(0,255,0,.7)">green</option>
+          <option value="rgba(0,0,255,.7)">blue</option>
+          <option value="rgba(0,0,0,.7)">black</option>
+          <option value="rgba(255,255,255,.7)">white</option>
+        </select>
+      </li>
       <li>
         <label>
           <input id="extent" type="checkbox" onclick="iline.useExtent($(this).prop('checked'));" />
           Show only visible images
         </label>
       </li>
-      <li>
-        <label>
-          <input 
-            id="link" 
-            type="checkbox" 
-            onclick="iline.set('linkColor', $(this).prop('checked') ? 'rgba(255,255,255,.7)':false);" 
-          />
-          Draw links
-        </label>
-      </li>
-      <li>
+       <li>
         <label>
           <input id="hover" type="checkbox" onclick="iline.set('hover',$(this).prop('checked'));" 
           />
@@ -126,11 +122,7 @@
   <script type="text/javascript">
 
   // Two base layers
-  var stamen = new ol.layer.Tile({
-    title: "Watercolor",
-    baseLayer: true,
-    source: new ol.source.StadiaMaps({ layer: 'stamen_watercolor' })
-  });
+  var carto = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
   var osm = new ol.layer.Tile({
     title: "OSM",
     baseLayer: true,
@@ -147,7 +139,7 @@
       if (!style) {
         style = cache[id] = new ol.style.Style({
           image: new ol.style.Photo({
-            src: f.get('img'),
+            src: '//wsrv.nl/?url=' + f.get('img'),
             radius: select ? 20:15,
             shadow: true,
             stroke: new ol.style.Stroke({
@@ -189,7 +181,7 @@
       zoom: 6,
       center: [173664, 6166327]
     }),
-    layers: [stamen, osm, vector]
+    layers: [carto, osm, vector]
   });
 
   // Create Imageline control when features are loaded
@@ -198,7 +190,7 @@
     // target: $('.options').get(0),
     collapsible: true,
     getImage: function(f) {
-      return f.get('img');
+      return '//wsrv.nl/?url=' + f.get('img');
     },
     getTitle: function(f) {
       return f.get('text');

@@ -11,20 +11,13 @@
   <meta name="description" content="DBPedia layer for OL3" />
   <meta name="keywords" content="ol3, layer, source, vector, wikipedia, dbpedia" />
   
-  <!-- SparQL server only works on http -->
-  <script>
-    if (location.protocol == 'https:') {
-      location.href = window.location.href.replace(/^https:/,"http:");
-    }
-  </script>
-
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://openlayers.org/en/v6.15.1/css/ol.css" />
   <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
-  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL,Object.assign"></script>
+
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />

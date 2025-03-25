@@ -48,6 +48,12 @@
   overflow-x: hidden;
   overflow-y: auto;
 }
+dialog.ol-ext-dialog > form {
+  left: 50%;
+  width: max-content;
+  max-width: 90%;
+}
+
 .ol-ext-dialog > form.ol-closebox {
   padding-top: 1.5em;
 }
@@ -115,8 +121,7 @@
   color: rgba(0,60,136,1);
   cursor: pointer;
   border-radius: .25em;
-  outline-width: 0;
-}
+} 
 .ol-ext-dialog > form .ol-buttons input:hover {
   background-color:  rgba(0,60,136,.1);
 }
