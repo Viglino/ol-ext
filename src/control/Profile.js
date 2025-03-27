@@ -9,7 +9,7 @@ import { transform as ol_proj_transform } from 'ol/proj.js'
 import ol_control_Control from 'ol/control/Control.js'
 import ol_Feature from 'ol/Feature.js'
 import ol_style_Fill from 'ol/style/Fill.js'
-import { asString as ol_asString } from 'ol/color.js'
+import { asString as ol_color_asString } from 'ol/color.js'
 
 import ol_style_Style from 'ol/style/Style.js'
 import ol_style_Stroke from 'ol/style/Stroke.js'
@@ -35,6 +35,8 @@ var KILOMETER_VALUE = 1000
 /**
  * @classdesc OpenLayers 3 Profile Control.
  * Draw a profile of a feature (with a 3D geometry)
+ * @author Gastón Zalba https://github.com/GastonZalba
+ * @author Jean-Marc Viglino https://github.com/viglino
  *
  * @constructor
  * @extends {ol_control_Control}
@@ -251,27 +253,38 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
         }
       }.bind(this))
     }
+
+    // Add listener on target elements
+    if (options.target) {
+      this._addListeners()
+    }
   }
 
   /** Add canvas listeners
    * @private
    */
   _addListeners() {
-    this.onMoveBinded = this.onMove.bind(this)
-    this.div_to_canvas_.addEventListener('pointerdown', this.onMoveBinded)
-    this.div_to_canvas_.addEventListener('mousemove', this.onMoveBinded)
-    this.div_to_canvas_.addEventListener('touchmove', this.onMoveBinded)
-    document.addEventListener('pointerup', this.onMoveBinded)
+    // prevent multi listeners
+    if (!this.onMoveBinded) {
+      this.onMoveBinded = this.onMove.bind(this)
+      this.div_to_canvas_.addEventListener('pointerdown', this.onMoveBinded)
+      this.div_to_canvas_.addEventListener('mousemove', this.onMoveBinded)
+      this.div_to_canvas_.addEventListener('touchmove', this.onMoveBinded)
+      document.addEventListener('pointerup', this.onMoveBinded)
+    }
   }
 
   /** Remove canvas listeners
    * @private
    */
   _removeListeners() {
-    this.div_to_canvas_.removeEventListener('pointerdown', this.onMoveBinded)
-    this.div_to_canvas_.removeEventListener('mousemove', this.onMoveBinded)
-    this.div_to_canvas_.removeEventListener('touchmove', this.onMoveBinded)
-    document.removeEventListener('pointerup', this.onMoveBinded)
+    if (this.onMoveBinded) {
+      this.div_to_canvas_.removeEventListener('pointerdown', this.onMoveBinded)
+      this.div_to_canvas_.removeEventListener('mousemove', this.onMoveBinded)
+      this.div_to_canvas_.removeEventListener('touchmove', this.onMoveBinded)
+      document.removeEventListener('pointerup', this.onMoveBinded)
+      this.onMoveBinded = null
+    }
   }
 
   /** Show popup info
@@ -521,9 +534,8 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
   * @api stable
   */
   toggle() {
-    this.element.classList.toggle("ol-collapsed")
-    var b = this.element.classList.contains("ol-collapsed")
-    this.dispatchEvent({ type: 'show', show: !b })
+    if (this.isShown()) this.hide()
+    else this.show()
   }
   /** Is panel visible
   */
@@ -554,7 +566,7 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
     function closeSegment(inX, outX) {
         if (style.getStroke()) {
             var stringColor = style.getStroke().getColor()
-            ctx.strokeStyle = stringColor ? ol_asString(stringColor) : '#000'
+            ctx.strokeStyle = stringColor ? ol_color_asString(stringColor) : '#000'
             ctx.lineWidth = style.getStroke().getWidth() * ratio
             ctx.setLineDash([])
             ctx.stroke()
@@ -562,8 +574,8 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
 
         if (style.getFill()) {
             var fillColor = style.getFill().getColor()
-            ctx.fillStyle = fillColor ? ol_asString(fillColor) : '#000'
-            ctx.Style = fillColor ? ol_asString(fillColor) : '#000'
+            ctx.fillStyle = fillColor ? ol_color_asString(fillColor) : '#000'
+            ctx.Style = fillColor ? ol_color_asString(fillColor) : '#000'
             ctx.lineTo(outX * scx, 0)
             ctx.lineTo(inX * scx, 0)  
             ctx.fill()
@@ -740,7 +752,7 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
     h -= this.margin_.top + this.margin_.bottom
     // Draw axes
     var textFillColor = this._style.getText().getFill().getColor()
-    ctx.strokeStyle = textFillColor ? ol_asString(textFillColor) : '#000'
+    ctx.strokeStyle = textFillColor ? ol_color_asString(textFillColor) : '#000'
     ctx.lineWidth = 0.5 * ratio
     ctx.beginPath()
     ctx.moveTo(0, 0); ctx.lineTo(0, -h)
@@ -780,7 +792,7 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
       grad = amp / (zSteps - 1)
     } else {
       // Set graduation
-      var grad = this.get('graduation')
+      grad = this.get('graduation')
       while (true) {
         zmax = Math.ceil(zmax / grad) * grad
         zmin = Math.floor(zmin / grad) * grad
@@ -815,7 +827,7 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
     ctx.textAlign = 'right'
     ctx.textBaseline = 'top'
     var textStrokeColor = this._style.getText().getFill().getColor()
-    ctx.fillStyle = textStrokeColor ? ol_asString(textStrokeColor) : '#000'
+    ctx.fillStyle = textStrokeColor ? ol_color_asString(textStrokeColor) : '#000'
 
     // Scale Z
     ctx.beginPath()
@@ -905,12 +917,14 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
           step = d
       }
     }
+
+    // Distances / X
     for (i = 0; i <= d; i += step) {
       var num = Number(this._unitsConversion(i, unit).toFixed(xDigits))
       var txt = this._numberFormat(num, xDigits)
       //if (i+step>d) txt += " "+ (options.zunits || "km");
-      ctx.fillText(txt, num * scx, 4 * ratio)
-      ctx.moveTo(num * scx, 2 * ratio); ctx.lineTo(num * scx, 0)
+      ctx.fillText(txt, i * scx, 4 * ratio)
+      ctx.moveTo(i * scx, 3 * ratio); ctx.lineTo(i * scx, 0)
     }
     ctx.font = (12 * ratio) + "px arial"
     var xOldMethod = this.info.xtitle.search('(km)') // Support for old naming convention and replace unit method
