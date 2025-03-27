@@ -9,4 +9,4 @@ doc/doc-pages
 dist/extra
 dist/*.js
 # ignore the src (copy in the root)
-src
+#src
