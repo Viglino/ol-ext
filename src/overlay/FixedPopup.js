@@ -251,14 +251,15 @@ var ol_Overlay_FixedPopup = class olOverlayFixedPopup extends ol_Overlay_Popup {
       return
     }
     var mapSize = map.getSize();
+    var pixel;
     if (!this._pixel) {
-        var pixel = map.getPixelFromCoordinate(this.getPosition());
+        pixel = map.getPixelFromCoordinate(this.getPosition());
         this.updateRenderedPosition(pixel, mapSize);
         this._coord = map.getCoordinateFromPixel(pixel)
         this._pixel = pixel;
     }
     if (this._pixel && this.get('hook') === 'map') {
-        var pixel = map.getPixelFromCoordinate(this._coord);
+        pixel = map.getPixelFromCoordinate(this._coord);
         super.updateRenderedPosition(pixel, mapSize);
         this._pixel = pixel;
     }

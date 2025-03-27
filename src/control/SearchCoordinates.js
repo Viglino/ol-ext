@@ -4,7 +4,6 @@
 */
 
 import {transform as ol_proj_transform} from 'ol/proj.js'
-import {toStringHDMS as ol_coordinate_toStringHDMS} from 'ol/coordinate.js';
 import ol_Geolocation from 'ol/Geolocation.js'
 
 import ol_control_Search from './Search.js'

@@ -823,6 +823,7 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
                 }
               }
               // Move up dans down
+              // fallthrough
               case 'ArrowUp':
               case 'ArrowDown': {
                 if (e.ctrlKey && this.reordering) {

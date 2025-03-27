@@ -49,7 +49,7 @@ var ol_control_Dialog = class olcontrolDialog extends ol_control_Control {
         }
       }.bind(this))
       // Cancel event
-      element.addEventListener('cancel', function(e) {
+      element.addEventListener('cancel', function() {
         setTimeout(function() { this.dispatchEvent('cancel'); }.bind(this))
       }.bind(this));
     }
