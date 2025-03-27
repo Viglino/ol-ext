@@ -19,19 +19,6 @@ import ol_geom_LineString from 'ol/geom/LineString.js'
 import { ol_coordinate_dist2d } from "../geom/GeomUtils.js"
 import ol_ext_element from '../util/element.js'
 
-// Accepted units
-var Unit = {
-  Meter: 'm',
-  Kilometer: 'km',
-  Foot: 'ft',
-  Mile: 'mi'
-}
-// Meter divided by...
-var FOOT_VALUE = 0.3048
-var MILE_VALUE = 1609.344
-var KILOMETER_VALUE = 1000
-
-
 /**
  * @classdesc OpenLayers 3 Profile Control.
  * Draw a profile of a feature (with a 3D geometry)
@@ -308,13 +295,13 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
       this.bar_.style.left = dx + "px"
       this.bar_.style.display = "block"
 
-      var zunit = this._isMetric ? Unit.Meter : Unit.Foot
+      var zunit = this._isMetric ? ol_control_Profile.prototype.Unit.Meter : ol_control_Profile.prototype.Unit.Foot
       var zvalue = this._unitsConversion(p[1], zunit)
       this.element.querySelector(".point-info .z").textContent = typeof zvalue === 'number' ? this._numberFormat(zvalue, this.get('zDigitsHover')) + zunit : '-'
 
       var xunit
-      if (this._isMetric) xunit = (xvalue > KILOMETER_VALUE) ? Unit.Kilometer : Unit.Meter
-      else xunit = (xvalue > MILE_VALUE) ? Unit.Mile : Unit.Foot
+      if (this._isMetric) xunit = (xvalue > ol_control_Profile.prototype.KILOMETER_VALUE) ? ol_control_Profile.prototype.Unit.Kilometer : ol_control_Profile.prototype.Unit.Meter
+      else xunit = (xvalue > ol_control_Profile.prototype.MILE_VALUE) ? ol_control_Profile.prototype.Unit.Mile : ol_control_Profile.prototype.Unit.Foot
 
       var xvalue = this._unitsConversion(p[0], xunit)
       this.element.querySelector(".point-info .dist").textContent = typeof xvalue === 'number' ? this._numberFormat(xvalue, this.get('xDigitsHover')) + xunit : '-'
@@ -763,19 +750,19 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
     this.element.querySelector(".track-info .zmin").textContent = zmin.toFixed(2) + this.info.altitudeUnits
     this.element.querySelector(".track-info .zmax").textContent = zmax.toFixed(2) + this.info.altitudeUnits
 
-    var zminunit = (this._isMetric) ? Unit.Meter : Unit.Foot
+    var zminunit = (this._isMetric) ? ol_control_Profile.prototype.Unit.Meter : ol_control_Profile.prototype.Unit.Foot
     var zminConverted = this._unitsConversion(zmin, zminunit)
     this.element.querySelector(".track-info .zmin").textContent = this._numberFormat(zminConverted, this.get('zDigitsHover')) + zminunit
 
-    var zmaxnunit = (this._isMetric) ? Unit.Meter : Unit.Foot
+    var zmaxnunit = (this._isMetric) ? ol_control_Profile.prototype.Unit.Meter : ol_control_Profile.prototype.Unit.Foot
     var zmaxConverted = this._unitsConversion(zmax, zmaxnunit)
     this.element.querySelector(".track-info .zmax").textContent = this._numberFormat(zmaxConverted, this.get('zDigitsHover')) + zmaxnunit
 
     var dunit;
     if (this._isMetric) {
-      dunit = (d > 1000) ? Unit.Kilometer : Unit.Meter
+      dunit = (d > 1000) ? ol_control_Profile.prototype.Unit.Kilometer : ol_control_Profile.prototype.Unit.Meter
     } else {
-      dunit = (d > MILE_VALUE) ? Unit.Mile : Unit.Foot
+      dunit = (d > ol_control_Profile.prototype.MILE_VALUE) ? ol_control_Profile.prototype.Unit.Mile : ol_control_Profile.prototype.Unit.Foot
     }
     var dConverted = this._unitsConversion(d, dunit)
     this.element.querySelector(".track-info .dist").textContent = this._numberFormat(dConverted, this.get('xDigitsHover')) + dunit
@@ -832,7 +819,7 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
     // Scale Z
     ctx.beginPath()
     var zDigits = this.get('zDigits')
-    var zunit = this.get('zunit') || this._isMetric ? Unit.Meter : Unit.Foot
+    var zunit = this.get('zunit') || this._isMetric ? ol_control_Profile.prototype.Unit.Meter : ol_control_Profile.prototype.Unit.Foot
 
     var exp = null
     if (typeof (this.get('zMaxChars')) == 'number') {
@@ -888,15 +875,15 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
     ctx.textAlign = "center"
     ctx.textBaseline = "top"
     ctx.setLineDash([ratio, 3 * ratio])
-    var unit = this.get('unit') || ((this._isMetric) ? Unit.Kilometer : Unit.Mile)
+    var unit = this.get('unit') || ((this._isMetric) ? ol_control_Profile.prototype.Unit.Kilometer : ol_control_Profile.prototype.Unit.Mile)
     var stepsX = this.get('xSteps')
     var xDigits = this.get('xDigits')
-    var maxLimit = unit === Unit.Mile ? MILE_VALUE : 1000
+    var maxLimit = unit === ol_control_Profile.prototype.Unit.Mile ? ol_control_Profile.prototype.MILE_VALUE : 1000
     var step
 
     if (d < maxLimit) {
       // For small distances use the smallers units
-      unit = this._isMetric ? Unit.Meter : Unit.Foot
+      unit = this._isMetric ? ol_control_Profile.prototype.Unit.Meter : ol_control_Profile.prototype.Unit.Foot
     }
 
     if (typeof stepsX === 'number') {
@@ -958,15 +945,16 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
    * @return {number}
    * @api stable
    */
-  _unitsConversion(nMeters, targetUnit = Unit.Meter) {
+  _unitsConversion(nMeters, targetUnit) {
+    targetUnit = targetUnit || ol_control_Profile.prototype.Unit.Meter
     switch (targetUnit) {
-      case Unit.Kilometer:
-        return nMeters / KILOMETER_VALUE;
-      case Unit.Foot:
-        return nMeters / FOOT_VALUE
-      case Unit.Mile:
-        return nMeters / MILE_VALUE
-      case Unit.Meter:
+      case ol_control_Profile.prototype.Unit.Kilometer:
+        return nMeters / ol_control_Profile.prototype.KILOMETER_VALUE;
+      case ol_control_Profile.prototype.Unit.Foot:
+        return nMeters / ol_control_Profile.prototype.FOOT_VALUE
+      case ol_control_Profile.prototype.Unit.Mile:
+        return nMeters / ol_control_Profile.prototype.MILE_VALUE
+      case ol_control_Profile.prototype.Unit.Meter:
       default:
         return nMeters
     }
@@ -1001,6 +989,18 @@ ol_control_Profile.prototype.info = {
   "altitude": "Altitude",
   "distance": "Distance"
 };
+
+// Accepted units
+ol_control_Profile.prototype.Unit = {
+  Meter: 'm',
+  Kilometer: 'km',
+  Foot: 'ft',
+  Mile: 'mi'
+}
+// Meter divided by...
+ol_control_Profile.prototype.FOOT_VALUE = 0.3048
+ol_control_Profile.prototype.MILE_VALUE = 1609.344
+ol_control_Profile.prototype.KILOMETER_VALUE = 1000
 
 
 // For backward compatibility
