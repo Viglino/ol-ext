@@ -7,7 +7,6 @@ import ol_style_Style from 'ol/style/Style.js'
 import {asString as ol_color_asString} from 'ol/color.js'
 import {asArray as ol_color_asArray} from 'ol/color.js'
 import {ol_coordinate_dist2d} from '../geom/GeomUtils.js'
-import '../geom/LineStringSplitAt.js'
 
 /** Flow line style
  * Draw LineString with a variable color / width
