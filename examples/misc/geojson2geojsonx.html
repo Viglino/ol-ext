@@ -343,7 +343,7 @@
   }
 
   // Add feature on drop
-  var dd = new ol.interaction.DropFile({ projection: 'EPSG:4326' });
+  var dd = new ol.interaction.DropFile();// { projection: 'EPSG:4326' });
   dd.on('loadstart', function () { 
     $('#dropfile').removeClass('hover');
     $('body').addClass('isloading');

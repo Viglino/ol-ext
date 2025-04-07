@@ -498,9 +498,19 @@ function getLayerStyle(layer) {
   return styles;
 }
 
+
+document.getElementById('save').addEventListener('click', save);
+
 // Save to JSON file
-function save() {
-  var data = JSON.stringify(currentStyle, null, ' ');
+function save(e) {
+  var style = Object.assign({}, currentStyle)
+  if (e.ctrlKey) {
+    style.layers = [];
+    currentStyle.layers.forEach(function(l) {
+      if (l.layout.visibility !== 'none') style.layers.push(l)
+    })
+  }
+  var data = JSON.stringify(style, null, ' ');
   data = data.replace(/an7nvfzojv5wa96dsga5nk8w/g, 'essentiels')
   var blob = new Blob([data], {type: 'text/plain;charset=utf-8'});
   saveAs(blob, 'custom.json');
