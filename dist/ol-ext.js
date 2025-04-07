@@ -3094,11 +3094,13 @@ ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
    * @param {string} key 
    */
   _handleColorByKey(key) {
+    // 0 = transparent
     if (key === '0' && !this.element.classList.contains('ol-nopacity')) {
-      this._selectPalette('rgba(0,0,0,0)')
-      this.setColor('rgba(0,0,0,0)')
+      this.setColor([0, 0, 0, 0])
       return true;
     }
+    if (!/^Arrow/.test(key)) return false;
+    // Arrow key
     var col = 0, colors = [];
     Object.keys(this._paletteColor).forEach(function(c) {
       var p = this._paletteColor[c]
@@ -3131,7 +3133,7 @@ ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
       this._selectPalette(colors[col].color)
       this.setColor(colors[col].color)
     }
-    return /^Arrow/.test(key);
+    return true;
   }
   /**
    * @private
@@ -3206,10 +3208,11 @@ ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
    * @param {string} what palette or picker
    */
   showTab(what) {
-    if (what === 'palette')
+    if (what === 'palette'){
       this.element.classList.remove('ol-picker-tab');
-    else
+    } else{
       this.element.classList.add('ol-picker-tab');
+    }
   }
   /** Show palette or picker tab
    * @returns {string} palette or picker
@@ -3240,10 +3243,11 @@ ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
       hsv.h = hsv2[0];
       hsv.s = hsv2[1];
       hsv.v = hsv2[2];
-      if (hsv2.length > 3)
+      if (hsv2.length > 3){
         hsv.a = hsv2[3] * 100;
-      else
+      } else{
         hsv.a = 100;
+      }
       this._cursor.picker.style.left = hsv.s + '%';
       this._cursor.picker.style.top = (100 - hsv.v) + '%';
       this._cursor.tint.style.top = (hsv.h / 360 * 100) + '%';
