@@ -34,6 +34,15 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
     if (options.opacity === false) {
       this.element.classList.add('ol-nopacity');
     }
+    this.element.addEventListener('keydown', function(e) {
+      if (e.target === this.element) {
+        if (this._handleColorByKey(e.key)) {
+          this.element.classList.remove('ol-picker-tab');
+          e.preventDefault()
+          e.stopPropagation()
+        }
+      }
+    }.bind(this))
 
     this._cursor = {};
     var hsv = this._hsv = {};
@@ -48,7 +57,7 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
       tabindex: 0,
       on: {
         keydown: function(e) {
-          this._handlePikerKey(e, 'remove')
+          this._handlePickerKey(e, 'palette')
         }.bind(this),
         focus: function() {
           this.element.classList.remove('ol-picker-tab');
@@ -60,9 +69,9 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
       className: 'ol-tab',
       html: options.pickerLabel || 'picker',
       tabindex: 0,
-        on: {
+      on: {
         keydown: function(e) {
-          this._handlePikerKey(e, 'add')
+          this._handlePickerKey(e, 'picker')
         }.bind(this),
         focus: function() {
           this.element.classList.add('ol-picker-tab');
@@ -244,8 +253,52 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
   }
   /**
    * @private
+   * @param {string} key 
    */
-  _handlePikerKey(e, what) {
+  _handleColorByKey(key) {
+    if (key === '0' && !this.element.classList.contains('ol-nopacity')) {
+      this._selectPalette('rgba(0,0,0,0)')
+      this.setColor('rgba(0,0,0,0)')
+      return true;
+    }
+    var col = 0, colors = [];
+    Object.keys(this._paletteColor).forEach(function(c) {
+      var p = this._paletteColor[c]
+      if (p.element.classList.contains('ol-select')) {
+        col = colors.length;
+      }
+      if (!this.element.classList.contains('ol-nopacity') || !p.element.classList.contains('ol-alpha')) {
+        colors.push(p)
+      }
+    }.bind(this))
+    switch (key) {
+      case 'ArrowRight': {
+        col += 1;
+        break;
+      }
+      case 'ArrowLeft': {
+        col -= 1;
+        break;
+      }
+      case 'ArrowUp': {
+        col -= 8;
+        break;
+      }
+      case 'ArrowDown': {
+        col += 8;
+        break;
+      }
+    }
+    if (colors[col]) {
+      this._selectPalette(colors[col].color)
+      this.setColor(colors[col].color)
+    }
+    return /^Arrow/.test(key);
+  }
+  /**
+   * @private
+   */
+  _handlePickerKey(e, what) {
     if (e.key === 'Tab') return;
     e.stopPropagation();
     e.preventDefault();
@@ -253,7 +306,20 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
       case 'Enter':
       case ' ': 
       case 'Space': {
-        this.element.classList[what]('ol-picker-tab');
+        if (what === 'palette') {
+          this.element.classList.remove('ol-picker-tab');
+        } else {
+          this.element.classList.add('ol-picker-tab');
+        }
+        break;
+      }
+      case 'ArrowRight':
+      case 'ArrowLeft':
+      case 'ArrowUp':
+      case 'ArrowDown': {
+        if (what === 'palette') {
+          this._handleColorByKey(e.key)
+        }
         break;
       }
       case 'Escape': {
