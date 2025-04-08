@@ -2273,25 +2273,34 @@ ol.ext.input.Base = class olextinputBase extends ol.Object {
     var input = this.input = options.input;
     if (!input) {
       input = this.input = document.createElement('INPUT');
-      if (options.type)
+      if (options.type) {
         input.setAttribute('type', options.type);
-      if (options.min !== undefined)
+      }
+      if (options.min !== undefined) {
         input.setAttribute('min', options.min);
-      if (options.max !== undefined)
+      }
+      if (options.max !== undefined) {
         input.setAttribute('max', options.max);
-      if (options.step !== undefined)
+      }
+      if (options.step !== undefined) {
         input.setAttribute('step', options.step);
-      if (options.parent)
+      }
+      if (options.parent) {
         options.parent.appendChild(input);
+      }
     }
-    if (options.disabled)
+    if (options.disabled) {
       input.disabled = true;
-    if (options.checked !== undefined)
+    }
+    if (options.checked !== undefined) {
       input.checked = !!options.checked;
-    if (options.val !== undefined)
+    }
+    if (options.val !== undefined) {
       input.value = options.val;
-    if (options.hidden)
-      input.style.display = 'none';
+    }
+    if (options.hidden) { 
+      input.classList.add('ol-input-hidden');
+    }
     input.addEventListener('focus', function () {
       if (this.element)
         this.element.classList.add('ol-focus');
@@ -3358,8 +3367,9 @@ ol.ext.input.List = class olextinputList extends ol.ext.input.Base {
     options = options || {};
     super(options);
     this._content = ol.ext.element.create('DIV');
-    if (options.hidden || options.disabled)
+    if (options.hidden || options.disabled) {
       options.hover = true;
+    }
     this.element = ol.ext.element.create('DIV', {
       html: this._content,
       className: 'ol-input-popup' + (options.hover ? ' ol-hover' : '')

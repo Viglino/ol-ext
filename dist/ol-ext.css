@@ -6882,6 +6882,16 @@ ul.ol-legend li div {
   margin: 0;
 }
 
+.ol-input-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+  display: block;
+}
+
 .ol-input-popup {
   display: inline-block;
   position: relative;
@@ -6912,7 +6922,6 @@ ul.ol-legend li div {
   -webkit-transform: translateY(-50%);
           transform: translateY(-50%);
 }
-
 
 .ol-input-popup .ol-popup li {
   position: relative;
