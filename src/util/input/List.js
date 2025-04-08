@@ -22,8 +22,9 @@ var ol_ext_input_List = class olextinputList extends ol_ext_input_Base {
     super(options);
 
     this._content = ol_ext_element.create('DIV');
-    if (options.hidden || options.disabled)
+    if (options.hidden || options.disabled) {
       options.hover = true;
+    }
     this.element = ol_ext_element.create('DIV', {
       html: this._content,
       className: 'ol-input-popup' + (options.hover ? ' ol-hover' : '')

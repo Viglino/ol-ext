@@ -26,25 +26,34 @@ var ol_ext_input_Base = class olextinputBase extends ol_Object {
     var input = this.input = options.input;
     if (!input) {
       input = this.input = document.createElement('INPUT');
-      if (options.type)
+      if (options.type) {
         input.setAttribute('type', options.type);
-      if (options.min !== undefined)
+      }
+      if (options.min !== undefined) {
         input.setAttribute('min', options.min);
-      if (options.max !== undefined)
+      }
+      if (options.max !== undefined) {
         input.setAttribute('max', options.max);
-      if (options.step !== undefined)
+      }
+      if (options.step !== undefined) {
         input.setAttribute('step', options.step);
-      if (options.parent)
+      }
+      if (options.parent) {
         options.parent.appendChild(input);
+      }
     }
-    if (options.disabled)
+    if (options.disabled) {
       input.disabled = true;
-    if (options.checked !== undefined)
+    }
+    if (options.checked !== undefined) {
       input.checked = !!options.checked;
-    if (options.val !== undefined)
+    }
+    if (options.val !== undefined) {
       input.value = options.val;
-    if (options.hidden)
-      input.style.display = 'none';
+    }
+    if (options.hidden) { 
+      input.classList.add('ol-input-hidden');
+    }
     input.addEventListener('focus', function () {
       if (this.element)
         this.element.classList.add('ol-focus');
