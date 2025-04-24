@@ -167,15 +167,14 @@ var ol_layer_AnimatedCluster = class ollayerAnimatedCluster extends ol_layer_Vec
         }
         // Draw feature
         var st = stylefn(c.f, resolution, true)
-        if (!st.length)
+        if (!Array.isArray(st)) {
           st = [st]
+        }
         // If one feature: draw the feature
         if (c.f.get("features").length === 1 && !dx && !dy) {
           f = c.f.get("features")[0]
-        }
-
-        // else draw a point
-        else {
+        } else {
+          // else draw a point
           var geo = new ol_geom_Point(pt)
           f = new ol_Feature(geo)
         }
