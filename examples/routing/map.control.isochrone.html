@@ -127,6 +127,11 @@
       iso.feature.setGeometry(parser.write(buffered));
     }
     console.log(currentFeature)
+    Object.keys(currentFeature.getProperties()).forEach(function(k) {
+      if (k !== 'iteration' && k !== currentFeature.getGeometryName()) {
+        iso.feature.set(k, currentFeature.get(k))
+      }
+    });
     vector.getSource().addFeature(iso.feature);
     setTimeout(function() {
       map.getView().fit(vector.getSource().getExtent(), { duration:1000 });
