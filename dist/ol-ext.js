@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.30
+ * @version v4.0.31
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -35999,14 +35999,14 @@ ol.layer.AnimatedCluster = class ollayerAnimatedCluster extends ol.layer.Vector 
         }
         // Draw feature
         var st = stylefn(c.f, resolution, true)
-        if (!st.length)
+        if (!Array.isArray(st)) {
           st = [st]
+        }
         // If one feature: draw the feature
         if (c.f.get("features").length === 1 && !dx && !dy) {
           f = c.f.get("features")[0]
-        }
-        // else draw a point
-        else {
+        } else {
+          // else draw a point
           var geo = new ol.geom.Point(pt)
           f = new ol.Feature(geo)
         }
