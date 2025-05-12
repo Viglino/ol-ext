@@ -286,7 +286,7 @@ var ol_ext_getPixelFromElevation =  function(height) {
 /** Convert pixel (terrain-RGB) to elevation 
  * @see ol_ext_getPixelFromElevation
  * @param {Array<number>} pixel the pixel value
- * @returns {number} elevation
+ * @returns {number} elevation (-12000 if no data)
  */
 var ol_ext_getElevationFromPixel = function(pixel) {
   // return -10000 + (pixel[0] * 65536 + pixel[1] * 256 + pixel[2]) * 0.01;
