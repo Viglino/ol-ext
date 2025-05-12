@@ -290,6 +290,8 @@ var ol_ext_getPixelFromElevation =  function(height) {
  */
 var ol_ext_getElevationFromPixel = function(pixel) {
   // return -10000 + (pixel[0] * 65536 + pixel[1] * 256 + pixel[2]) * 0.01;
+  if (!pixel) return -12000;
+  // Convert elevation
   return -12000 + ((pixel[0] << 16) + (pixel[1] << 8) + pixel[2]) * 0.01;
 };
 
