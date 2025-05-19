@@ -7556,6 +7556,7 @@ ol.control.CanvasAttribution = class olcontrolCanvasAttribution extends ol.contr
  */
 ol.control.CanvasScaleLine = class olcontrolCanvasScaleLine extends ol.control.ScaleLine {
   constructor(options) {
+    options.bar = false;
     super(options)
     this.element.classList.add('ol-canvas-control')
     this.scaleHeight_ = 6
@@ -7590,6 +7591,7 @@ ol.control.CanvasScaleLine = class olcontrolCanvasScaleLine extends ol.control.S
     // Hide the default DOM element
     this.element.style.visibility = 'hidden'
     this.olscale = this.element.querySelector(".ol-scale-line-inner")
+    console.log()
   }
   /**
    * Change the control style
