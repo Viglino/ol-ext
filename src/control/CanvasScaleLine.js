@@ -61,7 +61,6 @@ var ol_control_CanvasScaleLine = class olcontrolCanvasScaleLine extends ol_contr
     // Hide the default DOM element
     this.element.style.visibility = 'hidden'
     this.olscale = this.element.querySelector(".ol-scale-line-inner")
-    console.log()
   }
   /**
    * Change the control style
