@@ -1,0 +1,132 @@
+﻿<html>
+<head>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+
+  
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
+
+  <!-- Geoimport -->
+  <script src="https://cdn.jsdelivr.net/npm/geoimport@latest/dist/index.min.js"></script>
+
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    h1 {
+      margin: -0.5em -0.5em 0;
+    }
+    #map {
+      position: absolute; 
+      top: 5em; 
+      right: 0; 
+      bottom: 0; 
+      left: 0;
+      margin: 0;
+    }
+    dialog:before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0,0,0,0.3);
+      z-index: -1;
+    }
+    dialog {
+      background: none;
+      border: 0;
+    }
+    dialog form {
+      background-color: #fff;
+      padding: 1em;
+      box-shadow: 0 0 5px #000;
+    }
+  </style>
+
+</head>
+
+<body> 
+  <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"><i></i></a>
+
+  <a href="../../index.html">
+    <h1>Geoimport</h1>
+  </a>
+
+  <input type="file" />
+  <label>📥 </label>
+  <select>
+    <option>export</option>
+    <option value="KML">KML</option>
+    <option value="geojson">GeoJSON</option>
+    <option value="ESRI Shapefile">ESRI Shapefile</option>
+    <option value="GPKG">Geopackage</option>
+    <option value="FlatGeobuf">FlatGeobuf</option>
+  </select>
+
+  <div id="map"></div>
+  
+  <dialog class="loading">
+    <form>loading...</form>
+  </dialog>
+<script>
+  // @see https://github.com/riatelab/geoimport
+
+// The map
+var map = new ol.Map({
+  target: 'map',
+  view: new ol.View({
+    zoom: 3,
+    center: [270148, 6247782]
+  }),
+  layers: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }) ]
+});
+
+
+geoimport.init({
+  path: 'https://cdn.jsdelivr.net/npm/geoimport@latest/dist/static/',
+  useWorker: false,
+});
+
+var layer;
+var inputf = document.querySelector('input[type="file"]')
+inputf.addEventListener('change', e => {
+  document.querySelector('.loading').showModal();
+  geoimport.toGeoJSON(inputf.files[0]).then(json => {
+    layer = new ol.layer.VectorImage({
+      source: new ol.source.Vector({
+        features: new ol.format.GeoJSON().readFeatures(json, { dataProjection: 'EPSG:4326', featureProjection: map.getView().getProjection() }),
+      })
+    })
+    map.addLayer(layer)
+    document.querySelector('.loading').close();
+  })
+})
+
+document.querySelector('select').addEventListener('change', (e) => {
+  console.log(e.target.value)
+  if (layer) {
+    var json = new ol.format.GeoJSON().writeFeaturesObject(layer.getSource().getFeatures(), { dataProjection: 'EPSG:4326', featureProjection: map.getView().getProjection() })
+    if (e.target.value ==='geojson') {
+      var blob = new Blob([JSON.stringify(json)], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, 'export.geojson')
+    } else {
+      geoimport.fromGeoJSON(json, 'export', e.target.value).then(f => {
+        if (f.name) {
+          saveAs(f, f.name);
+        } else {
+          var blob = new Blob([f], {type: "text/plain;charset=utf-8"});
+          saveAs(blob, 'export.' + e.target.value.toLowerCase())
+        }
+      })
+    }
+  }
+})
+
+</script>
+</body>
+</html>
