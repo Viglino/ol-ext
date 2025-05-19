@@ -73,6 +73,9 @@
   <dialog class="loading">
     <form>loading...</form>
   </dialog>
+  <dialog class="saving">
+    <form>saving...</form>
+  </dialog>
 <script>
   // @see https://github.com/riatelab/geoimport
 
@@ -115,6 +118,7 @@ document.querySelector('select').addEventListener('change', (e) => {
       var blob = new Blob([JSON.stringify(json)], {type: "text/plain;charset=utf-8"});
       saveAs(blob, 'export.geojson')
     } else {
+      document.querySelector('.saving').showModal();
       geoimport.fromGeoJSON(json, 'export', e.target.value).then(f => {
         if (f.name) {
           saveAs(f, f.name);
@@ -122,6 +126,7 @@ document.querySelector('select').addEventListener('change', (e) => {
           var blob = new Blob([f], {type: "text/plain;charset=utf-8"});
           saveAs(blob, 'export.' + e.target.value.toLowerCase())
         }
+        document.querySelector('.saving').close();
       })
     }
   }
