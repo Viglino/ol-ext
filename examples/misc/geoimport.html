@@ -100,6 +100,7 @@ var inputf = document.querySelector('input[type="file"]')
 inputf.addEventListener('change', e => {
   document.querySelector('.loading').showModal();
   geoimport.toGeoJSON(inputf.files[0]).then(json => {
+    console.log('ok')
     layer = new ol.layer.VectorImage({
       source: new ol.source.Vector({
         features: new ol.format.GeoJSON().readFeatures(json, { dataProjection: 'EPSG:4326', featureProjection: map.getView().getProjection() }),
@@ -107,11 +108,13 @@ inputf.addEventListener('change', e => {
     })
     map.addLayer(layer)
     document.querySelector('.loading').close();
+  }).catch(function(e) {
+    document.querySelector('.loading').close();
+    console.log('OOPS', e);
   })
 })
 
 document.querySelector('select').addEventListener('change', (e) => {
-  console.log(e.target.value)
   if (layer) {
     var json = new ol.format.GeoJSON().writeFeaturesObject(layer.getSource().getFeatures(), { dataProjection: 'EPSG:4326', featureProjection: map.getView().getProjection() })
     if (e.target.value ==='geojson') {
