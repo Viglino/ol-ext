@@ -3773,12 +3773,20 @@ ul.ol-legend li div {
   outline: none;
   cursor: pointer;
 }
+.ol-routing .ol-constraints {
+  display: block;
+}
+
 .ol-routing .ol-button:hover,
 .ol-routing .ol-button.selected,
 .ol-routing i.selected {
   opacity: 1;
   background: transparent;
 }
+.ol-routing .ol-method {
+  display: block;
+}
+
 
 .ol-control.ol-routing {
   background-color: rgba(255,255,255,.25);

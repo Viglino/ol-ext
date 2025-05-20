@@ -16233,22 +16233,44 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
     this._search = [];
     this.addSearch(listElt, options);
     this.addSearch(listElt, options);
+    // Method
+    ol.ext.element.createSwitch({
+      className: 'ol-method',
+      html: 'fastest',
+      after: 'shortest',
+      parent: content
+    }).addEventListener('change', function(e) {
+      self.setMethod(e.target.checked ? 'shortest' : 'fastest')
+    })
+    // Constraints
+    var constraintsBlock = ol.ext.element.create('DIV', { className: 'ol-constraints', parent: content })
+    var constraints = options.constraints || { autoroute: 'péages', tunnel: 'tunnels', pont: 'ponts' }
+    Object.keys(constraints).forEach(function(c) {
+      ol.ext.element.createCheck({
+        after: constraints[c],
+        value: c,
+        checked: true,
+        parent: constraintsBlock
+      }).addEventListener('change', function(e) {
+        self.setConstraint(c, e.target.checked ? false : true)
+      })
+    })
+    // Mode
     ol.ext.element.create('I', { 
       className: 'ol-car', 
       title: options.carlabel || 'by car', 
       parent: content 
-    })
-      .addEventListener("click", function () {
+    }).addEventListener("click", function () {
         self.setMode('car');
       });
     ol.ext.element.create('I', { 
       className: 'ol-pedestrian', 
       title: options.pedlabel || 'pedestrian', 
       parent: content 
-    })
-      .addEventListener("click", function () {
+    }).addEventListener("click", function () {
         self.setMode('pedestrian');
       });
+    // OK/cancel
     ol.ext.element.create('I', { className: 'ol-ok', title: options.runlabel || 'search', html: 'OK', parent: content })
       .addEventListener("click", function () {
         self.calculate();
@@ -16263,19 +16285,43 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
     this.setMode(options.mode || 'car');
     this.set('timeout', options.timeout || 20000);
   }
+  /** Set the mode (car/pedestrian)
+   * @param {string} mode
+   * @param {boolean} [silent=false] pervent calculating
+   */
   setMode(mode, silent) {
     this.set('mode', mode);
     this.element.querySelector(".ol-car").classList.remove("selected");
     this.element.querySelector(".ol-pedestrian").classList.remove("selected");
     this.element.querySelector(".ol-" + mode).classList.add("selected");
-    if (!silent)
+    if (!silent) {
       this.calculate();
+    }
   }
+  /** Set method (shortest, fastest)
+   * @param {string} method
+   * @param {boolean} [silent=false] pervent calculating
+   */
   setMethod(method, silent) {
     this.set('method', method);
-    if (!silent)
+    if (!silent) {
       this.calculate();
+    }
   }
+  /** Add / remove constraint
+   * @param {string} type
+   * @param {string} [value]
+   */
+  setConstraint(type, value) {
+    var c = this.get('constraint') || [];
+    c[type] = value;
+    this.set('constraint', c)
+  }
+  /** Add a new button
+   * @param {string} className
+   * @param {string} title
+   * @param {string} info
+   */
   addButton(className, title, info) {
     var bt = document.createElement("I");
     bt.setAttribute("class", className);
@@ -16291,6 +16337,9 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
   getSource() {
     return this._source;
   }
+  /** reset
+   * @private
+   */
   _resetArray(element) {
     this._search = [];
     var q = element.parentNode.querySelectorAll('.search-input > div');
@@ -16429,6 +16478,10 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
     for (var i = 1; i < steps.length - 1; i++) {
       waypoints += (waypoints ? '|' : '') + steps[i].x + ',' + steps[i].y;
     }
+    var contr = []
+    Object.keys(this.get('constraint') || {}).forEach(function(c) {
+      contr.push('{%22constraintType%22:%22banned%22,%22key%22:%22wayType%22,%22operator%22:%22=%22,%22value%22:%22'+c+'%22}')
+    })
     return {
       resource: 'bdtopo-osrm',
       profile: this.get('mode') === 'pedestrian' ? 'pedestrian' : 'car',
@@ -16436,6 +16489,9 @@ ol.control.RoutingGeoportail = class olcontrolRoutingGeoportail extends ol.contr
       start: start.x + ',' + start.y,
       end: end.x + ',' + end.y,
       intermediates: waypoints,
+      constraints: contr.join('|'),
+      distanceUnit: 'meter',
+      timeUnit: 'minute',
       geometryFormat: 'geojson'
     };
   }
