@@ -151,6 +151,9 @@
         <label><input type="checkbox" class="merge">merge</label>
       </li>
       <li>
+        <label><input type="checkbox" class="cumul">cumulate</label>
+      </li>
+      <li>
         <label><input type="checkbox" class="remove" checked="checked">remove previous search</label>
       </li>
       <li>
@@ -201,8 +204,33 @@
   // Preocess result
   search.on('routing', function(routing) {
     if ($('.remove').prop('checked')) vector.getSource().clear();
-    if ($('.merge').prop('checked')) vector.getSource().addFeatures([routing.feature]);
-    else vector.getSource().addFeatures(routing.features);
+    if ($('.merge').prop('checked')) {
+      vector.getSource().addFeatures([routing.feature]);
+    } else if ($('.cumul').prop('checked')) {
+      var source = vector.getSource();
+      routing.features.forEach(function(f) {
+        var pt1 = f.getGeometry().getFirstCoordinate();
+        var pt2 = f.getGeometry().getLastCoordinate();
+        var features = source.getFeaturesAtCoordinate(pt1);
+        var found = false;
+        for (var i=0; i<features.length; i++) {
+          var f2 = features[i];
+          // Same feature
+          if (ol.coordinate.equal(pt1,f2.getGeometry().getFirstCoordinate()) && ol.coordinate.equal(pt2, f2.getGeometry().getLastCoordinate())
+            || ol.coordinate.equal(pt2,f2.getGeometry().getFirstCoordinate()) && ol.coordinate.equal(pt1, f2.getGeometry().getLastCoordinate())) {
+              f2.set('count', f2.get('count')+1)
+              found = true;
+              break;
+          }
+        }
+        if (!found) {
+          f.set('count', 1)
+          source.addFeature(f)
+        }
+      })
+    } else {
+      vector.getSource().addFeatures(routing.features);
+    }
     setTimeout(function() {
       map.getView().fit(vector.getSource().getExtent(), { duration:1000 });
     }, 500);
@@ -307,6 +335,33 @@
 		var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
 		saveAs(blob, "route.geojson");
 	}
+
+  // Drop file
+  var drop = new ol.interaction.DropFile();
+  map.addInteraction(drop);
+  drop.on('addfeatures', function(e) {
+    vector.getSource().clear();
+    batch = e.features;
+    dosearch(e.features);
+  });
+
+  function dosearch(features) {
+    $('.remove').prop('checked', false)
+    console.log(features)
+    var feature = features.pop();
+    var geom = feature.getGeometry()
+    if (geom.getType() === 'LineString') {
+      var pt1 = ol.proj.toLonLat(geom.getFirstCoordinate())
+      var pt2 = ol.proj.toLonLat(geom.getLastCoordinate())
+      search.once('routing', function() {
+        if (features.length) dosearch(features)
+      })
+      console.log(pt1,pt2)
+      search.calculate([pt1,pt2])
+    } else {
+      dosearch(features)
+    }
+  }
 
   </script>
   
