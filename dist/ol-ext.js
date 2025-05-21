@@ -7556,6 +7556,7 @@ ol.control.CanvasAttribution = class olcontrolCanvasAttribution extends ol.contr
  */
 ol.control.CanvasScaleLine = class olcontrolCanvasScaleLine extends ol.control.ScaleLine {
   constructor(options) {
+    options = options || {};
     options.bar = false;
     super(options)
     this.element.classList.add('ol-canvas-control')

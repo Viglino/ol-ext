@@ -20,6 +20,7 @@ import ol_ext_element from '../util/element.js'
  */
 var ol_control_CanvasScaleLine = class olcontrolCanvasScaleLine extends ol_control_ScaleLine {
   constructor(options) {
+    options = options || {};
     options.bar = false;
     super(options)
     this.element.classList.add('ol-canvas-control')

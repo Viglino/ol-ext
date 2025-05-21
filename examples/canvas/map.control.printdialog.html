@@ -184,6 +184,13 @@ printControl.on(['print', 'error'], function(e) {
   }
 });
 
+document.addEventListener('keydown', function(e) {
+  if (e.key==='p' && e.ctrlKey) {
+    e.preventDefault();
+    printControl.print()
+  }
+})
+
 </script>
 
 </body>
