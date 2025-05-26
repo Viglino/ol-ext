@@ -221,8 +221,10 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
    * @param {ol.coordinate} coord
    * @param {number|string} option A number as time (in second) or distance (in meter), depend on method propertie
    * or a string with a unit (s, mn, h for time or km, m)
+   * @param {number} [iter=0] iteration number (default no iteration)
+   * @param {boolean} [once=false] just one iteration (the current iter)
    */
-  search(coord, option, iter) {
+  search(coord, option, iter, once) {
     var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
     var method = /distance/.test(this.get('method')) ? 'distance' : 'time';
     if (typeof (option) === 'string') {
@@ -268,7 +270,8 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
         coord: coord,
         option: option,
         data: data,
-        iteration: (iter || 0) + 1
+        iteration: (iter || 0) + 1,
+        once: once
       });
     }
   }
@@ -276,7 +279,7 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
    * @private
    */
   _success(e) {
-    console.log(e)
+//    console.log(e)
     var proj = this.getMap() ? this.getMap().getView().getProjection() : 'EPSG:3857';
     // Convert to features
     var evt = e.response;
@@ -302,7 +305,7 @@ var ol_control_IsochroneGeoportail = class olcontrolIsochroneGeoportail extends 
     evt.type = 'isochrone';
     evt.iteration = e.options.iteration - 1;
     this.dispatchEvent(evt);
-    if (e.options.iteration < this.get('iter')) {
+    if (!e.options.once && e.options.iteration < this.get('iter')) {
       this.search(e.options.coord, e.options.option, e.options.iteration);
     }
   }

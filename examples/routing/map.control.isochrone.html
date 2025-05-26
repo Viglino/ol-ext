@@ -126,8 +126,9 @@
       buffered = jsts.simplify.DouglasPeuckerSimplifier.simplify(buffered, Math.min(10, simpli/10))
       iso.feature.setGeometry(parser.write(buffered));
     }
+    // Get fearture attributes
     if (currentFeature) {
-      console.log(currentFeature)
+//      console.log(currentFeature)
       Object.keys(currentFeature.getProperties()).forEach(function(k) {
         if (k !== 'iteration' && k !== currentFeature.getGeometryName()) {
           iso.feature.set(k, currentFeature.get(k))
@@ -172,12 +173,12 @@
       dosearch();
       return;
     }
-    dialog.show('Calculating: '+batch.length+'/'+current_iteration)
+    dialog.show('Calculating: '+batch.length+' - '+current_iteration)
     var pt = batch[0].getGeometry().getFirstCoordinate();
     var val = search.get('method')==='distance' ? search.get('distance')*1000 : (search.get('hour')||0)*60*60+(search.get('minute')||0)*60;
     if (val) {
       currentFeature = batch[0];
-      search.search(pt, val, current_iteration-1)
+      search.search(pt, val, current_iteration-1, true)
     } else {
       batch = [];
       dialog.hide();
@@ -187,7 +188,7 @@
   var drop = new ol.interaction.DropFile();
   map.addInteraction(drop);
   drop.on('addfeatures', function(e) {
-    console.log(e.features);
+//    console.log(e.features);
     vector.getSource().clear();
     batch = e.features;
     current_iteration = search.get('iter')+1;
