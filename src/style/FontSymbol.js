@@ -108,7 +108,7 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
       }
       ol_style_FontSymbol.defs.glyphs[i] = {
         font: thefont.font,
-        char: g.char || '' + String.fromCharCode(g.code) || '',
+        char: g.char || '' + String.fromCodePoint(g.code) || '',
         theme: g.theme || thefont.name,
         name: g.name || i,
         search: g.search || ''
