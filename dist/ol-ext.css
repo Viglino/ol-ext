@@ -2670,6 +2670,10 @@ ul.ol-legend li div {
   height: 5em;
   margin: 0 .2em 0 0;
 }
+.ol-mapzone > div:focus {
+  -webkit-box-shadow: 0 0 0 0.2em #369;
+          box-shadow: 0 0 0 0.2em #369;
+}
 .ol-control.ol-mapzone.ol-collapsed > div {
   display: none;
 }

@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.31
+ * @version v4.0.32
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -11920,10 +11920,15 @@ ol.control.MapZone = class olcontrolMapZone extends ol.control.Control {
         type: 'button',
         on: {
           'click': function () {
+            this.setVisible(this.getCollapsed())
+            /*
             element.classList.toggle("ol-collapsed")
             maps.forEach(function (m) {
-              m.updateSize()
+              // m.updateSize()
+              console.log('ok')
+              m.getView().fit(m.get('zone').extent)
             })
+              */
           }.bind(this)
         },
         parent: element
@@ -11949,11 +11954,11 @@ ol.control.MapZone = class olcontrolMapZone extends ol.control.Control {
    * @param {boolean} b
    */
   setCollapsed(b) {
-    if (b) {
+    if (!b) {
       this.element.classList.remove('ol-collapsed')
       // Force map rendering
       this.getMaps().forEach(function (m) {
-        m.updateSize()
+        setTimeout(() => m.getView().fit(m.get('extent')))
       })
     } else {
       this.element.classList.add('ol-collapsed')
@@ -11999,7 +12004,13 @@ ol.control.MapZone = class olcontrolMapZone extends ol.control.Control {
     // console.log(extent, z.extent)
     var div = ol.ext.element.create('DIV', {
       className: 'ol-mapzonezone',
+      tabindex: "0",
       parent: this.element,
+      on: {
+        keydown: function(e) {
+          if (e.key === ' ') e.target.click()
+        }
+      },
       click: function () {
         // Get index
         var index = -1
@@ -12018,7 +12029,7 @@ ol.control.MapZone = class olcontrolMapZone extends ol.control.Control {
         if (this.get('centerOnClick') !== false) {
           this.getMap().getView().fit(extent)
         }
-        this.setVisible(false)
+        // this.setVisible(true)
       }.bind(this)
     })
     var layer
@@ -12040,6 +12051,7 @@ ol.control.MapZone = class olcontrolMapZone extends ol.control.Control {
       layers: [layer]
     })
     map.set('zone', z)
+    map.set('extent', extent)
     this._maps.push(map)
     view.fit(extent)
     // Name
