@@ -42,14 +42,6 @@ var ol_control_MapZone = class olcontrolMapZone extends ol_control_Control {
         on: {
           'click': function () {
             this.setVisible(this.getCollapsed())
-            /*
-            element.classList.toggle("ol-collapsed")
-            maps.forEach(function (m) {
-              // m.updateSize()
-              console.log('ok')
-              m.getView().fit(m.get('zone').extent)
-            })
-              */
           }.bind(this)
         },
         parent: element

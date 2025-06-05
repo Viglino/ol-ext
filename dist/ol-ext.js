@@ -11921,14 +11921,6 @@ ol.control.MapZone = class olcontrolMapZone extends ol.control.Control {
         on: {
           'click': function () {
             this.setVisible(this.getCollapsed())
-            /*
-            element.classList.toggle("ol-collapsed")
-            maps.forEach(function (m) {
-              // m.updateSize()
-              console.log('ok')
-              m.getView().fit(m.get('zone').extent)
-            })
-              */
           }.bind(this)
         },
         parent: element
@@ -43833,7 +43825,7 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
       }
       ol.style.FontSymbol.defs.glyphs[i] = {
         font: thefont.font,
-        char: g.char || '' + String.fromCharCode(g.code) || '',
+        char: g.char || '' + String.fromCodePoint(g.code) || '',
         theme: g.theme || thefont.name,
         name: g.name || i,
         search: g.search || ''
