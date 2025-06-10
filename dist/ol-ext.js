@@ -300,7 +300,7 @@ ol.ext.SVGFilter = class olextSVGFilter extends ol.Object {
     }
   }
   applyTo(img) {
-    var canvas = document.createElement('CANVAS');
+    var canvas = document.createElement('canvas');
     canvas.width = img.naturalWidth || img.width;
     canvas.height = img.naturalHeight || img.height;
     canvas.getContext('2d').filter = 'url(#' + this.getId() + ')';
@@ -799,7 +799,7 @@ ol.ext.element.create = function (tagName, options) {
     if (options.parent) options.parent.appendChild(elt);
   } else {
     // Other element
-    elt = document.createElement(tagName);
+    elt = document.createElement(tagName.toLowerCase());
     if (/button/i.test(tagName)) elt.setAttribute('type', 'button');
     for (var attr in options) {
       switch (attr) {
@@ -2274,7 +2274,7 @@ ol.ext.input.Base = class olextinputBase extends ol.Object {
     super();
     var input = this.input = options.input;
     if (!input) {
-      input = this.input = document.createElement('INPUT');
+      input = this.input = document.createElement('input');
       if (options.type) {
         input.setAttribute('type', options.type);
       }
@@ -2637,7 +2637,7 @@ ol.ext.input.Checkbox = class olextinputCheckbox extends ol.ext.input.Base {
   constructor(options) {
     options = options || {};
     super(options);
-    var label = this.element = document.createElement('LABEL');
+    var label = this.element = document.createElement('label');
     if (options.html instanceof Element)
       label.appendChild(options.html);
     else if (options.html !== undefined)
@@ -2646,7 +2646,7 @@ ol.ext.input.Checkbox = class olextinputCheckbox extends ol.ext.input.Base {
     if (this.input.parentNode)
       this.input.parentNode.insertBefore(label, this.input);
     label.appendChild(this.input);
-    label.appendChild(document.createElement('SPAN'));
+    label.appendChild(document.createElement('span'));
     if (options.after) {
       label.appendChild(document.createTextNode(options.after));
     }
@@ -5104,7 +5104,7 @@ ol.control.Search = class olcontrolSearch extends ol.control.Control {
     this._classname = options.className || 'search';
     if (options.collapsed !== false) element.classList.add('ol-collapsed');
     if (!options.target) {
-      this.button = document.createElement('BUTTON');
+      this.button = document.createElement('button');
       this.button.setAttribute('type', 'button');
       this.button.setAttribute('title', options.title || options.label || 'Search');
       this.button.addEventListener('click', function () {
@@ -5257,7 +5257,7 @@ ol.control.Search = class olcontrolSearch extends ol.control.Control {
       element.appendChild(reverse);
     }
     // Autocomplete list
-    var ul = document.createElement('UL');
+    var ul = document.createElement('ul');
     ul.classList.add('autocomplete');
     element.appendChild(ul);
     if (typeof (options.getTitle) == 'function') this.getTitle = options.getTitle;
@@ -7199,7 +7199,7 @@ ol.control.LayerSwitcher.prototype.tip = {
 ol.control.Bar = class olcontrolBar extends ol.control.Control {
   constructor(options) {
     options = options || {};
-    var element = document.createElement('DIV');
+    var element = document.createElement('div');
     element.classList.add('ol-unselectable', 'ol-control', 'ol-bar');
     if (options.className) {
       var classes = options.className.split(' ').filter(function (className) {
@@ -8832,7 +8832,7 @@ ol.control.EditBar = class olcontrolEditBar extends ol.control.Bar {
         }
       }
       var regular = this._interactions.DrawRegular
-      var div = document.createElement('DIV')
+      var div = document.createElement('div')
       var down = ol.ext.element.create('DIV', { parent: div })
       ol.ext.element.addListener(down, ['click', 'touchstart'], function () {
         var sides = regular.getSides() - 1
@@ -12123,7 +12123,7 @@ ol.control.MapZone.zones.DOMTOM = [{
 ol.control.Notification = class olcontrolNotification extends ol.control.Control {
   constructor(options) {
     options = options || {};
-    var element = document.createElement('DIV');
+    var element = document.createElement('div');
     super({
       element: element,
       target: options.target
@@ -13601,7 +13601,7 @@ ol.control.PrintDialog = class olcontrolPrintDialog extends ol.control.Control {
         change: function () {
           // Print canvas (with white background)
           var clegend = extraCtrl.legend.control.getLegend().getCanvas()
-          var canvas = document.createElement('CANVAS')
+          var canvas = document.createElement('canvas')
           canvas.width = clegend.width
           canvas.height = clegend.height
           var ctx = canvas.getContext('2d')
@@ -17570,9 +17570,9 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
     // Input
     this._inputParcelle = {
       arrond: ol.ext.element.create('INPUT', { className: 'district', disabled: true }),
-      prefix: document.createElement('INPUT'),
-      section: document.createElement('INPUT'),
-      numero: document.createElement('INPUT')
+      prefix: document.createElement('input'),
+      section: document.createElement('input'),
+      numero: document.createElement('input')
     };
     this._inputParcelle.arrond.setAttribute('maxlength', 2);
     this._inputParcelle.arrond.setAttribute('placeholder', options.arrondLabel);
@@ -17604,13 +17604,13 @@ ol.control.SearchGeoportailParcelle = class olcontrolSearchGeoportailParcelle ex
     }
     this.activateParcelle(false);
     // Autocomplete list
-    var auto = document.createElement('DIV');
+    var auto = document.createElement('div');
     auto.className = 'autocomplete-parcelle';
     element.appendChild(auto);
-    var ul = document.createElement('UL');
+    var ul = document.createElement('ul');
     ul.classList.add('autocomplete-parcelle');
     auto.appendChild(ul);
-    ul = document.createElement('UL');
+    ul = document.createElement('ul');
     ul.classList.add('autocomplete-page');
     auto.appendChild(ul);
     // Show/hide list on fcus/blur	
@@ -23486,7 +23486,7 @@ ol.filter.Colorize = class olfilterColorize extends ol.filter.Base {
         var w = canvas.width
         var h = canvas.height
         if (this.get('preserveAlpha')) {
-          c2 = document.createElement('CANVAS')
+          c2 = document.createElement('canvas')
           c2.width = canvas.width
           c2.height = canvas.height
           ctx2 = c2.getContext('2d')
@@ -23509,7 +23509,7 @@ ol.filter.Colorize = class olfilterColorize extends ol.filter.Base {
       }
     } else {
       if (this.get('preserveAlpha')) {
-        c2 = document.createElement('CANVAS')
+        c2 = document.createElement('canvas')
         c2.width = canvas.width
         c2.height = canvas.height
         ctx2 = c2.getContext('2d')
@@ -26797,7 +26797,7 @@ ol.interaction.FillAttribute = class olinteractionFillAttribute extends ol.inter
       this.fill(e.selected, this._attributes);
     }.bind(this));
     if (options.cursor === undefined) {
-      var canvas = document.createElement('CANVAS');
+      var canvas = document.createElement('canvas');
       canvas.width = canvas.height = 32;
       var ctx = canvas.getContext("2d");
       ctx.beginPath();
@@ -34755,7 +34755,7 @@ ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
     };
     super(options);
     this._source = options.source;
-    this._canvas = document.createElement('CANVAS');
+    this._canvas = document.createElement('canvas');
     this._source.on(['addfeature', 'removefeature', 'clear', 'removefeature'], function () {
       this.changed();
     }.bind(this));
@@ -34947,7 +34947,7 @@ ol.source.IDW = class olsourceIDW extends ol.source.ImageCanvas {
    */
   onImageData(imageData) {
     // Calculation canvas at small resolution
-    var canvas = this._internal = document.createElement('CANVAS');
+    var canvas = this._internal = document.createElement('canvas');
     canvas.width = imageData.width;
     canvas.height = imageData.height;
     var ctx = canvas.getContext('2d');
@@ -37825,7 +37825,7 @@ ol.particule.Cloud = class olparticuleCloud extends ol.particule.Base {
     options = options || {};
     super(options);
     this.set('size', [100, 100]);
-    var canvas = document.createElement('CANVAS');
+    var canvas = document.createElement('canvas');
     canvas.width = 200;
     canvas.height = 200;
     var ctx = canvas.getContext('2d');
@@ -37881,7 +37881,7 @@ ol.particule.Rain = class olparticuleRain extends ol.particule.Base {
     options = options || {};
     super(options);
     this.z = Math.floor(Math.random() * 5) + 1;
-    var canvas = document.createElement('CANVAS');
+    var canvas = document.createElement('canvas');
     canvas.width = 50;
     canvas.height = 50;
     var ctx = canvas.getContext('2d');
@@ -37935,7 +37935,7 @@ ol.particule.RainDrop =class olparticuleRainDrop extends ol.particule.Base {
     super(options);
     this.size = 0;
     // Drops
-    var canvas = document.createElement('CANVAS');
+    var canvas = document.createElement('canvas');
     canvas.width = 100;
     canvas.height = 100;
     var ctx = canvas.getContext('2d');
@@ -37992,7 +37992,7 @@ ol.particule.Snow = class olparticuleSnow extends ol.particule.Base {
     this.z = (Math.floor(Math.random() * 5) + 1) / 5;
     this.angle = Math.random() * Math.PI;
     // Snow fakes
-    var canvas = document.createElement('CANVAS');
+    var canvas = document.createElement('canvas');
     canvas.width = 20;
     canvas.height = 20;
     var ctx = canvas.getContext('2d');
