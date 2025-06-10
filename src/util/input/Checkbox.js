@@ -19,7 +19,7 @@ var ol_ext_input_Checkbox = class olextinputCheckbox extends ol_ext_input_Base {
 
     super(options);
 
-    var label = this.element = document.createElement('LABEL');
+    var label = this.element = document.createElement('label');
     if (options.html instanceof Element)
       label.appendChild(options.html);
     else if (options.html !== undefined)
@@ -29,7 +29,7 @@ var ol_ext_input_Checkbox = class olextinputCheckbox extends ol_ext_input_Base {
     if (this.input.parentNode)
       this.input.parentNode.insertBefore(label, this.input);
     label.appendChild(this.input);
-    label.appendChild(document.createElement('SPAN'));
+    label.appendChild(document.createElement('span'));
     if (options.after) {
       label.appendChild(document.createTextNode(options.after));
     }

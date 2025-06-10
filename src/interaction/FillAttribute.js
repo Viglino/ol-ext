@@ -30,7 +30,7 @@ var ol_interaction_FillAttribute = class olinteractionFillAttribute extends ol_i
     }.bind(this));
 
     if (options.cursor === undefined) {
-      var canvas = document.createElement('CANVAS');
+      var canvas = document.createElement('canvas');
       canvas.width = canvas.height = 32;
       var ctx = canvas.getContext("2d");
       ctx.beginPath();

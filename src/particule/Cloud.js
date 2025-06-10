@@ -19,7 +19,7 @@ var ol_particule_Cloud = class olparticuleCloud extends ol_particule_Base {
     super(options);
 
     this.set('size', [100, 100]);
-    var canvas = document.createElement('CANVAS');
+    var canvas = document.createElement('canvas');
     canvas.width = 200;
     canvas.height = 200;
     var ctx = canvas.getContext('2d');

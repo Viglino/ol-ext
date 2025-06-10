@@ -30,7 +30,7 @@ var ol_source_IDW = class olsourceIDW extends ol_source_ImageCanvas {
     super(options);
 
     this._source = options.source;
-    this._canvas = document.createElement('CANVAS');
+    this._canvas = document.createElement('canvas');
     this._source.on(['addfeature', 'removefeature', 'clear', 'removefeature'], function () {
       this.changed();
     }.bind(this));
@@ -230,7 +230,7 @@ var ol_source_IDW = class olsourceIDW extends ol_source_ImageCanvas {
    */
   onImageData(imageData) {
     // Calculation canvas at small resolution
-    var canvas = this._internal = document.createElement('CANVAS');
+    var canvas = this._internal = document.createElement('canvas');
     canvas.width = imageData.width;
     canvas.height = imageData.height;
     var ctx = canvas.getContext('2d');

@@ -78,9 +78,9 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     // Input
     this._inputParcelle = {
       arrond: ol_ext_element.create('INPUT', { className: 'district', disabled: true }),
-      prefix: document.createElement('INPUT'),
-      section: document.createElement('INPUT'),
-      numero: document.createElement('INPUT')
+      prefix: document.createElement('input'),
+      section: document.createElement('input'),
+      numero: document.createElement('input')
     };
 
     this._inputParcelle.arrond.setAttribute('maxlength', 2);
@@ -116,13 +116,13 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     this.activateParcelle(false);
 
     // Autocomplete list
-    var auto = document.createElement('DIV');
+    var auto = document.createElement('div');
     auto.className = 'autocomplete-parcelle';
     element.appendChild(auto);
-    var ul = document.createElement('UL');
+    var ul = document.createElement('ul');
     ul.classList.add('autocomplete-parcelle');
     auto.appendChild(ul);
-    ul = document.createElement('UL');
+    ul = document.createElement('ul');
     ul.classList.add('autocomplete-page');
     auto.appendChild(ul);
 

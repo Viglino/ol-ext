@@ -22,7 +22,7 @@ import ol_control_Control from 'ol/control/Control.js'
 var ol_control_Bar = class olcontrolBar extends ol_control_Control {
   constructor(options) {
     options = options || {};
-    var element = document.createElement('DIV');
+    var element = document.createElement('div');
 
     element.classList.add('ol-unselectable', 'ol-control', 'ol-bar');
     if (options.className) {

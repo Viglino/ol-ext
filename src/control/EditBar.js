@@ -307,7 +307,7 @@ var ol_control_EditBar = class olcontrolEditBar extends ol_control_Bar {
       }
       var regular = this._interactions.DrawRegular
 
-      var div = document.createElement('DIV')
+      var div = document.createElement('div')
 
       var down = ol_ext_element.create('DIV', { parent: div })
       ol_ext_element.addListener(down, ['click', 'touchstart'], function () {

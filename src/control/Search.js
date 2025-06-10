@@ -62,7 +62,7 @@ var ol_control_Search = class olcontrolSearch extends ol_control_Control {
 
     if (options.collapsed !== false) element.classList.add('ol-collapsed');
     if (!options.target) {
-      this.button = document.createElement('BUTTON');
+      this.button = document.createElement('button');
       this.button.setAttribute('type', 'button');
       this.button.setAttribute('title', options.title || options.label || 'Search');
       this.button.addEventListener('click', function () {
@@ -220,7 +220,7 @@ var ol_control_Search = class olcontrolSearch extends ol_control_Control {
       element.appendChild(reverse);
     }
     // Autocomplete list
-    var ul = document.createElement('UL');
+    var ul = document.createElement('ul');
     ul.classList.add('autocomplete');
     element.appendChild(ul);
 

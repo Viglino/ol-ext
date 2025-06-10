@@ -116,7 +116,7 @@ var ol_filter_Colorize = class olfilterColorize extends ol_filter_Base {
         var w = canvas.width
         var h = canvas.height
         if (this.get('preserveAlpha')) {
-          c2 = document.createElement('CANVAS')
+          c2 = document.createElement('canvas')
           c2.width = canvas.width
           c2.height = canvas.height
           ctx2 = c2.getContext('2d')
@@ -139,7 +139,7 @@ var ol_filter_Colorize = class olfilterColorize extends ol_filter_Base {
       }
     } else {
       if (this.get('preserveAlpha')) {
-        c2 = document.createElement('CANVAS')
+        c2 = document.createElement('canvas')
         c2.width = canvas.width
         c2.height = canvas.height
         ctx2 = c2.getContext('2d')

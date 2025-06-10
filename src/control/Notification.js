@@ -20,7 +20,7 @@ import ol_ext_element from '../util/element.js';
 var ol_control_Notification = class olcontrolNotification extends ol_control_Control {
   constructor(options) {
     options = options || {};
-    var element = document.createElement('DIV');
+    var element = document.createElement('div');
     super({
       element: element,
       target: options.target

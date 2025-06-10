@@ -22,7 +22,7 @@ var ol_particule_Snow = class olparticuleSnow extends ol_particule_Base {
     this.angle = Math.random() * Math.PI;
 
     // Snow fakes
-    var canvas = document.createElement('CANVAS');
+    var canvas = document.createElement('canvas');
     canvas.width = 20;
     canvas.height = 20;
     var ctx = canvas.getContext('2d');

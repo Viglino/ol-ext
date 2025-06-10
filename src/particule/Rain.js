@@ -20,7 +20,7 @@ var ol_particule_Rain = class olparticuleRain extends ol_particule_Base {
 
     this.z = Math.floor(Math.random() * 5) + 1;
 
-    var canvas = document.createElement('CANVAS');
+    var canvas = document.createElement('canvas');
     canvas.width = 50;
     canvas.height = 50;
     var ctx = canvas.getContext('2d');
