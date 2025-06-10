@@ -31,7 +31,7 @@ ol_ext_element.create = function (tagName, options) {
     if (options.parent) options.parent.appendChild(elt);
   } else {
     // Other element
-    elt = document.createElement(tagName);
+    elt = document.createElement(tagName.toLowerCase());
     if (/button/i.test(tagName)) elt.setAttribute('type', 'button');
     for (var attr in options) {
       switch (attr) {
