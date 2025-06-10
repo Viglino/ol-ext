@@ -93,7 +93,7 @@ var ol_ext_SVGFilter = class olextSVGFilter extends ol_Object {
     }
   }
   applyTo(img) {
-    var canvas = document.createElement('CANVAS');
+    var canvas = document.createElement('canvas');
     canvas.width = img.naturalWidth || img.width;
     canvas.height = img.naturalHeight || img.height;
     canvas.getContext('2d').filter = 'url(#' + this.getId() + ')';

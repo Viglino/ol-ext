@@ -21,7 +21,7 @@ var ol_particule_RainDrop =class olparticuleRainDrop extends ol_particule_Base {
     this.size = 0;
 
     // Drops
-    var canvas = document.createElement('CANVAS');
+    var canvas = document.createElement('canvas');
     canvas.width = 100;
     canvas.height = 100;
     var ctx = canvas.getContext('2d');

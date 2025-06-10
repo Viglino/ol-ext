@@ -25,7 +25,7 @@ var ol_ext_input_Base = class olextinputBase extends ol_Object {
 
     var input = this.input = options.input;
     if (!input) {
-      input = this.input = document.createElement('INPUT');
+      input = this.input = document.createElement('input');
       if (options.type) {
         input.setAttribute('type', options.type);
       }

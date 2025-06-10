@@ -392,7 +392,7 @@ var ol_control_PrintDialog = class olcontrolPrintDialog extends ol_control_Contr
         change: function () {
           // Print canvas (with white background)
           var clegend = extraCtrl.legend.control.getLegend().getCanvas()
-          var canvas = document.createElement('CANVAS')
+          var canvas = document.createElement('canvas')
           canvas.width = clegend.width
           canvas.height = clegend.height
           var ctx = canvas.getContext('2d')
