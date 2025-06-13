@@ -414,6 +414,19 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
       }.bind(this)))
       ctx.font = this._titleStyle.getFont()
       ctx.textAlign = 'center'
+
+      const stroke = this._titleStyle.getStroke();
+      if (stroke) {
+        ctx.lineWidth = stroke.getWidth() || 1;
+        ctx.strokeStyle = stroke.getColor() || '#000';
+        ctx.lineJoin = 'round';
+        ctx.strokeText(this.getTitle(), canvas.width / ratio / 2, height / 2);
+      }
+
+      const fill = this._titleStyle.getFill();
+      if (fill) {
+        ctx.fillStyle = fill.getColor() || '#000';
+      }
       this._drawText(ctx, this.getTitle(), canvas.width / ratio / 2, height / 2)
     }
     // Add items
@@ -467,6 +480,17 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
           if (item.feature || item.typeGeom) {
             canvas = this.getLegendImage(item, canvas, offsetY)
             ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
+
+            const stroke = r.get('textStyle') ? r.get('textStyle').getStroke() : this._textStyle.getStroke();
+            if (stroke) {
+              ctx.lineWidth = stroke.getWidth() || 0;
+              ctx.strokeStyle = stroke.getColor() || '#000';
+              ctx.lineJoin = 'round';
+            }
+
+            // Handle fill
+            const fill = r.get('textStyle') ? r.get('textStyle').getFill() : this._textStyle.getFill();
+            ctx.fillStyle = fill ? fill.getColor() || '#000' : '#000';
             this._drawText(ctx, r.get('title'), width + margin, offsetY + h / 2)
           } else {
             ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
