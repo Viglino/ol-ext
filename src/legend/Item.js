@@ -28,6 +28,8 @@ var ol_legend_Item = class ollegendItem extends ol_Object {
     if (options.feature) this.set('feature', options.feature.clone());
     this.setWidth(options.width)
     this.setHeight(options.height)
+
+    this.set('textStyle', options.textStyle || null);
   }
   /** Set the legend title
    * @param {string} title
