@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.32
+ * @version v4.0.33
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -11982,6 +11982,7 @@ ol.control.MapZone = class olcontrolMapZone extends ol.control.Control {
     } else {
       this.element.classList.add('ol-collapsed')
     }
+    this.dispatchEvent({ type: 'change:collapse', collapsed: !!b })
   }
   /** Show the control
    * @param {boolean} b
