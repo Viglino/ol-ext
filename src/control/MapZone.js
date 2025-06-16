@@ -79,6 +79,7 @@ var ol_control_MapZone = class olcontrolMapZone extends ol_control_Control {
     } else {
       this.element.classList.add('ol-collapsed')
     }
+    this.dispatchEvent({ type: 'change:collapse', collapsed: !!b })
   }
   /** Show the control
    * @param {boolean} b
