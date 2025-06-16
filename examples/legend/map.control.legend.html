@@ -85,9 +85,18 @@
       x
       <input type="number" value="25" onchange="legend.set('size', [legend.get('size')[0],Number(this.value)]);" />
       <br/>
+      <label>Color: </label>
+      <select id="color">
+        <option value="#333">black</option>
+        <option value="#936">red</option>
+        <option value="#396">green</option>
+        <option value="#369">blue</option>
+      </select>
+      <br/>
       <button onclick="legend.getItems().clear()">Clear Legend</button>
       <label><input type="checkbox" onclick="legendCtrl.setCanvas($(this).prop('checked'));"/> draw in map</label>
-      <br/>
+    </p>
+    <p>
       <i>Select an object on the map and add it to the legend...</i>
     </p>
     <form class="row">
@@ -231,6 +240,7 @@
   // Define a new legend
   var legend = new ol.legend.Legend({
     title: 'Legend',
+    // textStyle: new ol.style.Text({ font: '16px sans-serif', fill: new ol.style.Fill({ color: '#369'  }) }),
     style: getFeatureStyle
   })
   var legendCtrl = new ol.control.Legend({ 
@@ -300,6 +310,13 @@
     });
     if (f) select.getFeatures().push(f);
   }
+
+  // Change text color
+  document.getElementById('color').addEventListener('change', function(e) {
+    legend.getTextStyle().getFill().setColor(e.target.value)
+    legend.getTitleStyle().getFill().setColor(e.target.value)
+    legend.refresh();
+  })
 
 	$(window).on("load", function(){ legend.refresh(); vector.changed(); });
 

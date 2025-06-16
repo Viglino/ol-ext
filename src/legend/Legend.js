@@ -288,6 +288,12 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
   getTextStyle() {
     return this._textStyle
   }
+  /** Get title Style
+   * @returns {ol_style_Text}
+   */
+  getTitleStyle() {
+    return this._titleStyle
+  }
   /** Set legend size
    * @param {ol.size} size
    */
