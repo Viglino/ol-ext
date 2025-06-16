@@ -3951,6 +3951,12 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
   getTextStyle() {
     return this._textStyle
   }
+  /** Get title Style
+   * @returns {ol.style.Text}
+   */
+  getTitleStyle() {
+    return this._titleStyle
+  }
   /** Set legend size
    * @param {ol.size} size
    */
@@ -4073,6 +4079,17 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
       }.bind(this)))
       ctx.font = this._titleStyle.getFont()
       ctx.textAlign = 'center'
+      var stroke = this._titleStyle.getStroke();
+      if (stroke) {
+        ctx.lineWidth = stroke.getWidth() || 1;
+        ctx.strokeStyle = stroke.getColor() || '#000';
+        ctx.lineJoin = 'round';
+        ctx.strokeText(this.getTitle(), canvas.width / ratio / 2, height / 2);
+      }
+      var fill = this._titleStyle.getFill();
+      if (fill) {
+        ctx.fillStyle = fill.getColor() || '#000';
+      }
       this._drawText(ctx, this.getTitle(), canvas.width / ratio / 2, height / 2)
     }
     // Add items
@@ -4126,6 +4143,15 @@ ol.legend.Legend = class ollegendLegend extends ol.Object {
           if (item.feature || item.typeGeom) {
             canvas = this.getLegendImage(item, canvas, offsetY)
             ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._textStyle.getFont()
+            var stroke = r.get('textStyle') ? r.get('textStyle').getStroke() : this._textStyle.getStroke();
+            if (stroke) {
+              ctx.lineWidth = stroke.getWidth() || 0;
+              ctx.strokeStyle = stroke.getColor() || '#000';
+              ctx.lineJoin = 'round';
+            }
+            // Handle fill
+            var fill = r.get('textStyle') ? r.get('textStyle').getFill() : this._textStyle.getFill();
+            ctx.fillStyle = fill ? fill.getColor() || '#000' : '#000';
             this._drawText(ctx, r.get('title'), width + margin, offsetY + h / 2)
           } else {
             ctx.font = r.get('textStyle') ? r.get('textStyle').getFont() : this._titleStyle.getFont()
@@ -4364,6 +4390,7 @@ ol.legend.Item = class ollegendItem extends ol.Object {
     if (options.feature) this.set('feature', options.feature.clone());
     this.setWidth(options.width)
     this.setHeight(options.height)
+    this.set('textStyle', options.textStyle || null);
   }
   /** Set the legend title
    * @param {string} title
