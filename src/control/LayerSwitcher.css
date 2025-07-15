@@ -231,6 +231,29 @@
   display:block;
 }
 
+.ol-control.ol-layerswitcher .ol-counter {
+  display: none;
+  position: absolute;
+  right: 0.3em;
+  top: 0;
+  z-index: 22;
+  line-height: 1.5em;
+  text-align: left;
+  font-size: 0.65em;
+}
+.ol-control.ol-layerswitcher.ol-counter .ol-counter {
+  display: block;
+}
+.ol-control.ol-layer-shop .ol-counter {
+  transform: translate(50%, -50%);
+  background: #fff;
+  line-height: 1.5em;
+  width: 1.5em;
+  text-align: center;
+  border-radius: 50%;
+  box-shadow: 0.5px 0.5px 2px currentColor;
+}
+
 .ol-layerswitcher-image > button,
 .ol-layerswitcher > button {
   background-color: white;

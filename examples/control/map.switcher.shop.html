@@ -52,6 +52,10 @@
     button:focus-visible {
       outline: solid!important;
     }
+    .ol-bar button:focus-visible {
+      position: relative;
+      z-index: 1;
+    }
   </style>
 </head>
 <body >
@@ -131,6 +135,7 @@
 
   // Add control inside the map
   var ctrl = new ol.control.LayerShop({
+    counter: true,
     minibar: true
   });
   map.addControl(ctrl);
