@@ -6173,6 +6173,7 @@ ol.control.SearchGeoportail = class olcontrolSearchGeoportail extends ol.control
  *  @param {boolean} options.collapsed collapse the layerswitcher at beginning, default true
  *  @param {ol.layer.Group} options.layerGroup a layer group to display in the switcher, default display all layers of the map
  *  @param {boolean} options.noScroll prevent handle scrolling, default false
+ *  @param {boolean} options.counter layer counter, default false
  *  @param {function} options.onchangeCheck optional callback on click on checkbox, you can call this method for doing operations after check/uncheck a layer
  *
  * Layers attributes that control the switcher
@@ -6210,6 +6211,12 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
       element.classList.add('ol-unselectable')
       element.classList.add('ol-control')
       element.classList.add(options.collapsed !== false ? 'ol-collapsed' : 'ol-forceopen')
+      if (options.counter) element.classList.add('ol-counter')
+      this.counter = ol.ext.element.create('SPAN', {
+        class: 'ol-counter',
+        text: 0,
+        parent: element
+      });
       this.button = ol.ext.element.create('BUTTON', {
         type: 'button',
         parent: element
@@ -6556,6 +6563,8 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
     }
     // Reset scrolltop
     this.panelContainer_.scrollTop = scrollTop
+    // Counter
+    this.counter.innerHTML = this.panel_.parentNode.querySelectorAll('ul.panel > li:not(.ol-header)').length;
   }
   /** Change layer visibility according to the baselayer option
    * @param {ol.layer}

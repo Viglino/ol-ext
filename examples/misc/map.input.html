@@ -151,7 +151,7 @@
 
   /* A dialog with a color input */ 
   var fakeMap = new ol.Map();  
-  var dialog = new ol.control.Dialog({ fullscreen: true });
+  var dialog = new ol.control.Dialog({ fullscreen: true, buttons: ['cancel'] });
   fakeMap.addControl(dialog);
   dialog.setContent({
     title: 'Color',
