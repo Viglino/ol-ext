@@ -20,6 +20,7 @@ import { VERSION as ol_util_VERSION } from 'ol/util.js'
  *  @param {number} options.scale z scale 
  *  @param {number} options.zIndex 
  *  @param {ol.geom.Geometry} options.geometry 
+ *  @param {number} options.vertexSize size of the vertex to draw. Default is 0 (no vertex).
  */
 var ol_style_Profile = class olstyleProfile extends ol_style_Style {
   constructor(options) {
@@ -34,6 +35,7 @@ var ol_style_Profile = class olstyleProfile extends ol_style_Style {
     this.setStroke(options.stroke)
     this.setFill(options.fill)
     this.setScale(options.scale)
+    this.setVertexSize(options.vertexSize)
 
   }
   /** Set style stroke
@@ -71,6 +73,19 @@ var ol_style_Profile = class olstyleProfile extends ol_style_Style {
    */
   getScale() {
     return this._scale
+  }
+  /** Set the vertex size
+   * Use 0 to disable vertex rendering
+   * @param {number}
+   */
+  setVertexSize(ver) {
+    this._vertexSize = ver || 0
+  }
+  /** Get the vertex size
+   * @return {number}
+   */
+  getVertexSize() {
+    return this._vertexSize
   }
   /** Renderer function
    * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
@@ -133,6 +148,18 @@ var ol_style_Profile = class olstyleProfile extends ol_style_Style {
       ctx.lineTo(p0[0], p0[1])
       ctx.fill()
       p0 = p
+    }
+
+    var vertexSize = this.getVertexSize();
+    if (vertexSize) {
+      // draw vertex on top of the lines
+      ctx.beginPath();
+      for (i = 1; p = geom[i]; i++) {
+          const yElev = p[1] - (p[2] - dz) * ez;
+          ctx.arc(p[0], yElev, vertexSize, 0, 2 * Math.PI);
+          ctx.moveTo(p[0] + vertexSize, yElev);
+      };
+      ctx.fill();
     }
 
     p0 = geom[0]
