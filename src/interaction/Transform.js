@@ -521,6 +521,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
       this.rotatedGeoms_ = []
       var extent = ol_extent_createEmpty()
       var rotExtent = ol_extent_createEmpty()
+      this.hasChanged_ = false;
       for (var i = 0, f; f = this.selection_.item(i); i++) {
         this.geoms_.push(f.getGeometry().clone())
         extent = ol_extent_extend(extent, f.getGeometry().getExtent())
@@ -600,6 +601,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
     var pt0 = [this.coordinate_[0], this.coordinate_[1]]
     var pt = [evt.coordinate[0], evt.coordinate[1]]
     this.isUpdating_ = true
+    this.hasChanged_ = true
     switch (this.mode_) {
       case 'rotate': {
         var a = Math.atan2(this.center_[1] - pt[1], this.center_[0] - pt[0])
@@ -844,10 +846,13 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
       feature: this.selection_.item(0),
       features: this.selection_,
       oldgeom: this.geoms_[0],
-      oldgeoms: this.geoms_
+      oldgeoms: this.geoms_,
+      // handle changes
+      transformed: this.hasChanged_,
     })
-
+    
     this.drawSketch_()
+    this.hasChanged_ = false;
     this.mode_ = null
     return false
   }
