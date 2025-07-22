@@ -154,8 +154,14 @@ var ol_style_Profile = class olstyleProfile extends ol_style_Style {
     if (vertexSize) {
       // draw vertex on top of the lines
       ctx.beginPath();
+      // draw first vertex before loop
+      var p0 = geom[0];
+      var y0 = p0[1] - (p0[2] - dz) * ez;
+      ctx.arc(p0[0], y0, vertexSize, 0, 2 * Math.PI);
+      ctx.moveTo(p0[0] + vertexSize, y0);
+
       for (i = 1; p = geom[i]; i++) {
-          const yElev = p[1] - (p[2] - dz) * ez;
+          var yElev = p[1] - (p[2] - dz) * ez;
           ctx.arc(p[0], yElev, vertexSize, 0, 2 * Math.PI);
           ctx.moveTo(p[0] + vertexSize, yElev);
       };
