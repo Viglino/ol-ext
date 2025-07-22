@@ -330,6 +330,8 @@
     undoInteraction.on('stack:remove', function (e) {
       if (e.shift) {
         $('.options .undo li').first().remove();
+      } else if (e.abort) {
+        $('.options .undo li').last().remove();
       } else {
         $('.options .redo').prepend($('.options .undo li').last());
       }

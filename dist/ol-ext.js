@@ -32314,9 +32314,9 @@ ol.interaction.Transform.prototype.Cursors = {
  * @extends {ol.interaction.Interaction}
  * @fires undo
  * @fires redo
- * @fires change:add
- * @fires change:remove
- * @fires change:clear
+ * @fires stack:add
+ * @fires stack:remove
+ * @fires stack:clear
  * @param {Object} options
  *  @param {number=} options.maxLength max undo stack length (0=Infinity), default Infinity
  *  @param {Array<ol.Layer>} options.layers array of layers to undo/redo
@@ -32362,15 +32362,19 @@ ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Int
       if (!e.element.level) {
         if (this._doShift) {
           this._undo.shift()
+        } else if (this._abort) {
+          this._undo.pop()
         } else {
-          if (this._undo.length)
+          if (this._undo.length) {
             this._redo.push(this._undo.pop())
+          }
         }
         if (!this._doClear) {
           this.dispatchEvent({
             type: 'stack:remove',
             action: e.element,
-            shift: this._doShift
+            shift: this._doShift,
+            abort: this._abort
           })
         }
       }
@@ -32571,7 +32575,7 @@ ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Int
       // Watch the interactions in the map 
       map.getInteractions().forEach((function (i) {
         this._interactionListener.push(i.on(
-          ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
+          ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'translateend', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
           this._onInteraction.bind(this)
         ))
       }).bind(this))
@@ -32710,11 +32714,27 @@ ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Int
    */
   undo() {
     var e = this._undoStack.item(this._undoStack.getLength() - 1)
-    if (!e)
+    if (!e) {
       return
+    }
     this._redoStack.push(e)
     this._undoStack.pop()
     this._handleDo(e, true)
+  }
+  /** Abort last operation (remove from stack but no redo)
+   * @api
+   */
+  abort() {
+    var e = this._undoStack.item(this._undoStack.getLength() - 1)
+    if (!e) {
+      return
+    }
+    this._abort = true
+    var action = this._undoStack.pop()
+    while (action.level !== 0) {
+      action = this._undoStack.pop()
+    }
+    this._abort = false
   }
   /** Redo last operation
    * @api
@@ -32787,6 +32807,14 @@ ol.interaction.UndoRedo.prototype._onInteraction.modifystart = function (e) {
   }.bind(this));
   this.blockEnd();
 };
+/** @private
+ */
+ol.interaction.UndoRedo.prototype._onInteraction.translateend = function(e) {
+  // prevent undo if nothing no translation
+  if (ol.coordinate.equal(e.oldgeom.getFirstCoordinate(), e.feature.getGeometry().getFirstCoordinate())) {
+    this.abort();
+  }
+}
 /** @private
  */
 ol.interaction.UndoRedo.prototype._onInteraction.beforesplit = function() {

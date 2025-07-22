@@ -2,6 +2,8 @@ import ol_Collection from 'ol/Collection.js'
 import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
 import ol_source_Vector from 'ol/source/Vector.js'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
+import { ol_coordinate_equal } from '../geom/GeomUtils.js'
+
 import '../source/Vector.js'
 
 /** Undo/redo interaction
@@ -9,9 +11,9 @@ import '../source/Vector.js'
  * @extends {ol_interaction_Interaction}
  * @fires undo
  * @fires redo
- * @fires change:add
- * @fires change:remove
- * @fires change:clear
+ * @fires stack:add
+ * @fires stack:remove
+ * @fires stack:clear
  * @param {Object} options
  *  @param {number=} options.maxLength max undo stack length (0=Infinity), default Infinity
  *  @param {Array<ol.Layer>} options.layers array of layers to undo/redo
@@ -60,15 +62,19 @@ var ol_interaction_UndoRedo = class olinteractionUndoRedo extends ol_interaction
       if (!e.element.level) {
         if (this._doShift) {
           this._undo.shift()
+        } else if (this._abort) {
+          this._undo.pop()
         } else {
-          if (this._undo.length)
+          if (this._undo.length) {
             this._redo.push(this._undo.pop())
+          }
         }
         if (!this._doClear) {
           this.dispatchEvent({
             type: 'stack:remove',
             action: e.element,
-            shift: this._doShift
+            shift: this._doShift,
+            abort: this._abort
           })
         }
       }
@@ -274,7 +280,7 @@ var ol_interaction_UndoRedo = class olinteractionUndoRedo extends ol_interaction
       // Watch the interactions in the map 
       map.getInteractions().forEach((function (i) {
         this._interactionListener.push(i.on(
-          ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
+          ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'translateend', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
           this._onInteraction.bind(this)
         ))
       }).bind(this))
@@ -417,11 +423,27 @@ var ol_interaction_UndoRedo = class olinteractionUndoRedo extends ol_interaction
    */
   undo() {
     var e = this._undoStack.item(this._undoStack.getLength() - 1)
-    if (!e)
+    if (!e) {
       return
+    }
     this._redoStack.push(e)
     this._undoStack.pop()
     this._handleDo(e, true)
+  }
+  /** Abort last operation (remove from stack but no redo)
+   * @api
+   */
+  abort() {
+    var e = this._undoStack.item(this._undoStack.getLength() - 1)
+    if (!e) {
+      return
+    }
+    this._abort = true
+    var action = this._undoStack.pop()
+    while (action.level !== 0) {
+      action = this._undoStack.pop()
+    }
+    this._abort = false
   }
   /** Redo last operation
    * @api
@@ -497,6 +519,14 @@ ol_interaction_UndoRedo.prototype._onInteraction.modifystart = function (e) {
   this.blockEnd();
 };
 
+/** @private
+ */
+ol_interaction_UndoRedo.prototype._onInteraction.translateend = function(e) {
+  // prevent undo if nothing no translation
+  if (ol_coordinate_equal(e.oldgeom.getFirstCoordinate(), e.feature.getGeometry().getFirstCoordinate())) {
+    this.abort();
+  }
+}
 
 /** @private
  */
