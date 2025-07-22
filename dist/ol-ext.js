@@ -31942,6 +31942,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
       this.rotatedGeoms_ = []
       var extent = ol.extent.createEmpty()
       var rotExtent = ol.extent.createEmpty()
+      this.hasChanged_ = false;
       for (var i = 0, f; f = this.selection_.item(i); i++) {
         this.geoms_.push(f.getGeometry().clone())
         extent = ol.extent.extend(extent, f.getGeometry().getExtent())
@@ -32020,6 +32021,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
     var pt0 = [this.coordinate_[0], this.coordinate_[1]]
     var pt = [evt.coordinate[0], evt.coordinate[1]]
     this.isUpdating_ = true
+    this.hasChanged_ = true
     switch (this.mode_) {
       case 'rotate': {
         var a = Math.atan2(this.center_[1] - pt[1], this.center_[0] - pt[0])
@@ -32249,9 +32251,12 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
       feature: this.selection_.item(0),
       features: this.selection_,
       oldgeom: this.geoms_[0],
-      oldgeoms: this.geoms_
+      oldgeoms: this.geoms_,
+      // handle changes
+      transformed: this.hasChanged_,
     })
     this.drawSketch_()
+    this.hasChanged_ = false;
     this.mode_ = null
     return false
   }
@@ -32575,7 +32580,7 @@ ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Int
       // Watch the interactions in the map 
       map.getInteractions().forEach((function (i) {
         this._interactionListener.push(i.on(
-          ['setattributestart', 'modifystart', 'rotatestart', 'translatestart', 'translateend', 'scalestart', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
+          ['setattributestart', 'modifystart', 'rotatestart', 'rotateend', 'translatestart', 'translateend', 'scalestart', 'scaleend', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
           this._onInteraction.bind(this)
         ))
       }).bind(this))
@@ -32802,16 +32807,18 @@ ol.interaction.UndoRedo.prototype._onInteraction.modifystart = function (e) {
     this._undoStack.push({ 
       type: 'changegeometry', 
       feature: m, 
-      oldGeom: m.getGeometry().clone() 
+      oldGeom: m.getGeometry().clone(),
     });
   }.bind(this));
   this.blockEnd();
 };
 /** @private
  */
-ol.interaction.UndoRedo.prototype._onInteraction.translateend = function(e) {
-  // prevent undo if nothing no translation
-  if (ol.coordinate.equal(e.oldgeom.getFirstCoordinate(), e.feature.getGeometry().getFirstCoordinate())) {
+ol.interaction.UndoRedo.prototype._onInteraction.translateend =
+ol.interaction.UndoRedo.prototype._onInteraction.rotateend = 
+ol.interaction.UndoRedo.prototype._onInteraction.scaleend = function(e) {
+  // prevent undo if nothing appends
+  if (!e.transformed) {
     this.abort();
   }
 }
@@ -44631,6 +44638,7 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
  *  @param {number} options.scale z scale 
  *  @param {number} options.zIndex 
  *  @param {ol.geom.Geometry} options.geometry 
+ *  @param {number} options.vertexSize size of the vertex to draw. Default is 0 (no vertex).
  */
 ol.style.Profile = class olstyleProfile extends ol.style.Style {
   constructor(options) {
@@ -44643,6 +44651,7 @@ ol.style.Profile = class olstyleProfile extends ol.style.Style {
     this.setStroke(options.stroke)
     this.setFill(options.fill)
     this.setScale(options.scale)
+    this.setVertexSize(options.vertexSize)
   }
   /** Set style stroke
    * @param {ol.style.Stroke}
@@ -44679,6 +44688,19 @@ ol.style.Profile = class olstyleProfile extends ol.style.Style {
    */
   getScale() {
     return this._scale
+  }
+  /** Set the vertex size
+   * Use 0 to disable vertex rendering
+   * @param {number}
+   */
+  setVertexSize(ver) {
+    this._vertexSize = ver || 0
+  }
+  /** Get the vertex size
+   * @return {number}
+   */
+  getVertexSize() {
+    return this._vertexSize
   }
   /** Renderer function
    * @param {Array<ol.coordinate>} geom The pixel coordinates of the geometry in GeoJSON notation
@@ -44736,6 +44758,17 @@ ol.style.Profile = class olstyleProfile extends ol.style.Style {
       ctx.lineTo(p0[0], p0[1])
       ctx.fill()
       p0 = p
+    }
+    var vertexSize = this.getVertexSize();
+    if (vertexSize) {
+      // draw vertex on top of the lines
+      ctx.beginPath();
+      for (i = 1; p = geom[i]; i++) {
+          var yElev = p[1] - (p[2] - dz) * ez;
+          ctx.arc(p[0], yElev, vertexSize, 0, 2 * Math.PI);
+          ctx.moveTo(p[0] + vertexSize, yElev);
+      };
+      ctx.fill();
     }
     p0 = geom[0]
     ctx.beginPath()
