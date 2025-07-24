@@ -1,9 +1,9 @@
 [data-dsfr] .ol-control button:not([class*=fr-btn]) {
   padding: 0.5rem;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2rem;
+  height: 2rem;
   box-sizing: content-box;
-  line-height: 1.5rem;
+  line-height: 2rem;
   box-shadow: none;
 }
 [data-dsfr] .ol-control button {
@@ -43,6 +43,7 @@
   padding: 4px;
   border-radius: 4px;
 }
+
 .ol-control.ol-bar .ol-control, 
 .ol-control.ol-bar.ol-group button {
   margin: 0;

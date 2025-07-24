@@ -68,9 +68,29 @@
     </header>
     <main id="content" role="main" data-dsfr>
       <div id="map"></div>
-    </main>
 
-      
+      <div class="fr-container">
+        <div class="fr-select-group">
+          <label class="fr-label" for="select-pos">
+            Bar position
+            <span class="fr-hint-text">Change the position of the menu bar</span>
+          </label>
+          <select class="fr-select" aria-describedby="select-pos-messages" id="select-pos" name="select-pos">
+            <option value="" selected disabled hidden>Select an option</option>
+            <option value="top">top</option>
+            <option value="top-left">top-left</option>
+            <option value="left">left</option>
+            <option value="bottom-left">bottom-left</option>
+            <option value="bottom">bottom</option>
+            <option value="bottom-right">bottom-right</option>
+            <option value="right">right</option>
+            <option value="top-right">top-right</option>
+          </select>
+          <div class="fr-messages-group" id="select-pos-messages" aria-live="polite">
+          </div>
+        </div>
+      </div>
+    </main>     
 
     <!-- Script en version es6 module et nomodule pour les navigateurs le ne supportant pas 
     <script type="module" src="./dsfr/dsfr.module.min.js"></script>
@@ -129,6 +149,10 @@
     }
   });
   nested.addControl ( pedit );
+
+  document.getElementById('select-pos').addEventListener('change', e => {
+    mainbar.setPosition(e.target.value)
+  })
 
 </script>
 
