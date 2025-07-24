@@ -168,9 +168,10 @@ var ol_control_EditBar = class olcontrolEditBar extends ol_control_Bar {
 
       this.addControl(selectCtrl)
       sel.on('change:active', function () {
-        if (!sel.getActive())
+        if (!sel.getActive()) {
           sel.getFeatures().clear()
-      })
+        }
+      }.bind(this))
     }
   }
   /** Add editing tools
@@ -409,8 +410,17 @@ var ol_control_EditBar = class olcontrolEditBar extends ol_control_Bar {
         this._interactions.Transform = options.interactions.Transform
       } else {
         this._interactions.Transform = new ol_interaction_Transform({
+          select: this._interactions.Select,
           addCondition: ol_events_condition_shiftKeyOnly
         })
+        // Remove selection if not active
+        if (this._interactions.Select) {
+          this._interactions.Transform.on('change:active', function() {
+            if (!this._interactions.Select.getActive()) {
+              this._interactions.Select.getFeatures().clear();
+            }
+          }.bind(this))
+        }
       }
       var transform = new ol_control_Toggle({
         html: '<i></i>',

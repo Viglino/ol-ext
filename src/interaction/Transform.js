@@ -22,6 +22,7 @@ import ol_ext_element from '../util/element.js'
  *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise.
  *  @param {Array<ol.Layer>} options.layers array of layers to transform,
  *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform,
+ *  @param {ol.interaction.Select} [options.select] a select interaction to synchronize with
  *	@param {ol.EventsConditionType|undefined} options.condition A function that takes an ol.MapBrowserEvent and a feature collection and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.always.
  *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled ie. the feature will be added to the transforms features. default: ol.events.condition.never.
  *	@param {number | undefined} options.hitTolerance Tolerance to select feature in pixel, default 0
@@ -119,6 +120,27 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
 
     // setstyle
     this.setDefaultStyle()
+
+    // Synchronize selection
+    if (options.select) {
+      // this.selection_ = options.select.getFeatures();
+      this.on('change:active', function(e) {
+        if (this.getActive()) {
+          this.setSelection(options.select.getFeatures().getArray())
+        } else {
+          options.select.getFeatures().extend(this.selection_)
+          this.selection_.forEach(function(f) {
+            options.select.getFeatures().push(f)
+          })
+          this.select(null)
+        }
+      }.bind(this))
+    } else {
+      this.on('change:active', function(e) {
+        this.select(null)
+      }.bind(this))
+    }
+
   }
   /**
    * Remove the interaction from its current map, if any,  and attach it to a new
@@ -151,7 +173,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
    * @api stable
    */
   setActive(b) {
-    this.select(null)
+    // this.select(null)
     if (this.overlayLayer_) this.overlayLayer_.setVisible(b)
     super.setActive(b)
   }
