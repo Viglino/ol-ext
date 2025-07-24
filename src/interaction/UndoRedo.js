@@ -3,8 +3,6 @@ import ol_interaction_Interaction from 'ol/interaction/Interaction.js'
 import ol_source_Vector from 'ol/source/Vector.js'
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
 import { ol_coordinate_equal } from '../geom/GeomUtils.js'
-import { equals as ol_extent_equals } from 'ol/extent'
-import { getCenter as ol_extent_getCenter } from 'ol/extent'
 
 import '../source/Vector.js'
 
@@ -282,7 +280,7 @@ var ol_interaction_UndoRedo = class olinteractionUndoRedo extends ol_interaction
       // Watch the interactions in the map 
       map.getInteractions().forEach((function (i) {
         this._interactionListener.push(i.on(
-          ['setattributestart', 'modifystart', 'rotatestart', 'rotateend', 'translatestart', 'translateend', 'scalestart', 'scaleend', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
+          ['setattributestart', 'modifystart', 'modifyend', 'rotatestart', 'rotateend', 'translatestart', 'translateend', 'scalestart', 'scaleend', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
           this._onInteraction.bind(this)
         ))
       }).bind(this))
@@ -510,26 +508,48 @@ ol_interaction_UndoRedo.prototype._onInteraction.rotatestart =
 ol_interaction_UndoRedo.prototype._onInteraction.translatestart = 
 ol_interaction_UndoRedo.prototype._onInteraction.scalestart = 
 ol_interaction_UndoRedo.prototype._onInteraction.modifystart = function (e) {
-  this.blockStart(e.type.replace(/start$/,''));
+  this._modify = {
+    coordinate: e.coordinate,
+    blockStart: e.type.replace(/start$/,''),
+    modify: []
+  }
   e.features.forEach(function(m) {
-    this._undoStack.push({ 
+    this._modify.modify.push({ 
       type: 'changegeometry', 
       feature: m, 
       oldGeom: m.getGeometry().clone(),
     });
   }.bind(this));
-  this.blockEnd();
 };
 
 /** @private
  */
 ol_interaction_UndoRedo.prototype._onInteraction.translateend =
 ol_interaction_UndoRedo.prototype._onInteraction.rotateend = 
-ol_interaction_UndoRedo.prototype._onInteraction.scaleend = function(e) {
-  // prevent undo if nothing appends
-  if (!e.transformed) {
-    this.abort();
+ol_interaction_UndoRedo.prototype._onInteraction.scaleend =
+ol_interaction_UndoRedo.prototype._onInteraction.modifyend = function(e) {
+  if (!this._modify) return;
+  // Handle modification
+  if (e.type==='modifyend') {
+    e.transformed = !e.coordinate || !ol_coordinate_equal(this._modify.coordinate, e.coordinate);
+    if (!e.transformed) {
+      this._modify.modify.forEach(function(m) {
+        if (m.feature.getGeometry().getFlatCoordinates().length !== m.oldGeom.getFlatCoordinates().length) {
+          e.transformed = true;
+        }
+        console.log(m.feature.getGeometry().getFlatCoordinates().length, m.oldGeom.getFlatCoordinates().length)
+      })
+    }
   }
+  // prevent undo if nothing appends
+  if (e.transformed) {
+    this.blockStart(this._modify.blockStart);
+    this._modify.modify.forEach(function(m) {
+      this._undoStack.push(m);
+    }.bind(this));
+    this.blockEnd();
+  }
+  this._modify = null
 }
 
 /** @private
