@@ -4,20 +4,24 @@
   height: 1.5rem;
   box-sizing: content-box;
   line-height: 1.5rem;
-  border-radius: 0!important;
   box-shadow: none;
 }
-[data-dsfr] .ol-control {
+[data-dsfr] .ol-control button {
   border-radius: 4px;
-  overflow: hidden;
 }
 [data-dsfr] .ol-control button:hover {
   outline: none;
 }
+[data-dsfr] .ol-control button:focus-visible {
+  z-index: 1;
+  position: relative;
+  outline-offset: 2px;
+  outline-width: 2px;
+  outline-color: #0a76f6;
+  outline-style: solid;
+}
 
 [data-dsfr] .ol-control button {
-  border: 1px solid;
-  border-color: var(--background-action-high-blue-france);
   color: var(--text-action-high-blue-france);
   box-shadow: none;
   margin: 0;
@@ -49,6 +53,10 @@
 }
 
 /* Layer switcher */
+[data-dsfr] .ol-layerswitcher {
+  overflow: visible;
+  background-color: rgba(255,255,255,0.6);
+}
 .ol-layerswitcher button:after {
   content: "";
   background: none;
@@ -62,4 +70,19 @@
   mask-repeat: no-repeat;
   mask: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBzdHJva2U9IiNmZmYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2Utd2lkdGg9IjEuMyIgZD0ibTIyIDguNTUzLTkuODYgNS41NTItOS44Ni01LjU1MkwxMi4xNCAzek0zLjE3OCAxNC45ODYgMiAxNS42NWw5Ljg2IDUuNTUzIDkuODYtNS41NTMtMS4xNzktLjY2NCIvPjxwYXRoIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS13aWR0aD0iMS4zIiBkPSJNMy4xNzggMTEuNDM3IDIgMTIuMWw5Ljg2IDUuNTUzIDkuODYtNS41NTMtMS4xNzktLjY2NCIvPjwvc3ZnPg==) center no-repeat;
   position: absolute;
+}
+.ol-layerswitcher li:has(> div.li-content > .ol-visibility:focus) {
+  border-color: #0a76f6;
+  box-shadow: inset 0 0 0 1px #0a76f6;
+}
+.ol-layerswitcher input:focus-visible+label:before {
+  outline: 0;
+}
+
+/* Zoom buttons */
+[data-dsfr] .ol-zoom .ol-zoom-in {
+  border-radius: 4px 4px 0 0;
+}
+[data-dsfr] .ol-zoom .ol-zoom-out {
+  border-radius: 0 0 4px 4px;
 }
