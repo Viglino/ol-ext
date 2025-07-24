@@ -32870,6 +32870,9 @@ ol.interaction.UndoRedo.prototype._onInteraction.modifyend = function(e) {
       })
     }
   }
+  if (e.type==='translateend' && e.coordinate) {
+    e.transformed = !ol.coordinate.equal(this._modify.coordinate, e.coordinate);
+  }
   // prevent undo if nothing appends
   if (e.transformed) {
     this.blockStart(this._modify.blockStart);
