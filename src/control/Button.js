@@ -11,6 +11,7 @@ import ol_ext_element from '../util/element.js'
  * @extends {ol_control_Control}
  * @param {Object=} options Control options.
  *  @param {String} options.className class of the control
+ *  @param {String} options.classButton class of the button
  *  @param {String} options.title title of the control
  *  @param {String} options.name an optional name, default none
  *  @param {String} options.html html to insert in the control
@@ -30,6 +31,7 @@ var ol_control_Button = class olcontrolButton extends ol_control_Control {
     var self = this;
 
     var bt = this.button_ = document.createElement(/ol-text-button/.test(options.className) ? "div" : "button");
+    this.button_.className = options.classButton || '';
     bt.type = "button";
     if (options.title)
       bt.title = options.title;

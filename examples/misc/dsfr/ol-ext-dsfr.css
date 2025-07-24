@@ -1,0 +1,65 @@
+[data-dsfr] .ol-control button:not([class*=fr-btn]) {
+  padding: 0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  box-sizing: content-box;
+  line-height: 1.5rem;
+  border-radius: 0!important;
+  box-shadow: none;
+}
+[data-dsfr] .ol-control {
+  border-radius: 4px;
+  overflow: hidden;
+}
+[data-dsfr] .ol-control button:hover {
+  outline: none;
+}
+
+[data-dsfr] .ol-control button {
+  border: 1px solid;
+  border-color: var(--background-action-high-blue-france);
+  color: var(--text-action-high-blue-france);
+  box-shadow: none;
+  margin: 0;
+  border: 0;
+}
+[data-dsfr] .ol-control button.fr-btn {
+  box-sizing: content-box;
+  line-height: 1em;
+  border-radius: 0!important;
+}
+.ol-control.ol-bar .ol-toggle.ol-active > button, 
+.ol-control.ol-bar .ol-toggle.ol-active button:hover {
+  background-color: var(--blue-france-975-75-active);
+  color: var(--text-action-high-blue-france)
+}
+
+.ol-control.ol-bar {
+  background-color: #fff;
+  padding: 4px;
+  border-radius: 4px;
+}
+.ol-control.ol-bar .ol-control, 
+.ol-control.ol-bar.ol-group button {
+  margin: 0;
+  border-radius: 0;
+}
+.ol-layerswitcher button:before {
+  content: none
+}
+
+/* Layer switcher */
+.ol-layerswitcher button:after {
+  content: "";
+  background: none;
+  transform: none;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: var(--text-action-high-blue-france);
+  background-color: var(--background-action-high-blue-france);
+  mask-repeat: no-repeat;
+  mask: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBzdHJva2U9IiNmZmYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2Utd2lkdGg9IjEuMyIgZD0ibTIyIDguNTUzLTkuODYgNS41NTItOS44Ni01LjU1MkwxMi4xNCAzek0zLjE3OCAxNC45ODYgMiAxNS42NWw5Ljg2IDUuNTUzIDkuODYtNS41NTMtMS4xNzktLjY2NCIvPjxwYXRoIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS13aWR0aD0iMS4zIiBkPSJNMy4xNzggMTEuNDM3IDIgMTIuMWw5Ljg2IDUuNTUzIDkuODYtNS41NTMtMS4xNzktLjY2NCIvPjwvc3ZnPg==) center no-repeat;
+  position: absolute;
+}

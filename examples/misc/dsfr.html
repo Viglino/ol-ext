@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fr" data-fr-scheme="system">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no">
+
+    <meta name="theme-color" content="#000091"><!-- Défini la couleur de thème du navigateur (Safari/Android) -->
+    <title>ol-ext + DSFR</title>
+    <!--
+      <link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
+      <link rel="icon" href="favicon/favicon.svg" type="image/svg+xml"><link rel="shortcut icon" href="favicon/favicon.ico" type="image/x-icon">
+      <link rel="manifest" href="favicon/manifest.webmanifest" crossorigin="use-credentials">
+    -->
+    <!-- Modifier les chemins relatifs des favicons en fonction de la structure du projet -->
+    <!-- Dans le fichier manifest.webmanifest aussi, modifier les chemins vers les images -->
+
+    <!-- Openlayers -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+
+    
+    <!-- ol-ext -->
+    <link rel="stylesheet" href="../../dist/ol-ext.css" />
+    <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+
+    <link rel="stylesheet" href="./dsfr/dsfr.min.css">
+    <link rel="stylesheet" href="./dsfr/utility/utility.min.css">
+
+    <link rel="stylesheet" href="./dsfr/ol-ext-dsfr.css" />
+
+    <style>
+      #map {
+        width: 100%;
+        height: 600px;
+      }
+    </style>
+
+  </head>
+  <body>
+    <!--- Script a placer au début de la page pour corriger l'effet de flash au chargement du mode sombre -->
+    <script type="module">
+      const e="system",t="dark",c="dark",o="data-fr-theme",a="data-fr-scheme",r=`:root[${o}], :root[${a}]`,m=()=>{document.documentElement.setAttribute(o,c),document.documentElement.style.colorScheme="dark"},n=()=>{window.matchMedia("(prefers-color-scheme: dark)").matches&&m()};(()=>{if(document.documentElement.matches(r)){const c=(()=>{try{return"localStorage"in window&&null!==window.localStorage}catch(e){return!1}})()?localStorage.getItem("scheme"):"",o=document.documentElement.getAttribute(a);switch(!0){case c===t:m();break;case c===e:n();break;case o===t:m();break;case o===e:n()}}})();
+    </script>
+
+    <header role="banner" class="fr-header">
+      <div class="fr-header__body">
+        <div class="fr-container">
+          <div class="fr-header__body-row">
+            <div class="fr-header__brand fr-enlarge-link">
+              <div class="fr-header__brand-top">
+                <div class="fr-header__logo">
+                  <p class="fr-logo">République<br>Française</p>
+                </div>
+              </div>
+              <div class="fr-header__service">
+                <a href="https://www.systeme-de-design.gouv.fr/" title="Accueil - Système de Design de l'État">
+                  <p class="fr-header__service-title">
+                    ol-ext - DSFR
+                  </p>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main id="content" role="main" data-dsfr>
+      <div id="map"></div>
+    </main>
+
+      
+
+    <!-- Script en version es6 module et nomodule pour les navigateurs le ne supportant pas 
+    <script type="module" src="./dsfr/dsfr.module.min.js"></script>
+    -->
+    <script type="text/javascript" nomodule src="./dsfr/dsfr.nomodule.min.js"></script>
+
+<script>
+
+  // Layers
+  var layer = new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' });
+  //  Vector layer
+  var vector = new ol.layer.Vector( { title: 'Vector', source: new ol.source.Vector() })
+    
+  // The map
+  var map = new ol.Map ({
+    target: 'map',
+    view: new ol.View({
+      zoom: 6,
+      center: [166326, 5992663]
+    }),
+    layers: [layer, vector]
+  });
+  map.addControl(new ol.control.LayerSwitcher)
+
+  var mainbar = new ol.control.Bar();
+  map.addControl(mainbar);
+
+  /* Nested toobar with one control activated at once */
+  var nested = new ol.control.Bar ({ toggleOne: true, group:true });
+  mainbar.addControl (nested);
+
+  // Add selection tool (a toggle control with a select interaction)
+  var selectCtrl = new ol.control.Toggle({
+    classButton: 'fr-btn fr-icon-cursor-line fr-btn--secondary',
+    title: "Select",
+    interaction: new ol.interaction.Select (),
+    active:true,
+    onToggle: function(active) {
+      console.log(active)
+    }
+  });
+  nested.addControl(selectCtrl);
+  selectCtrl.getInteraction().on('change:active', e => selectCtrl.getInteraction().getFeatures().clear() )
+
+  // Add editing tools
+  var pedit = new ol.control.Toggle({
+    classButton: 'fr-btn fr-icon-pen-nib-line fr-btn--secondary',
+    className: "edit",
+    title: 'Point',
+    interaction: new ol.interaction.Draw({
+      type: 'Point',
+      source: vector.getSource()
+    }),
+    onToggle: function(active) {
+      console.log(active)
+    }
+  });
+  nested.addControl ( pedit );
+
+</script>
+
+  </body>
+</html>

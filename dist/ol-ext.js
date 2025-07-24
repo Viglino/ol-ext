@@ -4823,6 +4823,7 @@ ol.control.SelectBase.prototype.operationsList = {
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
  *  @param {String} options.className class of the control
+ *  @param {String} options.classButton class of the button
  *  @param {String} options.title title of the control
  *  @param {String} options.name an optional name, default none
  *  @param {String} options.html html to insert in the control
@@ -4839,6 +4840,7 @@ ol.control.Button = class olcontrolButton extends ol.control.Control {
     });
     var self = this;
     var bt = this.button_ = document.createElement(/ol-text-button/.test(options.className) ? "div" : "button");
+    this.button_.className = options.classButton || '';
     bt.type = "button";
     if (options.title)
       bt.title = options.title;
