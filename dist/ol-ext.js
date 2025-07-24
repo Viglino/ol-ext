@@ -32616,7 +32616,7 @@ ol.interaction.UndoRedo = class olinteractionUndoRedo extends ol.interaction.Int
       // Watch the interactions in the map 
       map.getInteractions().forEach((function (i) {
         this._interactionListener.push(i.on(
-          ['setattributestart', 'modifystart', 'rotatestart', 'rotateend', 'translatestart', 'translateend', 'scalestart', 'scaleend', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
+          ['setattributestart', 'modifystart', 'modifyend', 'rotatestart', 'rotateend', 'translatestart', 'translateend', 'scalestart', 'scaleend', 'deletestart', 'deleteend', 'beforesplit', 'aftersplit'],
           this._onInteraction.bind(this)
         ))
       }).bind(this))
@@ -32838,25 +32838,47 @@ ol.interaction.UndoRedo.prototype._onInteraction.rotatestart =
 ol.interaction.UndoRedo.prototype._onInteraction.translatestart = 
 ol.interaction.UndoRedo.prototype._onInteraction.scalestart = 
 ol.interaction.UndoRedo.prototype._onInteraction.modifystart = function (e) {
-  this.blockStart(e.type.replace(/start$/,''));
+  this._modify = {
+    coordinate: e.coordinate,
+    blockStart: e.type.replace(/start$/,''),
+    modify: []
+  }
   e.features.forEach(function(m) {
-    this._undoStack.push({ 
+    this._modify.modify.push({ 
       type: 'changegeometry', 
       feature: m, 
       oldGeom: m.getGeometry().clone(),
     });
   }.bind(this));
-  this.blockEnd();
 };
 /** @private
  */
 ol.interaction.UndoRedo.prototype._onInteraction.translateend =
 ol.interaction.UndoRedo.prototype._onInteraction.rotateend = 
-ol.interaction.UndoRedo.prototype._onInteraction.scaleend = function(e) {
-  // prevent undo if nothing appends
-  if (!e.transformed) {
-    this.abort();
+ol.interaction.UndoRedo.prototype._onInteraction.scaleend =
+ol.interaction.UndoRedo.prototype._onInteraction.modifyend = function(e) {
+  if (!this._modify) return;
+  // Handle modification
+  if (e.type==='modifyend') {
+    e.transformed = !e.coordinate || !ol.coordinate.equal(this._modify.coordinate, e.coordinate);
+    if (!e.transformed) {
+      this._modify.modify.forEach(function(m) {
+        if (m.feature.getGeometry().getFlatCoordinates().length !== m.oldGeom.getFlatCoordinates().length) {
+          e.transformed = true;
+        }
+        console.log(m.feature.getGeometry().getFlatCoordinates().length, m.oldGeom.getFlatCoordinates().length)
+      })
+    }
   }
+  // prevent undo if nothing appends
+  if (e.transformed) {
+    this.blockStart(this._modify.blockStart);
+    this._modify.modify.forEach(function(m) {
+      this._undoStack.push(m);
+    }.bind(this));
+    this.blockEnd();
+  }
+  this._modify = null
 }
 /** @private
  */
