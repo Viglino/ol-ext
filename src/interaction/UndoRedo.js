@@ -541,6 +541,9 @@ ol_interaction_UndoRedo.prototype._onInteraction.modifyend = function(e) {
       })
     }
   }
+  if (e.type==='translateend' && e.coordinate) {
+    e.transformed = !ol_coordinate_equal(this._modify.coordinate, e.coordinate);
+  }
   // prevent undo if nothing appends
   if (e.transformed) {
     this.blockStart(this._modify.blockStart);
