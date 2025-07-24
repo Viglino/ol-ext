@@ -8741,9 +8741,10 @@ ol.control.EditBar = class olcontrolEditBar extends ol.control.Bar {
       })
       this.addControl(selectCtrl)
       sel.on('change:active', function () {
-        if (!sel.getActive())
+        if (!sel.getActive()) {
           sel.getFeatures().clear()
-      })
+        }
+      }.bind(this))
     }
   }
   /** Add editing tools
@@ -8970,8 +8971,17 @@ ol.control.EditBar = class olcontrolEditBar extends ol.control.Bar {
         this._interactions.Transform = options.interactions.Transform
       } else {
         this._interactions.Transform = new ol.interaction.Transform({
+          select: this._interactions.Select,
           addCondition: ol.events.condition.shiftKeyOnly
         })
+        // Remove selection if not active
+        if (this._interactions.Select) {
+          this._interactions.Transform.on('change:active', function() {
+            if (!this._interactions.Select.getActive()) {
+              this._interactions.Select.getFeatures().clear();
+            }
+          }.bind(this))
+        }
       }
       var transform = new ol.control.Toggle({
         html: '<i></i>',
@@ -31462,6 +31472,7 @@ ol.interaction.TouchCursorSelect = class olinteractionTouchCursorSelect extends 
  *  @param {function} options.filter A function that takes a Feature and a Layer and returns true if the feature may be transformed or false otherwise.
  *  @param {Array<ol.Layer>} options.layers array of layers to transform,
  *  @param {ol.Collection<ol.Feature>} options.features collection of feature to transform,
+ *  @param {ol.interaction.Select} [options.select] a select interaction to synchronize with
  *	@param {ol.EventsConditionType|undefined} options.condition A function that takes an ol.MapBrowserEvent and a feature collection and returns a boolean to indicate whether that event should be handled. default: ol.events.condition.always.
  *	@param {ol.EventsConditionType|undefined} options.addCondition A function that takes an ol.MapBrowserEvent and returns a boolean to indicate whether that event should be handled ie. the feature will be added to the transforms features. default: ol.events.condition.never.
  *	@param {number | undefined} options.hitTolerance Tolerance to select feature in pixel, default 0
@@ -31553,6 +31564,25 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
     })
     // setstyle
     this.setDefaultStyle()
+    // Synchronize selection
+    if (options.select) {
+      // this.selection_ = options.select.getFeatures();
+      this.on('change:active', function(e) {
+        if (this.getActive()) {
+          this.setSelection(options.select.getFeatures().getArray())
+        } else {
+          options.select.getFeatures().extend(this.selection_)
+          this.selection_.forEach(function(f) {
+            options.select.getFeatures().push(f)
+          })
+          this.select(null)
+        }
+      }.bind(this))
+    } else {
+      this.on('change:active', function(e) {
+        this.select(null)
+      }.bind(this))
+    }
   }
   /**
    * Remove the interaction from its current map, if any,  and attach it to a new
@@ -31585,7 +31615,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
    * @api stable
    */
   setActive(b) {
-    this.select(null)
+    // this.select(null)
     if (this.overlayLayer_) this.overlayLayer_.setVisible(b)
     super.setActive(b)
   }
