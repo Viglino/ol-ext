@@ -99,7 +99,7 @@ var ol_control_Search = class olcontrolSearch extends ol_control_Control {
       self.dispatchEvent({ type: "change:input", input: e, value: input.value });
     });
     var doSearch = function (e) {
-      // console.log(e.type+" "+e.key)'
+      // console.log(e.type+" "+e.key)
       var li = element.querySelector("ul.autocomplete li.select");
       var val = input.value;
       // move up/down
@@ -113,8 +113,10 @@ var ol_control_Search = class olcontrolSearch extends ol_control_Control {
           }
         } else {
           li = element.querySelector("ul.autocomplete li")
-          li.classList.add("select");
-          input.value = li.innerText;
+          if (li) {
+            li.classList.add("select");
+            input.value = li.innerText;
+          }
         }
       }
 
@@ -148,20 +150,22 @@ var ol_control_Search = class olcontrolSearch extends ol_control_Control {
         cur = val;
         if (cur) {
           // prevent searching on each typing
-          if (tout)
+          if (tout) {
             clearTimeout(tout);
+          }
           var minLength = self.get("minLength");
           tout = setTimeout(function () {
             if (cur.length >= minLength) {
               var s = self.autocomplete(cur, function (auto) { self.drawList_(auto); });
-              if (s)
+              if (s) {
                 self.drawList_(s);
-            }
-            else
+              }
+            } else {
               self.drawList_();
+            }
           }, options.typing);
         } else {
-          self.drawList_();
+           self.drawList_();
         }
       }
 
