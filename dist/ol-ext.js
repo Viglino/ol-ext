@@ -4822,12 +4822,14 @@ ol.control.SelectBase.prototype.operationsList = {
  * @constructor
  * @extends {ol.control.Control}
  * @param {Object=} options Control options.
- *  @param {String} options.className class of the control
- *  @param {String} options.classButton class of the button
- *  @param {String} options.title title of the control
- *  @param {String} options.name an optional name, default none
- *  @param {String} options.html html to insert in the control
- *  @param {function} options.handleClick callback when control is clicked (or use change:active event)
+ *  @param {String} [options.id] button id, default generate a unique id
+ *  @param {String} [options.className] class of the control
+ *  @param {String} [options.classButton] class of the button
+ *  @param {String} [options.title] title of the control
+ *  @param {String} [options.name] an optional name, default none
+ *  @param {String} [options.html] html to insert in the control
+ *  @param {function} [options.handleClick] callback when control is clicked (or use change:active event)
+ *  @param {Object} [options.attributes] key value attributes to set on the button element
  */
 ol.control.Button = class olcontrolButton extends ol.control.Control {
   constructor(options) {
@@ -4840,16 +4842,25 @@ ol.control.Button = class olcontrolButton extends ol.control.Control {
     });
     var self = this;
     var bt = this.button_ = document.createElement(/ol-text-button/.test(options.className) ? "div" : "button");
+    // Button id
+    if (options.id) {
+      bt.setAttribute('id', options.id);
+    } else {
+      bt.setAttribute('id', 'ol-button-' + ol.getUid(this));
+    }
     this.button_.className = options.classButton || '';
     bt.type = "button";
-    if (options.title)
+    if (options.title) {
       bt.title = options.title;
-    if (options.name)
+    }
+    if (options.name) {
       bt.name = options.name;
-    if (options.html instanceof Element)
+    }
+    if (options.html instanceof Element){
       bt.appendChild(options.html);
-    else
+    } else {
       bt.innerHTML = options.html || "";
+    }
     var evtFunction = function (e) {
       if (e && e.preventDefault) {
         e.preventDefault();
@@ -4866,22 +4877,30 @@ ol.control.Button = class olcontrolButton extends ol.control.Control {
     if (!options.title && bt.firstElementChild) {
       bt.title = bt.firstElementChild.title;
     }
+    // Set the control properties
     if (options.title) {
       this.set("title", options.title);
     }
-    if (options.title)
+    if (options.title) {
       this.set("title", options.title);
-    if (options.name)
+    }
+    if (options.name) {
       this.set("name", options.name);
+    }
+    // Set button element attributes
+    for (var p in options.attributes || {}) {
+      this.button_.setAttribute(p, options.attributes[p]);
+    }
   }
   /** Set the control visibility
   * @param {boolean} b
   */
   setVisible(val) {
-    if (val)
+    if (val) {
       ol.ext.element.show(this.element);
-    else
+    } else {
       ol.ext.element.hide(this.element);
+    }
   }
   /**
    * Test if the control is disabled.
@@ -4934,15 +4953,17 @@ ol.control.Button = class olcontrolButton extends ol.control.Control {
  * @extends {ol.control.Button}
  * @fires change:active, change:disable
  * @param {Object=} options Control options.
- *  @param {String} options.className class of the control
- *  @param {String} options.title title of the control
- *  @param {String} options.html html to insert in the control
- *  @param {ol.interaction} options.interaction interaction associated with the control
- *  @param {bool} options.active the control is created active, default false
- *  @param {bool} options.disable the control is created disabled, default false
- *  @param {ol.control.Bar} options.bar a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
- *  @param {bool} options.autoActive the control will activate when shown in an ol.control.Bar, default false
- *  @param {function} options.onToggle callback when control is clicked (or use change:active event)
+ *  @param {String} [options.className] class of the control
+ *  @param {String} [options.classButton] class of the button
+ *  @param {String} [options.title] title of the control
+ *  @param {String} [options.html] html to insert in the control
+ *  @param {ol.interaction} [options.interaction] interaction associated with the control
+ *  @param {bool} [options.active] the control is created active, default false
+ *  @param {bool} [options.disable] the control is created disabled, default false
+ *  @param {ol.control.Bar} [options.bar] a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
+ *  @param {bool} [options.autoActive] the control will activate when shown in an ol.control.Bar, default false
+ *  @param {function} [options.onToggle] callback when control is clicked (or use change:active event)
+ *  @param {Object} [options.attributes] key value attributes to set on the button element
  */
 ol.control.Toggle = class olcontrolToggle extends ol.control.Button {
   constructor(options) {
@@ -4968,8 +4989,9 @@ ol.control.Toggle = class olcontrolToggle extends ol.control.Button {
     }
     this.set("title", options.title);
     this.set("autoActivate", options.autoActivate);
-    if (options.bar)
+    if (options.bar) {
       this.setSubBar(options.bar);
+    }
     this.setActive(options.active);
     this.setDisable(options.disable);
   }
@@ -5005,14 +5027,24 @@ ol.control.Toggle = class olcontrolToggle extends ol.control.Button {
    */
   setSubBar(bar) {
     var map = this.getMap();
-    if (map && this.subbar_)
+    if (map && this.subbar_) {
       map.removeControl(this.subbar_);
+    }
     this.subbar_ = bar;
     if (bar) {
       this.subbar_.setTarget(this.element);
       this.subbar_.element.classList.add("ol-option-bar");
-      if (map)
+      if (map) {
         map.addControl(this.subbar_);
+      }
+      // Accessibility
+      if (bar.element.id) {
+        this.getButtonElement().setAttribute('aria-controls', bar.element.id);
+        bar.element.setAttribute('aria-labelledby', this.getButtonElement().id);
+        this.on('change:active', function (e) {
+          this.getButtonElement().setAttribute('aria-expanded', !!e.active);
+        }.bind(this));
+      }
     }
   }
   /**
@@ -7232,11 +7264,13 @@ ol.control.LayerSwitcher.prototype.tip = {
  * @fires control:add
  * @extends ol.control.Control
  * @param {Object=} options Control options.
- *  @param {String} options.className class of the control
- *  @param {boolean} options.group is a group, default false
- *  @param {boolean} options.toggleOne only one toggle control is active at a time, default false
- *  @param {boolean} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
- *  @param {Array<ol.control.Control> } options.controls a list of control to add to the bar
+ *  @param {String} [options.id] button id, default generate a unique id
+ *  @param {String} [options.className] class of the control
+ *  @param {boolean} [options.group=false] is a group, default false
+ *  @param {boolean} [options.toggleOne=false] only one toggle control is active at a time, default false
+ *  @param {boolean} [options.autoDeactivate=false] used with subbar to deactivate all control when top level control deactivate, default false
+ *  @param { Array<ol.control.Control> } [options.controls] a list of control to add to the bar
+ *  @param {Object} [options.attributes] key value attributes to set on the button element
  */
 ol.control.Bar = class olcontrolBar extends ol.control.Control {
   constructor(options) {
@@ -7254,6 +7288,11 @@ ol.control.Bar = class olcontrolBar extends ol.control.Control {
       element: element,
       target: options.target
     });
+    if (options.id) {
+      this.element.setAttribute('id', options.id);
+    } else {
+      this.element.setAttribute('id', 'ol-bar-' + ol.getUid(this));
+    }
     this.set('toggleOne', options.toggleOne);
     this.set('autoDeactivate', options.autoDeactivate);
     this.controls_ = [];
@@ -7261,6 +7300,10 @@ ol.control.Bar = class olcontrolBar extends ol.control.Control {
       for (var i = 0; i < options.controls.length; i++) {
         this.addControl(options.controls[i]);
       }
+    }
+    // Set attributes on the element
+    for (var k in options.attributes || {}) {
+      this.element.setAttribute(k, options.attributes[k]);
     }
   }
   /** Set the control visibility
