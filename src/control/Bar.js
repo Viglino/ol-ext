@@ -3,6 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_control_Control from 'ol/control/Control.js'
+import { getUid as ol_getUid } from 'ol/util.js'
 
 /** Control bar for OL3
  * The control bar is a container for other controls. It can be used to create toolbars.
@@ -13,11 +14,13 @@ import ol_control_Control from 'ol/control/Control.js'
  * @fires control:add
  * @extends ol_control_Control
  * @param {Object=} options Control options.
- *  @param {String} options.className class of the control
- *  @param {boolean} options.group is a group, default false
- *  @param {boolean} options.toggleOne only one toggle control is active at a time, default false
- *  @param {boolean} options.autoDeactivate used with subbar to deactivate all control when top level control deactivate, default false
- *  @param {Array<ol_control_Control> } options.controls a list of control to add to the bar
+ *  @param {String} [options.id] button id, default generate a unique id
+ *  @param {String} [options.className] class of the control
+ *  @param {boolean} [options.group=false] is a group, default false
+ *  @param {boolean} [options.toggleOne=false] only one toggle control is active at a time, default false
+ *  @param {boolean} [options.autoDeactivate=false] used with subbar to deactivate all control when top level control deactivate, default false
+ *  @param { Array<ol_control_Control> } [options.controls] a list of control to add to the bar
+ *  @param {Object} [options.attributes] key value attributes to set on the button element
  */
 var ol_control_Bar = class olcontrolBar extends ol_control_Control {
   constructor(options) {
@@ -38,6 +41,11 @@ var ol_control_Bar = class olcontrolBar extends ol_control_Control {
       target: options.target
     });
 
+    if (options.id) {
+      this.element.setAttribute('id', options.id);
+    } else {
+      this.element.setAttribute('id', 'ol-bar-' + ol_getUid(this));
+    }
     this.set('toggleOne', options.toggleOne);
     this.set('autoDeactivate', options.autoDeactivate);
 
@@ -46,6 +54,10 @@ var ol_control_Bar = class olcontrolBar extends ol_control_Control {
       for (var i = 0; i < options.controls.length; i++) {
         this.addControl(options.controls[i]);
       }
+    }
+    // Set attributes on the element
+    for (var k in options.attributes || {}) {
+      this.element.setAttribute(k, options.attributes[k]);
     }
   }
   /** Set the control visibility

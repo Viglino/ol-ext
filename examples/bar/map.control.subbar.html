@@ -123,7 +123,7 @@
         new ol.control.Toggle({
           html:"1", 
           autoActivate: true,
-          onToggle: function(b) { info("Button 1 "+(b?"activated":"deactivated")); } 
+          onToggle: function(b) { info("Button 1 "+(b?"activated":"deactivated")); },
         }),
         new ol.control.Toggle({
           html:"2", 
@@ -131,7 +131,10 @@
           // Second level nested control bar
           bar: sub2
         })
-      ]
+      ],
+      attributes: {
+        id: 'sub1'
+      }
     });
     var mainbar = new ol.control.Bar({
       controls: [
@@ -139,8 +142,11 @@
           html: '0',
           // First level nested control bar
           bar: sub1,
-          onToggle: function() { info(); }
-        })
+          onToggle: function() { info(); },
+          attributes: {
+            'aria-label': 'more options'
+          }
+        }),
       ]
     });
     map.addControl ( mainbar );

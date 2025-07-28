@@ -12,15 +12,17 @@ import ol_control_Button from './Button.js'
  * @extends {ol_control_Button}
  * @fires change:active, change:disable
  * @param {Object=} options Control options.
- *  @param {String} options.className class of the control
- *  @param {String} options.title title of the control
- *  @param {String} options.html html to insert in the control
- *  @param {ol.interaction} options.interaction interaction associated with the control
- *  @param {bool} options.active the control is created active, default false
- *  @param {bool} options.disable the control is created disabled, default false
- *  @param {ol.control.Bar} options.bar a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
- *  @param {bool} options.autoActive the control will activate when shown in an ol.control.Bar, default false
- *  @param {function} options.onToggle callback when control is clicked (or use change:active event)
+ *  @param {String} [options.className] class of the control
+ *  @param {String} [options.classButton] class of the button
+ *  @param {String} [options.title] title of the control
+ *  @param {String} [options.html] html to insert in the control
+ *  @param {ol.interaction} [options.interaction] interaction associated with the control
+ *  @param {bool} [options.active] the control is created active, default false
+ *  @param {bool} [options.disable] the control is created disabled, default false
+ *  @param {ol.control.Bar} [options.bar] a subbar associated with the control (drawn when active if control is nested in a ol.control.Bar)
+ *  @param {bool} [options.autoActive] the control will activate when shown in an ol.control.Bar, default false
+ *  @param {function} [options.onToggle] callback when control is clicked (or use change:active event)
+ *  @param {Object} [options.attributes] key value attributes to set on the button element
  */
 var ol_control_Toggle = class olcontrolToggle extends ol_control_Button {
   constructor(options) {
@@ -51,8 +53,9 @@ var ol_control_Toggle = class olcontrolToggle extends ol_control_Button {
     this.set("title", options.title);
 
     this.set("autoActivate", options.autoActivate);
-    if (options.bar)
+    if (options.bar) {
       this.setSubBar(options.bar);
+    }
 
     this.setActive(options.active);
     this.setDisable(options.disable);
@@ -91,14 +94,24 @@ var ol_control_Toggle = class olcontrolToggle extends ol_control_Button {
    */
   setSubBar(bar) {
     var map = this.getMap();
-    if (map && this.subbar_)
+    if (map && this.subbar_) {
       map.removeControl(this.subbar_);
+    }
     this.subbar_ = bar;
     if (bar) {
       this.subbar_.setTarget(this.element);
       this.subbar_.element.classList.add("ol-option-bar");
-      if (map)
+      if (map) {
         map.addControl(this.subbar_);
+      }
+      // Accessibility
+      if (bar.element.id) {
+        this.getButtonElement().setAttribute('aria-controls', bar.element.id);
+        bar.element.setAttribute('aria-labelledby', this.getButtonElement().id);
+        this.on('change:active', function (e) {
+          this.getButtonElement().setAttribute('aria-expanded', !!e.active);
+        }.bind(this));
+      }
     }
   }
   /**
