@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_control_Control from 'ol/control/Control.js'
-import { getUid as ol_getUid } from 'ol/util.js'
+import { getUid as ol_util_getUid } from 'ol/util.js'
 
 import ol_ext_element from '../util/element.js'
 
@@ -38,7 +38,7 @@ var ol_control_Button = class olcontrolButton extends ol_control_Control {
     if (options.id) {
       bt.setAttribute('id', options.id);
     } else {
-      bt.setAttribute('id', 'ol-button-' + ol_getUid(this));
+      bt.setAttribute('id', 'ol-button-' + ol_util_getUid(this));
     }
 
     this.button_.className = options.classButton || '';

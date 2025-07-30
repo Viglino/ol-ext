@@ -4846,7 +4846,7 @@ ol.control.Button = class olcontrolButton extends ol.control.Control {
     if (options.id) {
       bt.setAttribute('id', options.id);
     } else {
-      bt.setAttribute('id', 'ol-button-' + ol.getUid(this));
+      bt.setAttribute('id', 'ol-button-' + ol.util.getUid(this));
     }
     this.button_.className = options.classButton || '';
     bt.type = "button";
@@ -7291,7 +7291,7 @@ ol.control.Bar = class olcontrolBar extends ol.control.Control {
     if (options.id) {
       this.element.setAttribute('id', options.id);
     } else {
-      this.element.setAttribute('id', 'ol-bar-' + ol.getUid(this));
+      this.element.setAttribute('id', 'ol-bar-' + ol.util.getUid(this));
     }
     this.set('toggleOne', options.toggleOne);
     this.set('autoDeactivate', options.autoDeactivate);

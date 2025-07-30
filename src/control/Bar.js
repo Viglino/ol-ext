@@ -3,7 +3,7 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_control_Control from 'ol/control/Control.js'
-import { getUid as ol_getUid } from 'ol/util.js'
+import { getUid as ol_util_getUid } from 'ol/util.js'
 
 /** Control bar for OL3
  * The control bar is a container for other controls. It can be used to create toolbars.
@@ -44,7 +44,7 @@ var ol_control_Bar = class olcontrolBar extends ol_control_Control {
     if (options.id) {
       this.element.setAttribute('id', options.id);
     } else {
-      this.element.setAttribute('id', 'ol-bar-' + ol_getUid(this));
+      this.element.setAttribute('id', 'ol-bar-' + ol_util_getUid(this));
     }
     this.set('toggleOne', options.toggleOne);
     this.set('autoDeactivate', options.autoDeactivate);
