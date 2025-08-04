@@ -30070,6 +30070,7 @@ ol.interaction.TouchCursor = class olinteractionTouchCursor extends ol.interacti
       //offset: [-20,-20],
       overlays: overlay
     })
+    this.overlay = overlay;
     this.setAnchor(options.anchor || 'left')
     // List of listerner on the object
     this._listeners = {}
@@ -30086,21 +30087,9 @@ ol.interaction.TouchCursor = class olinteractionTouchCursor extends ol.interacti
           var cosa = Math.cos(e.frameState.viewState.rotation)
           var sina = Math.sin(e.frameState.viewState.rotation)
           var width = this.getOverlayElement().clientWidth / 2;
-          var offset = [width, width]
-          switch(this._anchor)  {
-            case 'right': {
-              offset = [width, -width];
-              break;
-            }
-            case 'center': {
-              offset = [0, -width];
-              break;
-            }
-            case 'left':
-            default: {
-              offset = [-width, -width]
-            }
-          }
+          var style = getComputedStyle(this.getOverlayElement());
+          var offset = [-width - parseInt(style.marginLeft), -width - parseInt(style.marginTop)]
+          if (this._anchor === 'center') offset[0] = 0;
           e.coordinate = [
             e.coordinate[0] + cosa * offset[0] * res + sina * offset[1] * res,
             e.coordinate[1] + sina * offset[0] * res - cosa * offset[1] * res
