@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>ol-ext Class: FontSymbol</title>
+	<title>ol-ext Class: SearchCoordinates</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -80,18 +80,18 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: FontSymbol</h1>
+	<h1 class="page-title">Class: SearchCoordinates</h1>
 <section>
 
 <header>
     
         <h2>
-            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.style.html">.style</a>.</span>
+            <span class="ancestors"><a href="ol.html">ol</a><a href="ol.control.html">.control</a>.</span>
         
-        FontSymbol
+        SearchCoordinates
         </h2>
         
-            <div class="class-description"><p>A marker style to use with font symbols.</p></div>
+            <div class="class-description"><p>Search on GPS coordinate.</p></div>
         
     
 </header>
@@ -103,7 +103,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="FontSymbol"><span class="type-signature"></span>new FontSymbol(options)</h4>
+    <h4 class="name" id="SearchCoordinates"><span class="type-signature"></span>new SearchCoordinates( [Control])</h4>
     
     
 </dt>
@@ -119,43 +119,6 @@
     
         <h5>Parameters:</h5>
         
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Options.</p>
-                <h6 class="method-params-label method-subparams-label">Properties</h6>
-                
 
 <table class="params table table-striped">
     <thead>
@@ -183,7 +146,85 @@
 
         <tr>
             
-                <td class="name"><code>color</code></td>
+                <td class="name"><code>Control</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>options.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options.projection</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol/proj/ProjectionLike</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    "EPSG:3857"
+                
+                </td>
+            
+
+            <td class="description last"><p>control projection</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options.className</code></td>
             
 
             <td class="type">
@@ -214,19 +255,22 @@
                 </td>
             
 
-            <td class="description last"><p>default #000</p></td>
+            <td class="description last"><p>control class name</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>glyph</code></td>
+                <td class="name"><code>options.target</code></td>
             
 
             <td class="type">
             
                 
+<span class="param-type">Element</span>
+|
+
 <span class="param-type">string</span>
 
 
@@ -236,6 +280,8 @@
 
             
                 <td class="attributes">
+                
+                    &lt;optional><br>
                 
 
                 
@@ -250,15 +296,14 @@
                 </td>
             
 
-            <td class="description last"><p>the glyph name or a char to display as symbol.
-The name must be added using the <a href="ol.style.FontSymbol.html#.addDefs">ol.style.FontSymbol.addDefs</a> function.</p></td>
+            <td class="description last"><p>Specify a target if you want the control to be rendered outside of the map's viewport.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>text</code></td>
+                <td class="name"><code>options.label</code></td>
             
 
             <td class="type">
@@ -286,17 +331,19 @@ The name must be added using the <a href="ol.style.FontSymbol.html#.addDefs">ol.
             
                 <td class="default">
                 
+                    "search"
+                
                 </td>
             
 
-            <td class="description last"><p>a text to display as a glyph</p></td>
+            <td class="description last"><p>Text label to use for the search button, default &quot;search&quot;</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>font</code></td>
+                <td class="name"><code>options.labelGPS</code></td>
             
 
             <td class="type">
@@ -324,17 +371,19 @@ The name must be added using the <a href="ol.style.FontSymbol.html#.addDefs">ol.
             
                 <td class="default">
                 
+                    "Locate with GPS"
+                
                 </td>
             
 
-            <td class="description last"><p>font to use with the text option</p></td>
+            <td class="description last"><p>placeholder</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>form</code></td>
+                <td class="name"><code>options.labelCenter</code></td>
             
 
             <td class="type">
@@ -350,6 +399,8 @@ The name must be added using the <a href="ol.style.FontSymbol.html#.addDefs">ol.
             
                 <td class="attributes">
                 
+                    &lt;optional><br>
+                
 
                 
 
@@ -360,18 +411,19 @@ The name must be added using the <a href="ol.style.FontSymbol.html#.addDefs">ol.
             
                 <td class="default">
                 
+                    "Map center"
+                
                 </td>
             
 
-            <td class="description last"><p>none|circle|poi|bubble|marker|coma|shield|blazon|bookmark|hexagon|diamond|triangle|sign|ban|lozenge|square
-a form that will enclose the glyph, default none</p></td>
+            <td class="description last"><p>placeholder</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>radius</code></td>
+                <td class="name"><code>options.typing</code></td>
             
 
             <td class="type">
@@ -387,114 +439,6 @@ a form that will enclose the glyph, default none</p></td>
             
                 <td class="attributes">
                 
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>rotation</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>rotateWithView</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>declutterMode</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
                     &lt;optional><br>
                 
 
@@ -507,23 +451,25 @@ a form that will enclose the glyph, default none</p></td>
             
                 <td class="default">
                 
+                    300
+                
                 </td>
             
 
-            <td class="description last"><p>Declutter mode &quot;declutter&quot; | &quot;obstacle&quot; | &quot;none&quot; | undefined</p></td>
+            <td class="description last"><p>a delay on each typing to start searching (ms), default 300.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>scale</code></td>
+                <td class="name"><code>options.minLength</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">integer</span>
 
 
 
@@ -550,20 +496,20 @@ a form that will enclose the glyph, default none</p></td>
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>minimum length to start searching, default 1</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>opacity</code></td>
+                <td class="name"><code>options.maxItems</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">integer</span>
 
 
 
@@ -585,25 +531,25 @@ a form that will enclose the glyph, default none</p></td>
             
                 <td class="default">
                 
-                    1
+                    10
                 
                 </td>
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>maximum number of items to display in the autocomplete list, default 10</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>fontSize</code></td>
+                <td class="name"><code>options.digit</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">integer</span>
 
 
 
@@ -625,283 +571,12 @@ a form that will enclose the glyph, default none</p></td>
             
                 <td class="default">
                 
-                    1
+                    3
                 
                 </td>
             
 
-            <td class="description last"><p>size of the font compare to the radius, fontSize greater than 1 will exceed the symbol extent</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>fontStyle</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>the font style (bold, italic, bold italic, etc), default none</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>gradient</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>true to display a gradient on the symbol</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>displacement</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;number></span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>to use with ol &gt; 6</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>offsetX</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    0
-                
-                </td>
-            
-
-            <td class="description last"><p>Horizontal offset in pixels, deprecated use displacement with ol&gt;6</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>offsetY</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    0
-                
-                </td>
-            
-
-            <td class="description last"><p>Vertical offset in pixels, deprecated use displacement with ol&gt;6</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>fill</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">_ol_style_Fill_</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>stroke</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">_ol_style_Stroke_</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-            </td>
+            <td class="description last"><p>number of digit in coords</p></td>
         </tr>
 
     
@@ -924,13 +599,6 @@ a form that will enclose the glyph, default none</p></td>
 
     
 
-    
-    <dt class="implements">Implements:</dt>
-    <dd class="implements"><ul>
-        
-            <li>ol.structs.IHasChecksum</li>
-        
-    </ul></dd>
     
 
     
@@ -960,6 +628,11 @@ a form that will enclose the glyph, default none</p></td>
     
 
     
+    <h5>Fires:</h5>
+    <ul>
+        <li>event:select</li>
+    </ul>
+    
 
     
 
@@ -982,7 +655,7 @@ a form that will enclose the glyph, default none</p></td>
 
 
     <ul>
-        <li>ol.style.RegularShape</li>
+        <li><a href="ol.control.Search.html">ol.control.Search</a></li>
     </ul>
 
 
@@ -1002,15 +675,15 @@ a form that will enclose the glyph, default none</p></td>
         <dl>
             
 <hr>
-<dt class="name" id=".defs">
-    <h4 id=".defs"><span class="type-signature">&lt;static> </span>defs<span class="type-signature"></span></h4>
+<dt class="name" id="_history">
+    <h4 id="_history"><span class="type-signature"></span>_history<span class="type-signature"></span></h4>
 
     
 </dt>
 <dd>
     
     <div class="description">
-        <p>Font defs</p>
+        <p>Current history</p>
     </div>
     
 
@@ -1025,7 +698,21 @@ a form that will enclose the glyph, default none</p></td>
 	
 
 	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#_history">ol.control.Search#_history</a>
+			</li>
+		</ul>
+	</dd>
+	
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#_history">ol.control.Search#_history</a>
+    </li></ul></dd>
     
 
     
@@ -1069,7 +756,7 @@ a form that will enclose the glyph, default none</p></td>
             
 <hr>
 <dt>
-    <h4 class="name" id=".addDefs"><span class="type-signature">&lt;static> </span>addDefs(font, glyphs)</h4>
+    <h4 class="name" id="_getTitleTxt"><span class="type-signature"></span>_getTitleTxt(f)</h4>
     
     
 </dt>
@@ -1077,7 +764,7 @@ a form that will enclose the glyph, default none</p></td>
 
     
     <div class="description">
-        <p>Static function : add new font defs</p>
+        <p>Returns title as text</p>
     </div>
     
 
@@ -1112,16 +799,13 @@ a form that will enclose the glyph, default none</p></td>
 
         <tr>
             
-                <td class="name"><code>font</code></td>
+                <td class="name"><code>f</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
-|
-
-<span class="param-type">Object</span>
+<span class="param-type">any</span>
 
 
 
@@ -1132,20 +816,158 @@ a form that will enclose the glyph, default none</p></td>
 
             
 
-            <td class="description last"><p>the font name or a description ({ font: font_name, name: font_name, copyright: '', prefix })</p></td>
+            <td class="description last"><p>feature to be displayed</p></td>
         </tr>
 
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#_getTitleTxt">ol.control.Search#_getTitleTxt</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#_getTitleTxt">ol.control.Search#_getTitleTxt</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="autocomplete"><span class="type-signature"></span>autocomplete(s)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Autocomplete function</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
     
 
         <tr>
             
-                <td class="name"><code>glyphs</code></td>
+                <td class="name"><code>s</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">string</span>
 
 
 
@@ -1156,11 +978,7 @@ a form that will enclose the glyph, default none</p></td>
 
             
 
-            <td class="description last"><p>a key / value list of glyph definitions.
-Each key is the name of the glyph,
-the value is an object that code the font, the caracter code,
-the name and a search string for the glyph.
-{ char: the char, code: the char code (if no char), theme: a theme for search puposes, name: the symbol name, search: a search string (separated with ',') }</p></td>
+            <td class="description last"><p>search string</p></td>
         </tr>
 
     
@@ -1180,177 +998,10 @@ the name and a search string for the glyph.
 	
 
     
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="clone"><span class="type-signature"></span>clone()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Clones the style.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="ol.style.FontSymbol.html">ol.style.FontSymbol</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="createRenderOptions"><span class="type-signature"></span>createRenderOptions()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#autocomplete">ol.control.Search#autocomplete</a>
+    </li></ul></dd>
     
 
     
@@ -1396,7 +1047,7 @@ the name and a search string for the glyph.
     
             
 <div class="param-desc">
-    <p>The render options</p>
+    <p>an array of search solutions</p>
 </div>
 
 
@@ -1407,7 +1058,10 @@ the name and a search string for the glyph.
     </dt>
     <dd>
         
-<span class="param-type">RenderOptions</span>
+<span class="param-type">Array.&lt;any></span>
+|
+
+<span class="param-type">false</span>
 
 
 
@@ -1424,81 +1078,7 @@ the name and a search string for the glyph.
             
 <hr>
 <dt>
-    <h4 class="name" id="getChecksum"><span class="type-signature"></span>getChecksum()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getFill"><span class="type-signature"></span>getFill()</h4>
+    <h4 class="name" id="clearHistory"><span class="type-signature"></span>clearHistory()</h4>
     
     
 </dt>
@@ -1506,7 +1086,7 @@ the name and a search string for the glyph.
 
     
     <div class="description">
-        <p>Get the fill style for the symbol.</p>
+        <p>Remove previous history</p>
     </div>
     
 
@@ -1526,7 +1106,21 @@ the name and a search string for the glyph.
 	
 
 	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#clearHistory">ol.control.Search#clearHistory</a>
+			</li>
+		</ul>
+	</dd>
+	
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#clearHistory">ol.control.Search#clearHistory</a>
+    </li></ul></dd>
     
 
     
@@ -1568,30 +1162,6 @@ the name and a search string for the glyph.
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Fill style.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">ol.style.Fill</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -1600,7 +1170,7 @@ the name and a search string for the glyph.
             
 <hr>
 <dt>
-    <h4 class="name" id="getFontInfo"><span class="type-signature"></span>getFontInfo()</h4>
+    <h4 class="name" id="collapse"><span class="type-signature"></span>collapse( [b])</h4>
     
     
 </dt>
@@ -1608,7 +1178,7 @@ the name and a search string for the glyph.
 
     
     <div class="description">
-        <p>Get the stroke style for the symbol.</p>
+        <p>Collapse the search</p>
     </div>
     
 
@@ -1617,6 +1187,76 @@ the name and a search string for the glyph.
     
 
     
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>b</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    true
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -1628,7 +1268,21 @@ the name and a search string for the glyph.
 	
 
 	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#collapse">ol.control.Search#collapse</a>
+			</li>
+		</ul>
+	</dd>
+	
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#collapse">ol.control.Search#collapse</a>
+    </li></ul></dd>
     
 
     
@@ -1670,30 +1324,6 @@ the name and a search string for the glyph.
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Stroke style.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">_ol_style_Stroke_</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -1702,7 +1332,7 @@ the name and a search string for the glyph.
             
 <hr>
 <dt>
-    <h4 class="name" id="getGlyph"><span class="type-signature"></span>getGlyph(name)</h4>
+    <h4 class="name" id="equalFeatures"><span class="type-signature"></span>equalFeatures(f1, f2)</h4>
     
     
 </dt>
@@ -1710,7 +1340,7 @@ the name and a search string for the glyph.
 
     
     <div class="description">
-        <p>Get the glyph definition for the symbol.</p>
+        <p>Test if 2 features are equal</p>
     </div>
     
 
@@ -1745,13 +1375,783 @@ the name and a search string for the glyph.
 
         <tr>
             
-                <td class="name"><code>name</code></td>
+                <td class="name"><code>f1</code></td>
             
 
             <td class="type">
             
                 
+<span class="param-type">any</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>f2</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#equalFeatures">ol.control.Search#equalFeatures</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#equalFeatures">ol.control.Search#equalFeatures</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getHistory"><span class="type-signature"></span>getHistory()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Get history table</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#getHistory">ol.control.Search#getHistory</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#getHistory">ol.control.Search#getHistory</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getInputField"><span class="type-signature"></span>getInputField()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Get the input field</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#getInputField">ol.control.Search#getInputField</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#getInputField">ol.control.Search#getInputField</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Element</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getProjection"><span class="type-signature"></span>getProjection()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Get the control projection</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">ol/proj/ProjectionLike</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getTitle"><span class="type-signature"></span>getTitle(f)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Returns the text to be displayed in the menu</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>f</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>feature to be displayed</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#getTitle">ol.control.Search#getTitle</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#getTitle">ol.control.Search#getTitle</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>the text to be displayed in the index, default f.name</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
 <span class="param-type">string</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="restoreHistory"><span class="type-signature"></span>restoreHistory()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Restore history (from the localstorage)</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#restoreHistory">ol.control.Search#restoreHistory</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#restoreHistory">ol.control.Search#restoreHistory</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="reverseGeocode"><span class="type-signature"></span>reverseGeocode(coord, cback)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Reverse geocode</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>coord</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ol.coordinate.html">ol.coordinate</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
 |
 
 <span class="param-type">undefined</span>
@@ -1765,7 +2165,7 @@ the name and a search string for the glyph.
 
             
 
-            <td class="description last"><p>a glyph name to get the definition, default return the glyph definition for the style.</p></td>
+            <td class="description last"><p>a callback function, default trigger a select event</p></td>
         </tr>
 
     
@@ -1783,7 +2183,21 @@ the name and a search string for the glyph.
 	
 
 	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#reverseGeocode">ol.control.Search#reverseGeocode</a>
+			</li>
+		</ul>
+	</dd>
+	
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#reverseGeocode">ol.control.Search#reverseGeocode</a>
+    </li></ul></dd>
     
 
     
@@ -1825,26 +2239,6 @@ the name and a search string for the glyph.
     
 
     
-    <h5>Returns:</h5>
-    
-            
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">*</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -1853,7 +2247,7 @@ the name and a search string for the glyph.
             
 <hr>
 <dt>
-    <h4 class="name" id="getGlyphName"><span class="type-signature"></span>getGlyphName()</h4>
+    <h4 class="name" id="saveHistory"><span class="type-signature"></span>saveHistory()</h4>
     
     
 </dt>
@@ -1861,7 +2255,7 @@ the name and a search string for the glyph.
 
     
     <div class="description">
-        <p>Get the glyph name.</p>
+        <p>Save history (in the localstorage)</p>
     </div>
     
 
@@ -1881,7 +2275,21 @@ the name and a search string for the glyph.
 	
 
 	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#saveHistory">ol.control.Search#saveHistory</a>
+			</li>
+		</ul>
+	</dd>
+	
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#saveHistory">ol.control.Search#saveHistory</a>
+    </li></ul></dd>
     
 
     
@@ -1923,30 +2331,6 @@ the name and a search string for the glyph.
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>the name</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -1955,7 +2339,7 @@ the name and a search string for the glyph.
             
 <hr>
 <dt>
-    <h4 class="name" id="getImage"><span class="type-signature"></span>getImage(pixelRatio)</h4>
+    <h4 class="name" id="search"><span class="type-signature"></span>search()</h4>
     
     
 </dt>
@@ -1963,7 +2347,99 @@ the name and a search string for the glyph.
 
     
     <div class="description">
-        <p>Get the image icon.</p>
+        <p>Force search to refresh</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#search">ol.control.Search#search</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#search">ol.control.Search#search</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="select"><span class="type-signature"></span>select(f, reverse, coord, options)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>A line has been clicked in the menu &gt; dispatch event</p>
     </div>
     
 
@@ -1998,13 +2474,13 @@ the name and a search string for the glyph.
 
         <tr>
             
-                <td class="name"><code>pixelRatio</code></td>
+                <td class="name"><code>f</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">any</span>
 
 
 
@@ -2015,7 +2491,79 @@ the name and a search string for the glyph.
 
             
 
-            <td class="description last"><p>Pixel ratio.</p></td>
+            <td class="description last"><p>the feature, as passed in the autocomplete</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>reverse</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>true if reverse geocode</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>coord</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ol.coordinate.html">ol.coordinate</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>options passed to the event</p></td>
         </tr>
 
     
@@ -2033,7 +2581,21 @@ the name and a search string for the glyph.
 	
 
 	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#select">ol.control.Search#select</a>
+			</li>
+		</ul>
+	</dd>
+	
 
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#select">ol.control.Search#select</a>
+    </li></ul></dd>
     
 
     
@@ -2075,30 +2637,6 @@ the name and a search string for the glyph.
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Image or Canvas element.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">HTMLCanvasElement</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
@@ -2107,7 +2645,7 @@ the name and a search string for the glyph.
             
 <hr>
 <dt>
-    <h4 class="name" id="getStroke"><span class="type-signature"></span>getStroke()</h4>
+    <h4 class="name" id="setInput"><span class="type-signature"></span>setInput( [coord])</h4>
     
     
 </dt>
@@ -2115,109 +2653,7 @@ the name and a search string for the glyph.
 
     
     <div class="description">
-        <p>Get the stroke style for the symbol.</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    <p>Stroke style.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">_ol_style_Stroke_</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getTextGlyph"><span class="type-signature"></span>getTextGlyph(text [, font])</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>Get glyph definition given a text and a font</p>
+        <p>Set the input value in the form (for initialisation purpose)</p>
     </div>
     
 
@@ -2254,48 +2690,13 @@ the name and a search string for the glyph.
 
         <tr>
             
-                <td class="name"><code>text</code></td>
+                <td class="name"><code>coord</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
-|
-
-<span class="param-type">undefined</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>font</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;number></span>
 
 
 
@@ -2316,7 +2717,284 @@ the name and a search string for the glyph.
 
             
 
-            <td class="description last"><p>the font for the text</p></td>
+            <td class="description last"><p>if none get the map center</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#setInput">ol.control.Search#setInput</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="setMap"><span class="type-signature"></span>setMap(map)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Remove the control from its current map and attach it to the new map.
+Subclasses may set up event handlers to get notified about changes to
+the map here.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>map</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ol.Map.html">ol.Map</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Map.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+	<dt class="inherited-from method-doc-label method-doc-details-label">Inherited From:</dt>
+	<dd class="inherited-from">
+		<ul class="dummy">
+			<li>
+				<a href="ol.control.Search.html#setMap">ol.control.Search#setMap</a>
+			</li>
+		</ul>
+	</dd>
+	
+
+    
+    <dt class="tag-overrides">Overrides:</dt>
+    <dd class="tag-overrides"><ul class="dummy"><li>
+        <a href="ol.control.Search.html#setMap">ol.control.Search#setMap</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="setProjection"><span class="type-signature"></span>setProjection(proj)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Set the projection</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>proj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">ol/proj/ProjectionLike</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
         </tr>
 
     
@@ -2376,26 +3054,6 @@ the name and a search string for the glyph.
     
 
     
-    <h5>Returns:</h5>
-    
-            
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">*</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
 
     
 </dd>
