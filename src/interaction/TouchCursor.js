@@ -16,10 +16,11 @@ import ol_Overlay_Fixed from '../overlay/Fixed.js'
  * @constructor
  * @extends {ol_interaction_DragOverlay}
  * @param {olx.interaction.InteractionOptions} options Options
- *  @param {string} options.className cursor class name
- *  @param {ol.coordinate} options.coordinate position of the cursor
- *  @param {Array<*>} options.buttons an array of buttons
- *  @param {number} options.maxButtons maximum number of buttons (default 5)
+ *  @param {string} [options.className] cursor class name
+ *  @param {ol.coordinate} [options.coordinate] position of the cursor
+ *  @param {strin} [options.anchor="left"] anchor position (left, center or right)
+ *  @param {Array<*>} [options.buttons] an array of buttons
+ *  @param {number} [options.maxButtons=5] maximum number of buttons (default 5)
  */
 var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_interaction_DragOverlay {
   constructor(options) {
@@ -39,7 +40,7 @@ var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_inter
       overlays: overlay
     })
 
-    this.overlay = overlay;
+    this.setAnchor(options.anchor || 'left')
 
     // List of listerner on the object
     this._listeners = {}
