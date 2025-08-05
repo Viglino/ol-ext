@@ -137,6 +137,12 @@
       </button>
       <i>Charger les dalles intersectant la zone de chargement</i>
     </p>
+    <p>
+      <label>
+        <input type="checkbox" onchange="doShannon(this.checked)" />
+        Calculer l'intice de Shannon
+      </label>
+    </p>
   </div>
 
   <div id="save" class="dialog hidden">
@@ -199,6 +205,7 @@
   </div>
 
 	<script type="text/javascript" src="./geoportail.loader.js"></script>
+	<script type="text/javascript" src="./geoportail.loader.shannon.js"></script>
 
 </body>
 </html>

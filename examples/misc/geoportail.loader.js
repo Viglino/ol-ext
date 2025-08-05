@@ -180,24 +180,28 @@ function loadTiles() {
     if (!tiles.length) {
       loading = 0;
       progress.hide();
+      console.log('Chargement terminé');
     } else {
-      progress.setContent('Chargement ('+(loading-tiles.length)+'/'+loading+')')
-      progress.setProgress((loading-tiles.length), loading);
+      progress.setProgress((loading - tiles.length), loading, 'Chargement ('+(loading-tiles.length)+'/'+loading+')');
     }
     showInfo();
   }
   if (tiles.length) {
     loading = tiles.length;
     vectorSource.clear();
-    progress.show();
-    draw();
+    progress.show('Chargement des objets');
+
+    // draw();
     var format = new ol.format.GeoJSON();
     // Load next tile
     function load() {
       draw();
       var f = tiles.pop();
       // No more tile
-      if (!f) return;
+      if (!f) {
+        setTimeout(calculateShannon, 100);
+        return;
+      }
       // Read tile
       var extent = f.getGeometry().getExtent();
       $.ajax({
@@ -228,7 +232,7 @@ function loadTiles() {
       });
     }
     // Start loading
-    load();
+    load()
   }
 }
 
@@ -508,7 +512,7 @@ var popup = new ol.Overlay.PopupFeature({
       return vectorLayer.get('title');
     },
     attributes: [
-      'nature', 'nom_1_droite', 'code_postal_droit', 'etat_de_l_objet', 'urbain',
+      'nature', 'nom_1_droite', 'code_postal_droit', 'etat_de_l_objet', 'urbain', 'shannon',
       'cpx_classement_administratif', 'cpx_numero',
       'usage_1', 'origine_du_batiment', 'hauteur', 'nombre_d_etages', 'nombre_de_logements', 'date_d_apparition',
       'nom_com', 'code_insee', 'code_arr', 'section', 'numero'
@@ -583,3 +587,4 @@ function showInfo() {
 
 setWFS(plink.getUrlParam('layer') || 'BDTOPO_V3:troncon_de_route');
 $('#typename').val(plink.getUrlParam('layer') || 'BDTOPO_V3:troncon_de_route')
+
