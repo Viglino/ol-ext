@@ -16,10 +16,11 @@ import ol_Overlay_Fixed from '../overlay/Fixed.js'
  * @constructor
  * @extends {ol_interaction_DragOverlay}
  * @param {olx.interaction.InteractionOptions} options Options
- *  @param {string} options.className cursor class name
- *  @param {ol.coordinate} options.coordinate position of the cursor
- *  @param {Array<*>} options.buttons an array of buttons
- *  @param {number} options.maxButtons maximum number of buttons (default 5)
+ *  @param {string} [options.className] cursor class name
+ *  @param {ol.coordinate} [options.coordinate] position of the cursor
+ *  @param {strin} [options.anchor="left"] anchor position (left, center or right)
+ *  @param {Array<*>} [options.buttons] an array of buttons
+ *  @param {number} [options.maxButtons=5] maximum number of buttons (default 5)
  */
 var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_interaction_DragOverlay {
   constructor(options) {
@@ -40,13 +41,13 @@ var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_inter
     })
 
     this.overlay = overlay;
+    this.setAnchor(options.anchor || 'left')
 
     // List of listerner on the object
     this._listeners = {}
 
     // Interaction to defer position on top of the interaction 
     // this is done to enable other coordinates manipulation inserted after the interaction (snapping)
-    var offset = [-35, -35]
     this.ctouch = new ol_interaction_Interaction({
       handleEvent: function (e) {
         if (!/drag/.test(e.type) && this.getMap()) {
@@ -57,6 +58,10 @@ var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_inter
           var res = e.frameState.viewState.resolution
           var cosa = Math.cos(e.frameState.viewState.rotation)
           var sina = Math.sin(e.frameState.viewState.rotation)
+          var width = this.getOverlayElement().clientWidth / 2;
+          var style = getComputedStyle(this.getOverlayElement());
+          var offset = [-width - parseInt(style.marginLeft), -width - parseInt(style.marginTop)]
+          if (this._anchor === 'center') offset[0] = 0;
           e.coordinate = [
             e.coordinate[0] + cosa * offset[0] * res + sina * offset[1] * res,
             e.coordinate[1] + sina * offset[0] * res - cosa * offset[1] * res
@@ -73,8 +78,9 @@ var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_inter
     this.set('maxButtons', options.maxButtons || 5)
 
     if (options.buttons) {
-      if (options.buttons.length > this.get('maxButtons'))
+      if (options.buttons.length > this.get('maxButtons')){
         this.set('maxButtons', options.buttons.length)
+      }
       var elt = this.overlay.element
       var begin = options.buttons.length > 4 ? 0 : 1
       options.buttons.forEach((function (b, i) {
@@ -128,8 +134,9 @@ var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_inter
     }.bind(this))
     this.on('dragging', function (e) {
       this._pixel = this.getMap().getPixelFromCoordinate(this.overlay.getPosition())
-      if (!e.overlay)
+      if (!e.overlay){
         return true
+      }
       dragging = true
       if (start) {
         this.dispatchEvent({
@@ -191,6 +198,20 @@ var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_inter
       }.bind(this))
     }
   }
+  /** Set anchor position
+   * @param {string} pos "left", "center" or "right"
+   * @api
+   */
+  setAnchor(pos) {
+    var positions = ['left', 'right', 'center']
+    if (positions.indexOf(pos) >= 0) {
+      positions.forEach(function(k) {
+        this.getOverlayElement().classList.remove('ol-touch-cursor-'+k)
+      }.bind(this))
+      this.getOverlayElement().classList.add('ol-touch-cursor-'+pos)
+      this._anchor = pos;
+    }
+  }
   /**
    * Activate or deactivate the interaction.
    * @param {boolean} active Active.
@@ -242,8 +263,9 @@ var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_inter
    */
   offsetPosition(coord) {
     var pos = this.overlay.getPosition()
-    if (pos)
+    if (pos) {
       this.overlay.setPosition([pos[0] + coord[0], pos[1] + coord[1]])
+    }
   }
   /** Get the position of the target
    * @return {ol.coordinate}
@@ -255,8 +277,9 @@ var ol_interaction_TouchCursor = class olinteractionTouchCursor extends ol_inter
    * @return {ol.pixel}
    */
   getPixel() {
-    if (this.getMap())
+    if (this.getMap()) {
       return this.getMap().getPixelFromCoordinate(this.getPosition())
+    }
   }
   /** Get cursor overlay
    * @return {ol.Overlay}

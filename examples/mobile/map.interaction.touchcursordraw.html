@@ -134,6 +134,14 @@
       <li>
         <button onclick="active.setActive(true);">Center cursor</button>
       </li>
+      <li>
+        <label>Anchor position: </label>
+        <select id="anchor">
+          <option>left</option>
+          <option>center</option>
+          <option>right</option>
+        </select>
+      </li>
     </ul>
   </div>
 
@@ -201,6 +209,12 @@
     });
     map.addInteraction(cursor.Modify);
 
+    // Position
+    document.getElementById('anchor').addEventListener('change', function(e) {
+      Object.keys(cursor).forEach(k => {
+        cursor[k].setAnchor(e.target.value)
+      });
+    })
     // Activate mode
     var active;
     function setActive(mode) {

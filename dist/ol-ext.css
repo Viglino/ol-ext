@@ -5268,7 +5268,24 @@ ul.ol-legend li div {
   left: 0;
   width: 50%;
   height: 50%;
-  background: radial-gradient(circle at 100% 100%, transparent, transparent 70%, #369 70%, #369)
+  background: radial-gradient(circle at 100% 100%, transparent, transparent 70%, #369 70%, #369);
+  -webkit-transform-origin: 100% 100%;
+          transform-origin: 100% 100%;
+}
+.ol-overlaycontainer .ol-touch-cursor-center {
+  margin-top: 16px;
+  margin-left: -28px;
+}
+.ol-overlaycontainer .ol-touch-cursor-center:after {
+  -webkit-transform: rotate(45deg);
+          transform: rotate(45deg);
+}
+.ol-overlaycontainer .ol-touch-cursor-right {
+  margin-left: -62px;
+}
+.ol-overlaycontainer .ol-touch-cursor-right:after {
+  -webkit-transform: rotate(90deg);
+          transform: rotate(90deg);
 }
 
 .ol-overlaycontainer .ol-touch-cursor .ol-button {
