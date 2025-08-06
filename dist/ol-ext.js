@@ -31158,6 +31158,7 @@ ol.interaction.TouchCursorDraw = class olinteractionTouchCursorDraw extends ol.i
     // Create cursor
     super({
       className: options.className,
+      anchor: options.anchor || 'left',
       coordinate: options.coordinate,
     });
     this.getOverlayElement().classList.add('nodrawing');
@@ -31306,6 +31307,7 @@ ol.interaction.TouchCursorModify = class olinteractionTouchCursorModify extends 
     super({
       className: ('disable ' + options.className).trim(),
       coordinate: options.coordinate,
+      anchor: options.anchor || 'left',
       buttons: [{
         // Dragging button
         className: 'ol-button-move',
@@ -31448,6 +31450,7 @@ ol.interaction.TouchCursorSelect = class olinteractionTouchCursorSelect extends 
     options = options || {};
     super({
       className: 'ol-select ' + (options.className || ''),
+      anchor: options.anchor || 'left',
       coordinate: options.coordinate
     });
     this._selection = null;
