@@ -19,6 +19,7 @@ var ol_interaction_TouchCursorSelect = class olinteractionTouchCursorSelect exte
 
     super({
       className: 'ol-select ' + (options.className || ''),
+      anchor: options.anchor || 'left',
       coordinate: options.coordinate
     });
 

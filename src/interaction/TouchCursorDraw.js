@@ -34,6 +34,7 @@ var ol_interaction_TouchCursorDraw = class olinteractionTouchCursorDraw extends 
     // Create cursor
     super({
       className: options.className,
+      anchor: options.anchor || 'left',
       coordinate: options.coordinate,
     });
     this.getOverlayElement().classList.add('nodrawing');

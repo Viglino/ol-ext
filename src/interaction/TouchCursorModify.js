@@ -34,6 +34,7 @@ var ol_interaction_TouchCursorModify = class olinteractionTouchCursorModify exte
     super({
       className: ('disable ' + options.className).trim(),
       coordinate: options.coordinate,
+      anchor: options.anchor || 'left',
       buttons: [{
         // Dragging button
         className: 'ol-button-move',

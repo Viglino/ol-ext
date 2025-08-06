@@ -168,7 +168,9 @@
     var cursor = {};
 
     // Select cursor interaction
-    cursor.Select = new ol.interaction.TouchCursorSelect();
+    cursor.Select = new ol.interaction.TouchCursorSelect({
+      // anchor: 'center',
+    });
     map.addInteraction(cursor.Select);
     // Add a delete
     cursor.Select.addButton({
@@ -182,6 +184,7 @@
     // Draw tools
     cursor.Draw = new ol.interaction.TouchCursorDraw({
       className: 'draw',
+      // anchor: 'center',
       coordinate: map.getView().getCenter(),
       type: 'Point',
       types: ['Point', 'LineString', 'Polygon', 'Circle'],
@@ -204,6 +207,7 @@
     // Modify
     cursor.Modify = new ol.interaction.TouchCursorModify({
       className: 'Modify',
+      // anchor: 'center',
       coordinate: map.getView().getCenter(),
       source: vector.getSource()
     });
