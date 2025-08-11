@@ -1,7 +1,18 @@
 var current = []
 var shannon = false
+
 function doShannon(value) {
   shannon = value;
+}
+
+var shanonAttr = document.getElementById('shannonAttr');
+// Get the value to use for the Shannon index
+function getShannonVal(feature) {
+  if (shanonAttr.value === 'usage'){
+    return feature.get('usage_1')
+  } else {
+    return Math.round(feature.get('hauteur') /4);
+  }
 }
 
 /** Calculate shannon index using a buffer of 200m
@@ -45,28 +56,28 @@ function _calcShannon() {
     var extent = ol.extent.buffer(feature.getGeometry().getExtent(), 200/res);
     // get features in buffer
     var features = vectorSource.getFeaturesInExtent(extent);
-    var usages = {}
-    usages[feature.get('usage_1')] = 1;
+    var shAttributes = {}
+    shAttributes[getShannonVal(feature)] = 1;
     var count = 1;
     features.forEach(function(f) {
       if (f === feature) return;
       var g = f._jstsGeometry;
       if (g.intersects(buffer)) { // buffer.intersects(g) || 
-        var usage = f.get('usage_1');
-        if (!usages[usage]) usages[usage] = 0;
-        usages[usage]++;
+        var attr = getShannonVal(f);
+        if (!shAttributes[attr]) shAttributes[attr] = 0;
+        shAttributes[attr]++;
         count++
       }
     });
 
     // Shannon index
     var shannonValue = 0;
-    Object.keys(usages).forEach(function(key) {
-      var pi = usages[key] / count;
+    Object.keys(shAttributes).forEach(function(key) {
+      var pi = shAttributes[key] / count;
       // shannonValue -= pi * Math.log2(pi);
       shannonValue -= pi * Math.log(pi);
     })
-    // console.log(usages, shannonValue)
+    // console.log(shAttributes, shannonValue)
     feature.set('shannon', Math.round(shannonValue*100)/100);
   }
   // Update progress
