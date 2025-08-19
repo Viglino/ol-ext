@@ -76,11 +76,16 @@
   <div class="info">
     The <b>ol/control/PrintDialog</b> is dialog to format the map for printing or exporting.
     <br/>
-    This example use display the dialog in french (only 
-    '<a href="./map.control.printdialog.html">en</a>'
-    and 
-    '<a href="./map.control.printdialog.fr.html">fr</a>'
-    are implemented yet).
+    You can change the language for the dialog: 
+    <select class="lang" onchange="location.href = location.pathname+'?lang=' + this.value">
+      <option value='en'>English (en)</option>
+      <option value='fr'>French (fr)</option>
+      <option value='de'>Deutch (de)</option>
+      <option value='zh'>China (zh)</option>
+      <option value='it'>Italia (it)</option>
+      <option value='pt-br'>Brazil (pt-br)</option>
+    </select>
+    <br/>
     Create <a href="https://github.com/Viglino/ol-ext/issues/new">an issue</a> to ask for a new language or make a pull request...
     <br/>
     Use <a href="https://github.com/eligrey/FileSaver.js/">eligrey/FileSaver</a> 
@@ -174,7 +179,10 @@
   map.addControl(new ol.control.CanvasScaleLine());
 
   // Print control
-  var printControl = new ol.control.PrintDialog({ lang: 'fr' });
+  var lang = location.search.replace(/\?lang=(.*)/,'$1') || 'fr';
+  if (!ol.control.PrintDialog.prototype._labels[lang]) lang = 'fr'
+  var printControl = new ol.control.PrintDialog({ lang: lang });
+  document.querySelector('select.lang').value = lang;
   printControl.setSize('A4');
   map.addControl(printControl);
 

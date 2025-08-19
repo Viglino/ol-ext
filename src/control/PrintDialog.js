@@ -24,6 +24,7 @@ import ol_control_Compass from './Compass.js';
  * @fire printing
  * @extends {ol.control.Control}
  * @author https://github.com/chicoff (italian i18n)
+ * @author https://github.com/cvpereira (Brazil pt-br i18n)
  * @param {Object=} options Control options.
  *	@param {string} options.className class of the control
  *	@param {String} options.title button title
@@ -958,6 +959,32 @@ ol_control_PrintDialog.prototype._labels = {
     small: 'piccolo',
     large: 'grande',
     cancel: 'annulla'
+  },
+  'pt-br': {
+    title: 'Imprimir',
+    orientation: 'Orientação',
+    portrait: 'Retrato',
+    landscape: 'Paisagem',
+    size: 'Tamanho da página',
+    custom: 'Tamanho da tela',
+    margin: 'Margem',
+    scale: 'Escala',
+    legend: 'Legenda',
+    north: 'Seta do norte',
+    mapTitle: 'Título do mapa',
+    saveas: 'Salvar como...',
+    saveLegend: 'Salvar legenda...',
+    copied: '✔ Copiado para a área de transferência',
+    errorMsg: 'Não foi possível salvar o mapa...',
+    printBt: 'Imprimir...',
+    clipboardFormat: 'Copiar para a área de transferência...',
+    jpegFormat: 'Salvar como JPEG',
+    pngFormat: 'Salvar como PNG',
+    pdfFormat: 'Salvar como PDF',
+    none: 'Nenhum',
+    small: 'Pequeno',
+    large: 'Grande',
+    cancel: 'Cancelar'
   }
 };
 
