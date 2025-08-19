@@ -44897,8 +44897,11 @@ ol.style.Profile = class olstyleProfile extends ol.style.Style {
     for (i = 0; p = geom[i]; i++) {
       var x = dx + p[0] * a * cos + p[1] * a * sin
       var y = dy + p[0] * a * sin - p[1] * a * cos
-      dz = Math.min(dz, p[2])
-      geom[i] = [x, y, p[2]]
+      var z = p[2]
+      if (typeof z === 'number') {
+        dz = Math.min(dz, z)
+      }
+      geom[i] = [x, y, z]
     }
     ctx.save()
     ctx.fillStyle = ol.color.asString(this.getFill().getColor())
@@ -44910,8 +44913,10 @@ ol.style.Profile = class olstyleProfile extends ol.style.Style {
       ctx.beginPath()
       ctx.moveTo(p0[0], p0[1])
       ctx.lineTo(p[0], p[1])
-      ctx.lineTo(p[0], p[1] - (p[2] - dz) * ez)
-      ctx.lineTo(p0[0], p0[1] - (p0[2] - dz) * ez)
+      if (typeof p[2] === 'number') {
+        ctx.lineTo(p[0], p[1] - (p[2] - dz) * ez)
+        ctx.lineTo(p0[0], p0[1] - (p0[2] - dz) * ez)
+      }
       ctx.lineTo(p0[0], p0[1])
       ctx.fill()
       p0 = p
@@ -44920,10 +44925,17 @@ ol.style.Profile = class olstyleProfile extends ol.style.Style {
     if (vertexSize) {
       // draw vertex on top of the lines
       ctx.beginPath();
+      // draw first vertex before loop
+      var p0 = geom[0];
+      var y0 = p0[1] - (p0[2] - dz) * ez;
+      ctx.arc(p0[0], y0, vertexSize, 0, 2 * Math.PI);
+      ctx.moveTo(p0[0] + vertexSize, y0);
       for (i = 1; p = geom[i]; i++) {
+        if (typeof p[2] === 'number' ) {
           var yElev = p[1] - (p[2] - dz) * ez;
           ctx.arc(p[0], yElev, vertexSize, 0, 2 * Math.PI);
           ctx.moveTo(p[0] + vertexSize, yElev);
+        }
       };
       ctx.fill();
     }
