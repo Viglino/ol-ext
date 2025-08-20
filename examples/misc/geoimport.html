@@ -61,7 +61,7 @@
   <input type="file" />
   <label>📥 </label>
   <select>
-    <option>export</option>
+    <option value="">export</option>
     <option value="KML">KML</option>
     <option value="geojson">GeoJSON</option>
     <option value="ESRI Shapefile">ESRI Shapefile</option>
@@ -72,10 +72,33 @@
   <div id="map"></div>
   
   <dialog class="loading">
-    <form>loading...</form>
+    <form>
+      loading...
+    </form>
   </dialog>
   <dialog class="saving">
-    <form>saving...</form>
+    <form>
+      saving...
+    </form>
+  </dialog>
+  <dialog class="error">
+    <form>
+      <h2>
+        Can not load this file
+      </h2>
+      <p></p>
+      <p>press [ESC] to close</p>
+    </form>
+  </dialog>
+  <dialog class="loaded">
+    <form>
+      <h2>
+        Chargement
+      </h2>
+      <p></p>
+      <button type="button">center</button>
+      <p>press [ESC] to close</p>
+    </form>
   </dialog>
 <script>
   // @see https://github.com/riatelab/geoimport
@@ -96,39 +119,54 @@ geoimport.init({
   useWorker: false,
 });
 
+document.querySelector('dialog.loaded button').addEventListener('click', function() {
+  map.getView().fit(layer.getSource().getExtent())
+  document.querySelector('dialog.loaded').close()
+})
+
 var layer;
 var inputf = document.querySelector('input[type="file"]')
 inputf.addEventListener('change', e => {
+  console.log((inputf.files[0].size / (1024)).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' Ko');
   document.querySelector('.loading').showModal();
   geoimport.toGeoJSON(inputf.files[0]).then(json => {
-    console.log('ok')
+    // console.log('loading', json)
+    console.log('loading')
     layer = new ol.layer.VectorImage({
       source: new ol.source.Vector({
         features: new ol.format.GeoJSON().readFeatures(json, { dataProjection: 'EPSG:4326', featureProjection: map.getView().getProjection() }),
       })
     })
     map.addLayer(layer)
+    var dlg = document.querySelector('.loaded')
+    dlg.querySelector('p').innerHTML = layer.getSource().getFeatures().length + ' features loaded'
+    dlg.showModal();
     document.querySelector('.loading').close();
   }).catch(function(e) {
     document.querySelector('.loading').close();
     console.log('Lecture impossible', e);
+    var dlg = document.querySelector('.error')
+    dlg.querySelector('p').innerHTML = e[0].message || ''
+    dlg.showModal();
   })
 })
 
 document.querySelector('select').addEventListener('change', (e) => {
-  if (layer) {
+  var format = e.target.value;
+  e.target.value = '';
+  if (layer && format) {
     var json = new ol.format.GeoJSON().writeFeaturesObject(layer.getSource().getFeatures(), { dataProjection: 'EPSG:4326', featureProjection: map.getView().getProjection() })
-    if (e.target.value ==='geojson') {
+    if (format ==='geojson') {
       var blob = new Blob([JSON.stringify(json)], {type: "text/plain;charset=utf-8"});
       saveAs(blob, 'export.geojson')
     } else {
       document.querySelector('.saving').showModal();
-      geoimport.fromGeoJSON(json, 'export', e.target.value).then(f => {
+      geoimport.fromGeoJSON(json, 'export', format).then(f => {
         if (f.name) {
           saveAs(f, f.name);
         } else {
           var blob = new Blob([f], {type: "text/plain;charset=utf-8"});
-          saveAs(blob, 'export.' + e.target.value.toLowerCase())
+          saveAs(blob, 'export.' + format.toLowerCase())
         }
         document.querySelector('.saving').close();
       })
