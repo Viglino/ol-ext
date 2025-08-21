@@ -244,6 +244,12 @@
   margin: 20px;
 }
 
+/* Focus */
+.ol-ext-print-dialog .ol-orientation input:focus-visible + span,
+.ol-ext-print-dialog select:focus-visible {
+  outline: 2px solid #000;
+}
+
 @keyframes ol-clipboard-copy { 
   0% { opacity: 0; top: 0; }
   80% { opacity: 1; top: -3em; }
