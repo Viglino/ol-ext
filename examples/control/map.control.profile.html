@@ -87,6 +87,7 @@
   <script type="text/javascript">
   // Layers
   var layer = new ol.layer.Geoportail('ORTHOIMAGERY.ORTHOPHOTOS');
+  var layer2 = new ol.layer.Geoportail('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2');
 
   // The map
   var map = new ol.Map({
@@ -95,8 +96,9 @@
       zoom: 13,
       center: [649083, 5408224]
     }),
-    layers: [layer]
+    layers: [layer2, layer]
   });
+  map.addControl(new ol.control.LayerSwitcher)
 
   // New profile in the map
   var profile = new ol.control.Profile();
@@ -105,7 +107,8 @@
   var profile2 = new ol.control.Profile({
     target: document.querySelector(".options"),
     selectable: true,
-    // zoomable: true,
+    skipFirst: 5,
+     zoomable: true,
     style: new ol.style.Style({
       fill: new ol.style.Fill({ color: '#ccc' })
     }),

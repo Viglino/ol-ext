@@ -96,7 +96,8 @@
   
   // Profile control
   var profile = new ol.control.Profile({
-    target: $('.options').get(0)
+    target: $('.options').get(0),
+    skipFirst: 5
   });
   map.addControl(profile);
   source.once('change',function(e) {

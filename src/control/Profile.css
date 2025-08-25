@@ -107,13 +107,25 @@
 
 .ol-profile table {
   text-align: center;
+  border-collapse: collapse; 
   width: 100%;
+  margin-top: 0.5em;
+}
+.ol-profile table tr {
+  border-top: 1px solid rgba(0,0,0,.25);
+  margin: 0.1em 0;
+}
+.ol-profile table td {
+  padding: 2px;
 }
 
 .ol-profile table span {
   display: block;
 }
-
+.ol-profile table span.elevationGain,
+.ol-profile table span.elevationLoss {
+  display: inline-block;
+}
 .ol-profilepopup {
   background-color: rgba(255, 255, 255, 0.5);
   margin: 0.5em;
@@ -124,11 +136,6 @@
 }
 .ol-profilepopup.ol-left {
   right:0;
-}
-
-
-.ol-profile table td {
-  padding: 0 2px;
 }
 
 .ol-profile table .track-info {
