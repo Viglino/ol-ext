@@ -15325,6 +15325,7 @@ ol.control.Profil = ol.control.Profile;
  *  @param {boolean} [options.selectable=false] enable selection on the profil, default false
  *  @param {boolean} [options.zoomable=false] can zoom in the profile
  *  @param {string} [options.numberFormat] Convert numbers to a custom locale format, default is not used
+ *  @param {string} [options.skipFirst] Skip the first/last n points of the profile to avaoid GPS spike on start, default 0
  */
 ol.control.Profile = class olcontrolProfile extends ol.control.Control {
   constructor(options) {
@@ -15402,7 +15403,8 @@ ol.control.Profile = class olcontrolProfile extends ol.control.Control {
     this.setProperties({
       'units': options.units || 'metric',
       'numberFormat': options.numberFormat,
-      'selectable': options.selectable
+      'selectable': options.selectable,
+      'skipFirst': parseInt(options.skipFirst) || 0,
     })
     this._isMetric = this.get('units') === 'metric'
     // Offset in px
@@ -15429,32 +15431,57 @@ ol.control.Profile = class olcontrolProfile extends ol.control.Control {
     t.cellSpacing = '0'
     t.style.clientWidth = this.canvas_.width / ratio + "px"
     div.appendChild(t)
-    var firstTr = document.createElement("tr")
-    firstTr.classList.add("track-info")
-    t.appendChild(firstTr)
-    var div_zmin = document.createElement("td")
-    div_zmin.innerHTML = (this.info.zmin || "Zmin") + ': <span class="zmin">'
-    firstTr.appendChild(div_zmin)
-    var div_zmax = document.createElement("td")
-    div_zmax.innerHTML = (this.info.zmax || "Zmax") + ': <span class="zmax">'
-    firstTr.appendChild(div_zmax)
-    var div_distance = document.createElement("td")
-    div_distance.innerHTML = (this.info.distance || "Distance") + ': <span class="dist">'
-    firstTr.appendChild(div_distance)
-    var div_time = document.createElement("td")
-    div_time.innerHTML = (this.info.time || "Time") + ': <span class="time">'
-    firstTr.appendChild(div_time)
+    var firstTr = ol.ext.element.create("tr", { 
+      className: 'track-info',
+      parent: t
+    })
+    ol.ext.element.create("td", { 
+      html: (this.info.zmin || "Zmin") + ': <span class="zmin zinfo"></span>',
+      parent: firstTr
+    })
+    ol.ext.element.create("td", { 
+      html: (this.info.zmax || "Zmax") + ': <span class="zmax"></span>',
+      parent: firstTr
+    })
+    var div_distance = ol.ext.element.create("td", { parent: firstTr })
+    div_distance.innerHTML = (this.info.distance || "Distance") + ': <span class="dist"></span>'
+    var div_time = ol.ext.element.create("td", { parent: firstTr })
+    div_time.innerHTML = (this.info.time || "Time") + ': <span class="time"></span>'
+    var optionTr = ol.ext.element.create("tr", { 
+      className: 'track-info track-options',
+      parent: t
+    })
+    ol.ext.element.create("td", { 
+      html: (this.info.elevation || "Elevation gain") + ': <br/><span class="elevationGain"></span> / <span class="elevationLoss"></span>' ,
+      colspan: 2,
+      parent: optionTr
+    })
+    /*
+    ol.ext.element.create("td", { 
+      html: (this.info.elevloss || "Elevation loss") + ': <span class="elevationLoss"></span>' ,
+      parent: optionTr
+    })
+      */
+    ol.ext.element.create("td", { 
+      html: (this.info.maxslope || "Max. slope") + ': <span class="maxSlope"></span>' ,
+      parent: optionTr
+    })
+    ol.ext.element.create("td", { 
+      html: (this.info.avgslope || "Average slope") + ': <span class="avgSlope"></span>' ,
+      parent: optionTr
+    })
+    // Point information
     var secondTr = document.createElement("tr")
     secondTr.classList.add("point-info")
     t.appendChild(secondTr)
     var div_altitude = document.createElement("td")
-    div_altitude.innerHTML = (this.info.altitude || "Altitude") + ': <span class="z">'
+    div_altitude.innerHTML = (this.info.altitude || "Altitude") + ': <span class="z"></span>'
     secondTr.appendChild(div_altitude)
     var div_distance2 = document.createElement("td")
-    div_distance2.innerHTML = (this.info.distance || "Distance") + ': <span class="dist">'
+    div_distance2.innerHTML = (this.info.distance || "Distance") + ': <span class="dist"></span>'
     secondTr.appendChild(div_distance2)
     var div_time2 = document.createElement("td")
-    div_time2.innerHTML = (this.info.time || "Time") + ': <span class="time">'
+    div_time2.innerHTML = (this.info.time || "Time") + ': <span class="time"></span>'
     secondTr.appendChild(div_time2)
     // Array of data
     this.tab_ = []
@@ -15875,10 +15902,11 @@ ol.control.Profile = class olcontrolProfile extends ol.control.Control {
     if (!/Z/.test(g.getLayout()))
       return
     // No time
-    if (/M/.test(g.getLayout()))
-      this.element.querySelector(".time").parentElement.style.display = 'block'
-    else
+    if (/M/.test(g.getLayout())) {
+      this.element.querySelector(".time").parentElement.style.display = 'table-cell'
+    } else {
       this.element.querySelector(".time").parentElement.style.display = 'none'
+    }
     // Coords
     var c = g.getCoordinates()
     switch (g.getType()) {
@@ -15904,21 +15932,40 @@ ol.control.Profile = class olcontrolProfile extends ol.control.Control {
     }
     // Calculate [distance, altitude, time, point] for each points
     var zmin = Infinity, zmax = -Infinity
+    var elevationGain = 0, elevationLoss = 0
+    var maxSlope = 0, avgSlope = 0;
     var i, p, d, z, ti, t = this.tab_ = []
     for (i = 0, p; p = c[i]; i++) {
       z = p[2]
-      if (z < zmin)
+      if (z < zmin) {
         zmin = z
-      if (z > zmax)
+      }
+      if (z > zmax) {
         zmax = z
-      if (i == 0)
+      }
+      if (i == 0) {
         d = 0
-      else
-        d += dist2d(c[i - 1], p)
+      } else {
+        var di = dist2d(c[i - 1], p)
+        var dz = z - c[i - 1][2]
+        var slope = di ? Math.abs(dz / di) : 0
+        // ignore first n points to avoid GPS spike
+        if (i < this.get('skipFirst') || i > c.length - this.get('skipFirst')) {
+          slope = 0;
+        }
+        maxSlope = Math.max(maxSlope, slope);
+        avgSlope += slope;
+        d += di
+        elevationGain += Math.max(0, z - c[i - 1][2])
+        elevationLoss += Math.max(0, c[i - 1][2] - z)
+      }
       ti = getTime(c[0][3], p[3])
       t.push([d, z, ti, p])
     }
     this._z = [zmin, zmax]
+    this._elevation = [elevationGain, elevationLoss]
+    this._maxSlope = 100 * maxSlope 
+    this._avgSlope = 100 * avgSlope / t.length;
     this.setProperties({
       'graduation': options.graduation || 100,
       'zmin': options.zmin,
@@ -15970,14 +16017,17 @@ ol.control.Profile = class olcontrolProfile extends ol.control.Control {
     ctx.moveTo(0, 0); ctx.lineTo(w, 0)
     ctx.stroke()
     // Info
-    this.element.querySelector(".track-info .zmin").textContent = zmin.toFixed(2) + this.info.altitudeUnits
-    this.element.querySelector(".track-info .zmax").textContent = zmax.toFixed(2) + this.info.altitudeUnits
-    var zminunit = (this._isMetric) ? ol.control.Profile.prototype.Unit.Meter : ol.control.Profile.prototype.Unit.Foot
-    var zminConverted = this._unitsConversion(zmin, zminunit)
-    this.element.querySelector(".track-info .zmin").textContent = this._numberFormat(zminConverted, this.get('zDigitsHover')) + zminunit
-    var zmaxnunit = (this._isMetric) ? ol.control.Profile.prototype.Unit.Meter : ol.control.Profile.prototype.Unit.Foot
-    var zmaxConverted = this._unitsConversion(zmax, zmaxnunit)
-    this.element.querySelector(".track-info .zmax").textContent = this._numberFormat(zmaxConverted, this.get('zDigitsHover')) + zmaxnunit
+    var zunit = (this._isMetric) ? ol.control.Profile.prototype.Unit.Meter : ol.control.Profile.prototype.Unit.Foot
+    var zminConverted = this._unitsConversion(zmin, zunit)
+    this.element.querySelector(".track-info .zmin").textContent = this._numberFormat(zminConverted, this.get('zDigitsHover')) + zunit
+    var zmaxConverted = this._unitsConversion(zmax, zunit)
+    this.element.querySelector(".track-info .zmax").textContent = this._numberFormat(zmaxConverted, this.get('zDigitsHover')) + zunit
+    var elevGainConverted = this._unitsConversion(this._elevation[0], zunit)
+    this.element.querySelector(".track-options .elevationGain").textContent = this._numberFormat(elevGainConverted, this.get('zDigitsHover')) + zunit
+    var elevLossConverted = this._unitsConversion(this._elevation[1], zunit)
+    this.element.querySelector(".track-options .elevationLoss").textContent = this._numberFormat(-elevLossConverted, this.get('zDigitsHover')) + zunit
+    this.element.querySelector(".track-options .maxSlope").textContent = this._numberFormat(this._maxSlope, 0) + "%"
+    this.element.querySelector(".track-options .avgSlope").textContent = this._numberFormat(this._avgSlope, 0) + "%"
     var dunit;
     if (this._isMetric) {
       dunit = (d > 1000) ? ol.control.Profile.prototype.Unit.Kilometer : ol.control.Profile.prototype.Unit.Meter
@@ -16172,8 +16222,7 @@ ol.control.Profile = class olcontrolProfile extends ol.control.Control {
    */
   _numberFormat(number, decimals = 2) {
     var locale = this.get('numberFormat')
-    if (!locale) 
-      return Number(number).toFixed(decimals)
+    if (!locale) return Number(number).toFixed(decimals)
     return Number(number).toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: decimals })
   }
 }
@@ -16187,7 +16236,11 @@ ol.control.Profile.prototype.info = {
   "xtitle": "Distance", // Unit of measurement is autogenerated
   "time": "Time",
   "altitude": "Altitude",
-  "distance": "Distance"
+  "elevation": "Elevation gain / loss",
+  "elevgain": "Elevation gain",
+  "elevloss": "Elevation loss",
+  "maxslope": "Max. slope",
+  "avgslope": "Avg. slope",
 };
 // Accepted units
 ol.control.Profile.prototype.Unit = {
