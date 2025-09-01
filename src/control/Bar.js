@@ -64,10 +64,11 @@ var ol_control_Bar = class olcontrolBar extends ol_control_Control {
    * @param {boolean} val
    */
   setVisible(val) {
-    if (val)
+    if (val) {
       this.element.style.display = '';
-    else
+    } else {
       this.element.style.display = 'none';
+    }
   }
   /** Get the control visibility
    * @return {boolean} b

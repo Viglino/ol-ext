@@ -153,16 +153,21 @@ var ol_control_Toggle = class olcontrolToggle extends ol_control_Button {
    * @param {bool} b activate or deactivate the control, default false
    */
   setActive(b) {
-    if (this.interaction_)
+    if (this.interaction_) {
       this.interaction_.setActive(b);
-    if (this.subbar_)
+    }
+    if (this.subbar_) {
       this.subbar_.setActive(b);
-    if (this.getActive() === b)
+    }
+    if (this.getActive() === b) {
       return;
-    if (b)
-      this.element.classList.add("ol-active");
-    else
-      this.element.classList.remove("ol-active");
+    }
+    if (b) {
+      this.element.classList.add('ol-active');
+    } else {
+      this.element.classList.remove('ol-active');
+    }
+    this.button_.setAttribute('aria-pressed', b);
 
     this.dispatchEvent({ type: 'change:active', key: 'active', oldValue: !b, active: b });
   }
