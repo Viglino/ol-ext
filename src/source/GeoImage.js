@@ -12,6 +12,7 @@
  * @property {number} imageRotate angle of the image in radian, default 0
  * @property {ol.Extent} imageCrop of the image to be show (in the image) default: [0,0,imageWidth,imageHeight]
  * @property {Array.<ol.Coordinate>} imageMask linestring to mask the image on the map
+ * @property {string} [crossOrigin] how the element handles cross-origin requests
  */
 
 import ol_source_ImageCanvas from 'ol/source/ImageCanvas.js'
