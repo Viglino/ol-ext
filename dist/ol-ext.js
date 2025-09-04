@@ -1,7 +1,7 @@
 /**
  * ol-ext - A set of cool extensions for OpenLayers (ol) in node modules structure
  * @description ol3,openlayers,popup,menu,symbol,renderer,filter,canvas,interaction,split,statistic,charts,pie,LayerSwitcher,toolbar,animation
- * @version v4.0.34
+ * @version v4.0.35
  * @author Jean-Marc Viglino
  * @see https://github.com/Viglino/ol-ext#,
  * @license BSD-3-Clause
@@ -34356,6 +34356,7 @@ ol.source.FeatureBin = class olsourceFeatureBin extends ol.source.BinBase {
  * @property {number} imageRotate angle of the image in radian, default 0
  * @property {ol.Extent} imageCrop of the image to be show (in the image) default: [0,0,imageWidth,imageHeight]
  * @property {Array.<ol.Coordinate>} imageMask linestring to mask the image on the map
+ * @property {string} [crossOrigin] how the element handles cross-origin requests
  */
 /** Layer source with georeferencement to place it on a map
  * @constructor 
