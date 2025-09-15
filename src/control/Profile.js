@@ -336,7 +336,7 @@ var ol_control_Profile = class olcontrolProfile extends ol_control_Control {
       else xunit = (xvalue > ol_control_Profile.prototype.MILE_VALUE) ? ol_control_Profile.prototype.Unit.Mile : ol_control_Profile.prototype.Unit.Foot
 
       xvalue = this._unitsConversion(p[0], xunit)
-      this.element.querySelector(".point-info .dist").textContent = typeof xvalue === 'number' ? this._numberFormat(xvalue, this.get('xDigitsHover')) + 'lol' + xunit : '-'
+      this.element.querySelector(".point-info .dist").textContent = typeof xvalue === 'number' ? this._numberFormat(xvalue, this.get('xDigitsHover')) + xunit : '-'
 
       this.element.querySelector(".point-info .time").textContent = p[2]
       if (dx > this.canvas_.width / this.ratio / 2)
