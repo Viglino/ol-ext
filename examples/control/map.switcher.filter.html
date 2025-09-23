@@ -104,10 +104,10 @@
     return found;
   }
   search.on('keyup change', function(){
-    var rex = new RegExp(search.val());
+    var rex = new RegExp(search.val(), 'i');
     filterLayers(rex, layers);
     // Force layer switcher redraw
-    // layers[0].changed();
+    lswitcher.drawPanel()
   });
 
   // Add search input in the switcher header
@@ -123,8 +123,7 @@
         $(e.li).show();
       }
     } else {
-      var rex = new RegExp(search.val());
-      if (rex.test(e.layer.get('title'))) {
+      if (e.layer.getVisible()) {
         $(e.li).show();
       } else {
         $(e.li).hide();
