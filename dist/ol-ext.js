@@ -6607,7 +6607,9 @@ ol.control.LayerSwitcher = class olcontrolLayerSwitcher extends ol.control.Contr
     // Reset scrolltop
     this.panelContainer_.scrollTop = scrollTop
     // Counter
-    this.counter.innerHTML = this.panel_.parentNode.querySelectorAll('ul.panel > li:not(.ol-header)').length;
+    if (this.counter) {
+      this.counter.innerHTML = this.panel_.parentNode.querySelectorAll('ul.panel > li:not(.ol-header)').length;
+    }
   }
   /** Change layer visibility according to the baselayer option
    * @param {ol.layer}
