@@ -21,6 +21,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
 
+  <!-- filesaver-js -->
+  <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/aa9f4e0e/FileSaver.min.js"></script>
   
   <!-- ol-ext -->
   <link rel="stylesheet" href="../../dist/ol-ext.css" />
@@ -48,6 +50,10 @@
       height: 100px;
       margin-right: .5em;
       float: left;
+    }
+    .options button {
+      display: block;
+      margin: 1em auto;
     }
   </style>
 </head>
@@ -82,10 +88,17 @@
   <div class="options">
     <label>
       <input id="polygon" type="checkbox" onclick="search.set('polygon', $(this).prop('checked')); search.search();" /> 
-      extract polygons<br/>(may slow down requests)
+      extract geometry (may slow down requests)
+    </label>
+    <br/>
+    <label>
+      <input id="clear" type="checkbox" onchange="sLayer.getSource().clear()"/> 
+      reset geometries
     </label>
     <br/>
     <i>Use the search control to start a new search.</i>
+    <br/>
+    <button id="save" onclick="save()" disabled>Export geometry (GeoJSON)</button>
   </div>
   
   <script type="text/javascript">
@@ -139,11 +152,20 @@
   // Select feature when click on the reference index
   search.on('select', function(e) {
     // console.log(e);
-    sLayer.getSource().clear();
+    if (document.getElementById('clear').checked) sLayer.getSource().clear();
     // Check if we get a geojson to describe the search
     if (e.search.geojson) {
       var format = new ol.format.GeoJSON();
       var f = format.readFeature(e.search.geojson, { dataProjection: "EPSG:4326", featureProjection: map.getView().getProjection() });
+      Object.keys(e.search).forEach(function(k) {
+        if (typeof e.search[k] !== 'object') {
+          if (k === 'lon' || k === 'lat') {
+            f.set(k, Number(e.search[k]))
+          } else {
+            f.set(k, e.search[k])
+          }
+        }
+      })
       sLayer.getSource().addFeature(f);
       var view = map.getView();
       var resolution = view.getResolutionForExtent(f.getGeometry().getExtent(), map.getSize());
@@ -156,13 +178,29 @@
         zoom: Math.min (zoom, 16)
       });
       }, 100);
+      document.getElementById('save').disabled = false
     } else {
       map.getView().animate({
         center:e.coordinate,
         zoom: Math.max (map.getView().getZoom(),16)
       });
+      document.getElementById('save').disabled = true
     }
   });
+
+  function save() {
+    var features = sLayer.getSource().getFeatures()
+    if (features.length) {
+      var format = new ol.format.GeoJSON();
+      var data = format.writeFeatures(features, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: map.getView().getProjection()
+      });
+      var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+      var name = features[0].get('name') || 'search'
+      saveAs(blob, name + ".geojson");
+    }
+  }
 
   </script>
   
