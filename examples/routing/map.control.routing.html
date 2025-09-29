@@ -142,6 +142,7 @@
 
   <div class="options">
     <i>Use the search control to start a new search.</i>
+    <br/>
     <label>Lang:</label> <select id="lang" onchange="search.set('lang', $('#lang').val())">
       <option value="en">English</option>
       <option value="fr">French</option>
@@ -310,6 +311,9 @@
           ;
       }
     }
+    if (e.feature.get('count')) {
+      content += '<br/>count: ' + e.feature.get('count');
+    }
     popup.show(e.coordinate, content);
   });
   hover.on('hover', function(e) {
@@ -342,12 +346,27 @@
   drop.on('addfeatures', function(e) {
     vector.getSource().clear();
     batch = e.features;
+    var pt = search.getSource().getFeatures()[0]
+    if (pt) {
+      batch.forEach(function(f) {
+        if (f.getGeometry().getType() === 'Point') {
+          var start = (pt.get('step') === 0)
+          var p0 = pt.getGeometry().getCoordinates();
+          var p1 = f.getGeometry().getCoordinates();
+          var line = start ? 
+            new ol.geom.LineString([p0, p1])
+            : 
+            new ol.geom.LineString([p1, p0]);
+          f.setGeometry(line)
+        }
+      })
+    }
     dosearch(e.features);
   });
 
   function dosearch(features) {
     $('.remove').prop('checked', false)
-    console.log(features)
+    // console.log(features)
     var feature = features.pop();
     var geom = feature.getGeometry()
     if (geom.getType() === 'LineString') {
