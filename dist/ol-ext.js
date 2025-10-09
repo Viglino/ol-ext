@@ -9937,8 +9937,8 @@ ol.control.GeoBookmark = class olcontrolGeoBookmark extends ol.control.Control {
       li.addEventListener('click', function (e) {
         var bm = JSON.parse(e.target.getAttribute("data-bookmark"));
         this.getMap().getView().setCenter(bm.pos);
-        this.getMap().getView().setZoom(bm.zoom);
-        this.getMap().getView().setRotation(bm.rot || 0);
+        if (bm.zoom !== undefined) this.getMap().getView().setZoom(bm.zoom);
+        if (bm.rot !== undefined) this.getMap().getView().setRotation(bm.rot || 0);
         this.element.classList.add('ol-collapsed')
         this.dispatchEvent({ type: 'select', name: e.target.getAttribute("data-name"), bookmark: bm });
       }.bind(this));
