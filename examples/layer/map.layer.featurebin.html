@@ -180,8 +180,13 @@
   var source = new ol.source.Vector();
   // Vector source with features collector
   var binSource = new ol.source.Vector({
+    /** /
     url: '../data/departements.geojson',
     format: new ol.format.GeoJSON()
+    /*/
+    url: 'https://macarte.ign.fr/edition/statistique/data/geometry/communes.geojsonx',
+    format: new ol.format.GeoJSONX()
+    /**/
   });
   // Force source to load
   binSource.loadFeatures(null, null, map.getView().getProjection());
