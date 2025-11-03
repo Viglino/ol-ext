@@ -44268,7 +44268,7 @@ ol.style.Profile = class olstyleProfile extends ol.style.Style {
           ctx.arc(p[0], yElev, vertexSize, 0, 2 * Math.PI);
           ctx.moveTo(p[0] + vertexSize, yElev);
         }
-      };
+      }
       ctx.fill();
     }
     p0 = geom[0]

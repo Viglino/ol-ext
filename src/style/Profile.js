@@ -171,7 +171,7 @@ var ol_style_Profile = class olstyleProfile extends ol_style_Style {
           ctx.arc(p[0], yElev, vertexSize, 0, 2 * Math.PI);
           ctx.moveTo(p[0] + vertexSize, yElev);
         }
-      };
+      }
       ctx.fill();
     }
 
