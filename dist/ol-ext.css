@@ -4013,19 +4013,19 @@ ul.ol-legend li div {
   height: 3px;
   left: 0;
   top: 1.6em;
-  -webkit-animation: pulse .5s infinite alternate linear;
-          animation: pulse .5s infinite alternate linear;
+  -webkit-animation: ol-pulse .5s infinite alternate linear;
+          animation: ol-pulse .5s infinite alternate linear;
   background: red;
   z-index: 2;
 }
 
-@-webkit-keyframes pulse {
+@-webkit-keyframes ol-pulse {
   0% { left:0; right: 95%; }
   50% {	left: 30%; right: 30%; }
   100% {	left: 95%; right: 0; }
 }
 
-@keyframes pulse {
+@keyframes ol-pulse {
   0% { left:0; right: 95%; }
   50% {	left: 30%; right: 30%; }
   100% {	left: 95%; right: 0; }
@@ -4221,10 +4221,10 @@ ul.ol-legend li div {
   background-color: transparent;
   -webkit-transform: translate(-50%,-50%);
           transform: translate(-50%,-50%);
-  -webkit-box-shadow: 
+  -webkit-box-shadow:
     .45em 0 currentColor, -.45em 0 currentColor, 0 -.45em currentColor, 0 .45em currentColor,
     .25em 0 currentColor, -.25em 0 currentColor, 0 -.25em currentColor, 0 .25em currentColor;
-          box-shadow: 
+          box-shadow:
     .45em 0 currentColor, -.45em 0 currentColor, 0 -.45em currentColor, 0 .45em currentColor,
     .25em 0 currentColor, -.25em 0 currentColor, 0 -.25em currentColor, 0 .25em currentColor;
 }

@@ -8658,6 +8658,7 @@ ol.control.Disable = class olcontrolDisable extends ol.control.Control {
  *	@param {String} options.className class of the control
  *	@param {String} options.target Specify a target if you want the control to be rendered outside of the map's viewport.
  *	@param {boolean} options.edition false to remove the edition tools, default true
+ *	@param {boolean} options.drawOptions false to remove the draw options bar
  *	@param {Object} options.interactions List of interactions to add to the bar 
  *    ie. Select, Delete, Info, DrawPoint, DrawLine, DrawPolygon
  *    Each interaction can be an interaction or true (to get the default one) or false to remove it from bar
@@ -8837,34 +8838,44 @@ ol.control.EditBar = class olcontrolEditBar extends ol.control.Bar {
           }
         })
       }
-      var ledit = new ol.control.Toggle({
-        className: 'ol-drawline',
-        title: this._getTitle(options.interactions.DrawLine) || 'LineString',
-        name: 'DrawLine',
-        interaction: this._interactions.DrawLine,
-        // Options bar associated with the control
-        bar: new ol.control.Bar({
-          controls: [
-            new ol.control.TextButton({
-              html: this._getTitle(options.interactions.UndoDraw) || 'undo',
-              title: this._getTitle(options.interactions.UndoDraw) || "delete last point",
-              handleClick: function () {
-                if (ledit.getInteraction().nbpts > 1)
-                  ledit.getInteraction().removeLastPoint()
-              }
-            }),
-            new ol.control.TextButton({
-              html: this._getTitle(options.interactions.FinishDraw) || 'finish',
-              title: this._getTitle(options.interactions.FinishDraw) || "finish",
-              handleClick: function () {
-                // Prevent null objects on finishDrawing
-                if (ledit.getInteraction().nbpts > 2)
-                  ledit.getInteraction().finishDrawing()
-              }
-            })
-          ]
+      var ledit
+      if (options.drawOptions !== false) {
+        ledit = new ol.control.Toggle({
+          className: 'ol-drawline',
+          title: this._getTitle(options.interactions.DrawLine) || 'LineString',
+          name: 'DrawLine',
+          interaction: this._interactions.DrawLine,
+          // Options bar associated with the control
+          bar: new ol.control.Bar({
+            controls: [
+              new ol.control.TextButton({
+                html: this._getTitle(options.interactions.UndoDraw) || 'undo',
+                title: this._getTitle(options.interactions.UndoDraw) || "delete last point",
+                handleClick: function () {
+                  if (ledit.getInteraction().nbpts > 1)
+                    ledit.getInteraction().removeLastPoint()
+                }
+              }),
+              new ol.control.TextButton({
+                html: this._getTitle(options.interactions.FinishDraw) || 'finish',
+                title: this._getTitle(options.interactions.FinishDraw) || "finish",
+                handleClick: function () {
+                  // Prevent null objects on finishDrawing
+                  if (ledit.getInteraction().nbpts > 2)
+                    ledit.getInteraction().finishDrawing()
+                }
+              })
+            ]
+          })
         })
-      })
+      } else {
+        ledit = new ol.control.Toggle({
+          className: 'ol-drawline',
+          title: this._getTitle(options.interactions.DrawLine) || 'LineString',
+          name: 'DrawLine',
+          interaction: this._interactions.DrawLine,
+        })
+      }
       this.addControl(ledit)
     }
     if (options.interactions.DrawPolygon !== false) {
@@ -8965,34 +8976,44 @@ ol.control.EditBar = class olcontrolEditBar extends ol.control.Bar {
    * @private
    */
   _setDrawPolygon(className, interaction, title, name, options) {
-    var fedit = new ol.control.Toggle({
-      className: className,
-      name: name,
-      title: title,
-      interaction: interaction,
-      // Options bar associated with the control
-      bar: new ol.control.Bar({
-        controls: [
-          new ol.control.TextButton({
-            html: this._getTitle(options.interactions.UndoDraw) || 'undo',
-            title: this._getTitle(options.interactions.UndoDraw) || 'undo last point',
-            handleClick: function () {
-              if (fedit.getInteraction().nbpts > 1)
-                fedit.getInteraction().removeLastPoint()
-            }
-          }),
-          new ol.control.TextButton({
-            html: this._getTitle(options.interactions.FinishDraw) || 'finish',
-            title: this._getTitle(options.interactions.FinishDraw) || 'finish',
-            handleClick: function () {
-              // Prevent null objects on finishDrawing
-              if (fedit.getInteraction().nbpts > 3)
-                fedit.getInteraction().finishDrawing()
-            }
-          })
-        ]
+    var fedit
+    if (options.drawOptions !== false) {
+      fedit = new ol.control.Toggle({
+        className: className,
+        name: name,
+        title: title,
+        interaction: interaction,
+        // Options bar associated with the control
+        bar: new ol.control.Bar({
+          controls: [
+            new ol.control.TextButton({
+              html: this._getTitle(options.interactions.UndoDraw) || 'undo',
+              title: this._getTitle(options.interactions.UndoDraw) || 'undo last point',
+              handleClick: function () {
+                if (fedit.getInteraction().nbpts > 1)
+                  fedit.getInteraction().removeLastPoint()
+              }
+            }),
+            new ol.control.TextButton({
+              html: this._getTitle(options.interactions.FinishDraw) || 'finish',
+              title: this._getTitle(options.interactions.FinishDraw) || 'finish',
+              handleClick: function () {
+                // Prevent null objects on finishDrawing
+                if (fedit.getInteraction().nbpts > 3)
+                  fedit.getInteraction().finishDrawing()
+              }
+            })
+          ]
+        })
       })
-    })
+    } else {
+      fedit = new ol.control.Toggle({
+        className: className,
+        name: name,
+        title: title,
+        interaction: interaction,
+      })
+    }
     this.addControl(fedit)
     return fedit
   }
@@ -44999,7 +45020,7 @@ ol.style.Profile = class olstyleProfile extends ol.style.Style {
           ctx.arc(p[0], yElev, vertexSize, 0, 2 * Math.PI);
           ctx.moveTo(p[0] + vertexSize, yElev);
         }
-      };
+      }
       ctx.fill();
     }
     p0 = geom[0]
