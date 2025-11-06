@@ -234,14 +234,14 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
     }
     // Arrondissement
     var district = this._inputParcelle.arrond.value;
-    if (district) {
+    if (district && !prefix) {
       var n = this._arrond.length - district.length;
-      district = this._arrond.substr(0,n) + district;
+      prefix = this._arrond.substr(0,n) + district;
     }
     // Get parcelle number
     var section = complete(this._inputParcelle.section.value, 2);
     var numero = complete(this._inputParcelle.numero.value, 4, '0');
-    this.searchParcelle(commune, district, prefix, section, numero,
+    this.searchParcelle(commune, '', prefix, section, numero,
       function (jsonResp) {
         this._listParcelle(jsonResp);
       }.bind(this),
@@ -254,7 +254,7 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
    * @param {function} success callback function called on success
    * @param {function} error callback function called on error
    */
-  searchParcelle(commune, district, prefix, section, numero, success /*, error */) {
+  searchParcelle(commune, olcode, prefix, section, numero, success /*, error */) {
     // Search url
     var url = this.get('url').replace('ols/apis/completion', 'geoportail/ols').replace('completion', 'search');
     // v2 ?
@@ -304,8 +304,8 @@ var ol_control_SearchGeoportailParcelle = class olcontrolSearchGeoportailParcell
       this.ajax(url + '?index=parcel&q='
         + '&departmentcode=' + commune.substr(0,2)
         + '&municipalitycode=' + commune.substr(-3)
-        + (prefix ? '&oldmunicipalitycode=' + prefix.replace(/_/g, '0') : '')
-        + (district ? '&districtcode=' + district : '')
+        + (prefix ? '&districtcode=' + prefix.replace(/_/g, '0') : '')
+        + (olcode ? '&oldmunicipalitycode=' + olcode : '')
         + (section ? '&section=' + section.toUpperCase() : '')
         + (numero ? '&number=' + numero : '')
         + '&limit=20',
