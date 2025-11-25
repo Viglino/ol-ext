@@ -40,10 +40,8 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
     this.postcompose_ = this.postcompose.bind(this);
 
     this.layers = [];
-    if (options.layers)
-      this.addLayer(options.layers, false);
-    if (options.rightLayers)
-      this.addLayer(options.rightLayers, true);
+    if (options.layers) this.addLayer(options.layers, false);
+    if (options.rightLayers) this.addLayer(options.rightLayers, true);
 
     this.on('propertychange', function (e) {
       if (this.getMap()) {
@@ -100,10 +98,11 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
       this._listener = [];
       for (i = 0; i < this.layers.length; i++) {
         l = this.layers[i];
-        if (l.right)
+        if (l.right) {
           l.layer.on(['precompose', 'prerender'], this.precomposeRight_);
-        else
+        } else {
           l.layer.on(['precompose', 'prerender'], this.precomposeLeft_);
+        }
         l.layer.on(['postcompose', 'postrender'], this.postcompose_);
       }
       try { map.renderSync(); } catch (e) { /* ok */ }
@@ -130,10 +129,11 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
       if (this.isLayer_(l) < 0) {
         this.layers.push({ layer: l, right: right });
         if (this.getMap()) {
-          if (right)
+          if (right) {
             l.on(['precompose', 'prerender'], this.precomposeRight_);
-          else
+          } else {
             l.on(['precompose', 'prerender'], this.precomposeLeft_);
+          }
           l.on(['postcompose', 'postrender'], this.postcompose_);
           try { this.getMap().renderSync(); } catch (e) { /* ok */ }
         }
@@ -304,18 +304,18 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
     var ctx = e.context;
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
+
         // Clear
-        if (this._lefttime != e.frameState.time) {
+        if (ctx._lefttime != e.frameState.time) {
           ctx.clearColor(0, 0, 0, 0);
           ctx.clear(ctx.COLOR_BUFFER_BIT);
-          this._lefttime = e.frameState.time;
+          ctx._lefttime = e.frameState.time;
         }
 
         // Clip
         ctx.enable(ctx.SCISSOR_TEST);
 
         var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
-
 
         // get render coordinates and dimensions given CSS coordinates
         var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
@@ -362,18 +362,18 @@ var ol_control_Swipe = class olcontrolSwipe extends ol_control_Control {
     var ctx = e.context;
     if (ctx instanceof WebGLRenderingContext) {
       if (e.type === 'prerender') {
+
         // Clear
-        if (this._righttime != e.frameState.time) {
+        if (ctx._righttime != e.frameState.time) {
           ctx.clearColor(0, 0, 0, 0);
           ctx.clear(ctx.COLOR_BUFFER_BIT);
-          this._righttime = e.frameState.time;
+          ctx._righttime = e.frameState.time;
         }
 
         // Clip
         ctx.enable(ctx.SCISSOR_TEST);
 
         var mapSize = this.getMap().getSize(); // [width, height] in CSS pixels
-
 
         // get render coordinates and dimensions given CSS coordinates
         var bottomLeft = this._transformPt(e, [0, mapSize[1]]);
