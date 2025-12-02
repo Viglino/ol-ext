@@ -50,7 +50,7 @@ To ensure the correct translation beetween the modules and the distribution on o
 
 ### Naming convention
 
-To ensure the correct translation beetween the modules and the distribution on ol classes, we use the following naming convention.
+To ensure the correct translation between the modules and the distribution on ol classes, we use the following naming convention.
 
 In Openlayers classes just replace the `point` by a `underscore`.
 - Thus the `ol.layer.Vector` class must be imported as `ol_layer_Vector`.
@@ -65,17 +65,18 @@ import ol_control_MyControl from 'ol-ext/control/MyControl.js';
 Example:
 ````javascript
 // Import ol classes
-import ol_ext_inherits from '../util/ext.js'
 import ol_control_Control from 'ol/control/Control.js'
 
-// Create my control
-var ol_control_MyControl = function(options) {
-  ol_control_Control.call(this,options);
+// Create my control extending ol/control/Control
+var ol_control_MyControl = class olcontrolMyControl extends ol_control_Control {
+  constructor(options) {
+    // init ol class
+    super(options);
+  }
 }
-ol_ext_inherits(ol_control_MyControl, ol_control_Control);
 
 // Export my control
-export default ol_control_MyControl
+export default olcontrolMyControl
 
 ````
 
