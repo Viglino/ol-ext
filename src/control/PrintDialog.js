@@ -25,6 +25,7 @@ import ol_control_Compass from './Compass.js';
  * @extends {ol.control.Control}
  * @author https://github.com/chicoff (italian i18n)
  * @author https://github.com/cvpereira (Brazil pt-br i18n)
+ * @author https://github.com/chicoff (Romansh rm i18n)
  * @param {Object=} options Control options.
  *	@param {string} options.className class of the control
  *	@param {String} options.title button title
@@ -985,6 +986,32 @@ ol_control_PrintDialog.prototype._labels = {
     small: 'Pequeno',
     large: 'Grande',
     cancel: 'Cancelar'
+  },
+  'rm': {
+    title: 'Stampar',
+    orientation: 'Orientaziun',
+    portrait: 'Vertical',
+    landscape: 'Horizontal',
+    size: 'Format',
+    custom: 'Grondezza dal monitur',
+    margin: 'Margin',
+    scale: 'Stgala',
+    legend: 'Legenda',
+    north: 'Fritga nord',
+    mapTitle: 'Titel',
+    saveas: 'Memorisar sco...',
+    saveLegend: 'Memorisar legenda...',
+    copied: '\u2714 Copià en las notizias',
+    errorMsg: 'Betg memorisar la carta',
+    printBt: 'Stampar',
+    clipboardFormat: 'Copia en las notizias...',
+    jpegFormat: 'Memorisar sco jpeg',
+    pngFormat: 'Memorisar sco png',
+    pdfFormat: 'Memorisar sco pdf',
+    none: 'betg',
+    small: 'pitschen',
+    large: 'grond',
+    cancel: 'Stizzar'
   }
 };
 
