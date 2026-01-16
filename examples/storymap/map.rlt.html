@@ -25,6 +25,8 @@
   <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
   <script src="https://unpkg.com/elm-pep"></script>
 
+  <script type="text/javascript" src="../data/RLT/missions.js"></script>
+
   <link rel="stylesheet" href="../style.css" />
   <style>
     #map {
@@ -81,8 +83,11 @@
       zoom: 18,
       center: [269889, 6248507]
     }),
-    // layers: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }) ]
+    layers: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }) ]
   });
+
+  map.addControl(new ol.control.LayerSwitcher);
+
   // Capabilities
   ol.layer.Geoportail.capabilities["ORTHOIMAGERY.ORTHOPHOTOS.1950-1965"] = {"server":"https://data.geopf.fr/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS.1950-1965","title":"Photographies aériennes historiques 1950-1965","format":"image/png","style":"BDORTHOHISTORIQUE","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-67.72138,-21.401262,55.84643,51.094486],"desc":"<![CDATA[Couverture en photographies aériennes de la France des années 50, telle qu'elle se présentait avant les grands aménagements des années 60. Cette couverture a été réalisée à partir des photographies aériennes historiques numérisées par l'IGN. Elle est disponible sur la France métropolitaine, les départements et régions d'Outre-Mer (la Guyane n'est que partiellement couverte) et les collectivités d'Outre-Mer sauf la Polynésie française.\nLes photographies sont orthorectifiées, c'est-à-dire corrigées des déformations dues à la prise de vue et au relief du terrain, et assemblées pour fournir une visualisation continue superposable avec le Référentiel à Grande Echelle (RGE®) ou les cartes.]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]}}};
   ol.layer.Geoportail.capabilities["ORTHOIMAGERY.ORTHOPHOTOS.1965-1980"] = {"server":"https://data.geopf.fr/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS.1965-1980","title":"BDOrtho Historique 1965-1980","format":"image/png","style":"BDORTHOHISTORIQUE","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-2.2752295,47.083138,2.619632,49.01929],"desc":"<![CDATA[Couverture en photographies aériennes de la France des années 1965 à 1980. Cette couverture a été réalisée à partir des photographies aériennes historiques numérisées par l'IGN. Elle est disponible sur la France métropolitaine, les départements et régions d'Outre-Mer (la Guyane n'est que partiellement couverte) et les collectivités d'Outre-Mer sauf la Polynésie française.\nLes photographies sont orthorectifiées, c'est-à-dire corrigées des déformations dues à la prise de vue et au relief du terrain, et assemblées pour fournir une visualisation continue superposable avec le Référentiel à Grande Echelle (RGE®) ou les cartes.]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":3,"maxZoom":18,"constraint":[{"minZoom":3,"maxZoom":18,"bbox":[-2.2752295,47.083138,2.619632,49.01929]}]}}};
@@ -117,66 +122,25 @@
   ol.layer.Geoportail.capabilities["ORTHOIMAGERY.ORTHO-SAT.PLEIADES.2019"] = {"server":"https://data.geopf.fr/wmts","layer":"ORTHOIMAGERY.ORTHO-SAT.PLEIADES.2019","title":"PLEIADES - 2019","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-63.17017,-21.409384,55.864906,51.111744],"desc":"Agrégation des images Pleiades de l'année 2019","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.17017,-21.409384,55.864906,51.111744]}]},"CNES":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES/CNES.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.17017,-21.409384,55.864906,51.111744]}]},"AIRBUS":{"href":"http://www.geo-airbusds.com/","attribution":"Airbus Defence and Space","logo":"https://wxs.ign.fr/static/logos/AIRBUS/AIRBUS.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.17017,-21.409384,55.864906,51.111744]}]}}};
   ol.layer.Geoportail.capabilities["ORTHOIMAGERY.ORTHO-SAT.PLEIADES.2020"] = {"server":"https://data.geopf.fr/wmts","layer":"ORTHOIMAGERY.ORTHO-SAT.PLEIADES.2020","title":"PLEIADES - 2020","format":"image/png","style":"normal","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-63.17017,-13.016858,45.313553,51.111744],"desc":"Agrégation des images Pleiades de l'année 2020","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.17017,3.8265102,9.669795,50.926514]}]},"CNES":{"href":"http://www.cnes.fr/","attribution":"Centre national d'études spatiales (CNES)","logo":"https://wxs.ign.fr/static/logos/CNES/CNES.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.17017,3.8265102,9.669795,50.926514]}]},"AIRBUS":{"href":"http://www.geo-airbusds.com/","attribution":"Airbus Defence and Space","logo":"https://wxs.ign.fr/static/logos/AIRBUS/AIRBUS.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-63.17017,3.8265102,9.669795,50.926514]}]}}};
 
-  var histo = [
-    /* no more ?
-    new ol.layer.Geoportail({ 
-      name: '1970',
-      title: '1965-1980',
-      key: 'orthohisto',
-      layer: 'ORTHOIMAGERY.ORTHOPHOTOS.1965-1980' 
-    }),
-    */
-    new ol.layer.Geoportail({ 
-      name: '1960',
-      title: '1950-1965',
-      key: 'orthohisto',
-      layer: 'ORTHOIMAGERY.ORTHOPHOTOS.1950-1965' 
-    }),
-    new ol.layer.Image({
-      name: "1924",
-      source: new ol.source.GeoImage({
-        "url": "../data/INGF/IGNF_PVA_1-0__1924-08-11__C2314-1541_1924_NP9_13007.jpg",
-        "imageCenter": [269892.63568257954,6248535.314175406],
-        "imageRotate": 3.1401654995959856,
-        "imageScale": [0.2670215718130227,0.2670215718130227]
+  var histo = [];
+  missions.forEach(m => {
+    console.log(m.date.split('-')[0], m)
+    var center = ol.proj.fromLonLat(m.coord);
+    var res = ol.proj.getPointResolution(map.getView().getProjection(), 2, center, 'm');
+    var sc = res * m.scale / 10000;
+    console.log( sc, m.scale )
+    histo.push(new ol.layer.Image({
+        name: m.date.split('-')[0],
+        source: new ol.source.GeoImage({
+          "url": "../data/RLT/" + m.img + ".jpg?raw=true",
+          "imageCenter": center,
+          "imageRotate": m.angle * Math.PI / 180,
+          "imageScale": [sc,sc]
+        })
       })
-    }),
-    new ol.layer.Image({
-      name: "1931",
-      source: new ol.source.GeoImage({
-        "url": "../data/INGF/IGNF_PVA_1-0__1931__CCF0H-2361_1931_CAF_H-236_0003.jpg",
-        "imageCenter": [269917.11527094606,6248564.182321039],
-        "imageRotate": -1.4887750967772184,
-        "imageScale": [0.5916825640700804,0.5916825640700804]
-      })
-    }),
-    new ol.layer.Image({
-      name: "1934",
-      source: new ol.source.GeoImage({
-        "url": "../data/INGF/IGNF_PVA_1-0__1934__CCF0F-54B1_1934_CAF_F-54_0011.jpg",
-        "imageCenter": [269884.7536107674,6248543.448601998],
-        "imageRotate": -3.136726258048235,
-        "imageScale": [0.6375976820489188,0.6375976820489188]
-      })
-    }),
-    new ol.layer.Image({
-      name: "1936",
-      source: new ol.source.GeoImage({
-        "url": "../data/INGF/IGNF_PVA_1-0__1936-07-17__C2314-1501_1936_NP2_3010.jpg?raw=true",
-        "imageCenter": [269937.2514666198,6248523.183442762],
-        "imageRotate": -2.778805073301242,
-        "imageScale": [0.47915761377123306,0.47915761377123306]
-      })
-    }),
-    new ol.layer.Image({
-      name: "1944",
-      source: new ol.source.GeoImage({
-        "url": "../data/INGF/IGNF_PVA_1-0__1944-08-11__C2214-1091_1944_106G2130_3199.jpg?raw=true",
-        "imageCenter": [269998.3656072118,6248506.391443234],
-        "imageRotate": 2.362938966984174,
-        "imageScale": [0.473608899531087,0.4768894853951739]
-      })
-    }),
+    )
+  });
+    /*
     new ol.layer.Image({
       name: "1950",
       source: new ol.source.GeoImage({
@@ -186,8 +150,9 @@
         "imageScale": [0.3267839610026342,0.326366151015898]
       })
     })
-  ];
+      */
 
+      /*
   var dates = [2000,2003,2008,2011,2014];
   for (var d=dates.length-1; d>=0; d--) {
     histo.unshift(new ol.layer.Geoportail({ 
@@ -209,11 +174,13 @@
   }
   */
 
+  /*
   histo.unshift(new ol.layer.Geoportail({ 
     name: (new Date()).getFullYear().toString(),
     title: (new Date()).getFullYear().toString(),
     layer: 'ORTHOIMAGERY.ORTHOPHOTOS' 
   }));
+  */
 
   histo.forEach(function(l) { map.addLayer(l); });
 
@@ -221,7 +188,7 @@
   var tline = new ol.control.Timeline({
     className: 'ol-pointer ol-zoomhover',
     features: histo,
-    minDate: new Date('1923'),
+    minDate: new Date('1900'),
     maxDate: new Date(),
     getFeatureDate: function(l) { return l.get('name'); },
     getHTML: function(l) { return l.get('name'); }
@@ -236,7 +203,7 @@
         layer = l;
         dmin = dt;
       }
-      if (i!==0) l.setVisible(false);
+      l.setVisible(false);
     });
     layer.setVisible(true);
     $('.date').text(layer.get('title') || layer.get('name'));

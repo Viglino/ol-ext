@@ -31986,6 +31986,7 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
    * @param {ol.Feature} f the feature
    * @param {boolean} clone clone resulting geom
    * @param {ol.geom.Geometry} rotated geometry
+   * @returns {ol.geom.Geometry}
    */
   getGeometryRotateToZero_(f, clone) {
     var origGeom = f.getGeometry()
@@ -32016,8 +32017,10 @@ ol.interaction.Transform = class olinteractionTransform extends ol.interaction.P
     var i, f, geom
     var keepRectangle = this.selection_.item(0) && this._isRectangle(this.selection_.item(0).getGeometry())
     this.overlayLayer_.getSource().clear()
-    if (!this.selection_.getLength())
+    // No selection or bad geometry
+    if (!this.selection_.getLength() || !this.selection_.item(0).getGeometry()) {
       return
+    }
     var viewRotation = this.getMap().getView().getRotation()
     var ext = this.getGeometryRotateToZero_(this.selection_.item(0)).getExtent()
     var coords
