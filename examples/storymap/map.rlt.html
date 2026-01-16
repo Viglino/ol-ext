@@ -63,6 +63,63 @@
       font-size: 2rem;
       margin-bottom: .05em;
     }
+        #video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background-color: rgba(0,0,0,.7);
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: .5s;
+    }
+    #video.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #video > div {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #video span {
+      position: absolute;
+      top: 0;
+      right: 0;
+      margin: .25em;
+      font-size: 1.5em;
+      color: #fff;
+      cursor: pointer;
+      text-shadow: 1px 1px #000;
+      width: 1em;
+      height: 1em;
+      line-height: 1em;
+      text-align: center;
+    }
+    #video div:hover span {
+      background: rgba(0,0,0,.6);
+      box-shadow: 0 0 20px #000, 0 0 20px #000, 0 0 20px #000;
+      border-radius: 50%;
+    }
+    #map.recording:before {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      animation: blink .25s alternate infinite;
+      left: 0;
+      top: 0;
+      border: 5px solid cyan;
+      box-sizing: border-box;
+      z-index: 1;
+    }
+    @keyframes blink {
+      0%, 50% { opacity: 0; }
+      51%, 100%   { opacity: 1;  }
+    }
   </style>
 </head>
 <body >
@@ -72,6 +129,12 @@
   </a>
 
   <!-- DIV pour la carte -->
+  <div id="video">
+    <div>
+      <video controls></video>
+      <span onclick="$('#video').removeClass('visible');">✖</span>
+    </div>
+  </div>
   <div id="map"></div>
   <div class='date'></div>
   
@@ -80,13 +143,85 @@
   var map = new ol.Map ({
     target: 'map',
     view: new ol.View({
-      zoom: 18,
-      center: [269889, 6248507]
+      zoom: 16,
+      center: [270092, 6248487]
     }),
-    layers: [ new ol.layer.Geoportail({ layer: 'ORTHOIMAGERY.ORTHOPHOTOS' }) ]
+    layers: [ new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', opacity: 0.5 }) ]
   });
 
   map.addControl(new ol.control.LayerSwitcher);
+
+  var title = new ol.control.CanvasTitle();
+  map.addControl(title);
+  title.setStyle (new ol.style.Style({
+    text: new ol.style.Text({
+      text: 'Toto',
+      font: "bold 28px 'Lucida Grande',Verdana,Geneva,Lucida,Arial,Helvetica,sans-serif",
+      fill: new ol.style.Fill({
+        color: '#333'
+      }),
+      stroke: new ol.style.Stroke({ width: 2, color: 'rgba(255,255,255,.5)' })
+    }),
+    fill: new ol.style.Fill({
+      color: 'rgba(255,255,255,0.2)'
+    }),
+    stroke: new ol.style.Stroke({ width: 2, color: 'red' })
+  })); 
+
+  // Record control
+  var rec = new ol.control.VideoRecorder();
+  map.addControl(rec);
+  rec.on('stop', function(e) {
+    document.querySelector('video').src = e.videoURL;
+    $('#video').addClass('visible');
+    $('#map').removeClass('recording');
+    title.setTitle('');
+  });
+  rec.on('start', function(e) {
+    // $('body').append(e.canvas);
+    $('#map').addClass('recording');
+    tline.setDate(start.getFullYear());
+    go();
+  })
+  rec.on('error', console.log)
+
+    // Run on the timeline
+  var running = false; 
+  var start = new Date('2100');
+  var end = new Date('1900');
+  function go(next) {
+    var date = tline.getDate();
+    title.setTitle(date.getFullYear())
+    if (running) clearTimeout(running);
+    if (!next) {
+      // stop
+      if (date>start && date<end && running) {
+        running = false;
+        tline.element.classList.remove('running');
+        return;
+      }
+      if (date > end) {
+        date = new Date(start.getTime());
+      }
+    }
+    if (date > end) {
+      tline.element.classList.remove('running');
+      title.setTitle('');
+      rec.stop();
+      return;
+    }
+    if (date < start) {
+      date = new Date(start.getTime());
+    }
+    // 1 year
+    date.setFullYear(date.getFullYear() +1);
+    tline.setDate(date, { anim:false });
+    // next
+    tline.element.classList.add('running');
+    running = setTimeout(function() { go(true); }, 200);
+  }
+
+
 
   // Capabilities
   ol.layer.Geoportail.capabilities["ORTHOIMAGERY.ORTHOPHOTOS.1950-1965"] = {"server":"https://data.geopf.fr/wmts","layer":"ORTHOIMAGERY.ORTHOPHOTOS.1950-1965","title":"Photographies aériennes historiques 1950-1965","format":"image/png","style":"BDORTHOHISTORIQUE","queryable":false,"tilematrix":"PM","minZoom":0,"maxZoom":18,"bbox":[-67.72138,-21.401262,55.84643,51.094486],"desc":"<![CDATA[Couverture en photographies aériennes de la France des années 50, telle qu'elle se présentait avant les grands aménagements des années 60. Cette couverture a été réalisée à partir des photographies aériennes historiques numérisées par l'IGN. Elle est disponible sur la France métropolitaine, les départements et régions d'Outre-Mer (la Guyane n'est que partiellement couverte) et les collectivités d'Outre-Mer sauf la Polynésie française.\nLes photographies sont orthorectifiées, c'est-à-dire corrigées des déformations dues à la prise de vue et au relief du terrain, et assemblées pour fournir une visualisation continue superposable avec le Référentiel à Grande Echelle (RGE®) ou les cartes.]]>","originators":{"IGN":{"href":"http://www.ign.fr","attribution":"Institut national de l'information géographique et forestière","logo":"https://wxs.ign.fr/static/logos/IGN/IGN.gif","minZoom":0,"maxZoom":18,"constraint":[{"minZoom":0,"maxZoom":18,"bbox":[-179.5,-75,179.5,75]}]}}};
@@ -124,11 +259,11 @@
 
   var histo = [];
   missions.forEach(m => {
-    console.log(m.date.split('-')[0], m)
     var center = ol.proj.fromLonLat(m.coord);
-    var res = ol.proj.getPointResolution(map.getView().getProjection(), 2, center, 'm');
-    var sc = res * m.scale / 10000;
-    console.log( sc, m.scale )
+    var res = ol.proj.getPointResolution(map.getView().getProjection(), 1, center, 'm');
+    var sc = res / m.scale * 10000;
+    sc = m.res;
+    console.log(m.scale/m.res, sc, m.scale, m.res )
     histo.push(new ol.layer.Image({
         name: m.date.split('-')[0],
         source: new ol.source.GeoImage({
@@ -139,48 +274,11 @@
         })
       })
     )
+    var an = parseInt(m.date.split('-')[0]);
+    console.log(an, start.getFullYear(), end.getFullYear())
+    if (an < start.getFullYear()) start.setFullYear(an);
+    if (an > end.getFullYear()) end.setFullYear(an);
   });
-    /*
-    new ol.layer.Image({
-      name: "1950",
-      source: new ol.source.GeoImage({
-        "url": "../data/INGF/IGNF_PVA_1-0__1950-05-30__C2314-1851_1950_CDP3505_0242.jpg?raw=true",
-        "imageCenter": [269869.74402191263,6248527.808891151],
-        "imageRotate": -0.028335836913955807,
-        "imageScale": [0.3267839610026342,0.326366151015898]
-      })
-    })
-      */
-
-      /*
-  var dates = [2000,2003,2008,2011,2014];
-  for (var d=dates.length-1; d>=0; d--) {
-    histo.unshift(new ol.layer.Geoportail({ 
-      name: dates[d]+'',
-      title: dates[d]+'',
-      gppKey: 'orthohisto',
-      layer: 'ORTHOIMAGERY.ORTHOPHOTOS' +dates[d]
-    }));
-  }
-  /*
-  dates = [2015,2016,2017,2018,2019,2020];
-  for (var d=dates.length-1; d>=0; d--) {
-    histo.unshift(new ol.layer.Geoportail({ 
-      name: dates[d]+'',
-      title: dates[d]+'',
-      gppKey: 'h1osiyvfm7c4wu976jv6gpum',
-      layer: 'ORTHOIMAGERY.ORTHO-SAT.PLEIADES.' +dates[d]
-    }));
-  }
-  */
-
-  /*
-  histo.unshift(new ol.layer.Geoportail({ 
-    name: (new Date()).getFullYear().toString(),
-    title: (new Date()).getFullYear().toString(),
-    layer: 'ORTHOIMAGERY.ORTHOPHOTOS' 
-  }));
-  */
 
   histo.forEach(function(l) { map.addLayer(l); });
 
@@ -213,7 +311,7 @@
   });
 
   map.addControl (tline);
-  tline.setDate(1924);
+  tline.setDate(start);
 
 
 </script>
