@@ -297,7 +297,7 @@
     title: (new Date()).getFullYear().toString(),
     layer: 'ORTHOIMAGERY.ORTHOPHOTOS' 
   }));
-  
+
   histo.forEach(function(l) { map.addLayer(l); });
 
   // Create timeline
@@ -329,8 +329,8 @@
   });
 
   map.addControl (tline);
-  // tline.setDate(start);
-  tline.setDate(end);
+  tline.setDate(start);
+  // tline.setDate(end);
 
 
 </script>
