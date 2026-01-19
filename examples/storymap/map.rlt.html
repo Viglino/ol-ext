@@ -143,8 +143,8 @@
   var map = new ol.Map ({
     target: 'map',
     view: new ol.View({
-      zoom: 16,
-      center: [270092, 6248487]
+      zoom: mapZoom || 16,
+      center: centerMap ? ol.proj.fromLonLat(centerMap) : [270092, 6248487]
     }),
     layers: [ new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2', opacity: 0.5 }) ]
   });
@@ -330,7 +330,7 @@
 
   map.addControl (tline);
   tline.setDate(start);
-  // tline.setDate(end);
+  tline.setDate(end);
 
 
 </script>
