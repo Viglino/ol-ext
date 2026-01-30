@@ -17,8 +17,8 @@ const layer = new ol.layer.Vector({
 var map = new ol.Map ({
   target: 'map',
   view: new ol.View({
-    zoom: 16,
-    center: [270092, 6248487]
+    zoom: 6,
+    center: [277872, 5917484]
   }),
   layers: [ 
     new ol.layer.Geoportail({ layer: 'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' }),
