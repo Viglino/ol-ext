@@ -57,7 +57,7 @@ map.addControl(dlg);
 
 // Actions
 document.getElementById('rlt').addEventListener('click', function() {
-  if (currentCoord && !running) {
+  if (!running) {
     load(currentCoord);
   }
 });
@@ -124,6 +124,10 @@ async function loadPVA(type, coord) {
  * @param {ol.MapBrowserEvent|ol.Coordinate} e
  */
 async function load(e) {
+  if (!e) {
+    e = JSON.parse(localStorage.rlt_position);
+    if (!e) return
+  }
   const layers = map.getLayers().getArray();
   // Remove previous images
   for (let i=layers.length-1; i>=0; i--) {
@@ -150,9 +154,6 @@ async function load(e) {
   });
   
   // Find feature under the click
-  if (!e) {
-    e = JSON.parse(localStorage.rlt_position);
-  }
   const coord = e.coordinate || e;
   // Save last position (debug)
   localStorage.rlt_position = JSON.stringify(coord);
@@ -225,7 +226,7 @@ async function load(e) {
   // console.log(i, cliches[i].get('orientation'))
   let current = cliches.pop()
   while (current) {
-    dlg.setProgress(nb-cliches.length, nb, 'Chargement image '+(nb-cliches.length)+'/'+nb+'...')
+    dlg.setProgress(nb-cliches.length, nb, 'Année '+current.get('date')+' - '+(nb-cliches.length)+'/'+nb+'...')
     try {
       const layer = window.image = await getLayerCliche(current);
       const lextent = new ol.layer.Vector({
@@ -292,6 +293,7 @@ function getLayerCliche(cliche) {
         canvas = tiff.toCanvas();
       } catch(e) {
         reject();
+        return;
       }
       // Too big
       if (canvas.width > 6000 || canvas.height > 6000) {
