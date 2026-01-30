@@ -340,8 +340,7 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
   /** Rotate feature from map view rotation
    * @param {ol.Feature} f the feature
    * @param {boolean} clone clone resulting geom
-   * @param {ol.geom.Geometry} rotated geometry
-   * @returns {ol.geom.Geometry}
+   * @returns {ol.geom.Geometry | undefined} rotated geometry if no/bad geom
    */
   getGeometryRotateToZero_(f, clone) {
     var origGeom = f.getGeometry()
