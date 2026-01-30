@@ -27,6 +27,10 @@ var map = new ol.Map ({
   ]
 });
 map.addControl(new ol.control.Permalink({ visible: false, geohash: true }));
+// Set the search control
+map.addControl (new ol.control.SearchGeoportail({
+  zoomOnSelect: 12
+}));
 
 // Layer switcher control
 var switcher = new ol.control.LayerShop({
@@ -120,6 +124,13 @@ async function loadPVA(type, coord) {
  * @param {ol.MapBrowserEvent|ol.Coordinate} e
  */
 async function load(e) {
+  const layers = map.getLayers().getArray();
+  // Remove previous images
+  for (let i=layers.length-1; i>=0; i--) {
+    if (layers[i] instanceof ol.layer.Group) {
+      map.removeLayer(layers[i]);
+    }
+  }
   let cancelOperation = false;
   overlay.getSource().clear();
   running = true;
@@ -139,7 +150,12 @@ async function load(e) {
   });
   
   // Find feature under the click
+  if (!e) {
+    e = JSON.parse(localStorage.rlt_position);
+  }
   const coord = e.coordinate || e;
+  // Save last position (debug)
+  localStorage.rlt_position = JSON.stringify(coord);
   console.log(coord)
   // Load cliches
   const features = await loadPVA('image', coord)
@@ -257,6 +273,10 @@ function getLayerCliche(cliche) {
     const dx = ol.coordinate.dist2d(geom.getCoordinates()[0][0], geom.getCoordinates()[0][2]);
     const extent = geom.getExtent();
     const center = [(extent[0]+extent[2])/2, (extent[1]+extent[3])/2];
+    const rotation = -Math.atan2(
+      geom.getCoordinates()[0][2][1]-geom.getCoordinates()[0][0][1],
+      geom.getCoordinates()[0][2][0]-geom.getCoordinates()[0][0][0]
+    );
     // console.log(prop);
     // chunk / telechargement
     const url = 'https://data.geopf.fr/chunk/telechargement/download/pva/' + prop.id_mission + '/' + prop.image_identifier + '.tif'
@@ -286,13 +306,14 @@ function getLayerCliche(cliche) {
       // Mimic naturalWidth / naturalHeight
       canvas.naturalWidth = canvas.width 
       canvas.naturalHeight = canvas.height
+      // console.log(rotation * 180 / Math.PI, prop.orientation);
       const layer = new ol.layer.GeoImage({
         title: prop.orientation + ' ' + prop.image_identifier,
         source:  new ol.source.GeoImage({
           image: canvas,
           imageCenter: center,
           imageScale: dx / canvas.width,
-          imageRotate: prop.orientation * Math.PI / 180,
+          imageRotate: rotation // prop.orientation * Math.PI / 180,
         })
       })
       layer.set('id', prop.image_identifier);
