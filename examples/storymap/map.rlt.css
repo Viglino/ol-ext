@@ -1,0 +1,138 @@
+#map {
+  position:fixed;
+  top: 4em;
+  left: 0;
+  right:0;
+  bottom:2em;
+  margin:0;
+}
+.buttons {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2em;
+  background: rgba(0,0,0,.7);
+  z-index: 1;
+}
+.buttons button {
+  color: #fff;
+  background: transparent;
+  font-size: 1.2em;
+  height: 100%;
+  cursor: pointer;
+}
+.ol-timeline .ol-scroll {
+  height: 3em;
+}
+.ol-timeline .ol-feature {
+  transform: translateX(-50%);
+}
+.ol-timeline.ol-zoomhover .ol-scroll .ol-feature:hover, 
+.ol-timeline.ol-zoomhover .ol-scroll .ol-feature.ol-select {
+  transform: translateX(-50%) scale(2);
+}
+.date {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5em;
+  background: rgba(255,255,255,.5);
+  transform: translateX(-50%);
+  font-size: 2rem;
+  margin-bottom: .05em;
+}
+#video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(0,0,0,.7);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: .5s;
+}
+#video.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+#video > div {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+#video span {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: .25em;
+  font-size: 1.5em;
+  color: #fff;
+  cursor: pointer;
+  text-shadow: 1px 1px #000;
+  width: 1em;
+  height: 1em;
+  line-height: 1em;
+  text-align: center;
+}
+#video div:hover span {
+  background: rgba(0,0,0,.6);
+  box-shadow: 0 0 20px #000, 0 0 20px #000, 0 0 20px #000;
+  border-radius: 50%;
+}
+#map.recording:before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  animation: blink .25s alternate infinite;
+  left: 0;
+  top: 0;
+  border: 5px solid cyan;
+  box-sizing: border-box;
+  z-index: 1;
+}
+@keyframes blink {
+  0%, 50% { opacity: 0; }
+  51%, 100%   { opacity: 1;  }
+}
+
+
+.ol-ext-dialog.ol-visible {
+  pointer-events: none !important;
+  background: no-repeat;
+  min-width: 0;
+  padding: 0.5em 1em;
+}
+.ol-ext-dialog.ol-visible > form {
+  pointer-events: all;
+  top: 0;
+  left: 0;
+  transform: none !important;
+}
+.ol-ext-dialog .ol-progress-bar {
+  width: 10em;
+}
+.ol-ext-dialog > form .ol-buttons input {
+  padding: 0;
+  margin: 0;
+}
+
+.ol-layerswitcher .layerInfo {
+  display: none;
+  background: transparent;
+  color: #369;
+  font-size: 1.5em;
+  margin: -0.2em 0.2em;
+}
+.ol-layerswitcher .layerInfo:before {
+  content: "\f019";
+  font-family: fontawesome;
+  color: #369;
+}
+
+.ol-layerswitcher .ol-layer-image .layerInfo {
+  display: inline-block;
+}
