@@ -302,7 +302,6 @@ async function getRGB(url) {
   return new Promise(function(resolve, reject){
     const w = new ol.ext.Worker(async function(e) {
       importScripts('https://cdn.jsdelivr.net/npm/geotiff');
-      importScripts('http://localhost:8181/examples/storymap/plotty.min.js');
       let width , height
       GeoTIFF.fromUrl(e.data.url).then(tiff => {
         self.postMessage({ type: 'tiff'});
