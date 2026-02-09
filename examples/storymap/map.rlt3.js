@@ -213,21 +213,25 @@ async function load(e) {
   while (current) {
     dlg.setProgress(nb-cliches.length, nb, 'Année '+current.get('date')+' - '+(nb-cliches.length)+'/'+nb+'...')
     const layer = window.image = await getLayerCliche(current);
-    const lextent = new ol.layer.Vector({
-      title: 'extent',
-      source: new ol.source.Vector({
-        features: [current, new ol.Feature(new ol.geom.Point(current.getGeometry().getFirstCoordinate()))]
-      }),
-      style: defaultStyle
-    });
-    const group = new ol.layer.Group({
-      layers: [layer, lextent],
-      title: current.get('date') + ' - ' + current.get('id_mission') ,
-      description: 'Cliché '+current.get('image_identifier')+' ('+current.get('couleur')+', '+(current.get('resolution')/100)+'m/pixel)'
-    });
-    // map.getLayers().insertAt(1,group);
-    // map.addLayer(group);
-    map.getLayers().insertAt(map.getLayers().getLength() -1, group);
+    if (layer) {
+      const lextent = new ol.layer.Vector({
+        title: 'extent',
+        source: new ol.source.Vector({
+          features: [current, new ol.Feature(new ol.geom.Point(current.getGeometry().getFirstCoordinate()))]
+        }),
+        style: defaultStyle
+      });
+      const group = new ol.layer.Group({
+        layers: [layer, lextent],
+        title: current.get('date') + ' - ' + current.get('id_mission') ,
+        description: 'Cliché '+current.get('image_identifier')+' ('+current.get('couleur')+', '+(current.get('resolution')/100)+'m/pixel)'
+      });
+      // map.getLayers().insertAt(1,group);
+      // map.addLayer(group);
+      map.getLayers().insertAt(map.getLayers().getLength() -1, group);
+    } else {
+      console.log('cliché non chargé', current.get('image_identifier'))
+    }
     // cancel or go on
     if (cancelOperation) {
       current = null;
@@ -255,6 +259,9 @@ async function getLayerCliche(cliche) {
   const url = 'https://data.geopf.fr/chunk/telechargement/download/pva/' + prop.id_mission + '/' + prop.image_identifier + '.tif'
   // Canvas from tiff
   let canvas = await loadTiff(url);
+  if (!canvas) {
+    return null;
+  }
   // console.log(rotation * 180 / Math.PI, prop.orientation);
   const layer = new ol.layer.GeoImage({
     title: prop.orientation + ' ' + prop.image_identifier,
@@ -272,7 +279,9 @@ async function getLayerCliche(cliche) {
 async function loadTiff(url) {
   // Load Image
   const imageData = await getRGB(url);
-
+  if (imageData.type === 'error') {
+    return null;
+  }
   // Create canvas
   let canvas = document.createElement('canvas');
   canvas.width = imageData.width;
@@ -314,24 +323,41 @@ async function getRGB(url) {
         // return image.readRasters();
       }).then(rgb => {
         const rgba = new Uint8ClampedArray(width * height * 4);
-        self.postMessage({ type: 'rgba' });
-        let j = 0;
-        for (let i = 0; i < rgb.length; i += 3) {
-          rgba[j] = rgb[i];
-          rgba[j + 1] = rgb[i + 1];
-          rgba[j + 2] = rgb[i + 2];
-          rgba[j + 3] = 255;
-          j += 4;
+        self.postMessage({ type: 'rgba', rgb: rgb });
+        try {
+          let j = 0;
+          /* Convert RGB to RGBA */
+          for (let i = 0; i < rgb[0].length; i ++) {
+            rgba[j] = rgb[0][i];
+            rgba[j + 1] = rgb[1][i];
+            rgba[j + 2] = rgb[2][i];
+            rgba[j + 3] = 255;
+            j += 4;
+          }
+          /*/
+          for (let i = 0; i < rgb.length; i += 3) {
+            rgba[j] = rgb[i];
+            rgba[j + 1] = rgb[i + 1];
+            rgba[j + 2] = rgb[i + 2];
+            rgba[j + 3] = 255;
+            j += 4;
+          }
+          /**/
+          // Finish
+          self.postMessage({ type: 'finish', rgba: rgba, width: width, height: height });
+        } catch(e) {
+          self.postMessage({ type: 'error', error: e.message });
+          return;
         }
-        /**/
-        self.postMessage({ type: 'ok', rgba: rgba, width: width, height: height });
+      }).catch(e => {
+        self.postMessage({ type: 'error', error: e.message });
       });
 
       return { type: 'start' };
     }, {
       onMessage: (e) => {
         console.log(e)
-        if (e.type === 'ok') {
+        if (e && (e.type === 'finish' || e.type === 'error')) {
           resolve(e);
         }
       },
