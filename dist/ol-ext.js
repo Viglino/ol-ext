@@ -2480,6 +2480,7 @@ ol.ext.input.Slider = class olextinputSlider extends ol.ext.input.Base {
  *  @param {string} [options.className]
  *  @param {ol.colorLike} [options.color] default color
  *  @param {Element} [options.input] input element, if non create one
+ *  @param {string} [options.ariaLabel=""] label
  *  @param {Element} [options.parent] parent element, if create an input
  *  @param {string} [options.position='popup'] fixed | static | popup | inline (no popup)
  *  @param {boolean} [options.autoClose=true] close when click on color
@@ -2522,10 +2523,23 @@ ol.ext.input.PopupBase = class olextinputPopupBase extends ol.ext.input.Base {
       if (this.isCollapsed())
         setTimeout(function () { this.collapse(false); }.bind(this));
     }.bind(this));
+    this.element.id = 'popup_button_'+ol.util.getUid(this);
     this._elt = {};
     // Popup container
-    this._elt.popup = ol.ext.element.create('DIV', { className: 'ol-popup', parent: this.element });
+    this._elt.popup = ol.ext.element.create('DIV', { 
+      className: 'ol-popup', 
+      id: 'popup_' + ol.util.getUid(this),
+      parent: this.element 
+    });
     this._elt.popup.addEventListener('click', function (e) { e.stopPropagation(); });
+    // Accessibility
+    this.element.ariaLabel = options.ariaLabel || '';
+    this.element.ariaExpanded = false;
+    this.element.role = 'button';
+    this.element.setAttribute('aria-controls', this._elt.popup.id);
+    this.on('collapse', e => {
+      this.element.ariaExpanded = e.visible;
+    });
     // Hide on click outside
     var down = false;
     this._elt.popup.addEventListener('pointerdown', function () {
@@ -2881,8 +2895,10 @@ ol.ext.input.Collection = class olextinputCollection extends ol.Object {
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
  *  @param {boolean} [options.hastab=false] use tabs for palette / picker
+ *  @param {string} [options.ariaLabel="color picker"] label
  *  @param {string} [options.paletteLabel="palette"] label for the palette tab
  *  @param {string} [options.pickerLabel="picker"] label for the picker tab
+ *  @param {string} [options.eyeDropperLabel="eyedropper"] label for the picker tab
  *  @param {string} [options.position='popup'] fixed | static | popup | inline (no popup)
  *  @param {boolean} [options.opacity=true] enable opacity
  *  @param {boolean} [options.autoClose=true] close when click on color
@@ -2891,6 +2907,7 @@ ol.ext.input.Collection = class olextinputCollection extends ol.Object {
 ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
   constructor(options) {
     options = options || {};
+    options.ariaLabel = options.ariaLabel || "color picker";
     options.hidden = options.hidden !== false;
     options.className = ('ol-ext-colorpicker ' + (options.hastab ? 'ol-tab ' : '') + (options.className || '')).trim();
     super(options);
@@ -2998,6 +3015,31 @@ ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
     this._elt.g = ol.ext.element.create('INPUT', { type: 'number', lang: 'en-GB', change: changergb, min: 0, max: 255, parent: rgb });
     this._elt.b = ol.ext.element.create('INPUT', { type: 'number', lang: 'en-GB', change: changergb, min: 0, max: 255, parent: rgb });
     this._elt.a = ol.ext.element.create('INPUT', { type: 'number', lang: 'en-GB', change: changergb, min: 0, max: 1, step: .1, parent: rgb });
+    var inputDiv = ol.ext.element.create('DIV', { className: 'ol-txtcolor', parent: container });
+    // Eye dropper (if possible)
+    if (window.EyeDropper) {
+      var self = this
+      // Pick up color from screen
+      async function pickColor() {
+        var eyeDropper = new EyeDropper();
+        try {
+          var pickedColor = await eyeDropper.open();
+          self.setColor(pickedColor.sRGBHex);
+        } catch (error) {
+          /* oops */
+        }
+      }
+      this.element.classList.add('eyedropper');
+      // add button
+      ol.ext.element.create('BUTTON', {
+        title: options.eyeDropperLabel || 'eyedropper',
+        ariaLabel: options.eyeDropperLabel || 'eyedropper',
+        className: 'ol-eyedropper',
+        type: 'button',
+        click: pickColor,
+        parent: inputDiv
+      });
+    }
     // Text color input
     this._elt.txtColor = ol.ext.element.create('INPUT', {
       type: 'text',
@@ -3013,7 +3055,7 @@ ol.ext.input.Color = class olextinputColor extends ol.ext.input.PopupBase {
         if (color)
           this.setColor(color);
       }.bind(this),
-      parent: container
+      parent: inputDiv
     });
     ol.ext.element.create('BUTTON', {
       html: 'OK',
@@ -3377,8 +3419,9 @@ ol.ext.input.List = class olextinputList extends ol.ext.input.Base {
       className: 'ol-input-popup' + (options.hover ? ' ol-hover' : '')
     });
     this.set('hideOnClick', options.hideOnClick !== false);
-    if (options.className)
+    if (options.className) {
       this.element.classList.add(options.className);
+    }
     if (options.fixed) {
       this.element.classList.add('ol-fixed');
       this.set('hideOnClick', false);
@@ -3394,8 +3437,9 @@ ol.ext.input.List = class olextinputList extends ol.ext.input.Base {
         break;
     }
     var input = this.input;
-    if (input.parentNode)
+    if (input.parentNode) {
       input.parentNode.insertBefore(this.element, input);
+    }
     this.element.appendChild(input);
     var popup = this.popup = ol.ext.element.create('UL', {
       className: 'ol-popup',
