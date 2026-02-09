@@ -1,3 +1,4 @@
+import { getUid as ol_util_getUid } from 'ol/util.js'
 import ol_ext_element from '../element.js';
 import ol_ext_input_Base from './Base.js'
 
@@ -10,6 +11,7 @@ import ol_ext_input_Base from './Base.js'
  *  @param {string} [options.className]
  *  @param {ol.colorLike} [options.color] default color
  *  @param {Element} [options.input] input element, if non create one
+ *  @param {string} [options.ariaLabel=""] label
  *  @param {Element} [options.parent] parent element, if create an input
  *  @param {string} [options.position='popup'] fixed | static | popup | inline (no popup)
  *  @param {boolean} [options.autoClose=true] close when click on color
@@ -57,11 +59,25 @@ var ol_ext_input_PopupBase = class olextinputPopupBase extends ol_ext_input_Base
       if (this.isCollapsed())
         setTimeout(function () { this.collapse(false); }.bind(this));
     }.bind(this));
+    this.element.id = 'popup_button_'+ol_util_getUid(this);
 
     this._elt = {};
     // Popup container
-    this._elt.popup = ol_ext_element.create('DIV', { className: 'ol-popup', parent: this.element });
+    this._elt.popup = ol_ext_element.create('DIV', { 
+      className: 'ol-popup', 
+      id: 'popup_' + ol_util_getUid(this),
+      parent: this.element 
+    });
     this._elt.popup.addEventListener('click', function (e) { e.stopPropagation(); });
+    // Accessibility
+    this.element.ariaLabel = options.ariaLabel || '';
+    this.element.ariaExpanded = false;
+    this.element.role = 'button';
+    this.element.setAttribute('aria-controls', this._elt.popup.id);
+    this.on('collapse', e => {
+      this.element.ariaExpanded = e.visible;
+    });
+
 
     // Hide on click outside
     var down = false;

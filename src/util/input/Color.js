@@ -15,8 +15,10 @@ import { asArray as ol_color_asArray } from 'ol/color.js'
  *  @param {Element} [options.input] input element, if non create one
  *  @param {Element} [options.parent] parent element, if create an input
  *  @param {boolean} [options.hastab=false] use tabs for palette / picker
+ *  @param {string} [options.ariaLabel="color picker"] label
  *  @param {string} [options.paletteLabel="palette"] label for the palette tab
  *  @param {string} [options.pickerLabel="picker"] label for the picker tab
+ *  @param {string} [options.eyeDropperLabel="eyedropper"] label for the picker tab
  *  @param {string} [options.position='popup'] fixed | static | popup | inline (no popup)
  *  @param {boolean} [options.opacity=true] enable opacity
  *  @param {boolean} [options.autoClose=true] close when click on color
@@ -25,7 +27,7 @@ import { asArray as ol_color_asArray } from 'ol/color.js'
 var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
   constructor(options) {
     options = options || {};
-
+    options.ariaLabel = options.ariaLabel || "color picker";
     options.hidden = options.hidden !== false;
     options.className = ('ol-ext-colorpicker ' + (options.hastab ? 'ol-tab ' : '') + (options.className || '')).trim();
     super(options);
@@ -143,6 +145,31 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
     this._elt.b = ol_ext_element.create('INPUT', { type: 'number', lang: 'en-GB', change: changergb, min: 0, max: 255, parent: rgb });
     this._elt.a = ol_ext_element.create('INPUT', { type: 'number', lang: 'en-GB', change: changergb, min: 0, max: 1, step: .1, parent: rgb });
 
+    var inputDiv = ol_ext_element.create('DIV', { className: 'ol-txtcolor', parent: container });
+    // Eye dropper (if possible)
+    if (window.EyeDropper) {
+      const self = this
+      // Pick up color from screen
+      async function pickColor() {
+        var eyeDropper = new EyeDropper();
+        try {
+          var pickedColor = await eyeDropper.open();
+          self.setColor(pickedColor.sRGBHex);
+        } catch (error) {
+          /* oops */
+        }
+      }
+      this.element.classList.add('eyedropper');
+      // add button
+      ol_ext_element.create('BUTTON', {
+        title: options.eyeDropperLabel || 'eyedropper',
+        ariaLabel: options.eyeDropperLabel || 'eyedropper',
+        className: 'ol-eyedropper',
+        type: 'button',
+        click: pickColor,
+        parent: inputDiv
+      });
+    }
     // Text color input
     this._elt.txtColor = ol_ext_element.create('INPUT', {
       type: 'text',
@@ -158,7 +185,7 @@ var ol_ext_input_Color = class olextinputColor extends ol_ext_input_PopupBase {
         if (color)
           this.setColor(color);
       }.bind(this),
-      parent: container
+      parent: inputDiv
     });
     ol_ext_element.create('BUTTON', {
       html: 'OK',

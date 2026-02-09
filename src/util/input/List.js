@@ -30,8 +30,9 @@ var ol_ext_input_List = class olextinputList extends ol_ext_input_Base {
       className: 'ol-input-popup' + (options.hover ? ' ol-hover' : '')
     });
     this.set('hideOnClick', options.hideOnClick !== false);
-    if (options.className)
+    if (options.className) {
       this.element.classList.add(options.className);
+    }
     if (options.fixed) {
       this.element.classList.add('ol-fixed');
       this.set('hideOnClick', false);
@@ -48,8 +49,9 @@ var ol_ext_input_List = class olextinputList extends ol_ext_input_Base {
     }
 
     var input = this.input;
-    if (input.parentNode)
+    if (input.parentNode) {
       input.parentNode.insertBefore(this.element, input);
+    }
     this.element.appendChild(input);
 
     var popup = this.popup = ol_ext_element.create('UL', {
