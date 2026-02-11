@@ -729,6 +729,8 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
           }
         }
 
+        var keepAspectRatio = this.get('keepAspectRatio')(evt)
+
         for (i = 0, f; f = this.selection_.item(i); i++) {
           geometry = (viewRotation === 0 || !this.get('enableRotatedTransform')) ? this.geoms_[i].clone() : this.rotatedGeoms_[i].clone()
           geometry.applyTransform(function (g1, g2, dim) {
@@ -760,10 +762,17 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
                   g2[j + 1] = coordsToChange.includes(j) ? g1[j + 1] + projectedVector[1] : g1[j + 1]
                 }
               } else {
-                var projectedLeft, projectedRight
+                var projectedLeft, projectedRight, snapped
+
                 switch (opt) {
-                  case 0:
-                    displacementVector = this._countVector(pointD, dragCoordinate)
+                  case 0: // Dragging D
+                    if (keepAspectRatio) {
+                      snapped = this._snapToDiagonal(pointD, pointB, dragCoordinate);
+                      displacementVector = this._countVector(pointD, snapped);
+                    } else {
+                      displacementVector = this._countVector(pointD, dragCoordinate);
+                    }
+
                     projectedLeft = this._projectVectorOnVector(displacementVector, this._countVector(pointC, pointD))
                     projectedRight = this._projectVectorOnVector(displacementVector, this._countVector(pointA, pointD));
                     [g2[0], g2[1]] = this._movePoint(pointA, projectedLeft);
@@ -771,8 +780,14 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
                     [g2[6], g2[7]] = this._movePoint(pointD, displacementVector);
                     [g2[8], g2[9]] = this._movePoint(pointA1, projectedLeft)
                     break
-                  case 1:
-                    displacementVector = this._countVector(pointA, dragCoordinate)
+                  case 1: // Dragging A
+                    if (keepAspectRatio) {
+                      snapped = this._snapToDiagonal(pointA, pointC, dragCoordinate);
+                      displacementVector = this._countVector(pointA, snapped);
+                    } else {
+                      displacementVector = this._countVector(pointA, dragCoordinate);
+                    }
+
                     projectedLeft = this._projectVectorOnVector(displacementVector, this._countVector(pointD, pointA))
                     projectedRight = this._projectVectorOnVector(displacementVector, this._countVector(pointB, pointA));
                     [g2[0], g2[1]] = this._movePoint(pointA, displacementVector);
@@ -780,8 +795,14 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
                     [g2[6], g2[7]] = this._movePoint(pointD, projectedRight);
                     [g2[8], g2[9]] = this._movePoint(pointA1, displacementVector)
                     break
-                  case 2:
-                    displacementVector = this._countVector(pointB, dragCoordinate)
+                  case 2: // Dragging B
+                    if (keepAspectRatio) {
+                      snapped = this._snapToDiagonal(pointB, pointD, dragCoordinate);
+                      displacementVector = this._countVector(pointB, snapped);
+                    } else {
+                      displacementVector = this._countVector(pointB, dragCoordinate);
+                    }
+
                     projectedLeft = this._projectVectorOnVector(displacementVector, this._countVector(pointA, pointB))
                     projectedRight = this._projectVectorOnVector(displacementVector, this._countVector(pointC, pointB));
                     [g2[0], g2[1]] = this._movePoint(pointA, projectedRight);
@@ -789,8 +810,14 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
                     [g2[4], g2[5]] = this._movePoint(pointC, projectedLeft);
                     [g2[8], g2[9]] = this._movePoint(pointA1, projectedRight)
                     break
-                  case 3:
-                    displacementVector = this._countVector(pointC, dragCoordinate)
+                  case 3: // Dragging C
+                    if (keepAspectRatio) {
+                      snapped = this._snapToDiagonal(pointC, pointA, dragCoordinate);
+                      displacementVector = this._countVector(pointC, snapped);
+                    } else {
+                       displacementVector = this._countVector(pointC, dragCoordinate);
+                    }
+
                     projectedLeft = this._projectVectorOnVector(displacementVector, this._countVector(pointB, pointC))
                     projectedRight = this._projectVectorOnVector(displacementVector, this._countVector(pointD, pointC));
                     [g2[2], g2[3]] = this._movePoint(pointB, projectedRight);
@@ -915,8 +942,20 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
   _movePoint(point, displacementVector) {
     return [point[0]+displacementVector[0], point[1]+displacementVector[1]];
   }
-  
-  
+
+  /**
+   * @private
+   */
+  _snapToDiagonal(handle, anchor, mouse) {
+    var rail = [handle[0] - anchor[0], handle[1] - anchor[1]];
+    var pull = [mouse[0] - anchor[0], mouse[1] - anchor[1]];
+    var dot = pull[0] * rail[0] + pull[1] * rail[1];
+    var magSq = rail[0] * rail[0] + rail[1] * rail[1];
+    var s = dot / magSq;
+    return [anchor[0] + rail[0] * s, anchor[1] + rail[1] * s];
+  }
+
+
 }
 
 /** Cursors for transform
