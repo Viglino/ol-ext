@@ -234,8 +234,7 @@
     }
 
     function setKeepRectangle (p) {
-      if ($("#"+p).prop('checked')) interaction.set("keepRectangle", ol.events.condition.always);
-      else interaction.set("keepRectangle", ol.events.condition.never);
+      interaction.set("keepRectangle", $("#"+p).prop('checked'));
     }
 
     var interaction = new ol.interaction.Transform ({
