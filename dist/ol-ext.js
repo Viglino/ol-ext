@@ -43028,8 +43028,21 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
    */
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
+    this.renderOptions_ = this.createRenderOptions();
     // Get canvas
-    var canvas = super.getImage(pixelratio);
+    var image = super.getImage(pixelratio);
+    if (image && image.getContext) {
+      this.draw_(this.renderOptions_, image.getContext('2d'), pixelratio);
+    }
+    return image;
+  }
+  /**
+   * @private
+   * @param {RenderOptions} renderOptions Render options.
+   * @param {CanvasRenderingContext2D} context The rendering context.
+   * @param {number} pixelRatio The pixel ratio.
+   */
+  draw_(renderOptions, context, pixelratio) {
     if (this._done === pixelratio) return canvas;
     this._done = pixelratio
     var strokeStyle;
@@ -43039,7 +43052,7 @@ ol.style.Chart = class olstyleChart extends ol.style.RegularShape {
       strokeWidth = this._stroke.getWidth();
     }
     // draw the circle on the canvas
-    var context = (canvas.getContext('2d'));
+    var canvas = context.canvas;
     context.save();
     // reset transform
     context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);
@@ -44215,6 +44228,7 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
     if (!this.getDisplacement){
       this.getImage();
     }
+    this.getImage();
     this.render();
   }
   /** Static function : add new font defs
@@ -44371,22 +44385,34 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     // get canvas
-    var canvas = super.getImage(pixelratio);
-    var strokeStyle;
-    var strokeWidth = 0;
-    if (this._stroke) {
-      strokeStyle = ol.color.asString(this._stroke.getColor());
-      strokeWidth = this._stroke.getWidth();
+    var image = super.getImage(pixelratio);
+    // Draw the symbol on the canvas (ol<10.8)
+    if (image && image.getContext) {
+      /** @type {ol.style.FontSymbol.RenderOptions} */
+      var renderOptions = {
+        width: image.width,
+        height: image.height,
+      };
+      this.draw_(renderOptions, image.getContext('2d'), pixelratio);
     }
-    /** @type {ol.style.FontSymbol.RenderOptions} */
-    var renderOptions = {
-      strokeStyle: strokeStyle,
-      strokeWidth: strokeWidth,
-      size: canvas.width / pixelratio,
-    };
+    return image;
+  }
+  /**
+   * @private
+   * @param {RenderOptions} renderOptions Render options.
+   * @param {CanvasRenderingContext2D} context The rendering context.
+   * @param {number} pixelRatio The pixel ratio.
+   */
+  draw_(renderOptions, context, pixelratio) {
+    renderOptions.strokeWidth = 0;
+    var canvas = context.canvas;
+    renderOptions.size = canvas.width / pixelratio;
+    if (this._stroke) {
+      renderOptions.strokeStyle = ol.color.asString(this._stroke.getColor());
+      renderOptions.strokeWidth = this._stroke.getWidth();
+    }
     // draw the circle on the canvas
-    var context = (canvas.getContext('2d'));
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, renderOptions.width, renderOptions.height);
     this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
     // Set anchor / displacement
     if (!this.getDisplacement) {
@@ -44394,7 +44420,6 @@ ol.style.FontSymbol = class olstyleFontSymbol extends ol.style.RegularShape {
       a[0] = canvas.width / 2 - this._offset[0];
       a[1] = canvas.width / 2 - this._offset[1];
     }
-    return canvas;
   }
   /**
    * @private
@@ -44809,6 +44834,7 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
         this._src,
         this._shadow,
         this._kind,
+        this._loaded,
       ].join('-')
     return opt;
   }
@@ -44824,23 +44850,37 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
     if ((this._gethit || this.img_) && this._currentRatio === pixelratio) return canvas;
     // Calculate image at pixel ratio
     this._currentRatio = pixelratio;
+    // Draw hitdetection image
+    this._gethit = true
+      var context = this.getHitDetectionImage().getContext('2d')
+      context.save()
+      context.setTransform(1, 0, 0, 1, 0, 0)
+      this.drawBack_(context, "#000", this._stroke ? this._stroke.getWidth() : 0, 1)
+      context.fill()
+      context.restore()
+    this._gethit = false
+    if (canvas && canvas.getContext) {
+      this._loaded = false;
+      this.draw_(this.createRenderOptions(), canvas.getContext('2d'), pixelratio)
+    }
+    return canvas;
+  }
+  /**
+   * @private
+   * @param {RenderOptions} renderOptions Render options.
+   * @param {CanvasRenderingContext2D} context The rendering context.
+   * @param {number} pixelRatio The pixel ratio.
+   */
+  draw_(renderOptions, context, pixelratio) {
     var strokeStyle
     var strokeWidth = 0
     if (this._stroke) {
       strokeStyle = ol.color.asString(this._stroke.getColor())
       strokeWidth = this._stroke.getWidth()
     }
-    // Draw hitdetection image
-    this._gethit = true
-      var context = this.getHitDetectionImage().getContext('2d')
-      context.save()
-      context.setTransform(1, 0, 0, 1, 0, 0)
-      this.drawBack_(context, "#000", strokeWidth, 1)
-      context.fill()
-      context.restore()
-    this._gethit = false
     // Draw the image
-    context = canvas.getContext('2d')
+    //context = canvas.getContext('2d')
+    var canvas = context.canvas;
     context.save()
     context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0)
     this.drawBack_(context, strokeStyle, strokeWidth, pixelratio)
@@ -44862,6 +44902,8 @@ ol.style.Photo = class olstylePhoto extends ol.style.RegularShape {
       self.drawImage_(canvas, img, pixelratio)
     } else {
       img.onload = function () {
+        self._loaded = true;
+        self.renderOptions_ = self.createRenderOptions();
         self.drawImage_(canvas, img, pixelratio)
         // Force change (?!)
         // self.setScale(1);
@@ -45431,10 +45473,24 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
    */
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
+    var image = super.getImage(pixelratio);
+    if (image && image.getContext) {
+      var renderOptions = this.createRenderOptions();
+      this.draw_(renderOptions, image.getContext('2d'), pixelratio);
+    }
+    return image;
+  }
+  /**
+   * @private
+   * @param {RenderOptions} renderOptions Render options.
+   * @param {CanvasRenderingContext2D} context The rendering context.
+   * @param {number} pixelRatio The pixel ratio.
+   */
+  draw_(renderOptions, context, pixelratio) {
     var radius = this._radius;
-    var canvas = super.getImage(pixelratio);
     // Remove the circle on the canvas
-    var context = (canvas.getContext('2d'));
+    // var context = (canvas.getContext('2d'));
+    var canvas = context.canvas;
     context.save();
     context.resetTransform();
     context.clearRect(0, 0, canvas.width, canvas.height);
