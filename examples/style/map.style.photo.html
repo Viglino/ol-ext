@@ -101,12 +101,13 @@
   var styleCache = {};
   // Vector style
   function getFeatureStyle (feature, resolution, sel) {
-    var k = $('#kind').val()+"_"+$("#border").val()+"_"+feature.get("img").match(/[^\\/]+$/)[0]+($("#shadow").prop('checked')?"_1":"_0")+($("#crop").prop('checked')?"_1":"_0")+(sel?"_1":"");
+    var img = feature.get("img") || 'https://pbs.twimg.com/media/FkZzSZgXwAMqjTy?format=jpg&name=large';
+    var k = $('#kind').val()+"_"+$("#border").val()+"_"+img.match(/[^\\/]+$/)[0]+($("#shadow").prop('checked')?"_1":"_0")+($("#crop").prop('checked')?"_1":"_0")+(sel?"_1":"");
     var style = styleCache[k];
     if (!style) {
       styleCache[k] = style = new ol.style.Style ({
         image: new ol.style.Photo ({
-          src: feature.get("img"),
+          src: img,
           radius: 20,
           crop: $("#crop").prop('checked'),
           kind: $('#kind').val(),
@@ -130,6 +131,7 @@
     format: new ol.format.GeoJSON(),
     attributions: [ "&copy; <a href='https://twitter.com/search?q=paris%20autrefois%20(from%3ASamuelMartin75)&src=typed_query&f=live'>@SamuelMartin75</a>" ]
   });
+  //vectorSource.addFeature(new ol.Feature(new ol.geom.Point(map.getView().getCenter())))
 
   var vector = new ol.layer.Vector({
     name: 'Paris 1900',

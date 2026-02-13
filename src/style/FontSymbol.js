@@ -80,6 +80,8 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
     if (!this.getDisplacement){
       this.getImage();
     }
+    this.getImage();
+
     this.render();
   }
   /** Static function : add new font defs
@@ -236,26 +238,36 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
     // get canvas
-    var canvas = super.getImage(pixelratio);
-
-    var strokeStyle;
-    var strokeWidth = 0;
+    var image = super.getImage(pixelratio);
+    // Draw the symbol on the canvas (ol<10.8)
+    if (image && image.getContext) {
+      /** @type {ol_style_FontSymbol.RenderOptions} */
+      var renderOptions = {
+        width: image.width,
+        height: image.height,
+      };
+      this.draw_(renderOptions, image.getContext('2d'), pixelratio);
+    }
+    return image;
+  }
+  /**
+   * @private
+   * @param {RenderOptions} renderOptions Render options.
+   * @param {CanvasRenderingContext2D} context The rendering context.
+   * @param {number} pixelRatio The pixel ratio.
+   */
+  draw_(renderOptions, context, pixelratio) {
+    renderOptions.strokeWidth = 0;
+    var canvas = context.canvas;
+    renderOptions.size = canvas.width / pixelratio;
 
     if (this._stroke) {
-      strokeStyle = ol_color_asString(this._stroke.getColor());
-      strokeWidth = this._stroke.getWidth();
+      renderOptions.strokeStyle = ol_color_asString(this._stroke.getColor());
+      renderOptions.strokeWidth = this._stroke.getWidth();
     }
 
-    /** @type {ol_style_FontSymbol.RenderOptions} */
-    var renderOptions = {
-      strokeStyle: strokeStyle,
-      strokeWidth: strokeWidth,
-      size: canvas.width / pixelratio,
-    };
-
     // draw the circle on the canvas
-    var context = (canvas.getContext('2d'));
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, renderOptions.width, renderOptions.height);
     this.drawMarker_(renderOptions, context, 0, 0, pixelratio);
 
     // Set anchor / displacement
@@ -264,8 +276,6 @@ var ol_style_FontSymbol = class olstyleFontSymbol extends ol_style_RegularShape 
       a[0] = canvas.width / 2 - this._offset[0];
       a[1] = canvas.width / 2 - this._offset[1];
     }
-
-    return canvas;
   }
   /**
    * @private

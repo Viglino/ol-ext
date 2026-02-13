@@ -212,6 +212,7 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
         this._src,
         this._shadow,
         this._kind,
+        this._loaded,
       ].join('-')
     return opt;
   }
@@ -228,6 +229,29 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
     // Calculate image at pixel ratio
     this._currentRatio = pixelratio;
 
+    // Draw hitdetection image
+    this._gethit = true
+      var context = this.getHitDetectionImage().getContext('2d')
+      context.save()
+      context.setTransform(1, 0, 0, 1, 0, 0)
+      this.drawBack_(context, "#000", this._stroke ? this._stroke.getWidth() : 0, 1)
+      context.fill()
+      context.restore()
+    this._gethit = false
+
+    if (canvas && canvas.getContext) {
+      this._loaded = false;
+      this.draw_(this.createRenderOptions(), canvas.getContext('2d'), pixelratio)
+    }
+    return canvas;
+  }
+  /**
+   * @private
+   * @param {RenderOptions} renderOptions Render options.
+   * @param {CanvasRenderingContext2D} context The rendering context.
+   * @param {number} pixelRatio The pixel ratio.
+   */
+  draw_(renderOptions, context, pixelratio) {
     var strokeStyle
     var strokeWidth = 0
     if (this._stroke) {
@@ -235,18 +259,9 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
       strokeWidth = this._stroke.getWidth()
     }
 
-    // Draw hitdetection image
-    this._gethit = true
-      var context = this.getHitDetectionImage().getContext('2d')
-      context.save()
-      context.setTransform(1, 0, 0, 1, 0, 0)
-      this.drawBack_(context, "#000", strokeWidth, 1)
-      context.fill()
-      context.restore()
-    this._gethit = false
-
     // Draw the image
-    context = canvas.getContext('2d')
+    //context = canvas.getContext('2d')
+    var canvas = context.canvas;
     context.save()
     context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0)
     this.drawBack_(context, strokeStyle, strokeWidth, pixelratio)
@@ -271,6 +286,8 @@ var ol_style_Photo = class olstylePhoto extends ol_style_RegularShape {
       self.drawImage_(canvas, img, pixelratio)
     } else {
       img.onload = function () {
+        self._loaded = true;
+        self.renderOptions_ = self.createRenderOptions();
         self.drawImage_(canvas, img, pixelratio)
         // Force change (?!)
         // self.setScale(1);

@@ -85,11 +85,24 @@ var ol_style_Shadow = class olstyleShadow extends ol_style_RegularShape {
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
 
+    var image = super.getImage(pixelratio);
+    if (image && image.getContext) {
+      var renderOptions = this.createRenderOptions();
+      this.draw_(renderOptions, image.getContext('2d'), pixelratio);
+    }
+    return image;
+  }
+  /**
+   * @private
+   * @param {RenderOptions} renderOptions Render options.
+   * @param {CanvasRenderingContext2D} context The rendering context.
+   * @param {number} pixelRatio The pixel ratio.
+   */
+  draw_(renderOptions, context, pixelratio) {
     var radius = this._radius;
-    var canvas = super.getImage(pixelratio);
-
     // Remove the circle on the canvas
-    var context = (canvas.getContext('2d'));
+    // var context = (canvas.getContext('2d'));
+    var canvas = context.canvas;
 
     context.save();
     context.resetTransform();

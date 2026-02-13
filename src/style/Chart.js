@@ -153,10 +153,22 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
    */
   getImage(pixelratio) {
     pixelratio = pixelratio || 1;
+    this.renderOptions_ = this.createRenderOptions();
 
     // Get canvas
-    var canvas = super.getImage(pixelratio);
-    
+    var image = super.getImage(pixelratio);
+    if (image && image.getContext) {
+      this.draw_(this.renderOptions_, image.getContext('2d'), pixelratio);
+    }
+    return image;
+  }
+  /**
+   * @private
+   * @param {RenderOptions} renderOptions Render options.
+   * @param {CanvasRenderingContext2D} context The rendering context.
+   * @param {number} pixelRatio The pixel ratio.
+   */
+  draw_(renderOptions, context, pixelratio) {
     if (this._done === pixelratio) return canvas;
     this._done = pixelratio
 
@@ -169,7 +181,7 @@ var ol_style_Chart = class olstyleChart extends ol_style_RegularShape {
     }
 
     // draw the circle on the canvas
-    var context = (canvas.getContext('2d'));
+    var canvas = context.canvas;
     context.save();
     // reset transform
     context.setTransform(pixelratio, 0, 0, pixelratio, 0, 0);

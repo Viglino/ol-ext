@@ -27,12 +27,13 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
   <!--
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v10.2.0/dist/ol.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v10.7.0/dist/ol.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v9.2.0/dist/ol.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v10.2.0/dist/ol.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@v8.1.0/dist/ol.js"></script>
     <script type="text/javascript" src="https://openlayers.org/en/v6.15.1/build/ol.js"></script>
     <script type="text/javascript" src="https://openlayers.org/en/v5.3.0/build/ol.js"></script>
-  -->
+    -->
 
 
   <!-- ol-ext -->
@@ -386,6 +387,7 @@
     attributions: [ "&copy; <a href='https://data.culture.gouv.fr/explore/dataset/fonds-de-la-guerre-14-18-extrait-de-la-base-memoire'>data.culture.gouv.fr</a>" ],
     logo:"https://www.data.gouv.fr/s/avatars/37/e56718abd4465985ddde68b33be1ef.jpg" 
   });
+  // vectorSource.addFeature(new ol.Feature(new ol.geom.Point(map.getView().getCenter())))
 
   var vector = new ol.layer.Vector({
     name: '1914-18',
