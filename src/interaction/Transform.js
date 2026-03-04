@@ -416,6 +416,14 @@ var ol_interaction_Transform = class olinteractionTransform extends ol_interacti
           ])
         }
       }
+      // Check extent
+      if (ext[2] < ext[0]) {
+        ext = [ext[2], ext[1], ext[0], ext[3]];
+      }
+      if (ext[3] < ext[1]) {
+        ext = [ext[0], ext[3], ext[2], ext[1]];
+      }
+      // Geom from extent
       geom = keepRectangle ? new ol_geom_Polygon([coords]) : ol_geom_Polygon_fromExtent(ext)
       if (this.get('enableRotatedTransform') && viewRotation !== 0) {
         geom.rotate(viewRotation, this.getMap().getView().getCenter())
