@@ -122,12 +122,16 @@
     </ul>
     <div class="info">Selection: <span>0</span></div>
     <div class="info">
-      <i class="fa fa-upload"></i> Drag'n'drop .geojson to calculate on your data!
+      <i class="fa fa-upload"></i> Drag'n'drop .geojson on the map to calculate on your data!
       <br/>
       <label>
         <input id="add" type="checkbox" />
         add features when dropped
       </label>
+    </div>
+    <div class="info">
+      Load a bin file :
+      <input id="binfile" type="file">
     </div>
   </div>
 
@@ -180,7 +184,7 @@
   var source = new ol.source.Vector();
   // Vector source with features collector
   var binSource = new ol.source.Vector({
-    /** /
+    /**/
     url: '../data/departements.geojson',
     format: new ol.format.GeoJSON()
     /*/
@@ -227,7 +231,7 @@
   addFeatures(1000);
 
   // Add feature on drop
-  var dd = new ol.interaction.DropFile();
+  var dd = new ol.interaction.DropFile({ zone: document.querySelector('#map') });
   map.addInteraction (dd);
   dd.on('loadstart', function () { $('body').addClass('waiting'); });
   dd.on('loadend', function () { $('body').removeClass('waiting'); });
@@ -237,6 +241,20 @@
     source.addFeatures(f);
     reset();
   });
+
+  // Change bin
+  document.getElementById('binfile').addEventListener('change', function(e) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var output = document.getElementById("fileOutput");  
+      // parse string to json 
+      var json = JSON.parse(e.target.result);
+      var features = (new ol.format.GeoJSON).readFeatures(json, { featureProjection: map.getView().getProjection() })
+      binSource.clear();
+      binSource.addFeatures(features);
+    };
+    reader.readAsText(this.files[0]);
+  })
 
   // Create Bin
   function reset() {
