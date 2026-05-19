@@ -16,6 +16,9 @@
   <!-- jQuery -->
   <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 
+  <!-- geotiff -->
+  <script src="https://cdn.jsdelivr.net/npm/geotiff"></script>
+
   <!-- Openlayers -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
@@ -96,7 +99,10 @@
     /* WebGLTile */
     var cog = new ol.source.GeoTIFF({
       sources: [
-        { url: 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/2020/S2A_36QWD_20200701_0_L2A/TCI.tif' }
+        { 
+          url: 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/2020/S2A_36QWD_20200701_0_L2A/TCI.tif',
+          url: 'https://openlayers.org/data/raster/no-overviews.tif',
+        }
       ]
     });
     var gl = new ol.layer.WebGLTile({

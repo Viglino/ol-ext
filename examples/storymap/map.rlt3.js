@@ -367,7 +367,7 @@ async function getRGB(url) {
   });
 }
 
-/*
+/* * /
 async function main() {
 	const tiff = await GeoTIFF.fromUrl('https://data.geopf.fr/chunk/telechargement/download/pva/P18000152/IGNF_PVA_1-0__2018-06-22__CP18000152_18FD3725x00030_00124.tif');
 	const image = window.img = await tiff.getImage();
@@ -394,4 +394,4 @@ async function read(sc, sample) {
 }
 
 main()
-*/
+/* end */

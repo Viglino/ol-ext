@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO,
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+  <title>ol-ext: Image line control</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="A control to show image on a map." />
+  <meta name="keywords" content="ol, image, control, line" />
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+  <!-- geotiff -->
+  <script src="https://cdn.jsdelivr.net/npm/geotiff"></script>
+
+  <!-- Openlayers -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+
+  <!-- ol-ext -->
+  <link rel="stylesheet" href="../../dist/ol-ext.css" />
+  <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+
+  <style>
+    input[type="text"] {
+      display: block;
+      width: 100%;
+    }
+    body[data-loading] {
+      opacity: 0.5;
+    }
+  </style>
+
+</head>
+<body>
+  <h1>GeoTIFF</h1>
+
+  <input id="url" type="text" value="https://data.geopf.fr/chunk/telechargement/download/pva/P18000152/IGNF_PVA_1-0__2018-06-22__CP18000152_18FD3725x00030_00124.tif"/>
+  <input id="width" type="number" value="500" min="0" />
+  <button onclick="getImage()">Charger</button>
+  <br/>
+<script>
+
+  
+  
+class TIFFLoader {
+  constructor(options) {
+    const target = this.target = document.createElement('div');
+    target.style.position = 'absolute';
+    target.style.top = 0;
+    target.style.left = 0;
+    target.style.transform = 'translate(-150%, -150%)';
+    document.body.appendChild(this.target)
+    this.map = new ol.Map ({
+      target: this.target,
+    });
+    this.layers = [];
+  }
+  
+  load(url, width, callback) {
+    this.layers.push({
+      url: url, 
+      source: new ol.source.GeoTIFF({ 
+        convertToRGB: true,
+        normalize: true,
+        sources: [{ 
+          url: url,
+        }] 
+      }),
+      width: width, 
+      callback: callback
+    })
+    this._load();
+  }
+
+  reset() {
+    this.running = false;
+    this.layers = [];
+  }
+
+  _load() {
+    if (this.running) console.log('pending', this.layers.length)
+    else console.log('load', this.layers.length)
+    if (this.running) return;
+    const current = this.layers.pop();
+    if (!current) return;
+    this.running = true;
+    var self = this;
+    var url = current.url;
+    var source = current.source;
+    var width = current.width;
+    var callback = current.callback;
+    var map = this.map;
+    var target = this.target;
+    var layer, print;
+    source.getView().then(view => {
+      // Scale
+      var size = [view.extent[2], view.extent[3]];
+      var sc = view.extent[2]/view.extent[3];
+      var w = parseInt(width);
+      var h = w/sc;
+
+      target.style.width = w+'px';
+      target.style.height = h+'px';
+
+      setTimeout(() => {
+        layer = new ol.layer.WebGLTile({ 
+          preload: 0,
+          source: source 
+        });
+        map.setView(new ol.View(view))
+        map.render();
+        map.once('rendercomplete', function (event) {
+          var canvas = map.getViewport().querySelector('.ol-layers canvas');
+          var img = document.createElement('IMG')
+          img.src = canvas.toDataURL("image/jpeg", 0.5);
+          callback({
+            thumb: img,
+            size: size
+          })
+          map.removeLayer(layer);
+          self.running = false;
+          self._load();
+        })
+        map.addLayer(layer);
+        map.render();
+      })
+    })
+  }
+}
+
+var loader = new TIFFLoader();
+
+function getImage() {
+  document.body.dataset.loading = "";
+  document.querySelectorAll('img').forEach(i => i.remove());
+  loader.load(
+    document.getElementById('url').value,
+    document.getElementById('width').value,
+    img => {
+      document.body.appendChild(img.thumb);
+      delete document.body.dataset.loading;
+    }
+  )
+}
+
+</script>
+</body>
+</html>
