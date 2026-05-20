@@ -140,9 +140,9 @@ class TIFFLoader {
     source.getView().then(view => {
       // Scale
       var size = [view.extent[2], view.extent[3]];
-      var sc = view.extent[2]/view.extent[3];
+      var sc = Math.max(1, view.extent[2]/view.extent[3]);
       var w = parseInt(width);
-      var h = w/sc;
+      var h = Math.floor(w/sc);
 
       target.style.width = w+'px';
       target.style.height = h+'px';
