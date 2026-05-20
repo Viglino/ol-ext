@@ -102,19 +102,14 @@ class TIFFLoader {
     options = options || {};
     this.layers.push({
       url: url, 
-      source: new ol.source.GeoTIFF({ 
-        convertToRGB: true,
-        normalize: true,
-        sources: [{ 
-          url: url,
-        }] 
-      }),
+      source: null,
       width: width, 
       type: options.type || 'image/jpeg',
       quality: options.quality || 0.5,
       callback: callback
     })
-    this._load();
+    // Start loading
+    setTimeout(() => this._load());
   }
 
   reset() {
@@ -124,19 +119,28 @@ class TIFFLoader {
 
   _load() {
     if (this.running) console.log('pending', this.layers.length)
-    else console.log('load', this.layers.length)
     if (this.running) return;
     const current = this.layers.pop();
+    // Finish?
     if (!current) return;
+    console.time('Chargement')
+    console.log('load', this.layers.length + 1)
     this.running = true;
     var self = this;
     var url = current.url;
-    var source = current.source;
+    var source = current.source = new ol.source.GeoTIFF({ 
+      convertToRGB: true,
+      normalize: true,
+      sources: [{ 
+        url: url,
+      }] 
+    });
     var width = current.width;
     var callback = current.callback;
     var map = this.map;
     var target = this.target;
     var layer, print;
+    source.on(['tileloaderror', 'error'], console.log)
     source.getView().then(view => {
       // Scale
       var size = [view.extent[2], view.extent[3]];
@@ -163,6 +167,7 @@ class TIFFLoader {
             size: size
           })
           map.removeLayer(layer);
+          console.timeEnd('Chargement')
           self.running = false;
           self._load();
         })
