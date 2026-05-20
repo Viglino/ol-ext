@@ -27,11 +27,18 @@
 
   <style>
     input[type="text"] {
-      display: block;
-      width: 100%;
+      display: inline-block;
+      width: calc(100% - 6em);
     }
     body[data-loading] {
       opacity: 0.5;
+    }
+    img {
+      margin: 3px;
+    }
+    label {
+      margin-top: 5px;
+      display: block;
     }
   </style>
 
@@ -39,8 +46,34 @@
 <body>
   <h1>GeoTIFF</h1>
 
-  <input id="url" type="text" value="https://data.geopf.fr/chunk/telechargement/download/pva/P18000152/IGNF_PVA_1-0__2018-06-22__CP18000152_18FD3725x00030_00124.tif"/>
+  <label>
+    Image 1:
+    <input class="url" type="text" value="https://data.geopf.fr/chunk/telechargement/download/pva/P18000152/IGNF_PVA_1-0__2018-06-22__CP18000152_18FD3725x00030_00124.tif"/>
+  </label>
+  <label>
+    Image 2:
+    <input class="url" type="text" value="https://data.geopf.fr/chunk/telechargement/download/pva/P17000212/IGNF_PVA_1-0__2017-06-17__CP17000212_17FD5820x00012_01054.tif"/>
+  </label>
+  <label>
+    Image 3:
+  <input class="url" type="text" value="https://data.geopf.fr/chunk/telechargement/download/pva/P17000212/IGNF_PVA_1-0__2017-06-17__CP17000212_17FD5820x00020_02211.tif"/>
+  </label>
+  <label>
+    Image 4:
+  <input class="url" type="text" value=""/>
+  </label>
+  <label>
+    Image 5:
+  <input class="url" type="text" value=""/>
+  </label>
+  <label>
+    Image 6:
+  <input class="url" type="text" value=""/>
+  </label>
+  <label>
+    Largeur des images :
   <input id="width" type="number" value="500" min="0" />
+  </label>
   <button onclick="getImage()">Charger</button>
   <br/>
 <script>
@@ -138,14 +171,19 @@ var loader = new TIFFLoader();
 function getImage() {
   document.body.dataset.loading = "";
   document.querySelectorAll('img').forEach(i => i.remove());
-  loader.load(
-    document.getElementById('url').value,
-    document.getElementById('width').value,
-    img => {
-      document.body.appendChild(img.thumb);
-      delete document.body.dataset.loading;
+  const width = document.getElementById('width').value;
+  document.querySelectorAll('.url').forEach(input => {
+    if (input.value) {
+      loader.load(
+        input.value,
+        width,
+        img => {
+          document.body.appendChild(img.thumb);
+          delete document.body.dataset.loading;
+        }
+      )
     }
-  )
+  })
 }
 
 </script>
