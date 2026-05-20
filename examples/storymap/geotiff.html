@@ -60,19 +60,23 @@
   </label>
   <label>
     Image 4:
-  <input class="url" type="text" value=""/>
+  <input class="url" type="text" value="https://data.geopf.fr/chunk/telechargement/download/pva/2524-0051/IGNF_PVA_1-0__1949-07-30__C2524-0051_1949_F2524-2724_0240.tif"/>
   </label>
   <label>
     Image 5:
-  <input class="url" type="text" value=""/>
+  <input class="url" type="text" value="https://data.geopf.fr/chunk/telechargement/download/pva/2524-0041/IGNF_PVA_1-0__1957-06-28__C2524-0041_1957_F2524-2624_0074.tif"/>
   </label>
   <label>
     Image 6:
-  <input class="url" type="text" value=""/>
+  <input class="url" type="text" value="https://data.geopf.fr/chunk/telechargement/download/pva/2621-0031/IGNF_PVA_1-0__1971-07-09__C2621-0031_1971_FR2119_0474.tif"/>
   </label>
   <label>
     Largeur des images :
-  <input id="width" type="number" value="500" min="0" />
+    <input id="width" type="number" value="500" min="0" />
+  </label>
+  <label>
+    Qualité :
+    <input id="quality" type="range" min="0" max="1" value="0.5" step="0.1" />
   </label>
   <button onclick="getImage()">Charger</button>
   <br/>
@@ -94,7 +98,8 @@ class TIFFLoader {
     this.layers = [];
   }
   
-  load(url, width, callback) {
+  load(url, width, options, callback) {
+    options = options || {};
     this.layers.push({
       url: url, 
       source: new ol.source.GeoTIFF({ 
@@ -105,6 +110,8 @@ class TIFFLoader {
         }] 
       }),
       width: width, 
+      type: options.type || 'image/jpeg',
+      quality: options.quality || 0.5,
       callback: callback
     })
     this._load();
@@ -150,7 +157,7 @@ class TIFFLoader {
         map.once('rendercomplete', function (event) {
           var canvas = map.getViewport().querySelector('.ol-layers canvas');
           var img = document.createElement('IMG')
-          img.src = canvas.toDataURL("image/jpeg", 0.5);
+          img.src = canvas.toDataURL(current.type, current.quality);
           callback({
             thumb: img,
             size: size
@@ -172,11 +179,16 @@ function getImage() {
   document.body.dataset.loading = "";
   document.querySelectorAll('img').forEach(i => i.remove());
   const width = document.getElementById('width').value;
+  const quality = document.getElementById('quality').value;
   document.querySelectorAll('.url').forEach(input => {
     if (input.value) {
       loader.load(
         input.value,
         width,
+        {
+          type: 'image/jpeg',
+          quality: parseFloat(quality)
+        },
         img => {
           document.body.appendChild(img.thumb);
           delete document.body.dataset.loading;

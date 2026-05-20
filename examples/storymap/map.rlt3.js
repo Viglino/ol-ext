@@ -196,6 +196,8 @@ async function load(e) {
       missions[m].set('resolution', pva[m].resolution);
       missions[m].set('support', pva[m].support);
       missions[m].set('date', parseInt(missions[m].get('date_cliche')));
+      missions[m].set('url', 'https://data.geopf.fr/chunk/telechargement/download/pva/' + m + '/' + missions[m].get('image_identifier') + '.tif')
+
       cliches.push(missions[m]);
     }
     // console.log(missions[m].get('date_cliche'))
@@ -203,6 +205,7 @@ async function load(e) {
   cliches.sort((a,b) => {
     return a.get('date') - b.get('date');
   });
+  console.log(cliches);
   // Add bbox
   layer.getSource().clear();
   layer.getSource().addFeatures(cliches)
