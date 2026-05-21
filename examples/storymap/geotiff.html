@@ -40,6 +40,19 @@
       margin-top: 5px;
       display: block;
     }
+    .result {
+      position: relative;
+      display: inline-block;
+    }
+    .result span {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: #fff;
+      color: #000;
+      padding: 0 .5em;
+      box-shadow: 1px 1px 5px 0px #000;
+    }
   </style>
 
 </head>
@@ -125,6 +138,7 @@ class TIFFLoader {
     if (!current) return;
     console.time('Chargement')
     console.log('load', this.layers.length + 1)
+    var timer = new Date();
     this.running = true;
     var self = this;
     var url = current.url;
@@ -164,6 +178,7 @@ class TIFFLoader {
           img.src = canvas.toDataURL(current.type, current.quality);
           callback({
             thumb: img,
+            time: new Date() - timer,
             size: size
           })
           map.removeLayer(layer);
@@ -182,7 +197,7 @@ var loader = new TIFFLoader();
 
 function getImage() {
   document.body.dataset.loading = "";
-  document.querySelectorAll('img').forEach(i => i.remove());
+  document.querySelectorAll('.result').forEach(i => i.remove());
   const width = document.getElementById('width').value;
   const quality = document.getElementById('quality').value;
   document.querySelectorAll('.url').forEach(input => {
@@ -195,7 +210,13 @@ function getImage() {
           quality: parseFloat(quality)
         },
         img => {
-          document.body.appendChild(img.thumb);
+          var div = document.createElement('div');
+          div.className = 'result';
+          document.body.appendChild(div)
+          div.appendChild(img.thumb);
+          var span = document.createElement('span');
+          span.innerText = '⏱️' + (Math.round(img.time / 100) / 10) +' s';
+          div.appendChild(span);
           delete document.body.dataset.loading;
         }
       )
