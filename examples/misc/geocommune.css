@@ -1,0 +1,8 @@
+#map {
+  position: fixed;
+  inset: 0;
+}
+
+.wait {
+  display: none;
+}
