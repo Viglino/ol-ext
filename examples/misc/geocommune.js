@@ -21,8 +21,10 @@ map.addLayer (new ol.layer.Geoportail({
 const dlog = new ol.control.Dialog({
   title: 'Commune',
   content: document.querySelector('#commune'),
-  buttons: ['charger'],
+  closeBox: false,
+  buttons: {submit: 'charger'},
   onButton: function (btn) {
+    console.log('onButton', btn);
     const inputs = dlog.getInputs();
     const insee = inputs.insee.value;
     getCommune(insee);
@@ -34,6 +36,7 @@ async function getCommune(insee) {
   let commune = await fetch(`https://geo.api.gouv.fr/communes?code=${insee}&fields=nom,code,contour&format=geojson&geometry=contour`);
   if (!commune.ok) {
     console.error('Erreur lors de la récupération des données de la commune');
+    dlg.show();
     return;
   }
   commune = await commune.json();
@@ -47,6 +50,10 @@ async function getCommune(insee) {
   const carte = await reponse.json();
   carte.param.lon = (extent[0] + extent[2]) / 2;
   carte.param.lat = (extent[1] + extent[3]) / 2;
+  // Reset features of all layers
+  carte.layers.forEach(l => {
+    if (l.features) l.features = [];
+  });
   for (let i=0; i<carte.layers.length; i++) {
     l = carte.layers[i];
   // carte.layers.forEach(l => {
@@ -56,15 +63,19 @@ async function getCommune(insee) {
         featureProjection: 'EPSG:4326',
         dataProjection: map.getView().getProjection()
       });
-      l.features[0].attributes = geojson.properties;
-      l.features[0].type = geojson.geometry.type;
-      l.features[0].coords = geojson.geometry.coordinates;
+      l.features = [{
+        attributes: geojson.properties,
+        type: geojson.geometry.type,
+        coords: geojson.geometry.coordinates,
+        "style": {},
+        "popupcontent": {}
+      }];
       if (geojson.geometry.type === 'Polygon') {
         l.crop.coordinates[0] = geojson.geometry.coordinates;
       } else {
         l.crop.coordinates = geojson.geometry.coordinates;
       }
-    }
+      }
     if (l.url) {
       l.url = l.url.split('?');
       const search = l.url.pop().split('&');
@@ -85,7 +96,7 @@ async function getCommune(insee) {
       l.url.push(search.join('&'));
       l.url = l.url.join('?');
       // Get points layer
-      const player = carte.layers.find(l2 => l.title === l2.title && l2 !== l);
+      const player = carte.layers.find(l2 => (l.title === l2.title || l2.title === l.theme) && l2 !== l && l2.dessin);
       if (player) {
         await fetch(l.url).then(r => r.json()).then(json => {
           const features = (new ol.format.GeoJSON()).readFeatures(json, {
@@ -100,7 +111,6 @@ async function getCommune(insee) {
             }
           });
           const pts = (new ol.format.GeoJSON()).writeFeaturesObject(features);
-          player.features = [];
           pts.features.forEach(f => {
             player.features.push({
               attributes: f.properties,
@@ -109,12 +119,14 @@ async function getCommune(insee) {
             });
           });
           console.log(json, player, features);
-
         });
       }
     }
   }
   saveAs(new Blob([JSON.stringify(carte, null, ' ')], {type: "application/json"}), `commune-${insee}.carte`);
+  dlog.getContentElement().querySelector('p').innerHTML = 'ℹ️ ' + commune.get('nom') + ' (' + commune.get('code') + ') chargée' ;
+  dlog.show();
 }
+
 dlog.show();
 
