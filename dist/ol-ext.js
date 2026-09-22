@@ -45764,6 +45764,211 @@ ol.style.Shadow = class olstyleShadow extends ol.style.RegularShape {
   }
 }
 
+/*	Copyright (c) 2016 Jean-Marc VIGLINO, 
+  released under the CeCILL-B license (French BSD license)
+  (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
+*/
+/**
+ * @classdesc
+ * Applies an image-based stroke to vector features
+ *
+ * @constructor
+ * @param {Object} options
+ *  @param {ol.style.Icon} options.icon Icon style to be applied to stroke
+ *  @param {string} [options.fallbackColor] Alternative stroke if segment length is less than image width
+ *  @param {boolean} [options.isVectorTile] Toggle to true if applying stroke into VectorTile layer
+ *  @param {ol.Map} [options.map] map instance. required if applying style to VectorTile Layer to determine point location on tile extent.
+ * @extends {ol.style.Style}
+ * @example
+ * function getStyle(feature) {
+ *   return new ol.style.StrokeImage({
+ *     icon: new ol.style.Icon({
+ *       src: "../data/stroke-image-sprint.png",
+ *       size: [116, 20],
+ *       offset: [40, 40],
+ *     }),
+ *     fallbackColor: '#c844c5',
+ *   });
+ * }
+ *
+ * var vector = new ol.layer.Vector({
+ *   source: new ol.source.Vector(),
+ *   style: getStyle,
+ * });
+ */
+ol.style.StrokeImage = class olstyleStrokeImage extends ol.style.Style {
+  /**
+   * @param {Object} options
+   *  @param {ol.style.Icon} options.icon Icon style to be applied to stroke
+   *  @param {string} [options.fallbackColor] Alternative stroke if segment length is less than image width
+   *  @param {boolean} [options.isVectorTile] Toggle to true if applying stroke into VectorTile layer
+   *  @param {ol.Map} [options.map] map instance. required if applying style to VectorTile Layer to determine point location on tile extent.
+   */
+  constructor(options) {
+    super({ renderer: (a, b) => this._renderer(a, b) });
+    this.icon = options.icon;
+    this.fallbackColor = options.fallbackColor;
+    this.isVectorTile = options.isVectorTile;
+    this.map = options.map;
+    if (this.icon) this.icon.load();
+  }
+  /**
+   *
+   * @param {ol.coordinate.Coordinate | ol.coordinate.Coordinate[] | ol.coordinate.Coordinate[][] | ol.coordinate.Coordinate[][][]} pixelCoordinates
+   * @param {ol.render.State} state
+   * @private
+   */
+  _renderer(pixelCoordinates, state) {
+    if (!["LineString", "Polygon"].includes(state.geometry.getType())) {
+      return;
+    }
+    var ctx = state.context;
+    /**
+     *
+     * @param {ol.coordinate.Coordinate[]} coordinates
+     * @param {boolean} checkExtent
+     */
+    var draw = (coordinates, checkExtent = false) => {
+      var ps = coordinates.slice(0, 12);
+      var extent = state.geometry.getExtent();
+      var flatCoords = state.geometry.getFlatCoordinates();
+      var pLength =
+        state.geometry.getType() == "Polygon" ? ps.length - 1 : ps.length - 1;
+      for (var i = 0; i < pLength; i++) {
+        var p1 = ps[i];
+        var p2 = ps[i + 1];
+        if (checkExtent && !!this.map) {
+          if (!checkExtentIntersection(extent, p1, p2)) continue;
+        }
+        var dx = p2[0] - p1[0];
+        var dy = p2[1] - p1[1];
+        var rotation = Math.atan2(dy, dx);
+        var icon = this.icon;
+        var iconWidth = icon.getWidth();
+        var iconHeight = icon.getHeight();
+        var iconOrigin = icon.getOrigin();
+        var segments = this._splitLineIntoSegments(p1, p2, iconWidth || 1);
+        for (var j = 0; j < segments.length; j++) {
+          var { p, length } = segments[j];
+          if (
+            !this.fallbackColor ||
+            (length == (iconWidth || 1) && segments.length > 2)
+          ) {
+            ctx.save();
+            ctx.imageSmoothingEnabled = false;
+            ctx.translate(p[0], p[1]);
+            ctx.rotate(rotation);
+            ctx.drawImage(
+              icon.getImage(),
+              iconOrigin[0],
+              iconOrigin[1],
+              length,
+              iconHeight,
+              0,
+              -iconHeight / 2,
+              length,
+              iconHeight,
+            );
+            ctx.restore();
+          } else {
+            var nextSegment = segments[j + 1];
+            if (!nextSegment) continue;
+            if (this.fallbackColor) ctx.strokeStyle = this.fallbackColor;
+            ctx.lineWidth = 1;
+            var p0 = p;
+            var p1 = nextSegment.p;
+            ctx.beginPath();
+            ctx.moveTo(p0[0], p0[1]);
+            ctx.lineTo(p1[0], p1[1]);
+            ctx.closePath();
+            ctx.stroke();
+          }
+        }
+      }
+    };
+    switch (state.geometry.getType()) {
+      case "LineString":
+      default:
+        draw(pixelCoordinates);
+        break;
+      case "Polygon":
+        for (var i = 0; i < pixelCoordinates.length; i++) {
+          var _pixelCoordinates = pixelCoordinates;
+          draw(_pixelCoordinates[i], this.isVectorTile);
+        }
+        break;
+    }
+  }
+  /**
+   * @typedef {Object} Segment
+   * @property {number[]} p
+   * @property {number} length
+   */
+  /**
+   * @param {number[]} p1
+   * @param {number[]} p2
+   * @param {number} segmentLength
+   * @returns {Segment[]}
+   * @private
+   */
+  _splitLineIntoSegments(p1, p2, segmentLength) {
+    var dx = p2[0] - p1[0];
+    var dy = p2[1] - p1[1];
+    var totalDistance = Math.sqrt(dx * dx + dy * dy);
+    if (totalDistance <= segmentLength || segmentLength <= 0) {
+      return [
+        { p: [p1[0], p1[1]], length: totalDistance },
+        { p: [p2[0], p2[1]], length: 0 },
+      ];
+    }
+    var trDistance = totalDistance - segmentLength;
+    var numSegments = Math.floor(totalDistance / segmentLength);
+    var segments = [
+      {
+        p: [p1[0], p1[1]],
+        length: numSegments > 1 ? segmentLength : segmentLength,
+      },
+    ];
+    for (var i = 1; i <= numSegments; i++) {
+      var t = (i * segmentLength) / totalDistance;
+      var x = p1[0] + t * dx;
+      var y = p1[1] + t * dy;
+      segments.push({
+        p: [x, y],
+        length: i < numSegments ? segmentLength : trDistance,
+      });
+      trDistance -= segmentLength;
+    }
+    segments.push({
+      p: [p2[0], p2[1]],
+      length: 0,
+    });
+    return segments;
+  }
+  /**
+   *
+   * @param {ol.extent.Extent} Extent
+   * @param {ol.coordinate.Coordinate} p1
+   * @param {ol.coordinate.Coordinate} p2
+   * @private
+   */
+  _checkExtentIntersection(extent, p1, p2) {
+    var px1 = this.map.getPixelFromCoordinate([extent[0], extent[1]]);
+    var px2 = this.map.getPixelFromCoordinate([extent[2], extent[3]]);
+    if (
+      (p1[0] <= px1[0] && p2[0] <= px1[0]) ||
+      (p1[0] >= px2[0] && p2[0] >= px2[0])
+    )
+      return false;
+    if (
+      (p1[1] >= px1[1] && p2[1] >= px1[1]) ||
+      (p1[1] <= px2[1] && p2[1] <= px2[1])
+    )
+      return false;
+    return true;
+  }
+};
+
 /*	Copyright (c) 2018 Jean-Marc VIGLINO, 
 	released under the CeCILL-B license (French BSD license)
 	(http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).

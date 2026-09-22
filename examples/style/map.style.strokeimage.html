@@ -52,12 +52,19 @@
         height: 40px;
       }
       label {
-        width: 7em;
+        width: 8em;
         text-align: right;
         display: inline-block;
       }
       input[type="number"] {
         width: 4em;
+      }
+      li img {
+        background: #fff;
+        margin: 0.5em 0 0 -0.5em;
+        box-shadow: 1px 1px 5px rgba(0,0,0,.5);
+        border-radius: 5px;
+        display: block;
       }
       #pselect {
         max-width: 300px;
@@ -112,10 +119,10 @@
       <h2>Options:</h2>
       <ul>
         <li>
-          <label>Fallback Color: </label>
+          <label>Fallback color:</label>
           <select id="color" onchange="refresh()">
-            <option value="">None</option>
-            <option value="#c844c5" selected>purple</option>
+            <option value="" selected>None</option>
+            <option value="#c844c5">purple</option>
             <option value="#d9b1ee">light-purple</option>
             <option value="#858e91">gray</option>
           </select>
@@ -128,6 +135,10 @@
             <option value="ADMARE01">Administrative Boundary</option>
             <option value="ARCSLN01">Archipelago Sea Lane</option>
           </select>
+        </li>
+        <li>
+          <label>Image: </label>
+          <img src="../data/stroke-image-sprint.png"/>
         </li>
       </ul>
       <!-- force font loading -->
@@ -215,7 +226,7 @@
         );
 
         var interaction = new ol.interaction.Draw({
-          type: "Polygon",
+          type: "LineString",
           source: vector.getSource(),
         });
         map.addInteraction(interaction);
