@@ -1,0 +1,230 @@
+﻿<!doctype html>
+<html>
+  <head>
+    <!--
+  Copyright (c) 2015-2018 Jean-Marc VIGLINO, 
+  released under CeCILL-B (french BSD like) licence: http://www.cecill.info/
+-->
+    <title>ol-ext: stroke image</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <meta
+      name="description"
+      content="an OL3 stroke image style to use in your maps."
+    />
+    <meta name="keywords" content="ol3, vector, style, stroke, image" />
+
+    <link rel="stylesheet" href="../style.css" />
+
+    <!-- jQuery -->
+    <script
+      type="text/javascript"
+      src="https://code.jquery.com/jquery-1.11.0.min.js"
+    ></script>
+    <!-- FontAwesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+
+    <!-- Openlayers -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css"
+    />
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"
+    ></script>
+
+    <!-- ol-ext -->
+    <script type="text/javascript" src="../../dist/ol-ext.js"></script>
+    <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+    <script src="https://unpkg.com/elm-pep"></script>
+
+    <style>
+      #select {
+        box-shadow: 1px 1px 3px #000;
+        background: #fff;
+        margin-left: 0.5em;
+        display: inline-block;
+        width: 50px;
+        height: 40px;
+      }
+      label {
+        width: 7em;
+        text-align: right;
+        display: inline-block;
+      }
+      input[type="number"] {
+        width: 4em;
+      }
+      #pselect {
+        max-width: 300px;
+        position: absolute;
+        box-shadow: 1px 1px 3px #000;
+        background: #fff;
+      }
+      #pselect > div {
+        float: left;
+        width: 50px;
+        height: 40px;
+        background-color: #fff;
+        border: 2px solid #000;
+        box-sizing: border-box;
+      }
+      #pselect > div:hover {
+        border-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="https://github.com/Viglino/ol-ext" class="icss-github-corner"
+      ><i></i
+    ></a>
+
+    <a href="../../index.html">
+      <h1>ol-ext: StrokeImage style</h1>
+    </a>
+    <div class="info">
+      <p>
+        <i>ol.style.StrokeImage</i> applies an image-based stroke to vector
+        features.
+      </p>
+      <p>
+        It works by dividing a line into multiple segments, each matching the
+        width of the source image.
+      </p>
+      <p>
+        When using sprite sheets, you can adjust the size and offset to select a
+        specific image region.
+      </p>
+      <p>
+        If a line segment is narrower than the image width, the style can
+        automatically fall back to a defined solid stroke color.
+      </p>
+    </div>
+
+    <!-- Map div -->
+    <div id="map" style="width: 600px; height: 400px"></div>
+
+    <div class="options" style="min-width: 300px">
+      <h2>Options:</h2>
+      <ul>
+        <li>
+          <label>Fallback Color: </label>
+          <select id="color" onchange="refresh()">
+            <option value="">None</option>
+            <option value="#c844c5" selected>purple</option>
+            <option value="#d9b1ee">light-purple</option>
+            <option value="#858e91">gray</option>
+          </select>
+        </li>
+        <li>
+          <label>Pattern: </label>
+          <select id="pattern" onchange="refresh()">
+            <option value="ACHARE51" selected>Anchorage Area</option>
+            <option value="ACHRES51">Anchorage Restricted Area</option>
+            <option value="ADMARE01">Administrative Boundary</option>
+            <option value="ARCSLN01">Archipelago Sea Lane</option>
+          </select>
+        </li>
+      </ul>
+      <!-- force font loading -->
+      <i class="fa fa-bug" style="visibility: hidden"></i>
+    </div>
+
+    <script type="text/javascript">
+      const sprintMap = {
+        ACHARE51: {
+          size: [116, 20],
+          offset: [40, 40],
+        },
+        ACHRES51: {
+          size: [108, 20],
+          offset: [196, 40],
+        },
+        ADMARE01: {
+          size: [12, 8],
+          offset: [344, 38],
+        },
+        ARCSLN01: {
+          size: [24, 8],
+          offset: [396, 38],
+        },
+      };
+      let refresh;
+
+      $(window).load(function () {
+        // Layers
+        var layer = new ol.layer.Geoportail({
+          layer: "ORTHOIMAGERY.ORTHOPHOTOS",
+        });
+
+        // The map
+        var map = new ol.Map({
+          target: "map",
+          view: new ol.View({
+            zoom: 5,
+            center: [-684876.746983723, 5919283.45284623],
+          }),
+          layers: [layer],
+        });
+
+        function getStyle(feature) {
+          return [
+            new ol.style.StrokeImage({
+              icon: new ol.style.Icon({
+                src: "../data/stroke-image-sprint.png",
+                size: sprintMap[$("#pattern").val()].size,
+                offset: sprintMap[$("#pattern").val()].offset,
+              }),
+              fallbackColor: $("#color").val(),
+            }),
+          ];
+        }
+
+        var vector = new ol.layer.Vector({
+          source: new ol.source.Vector(),
+          style: getStyle,
+        });
+        map.addLayer(vector);
+        vector.getSource().addFeature(
+          new ol.Feature(
+            new ol.geom.Polygon([
+              [
+                [-1662063.867775031, 5510719.475652008],
+                [-718511.3206573606, 5510719.475652008],
+                [-718511.3206573606, 6037003.764880988],
+                [-1665823.0412695236, 6033244.591386495],
+                [-1662063.867775031, 5510719.475652008],
+              ],
+            ]),
+          ),
+        );
+        vector.getSource().addFeature(
+          new ol.Feature(
+            new ol.geom.LineString([
+              [161434.03018974862, 6633511.045142917],
+              [-29352.79241005145, 6476968.011214876],
+              [-210355.67538934876, 6472076.0414046245],
+              [-528333.7130556819, 6325316.947097086],
+              [-1668162.6788442305, 6344884.826338091],
+            ]),
+          ),
+        );
+
+        var interaction = new ol.interaction.Draw({
+          type: "Polygon",
+          source: vector.getSource(),
+        });
+        map.addInteraction(interaction);
+
+        refresh = function () {
+          $("#pselect").hide();
+          vector.changed();
+        };
+      });
+    </script>
+  </body>
+</html>
