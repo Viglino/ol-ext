@@ -10,7 +10,7 @@
 import {unByKey as ol_Observable_unByKey} from 'ol/Observable.js'
 import ol_interaction_Pointer from 'ol/interaction/Pointer.js'
 import {asString as ol_color_asString} from 'ol/color.js'
-import ol_ext_getMapCanvas from '../util/getMapcanvas.js'
+import ol_ext_getMapCanvas from '../util/getMapCanvas.js'
 
 /**
  * @constructor
