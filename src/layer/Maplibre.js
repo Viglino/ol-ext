@@ -5,7 +5,7 @@
 import ol_layer_Layer from 'ol/layer/Layer.js'
 import ol_ext_element from '../util/element.js'
 import {toLonLat as ol_proj_toLonLat} from 'ol/proj.js'
-import { Map as MapLibreMap } from 'maplibre-gl';
+import * as mapboxgl from 'maplibre-gl';
 
 /** Layer that use Maplibre GL as render
  * @constructor
@@ -111,7 +111,7 @@ ol_layer_Maplibre.prototype._create = function(style) {
     },
     parent: document.body
   })
-  this.glMap = new MapLibreMap({
+  this.glMap = new mapboxgl.Map({
     container: this._container,
     style: style,
     center: [3, 47],
