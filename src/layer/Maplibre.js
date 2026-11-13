@@ -3,78 +3,74 @@
   (http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt).
 */
 import ol_layer_Layer from 'ol/layer/Layer.js'
-import {ol_ext_inherits} from '../util/ext.js'
 import ol_ext_element from '../util/element.js'
 import {toLonLat as ol_proj_toLonLat} from 'ol/proj.js'
 import { Map as MapLibreMap } from 'maplibre-gl';
 
 /** Layer that use Maplibre GL as render
- * @constructor 
+ * @constructor
  * @extends {ol_layer_Layer}
  * @param {any} options layer options
  *  @param {string} options.layer Geoportail layer name
  *  @param {string} options.gppKey Geoportail API key
  *  @param {olx.source.WMTSOptions=} tileoptions WMTS options if not defined default are used
  */
-var ol_layer_Maplibre = function(options) {
-  if (!ol_layer_Layer) {
-    console.error('[ol/layer/MapLibre] bad ol version (need ol@6+)');
-  }
-  options = options || {};
-  options.render = function (frameState) {
+var ol_layer_Maplibre = class ollayerMaplibre extends ol_layer_Layer {
+  constructor(options) {
+    options = options || {};
+    options.render = function (frameState) {
 
-    // Create map if not exists
-    if (!this._container) {
-      this._create(options.style);
-    } 
-    /**/
-    var fac = 1
-    var dzoom = 1
-    //fac = Math.pow(2,.5);
-    //dzoom = .5;
-    /*/
-    var fac = 2
-    var dzoom = 0
-    /**/
-    this._container.style.width = fac*frameState.size[0]+'px';
-    this._container.style.height = fac*frameState.size[1]+'px';
+      // Create map if not exists
+      if (!this._container) {
+        this._create(options.style);
+      }
+      /**/
+      var fac = 1
+      var dzoom = 1
+      //fac = Math.pow(2,.5);
+      //dzoom = .5;
+      /*/
+      var fac = 2
+      var dzoom = 0
+      /**/
+      this._container.style.width = fac*frameState.size[0]+'px';
+      this._container.style.height = fac*frameState.size[1]+'px';
 
-    var glMap = this.glMap;
-    if (!glMap) return null;
+      var glMap = this.glMap;
+      if (!glMap) return null;
 
-    var canvas = glMap.getCanvas();
-    canvas.style.transform = 'scale('+(1/fac)+')';
+      var canvas = glMap.getCanvas();
+      canvas.style.transform = 'scale('+(1/fac)+')';
 
-    // Force map to resize
-    if (frameState.size[0] !== canvas.width || frameState.size[1] !== canvas.height) {
-      glMap.resize();
+      // Force map to resize
+      if (frameState.size[0] !== canvas.width || frameState.size[1] !== canvas.height) {
+        glMap.resize();
+      }
+
+      canvas.style.opacity = this.getOpacity();
+
+      // adjust view parameters in mapbox
+      var viewState = frameState.viewState;
+      glMap.jumpTo({
+        center: ol_proj_toLonLat(viewState.center),
+        zoom: viewState.zoom - dzoom,
+        bearing: (-viewState.rotation * 180) / Math.PI,
+        animate: false,
+      });
+      // cancel the scheduled update & trigger synchronous redraw
+      // see https://github.com/mapbox/mapbox-gl-js/issues/7893#issue-408992184
+      // NOTE: THIS MIGHT BREAK IF UPDATING THE MAPBOX VERSION
+      if (glMap._frame) {
+        glMap._frame.cancel();
+        glMap._frame = null;
+      }
+      glMap._render();
+
+      return this._container;
     }
-
-    canvas.style.opacity = this.getOpacity();
-
-    // adjust view parameters in mapbox
-    var viewState = frameState.viewState;
-    glMap.jumpTo({
-      center: ol_proj_toLonLat(viewState.center),
-      zoom: viewState.zoom - dzoom,
-      bearing: (-viewState.rotation * 180) / Math.PI,
-      animate: false,
-    });
-    // cancel the scheduled update & trigger synchronous redraw
-    // see https://github.com/mapbox/mapbox-gl-js/issues/7893#issue-408992184
-    // NOTE: THIS MIGHT BREAK IF UPDATING THE MAPBOX VERSION
-    if (glMap._frame) {
-      glMap._frame.cancel();
-      glMap._frame = null;
-    }
-    glMap._render();
-
-    return this._container;
+    super(options);
   }
-  ol_layer_Layer.call(this, options);
 };
-if (!ol_layer_Layer) ol_layer_Layer = function() {};
-ol_ext_inherits (ol_layer_Maplibre, ol_layer_Layer);
 
 /** Get the Maplibre map
  * @return {Object}
@@ -95,7 +91,7 @@ ol_layer_Maplibre.prototype.setStyle = function(style) {
 }
 
 /** Returns the map's Mapbox style object.
- * @returns {Object} 
+ * @returns {Object}
  */
 ol_layer_Maplibre.prototype.getStyle = function() {
   return this.getMapGL().get('style');
