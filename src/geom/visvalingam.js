@@ -1,5 +1,5 @@
 import ol_geom_LineString from 'ol/geom/LineString.js'
-import { ol_coordinate_equal } from './GeomUtils';
+import { ol_coordinate_equal } from './GeomUtils.js';
 
 (function () {
 
