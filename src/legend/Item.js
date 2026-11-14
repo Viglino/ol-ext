@@ -45,11 +45,11 @@ var ol_legend_Item = class ollegendItem extends ol_Object {
     this.set('width', width || null);
     this.changed();
   }
-  /** Set the item heigth
-   * @param {number} [heigth]
+  /** Set the item height
+   * @param {number} [height]
    */
-  setHeight(heigth) {
-    this.set('heigth', heigth || null);
+  setHeight(height) {
+    this.set('height', height || null);
     this.changed();
   }
   /** Get element

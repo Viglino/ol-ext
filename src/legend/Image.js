@@ -46,18 +46,21 @@ var ol_legend_Image = class ollegendImage extends ol_Object {
    * @return {number}
    */
   getWidth() {
-    if (!this._img.naturalWidth) return 0;
-    return this.get('width') || this._img.naturalWidth
+    var width = this._img instanceof HTMLCanvasElement ? this._img.width : this._img.naturalWidth;
+    if (!width) return 0;
+    return this.get('width') || width
   }
   /** Get image height
    * @return {number}
    */
   getHeight() {
-    if (!this._img.naturalWidth) return 0;
+    var width = this._img instanceof HTMLCanvasElement ? this._img.width : this._img.naturalWidth;
+    var height = this._img instanceof HTMLCanvasElement ? this._img.height : this._img.naturalHeight;
+    if (!width) return 0;
     if (this.get('width')) {
-      return this.get('width') * this._img.naturalHeight / this._img.naturalWidth
+      return this.get('width') * height / width
     }
-    return this._img.naturalHeight || 0
+    return height || 0
   }
   /** Get Image
    * @returns {Image}

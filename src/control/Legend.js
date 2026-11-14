@@ -152,7 +152,7 @@ var ol_control_Legend = class olcontrolLegend extends ol_control_CanvasBase {
     }
   }
   /** Show/hide control
-   * @returns {boolean}
+   * @param {boolean} b whether to collapse the control
    */
   collapse(b) {
     if (b === false)
