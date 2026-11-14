@@ -1,4 +1,3 @@
-import ol_ext_inherits from '../util/ext.js'
 import ol_layer_Vector from 'ol/layer/Vector.js'
 import ol_style_Style from 'ol/style/Style.js'
 import ol_style_Text from 'ol/style/Text.js'
@@ -119,20 +118,21 @@ ol_layer_Vector.prototype.setTextPathStyle = function(style, maxResolution)
 *	@param {visible|ellipsis|string} textOverflow
 *	@param {number} minWidth minimum width (px) to draw text, default 0
 */
-var ol_style_TextPath = function(options)
-{	if (!options) options={};
-	ol_style_Text.call (this, options);
-	this.textOverflow_ = typeof(options.textOverflow)!="undefined" ?  options.textOverflow : "visible";
-	this.minWidth_ = options.minWidth || 0;
-}
-ol_ext_inherits(ol_style_TextPath, ol_style_Text);
+var ol_style_TextPath = class olstyleTextPath extends ol_style_Text {
+  constructor(options) {
+    options = options || {};
+    super(options);
+    this.textOverflow_ = typeof(options.textOverflow)!="undefined" ? options.textOverflow : "visible";
+    this.minWidth_ = options.minWidth || 0;
+  }
 
-ol_style_TextPath.prototype.getTextOverflow = function()
-{	return this.textOverflow_; 
-};
+  getTextOverflow() {
+    return this.textOverflow_;
+  }
 
-ol_style_TextPath.prototype.getMinWidth = function()
-{	return this.minWidth_; 
+  getMinWidth() {
+    return this.minWidth_;
+  }
 };
 
 /**/
