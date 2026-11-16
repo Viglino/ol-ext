@@ -52,7 +52,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
       tout = setTimeout(function () { this.refresh() }.bind(this), 0)
     }.bind(this))
     this._items.on('remove', function (e) {
-      for (var i = 0; i < listeners; i++) {
+      for (var i = 0; i < listeners.length; i++) {
         if (e.element === listeners[i].item) {
           ol_Observable_unByKey(listeners[i].on)
           listeners.splice(i, 1)
@@ -119,7 +119,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
     }
     var size = item.size || [40, 25]
     if (item.width) size[0] = item.width
-    if (item.heigth) size[1] = item.heigth
+    if (item.height) size[1] = item.height
     item.onload = item.onload || function () {
       setTimeout(function () {
         ol_legend_Legend.getLegendImage(item, canvas, offsetY)
@@ -476,7 +476,7 @@ var ol_legend_Legend = class ollegendLegend extends ol_Object {
           // Image
           var img = r.getImage()
           try {
-            ctx.drawImage(img, 0,0,img.naturalWidth, img.naturalHeight, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
+            ctx.drawImage(img, 0, offsetY * ratio, r.getWidth() * ratio, r.getHeight() * ratio)
           } catch(e) { /* ok */ }
           offsetY += r.getHeight();
         } else {
