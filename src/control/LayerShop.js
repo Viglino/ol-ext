@@ -33,7 +33,7 @@ import ol_control_LayerSwitcher from '../control/LayerSwitcher.js'
  *  @param {boolean} options.noScroll prevent handle scrolling, default false
  *
  * Layers attributes that control the switcher
- *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
+ *	- alwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false (allwaysOnTop is still supported)
  *	- displayInLayerSwitcher {boolean} display the layer in switcher, default true
  *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
  */
