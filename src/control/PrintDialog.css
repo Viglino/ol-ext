@@ -94,7 +94,8 @@
   display: none;
 }
 .ol-ext-print-dialog .ol-print-param label {
-  width: 8em;
+  width: auto;
+  min-width: 8em;
   display: inline-block;
   vertical-align: middle;
 }
@@ -110,6 +111,7 @@
 .ol-ext-print-dialog .ol-orientation label {
   position: relative;
   width: 7em;
+  min-width: 0;
   cursor: pointer;
 }
 .ol-ext-print-dialog .ol-orientation input {
