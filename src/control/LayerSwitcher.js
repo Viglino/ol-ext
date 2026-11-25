@@ -45,7 +45,7 @@ import ol_ext_element from '../util/element.js'
  *  @param {function} options.onchangeCheck optional callback on click on checkbox, you can call this method for doing operations after check/uncheck a layer
  *
  * Layers attributes that control the switcher
- *	- allwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false
+ *	- alwaysOnTop {boolean} true to force layer stay on top of the others while reordering, default false (allwaysOnTop is still supported)
  *	- displayInLayerSwitcher {boolean} display the layer in switcher, default true
  *	- noSwitcherDelete {boolean} to prevent layer deletion (w. trash option = true), default false
  */
@@ -186,6 +186,14 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
    */
   displayInLayerSwitcher(layer) {
     return (layer.get('displayInLayerSwitcher') !== false)
+  }
+  /** Test if a layer should stay on top of the others while reordering
+   * @param {ol.layer} layer
+   * @return {boolean}
+   */
+  isAlwaysOnTop(layer) {
+    // allwaysOnTop is the former (misspelled) name of the property
+    return !!(layer.get('alwaysOnTop') || layer.get('allwaysOnTop'))
   }
   /**
    * Set the map instance the control is associated with.
@@ -638,7 +646,7 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
         if (li && li.parentNode.classList.contains('drag') && li !== elt) {
           target = self._getLayerForLI(li)
           // Don't mix layer level
-          if (target && !target.get('allwaysOnTop') == !layer.get('allwaysOnTop')) {
+          if (target && self.isAlwaysOnTop(target) === self.isAlwaysOnTop(layer)) {
             li.classList.add("dropover")
             li.classList.add((elt.offsetTop < li.offsetTop) ? 'dropover-after' : 'dropover-before')
           } else {
@@ -898,8 +906,8 @@ var ol_control_LayerSwitcher = class olcontrolLayerSwitcher extends ol_control_C
       
       //  up/down
       if (this.reordering) {
-        if ((i < layers.length - 1 && (layer.get("allwaysOnTop") || !layers[i + 1].get("allwaysOnTop")))
-          || (i > 0 && (!layer.get("allwaysOnTop") || layers[i - 1].get("allwaysOnTop")))) {
+        if ((i < layers.length - 1 && (self.isAlwaysOnTop(layer) || !self.isAlwaysOnTop(layers[i + 1])))
+          || (i > 0 && (!self.isAlwaysOnTop(layer) || self.isAlwaysOnTop(layers[i - 1])))) {
           ol_ext_element.create('DIV', {
             className: 'layerup ol-noscroll',
             title: this.tip.up,
